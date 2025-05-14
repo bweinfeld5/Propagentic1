@@ -1,0 +1,171 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 🔐 Auth & Role Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType;
+    }
+
+    function isLandlord() { 
+      return isSignedIn() && 
+        (getRole() == 'landlord' || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'landlord'); 
+    }
+    function isTenant() { 
+      return isSignedIn() && 
+        (getRole() == 'tenant' || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tenant'); 
+    }
+    function isContractor() { 
+      return isSignedIn() && 
+        (getRole() == 'contractor' || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'contractor'); 
+    }
+    function isAdmin() { return isSignedIn() && getRole() == 'admin'; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+
+    function isPropertyOwner(propertyId) {
+      let prop = get(/databases/$(database)/documents/properties/$(propertyId));
+      return prop.data.landlordId == request.auth.uid;
+    }
+
+    function isPropertyTenant(propertyId) {
+      let prop = get(/databases/$(database)/documents/properties/$(propertyId));
+      return prop.data.tenants.hasAny([request.auth.uid]);
+    }
+
+    function isValidString(field, max) {
+      return field is string && field.size() <= max;
+    }
+
+    function isValidStringArray(arr, maxEntries, maxLength) {
+      return arr is list && arr.size() <= maxEntries && 
+             (arr.size() == 0 || isArrayOfStringsWithinLength(arr, maxLength));
+    }
+
+    function isArrayOfStringsWithinLength(arr, maxLength) {
+      // Limit to checking first 10 items (practical limit for validation)
+      return (arr.size() >= 1 ? (arr[0] is string && arr[0].size() <= maxLength) : true) &&
+             (arr.size() >= 2 ? (arr[1] is string && arr[1].size() <= maxLength) : true) &&
+             (arr.size() >= 3 ? (arr[2] is string && arr[2].size() <= maxLength) : true) &&
+             (arr.size() >= 4 ? (arr[3] is string && arr[3].size() <= maxLength) : true) &&
+             (arr.size() >= 5 ? (arr[4] is string && arr[4].size() <= maxLength) : true) &&
+             (arr.size() >= 6 ? (arr[5] is string && arr[5].size() <= maxLength) : true) &&
+             (arr.size() >= 7 ? (arr[6] is string && arr[6].size() <= maxLength) : true) &&
+             (arr.size() >= 8 ? (arr[7] is string && arr[7].size() <= maxLength) : true) &&
+             (arr.size() >= 9 ? (arr[8] is string && arr[8].size() <= maxLength) : true) &&
+             (arr.size() >= 10 ? (arr[9] is string && arr[9].size() <= maxLength) : true);
+    }
+
+    function isValidTicket(data) {
+      return isValidString(data.description, 1000) &&
+             isValidString(data.issueType, 50) &&
+             isValidString(data.urgencyLevel, 20) &&
+             isValidStringArray(data.photos, 10, 500);
+    }
+
+    function isLimitedUpdate(data, resourceData) {
+      let allowed = ['status', 'progressUpdates', 'updatedAt'];
+      return data.diff(resourceData).affectedKeys().hasOnly(allowed);
+    }
+
+    function isValidFeedback(data) {
+      return data.rating >= 1 && data.rating <= 5 && isValidString(data.comment, 500);
+    }
+
+    // MATCHES BEGIN HERE
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) &&
+        (!('role' in request.resource.data) || request.resource.data.role == resource.data.role);
+    }
+
+    match /landlordProfiles/{landlordId} {
+      allow read: if isOwner(landlordId) || isAdmin();
+      allow create, update: if isOwner(landlordId) && isLandlord();
+
+      match /contractors/{contractorId} {
+        allow read: if isOwner(landlordId) || isOwner(contractorId) || isAdmin();
+        allow write: if isOwner(landlordId);
+      }
+    }
+
+    match /contractorProfiles/{contractorId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(contractorId) && isContractor();
+      allow update: if isOwner(contractorId) &&
+        !('averageRating' in request.resource.data) &&
+        !('totalRatings' in request.resource.data) &&
+        !('totalRatingSum' in request.resource.data) ||
+        isAdmin();
+    }
+
+    match /tenantProfiles/{tenantId} {
+      allow read: if isOwner(tenantId) || isAdmin();
+      allow create: if isOwner(tenantId) && isTenant() && request.resource.data.userId == request.auth.uid;
+      allow update: if isOwner(tenantId);
+    }
+
+    match /properties/{propertyId} {
+      allow read: if isPropertyOwner(propertyId) || isPropertyTenant(propertyId) || isAdmin();
+      allow create: if isLandlord();
+      allow update, delete: if isPropertyOwner(propertyId);
+
+      match /tenants/{tenantId} {
+        allow read: if isPropertyOwner(propertyId) || isOwner(tenantId) || isAdmin();
+        allow write: if isPropertyOwner(propertyId);
+      }
+    }
+
+    match /tickets/{ticketId} {
+      allow read: if
+        resource.data.tenantId == request.auth.uid ||
+        isPropertyOwner(resource.data.propertyId) ||
+        resource.data.contractorId == request.auth.uid ||
+        isAdmin();
+
+      allow create: if isTenant() &&
+        request.resource.data.tenantId == request.auth.uid &&
+        isPropertyTenant(request.resource.data.propertyId) &&
+        isValidTicket(request.resource.data);
+
+      allow update: if
+        isPropertyOwner(resource.data.propertyId) ||
+        (resource.data.contractorId == request.auth.uid && isContractor() &&
+         isLimitedUpdate(request.resource.data, resource.data)) ||
+        isAdmin();
+
+      match /feedback/{userId} {
+        allow read: if
+          get(/databases/$(database)/documents/tickets/$(ticketId)).data.tenantId == request.auth.uid ||
+          isPropertyOwner(get(/databases/$(database)/documents/tickets/$(ticketId)).data.propertyId) ||
+          get(/databases/$(database)/documents/tickets/$(ticketId)).data.contractorId == request.auth.uid ||
+          isAdmin();
+
+        allow create: if
+          get(/databases/$(database)/documents/tickets/$(ticketId)).data.tenantId == request.auth.uid &&
+          request.resource.data.tenantId == request.auth.uid &&
+          isValidFeedback(request.resource.data);
+
+        allow update, delete: if false;
+      }
+    }
+
+    match /notifications/{notificationId} {
+      allow read, update, delete: if isSignedIn() &&
+        resource.data.userId == request.auth.uid;
+      allow create: if isAdmin();
+    }
+
+    // Default fallback
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

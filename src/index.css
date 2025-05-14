@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Mode Base Variables - Using Hex Codes */
+    --color-background: #FFFFFF; /* white */
+    --color-background-subtle: #F9FAFB; /* neutral-50 */
+    --color-content-base: #1F2937; /* neutral-800 */
+    --color-content-secondary: #4B5563; /* neutral-600 */
+    --color-content-subtle: #6B7280; /* neutral-500 */
+    --color-border: theme('colors.border.DEFAULT');
+    /* Add others as needed */
+
+    /* Chart Variables - Light Mode */
+    --chart-text-muted: theme('colors.neutral.500'); /* gray-500 */
+    --chart-text-base: theme('colors.neutral.700'); /* gray-700 */
+    --chart-grid-color: theme('colors.neutral.200'); /* gray-200 */
+    --chart-tooltip-bg: theme('colors.white');
+    --chart-tooltip-border: theme('colors.neutral.200');
+    --chart-tooltip-title: theme('colors.neutral.900');
+    --chart-tooltip-body: theme('colors.neutral.700');
+  }
+
+  .dark {
+    /* Dark Mode Variable Overrides - Using Hex Codes */
+    --color-background: #111827; /* neutral-900 */
+    --color-background-subtle: #1F2937; /* neutral-800 */
+    --color-content-base: #F3F4F6; /* neutral-100 */
+    --color-content-secondary: #9CA3AF; /* neutral-400 */
+    --color-content-subtle: #6B7280; /* neutral-500 */
+    --color-border: theme('colors.border.dark');
+
+    /* Chart Variables - Dark Mode */
+    --chart-text-muted: theme('colors.neutral.400'); /* gray-400 */
+    --chart-text-base: theme('colors.neutral.300'); /* gray-300 */
+    --chart-grid-color: theme('colors.neutral.700'); /* gray-700 */
+    --chart-tooltip-bg: theme('colors.neutral.800');
+    --chart-tooltip-border: theme('colors.neutral.600');
+    --chart-tooltip-title: theme('colors.neutral.100');
+    --chart-tooltip-body: theme('colors.neutral.300');
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    /* Apply base theme using CSS variables */
+    background-color: var(--color-background);
+    color: var(--color-content-base);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+  }
+
+  /* Ensure headings inherit base text color */
+  h1, h2, h3, h4, h5, h6 {
+    color: inherit;
+  }
+}
+
+.App {
+  text-align: center;
+}
+
+.App-header {
+  /* Remove or update if this specific component style is still used */
+  /* background-color: #282c34; */ 
+  /* ... other App-header styles ... */
+}
+
+.transition-hover {
+  @apply transition-all duration-200 ease-in-out;
+} 

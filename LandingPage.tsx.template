@@ -1,0 +1,133 @@
+import React, { lazy, Suspense } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
+
+// Import section components
+// Using lazy loading for improved performance
+const HeroSection = lazy(() => import('./sections/HeroSection'));
+const FeaturesSection = lazy(() => import('./sections/FeaturesSection'));
+const WorkflowDemoSection = lazy(() => import('./sections/WorkflowDemoSection'));
+const AIExplainerSection = lazy(() => import('./sections/AIExplainerSection'));
+const ComparisonSection = lazy(() => import('./sections/ComparisonSection'));
+const TestimonialsSection = lazy(() => import('./sections/TestimonialsSection'));
+const PricingSection = lazy(() => import('./sections/PricingSection'));
+const DashboardPreview = lazy(() => import('./sections/DashboardPreview'));
+const FaqSection = lazy(() => import('./sections/FaqSection'));
+const NewsletterSection = lazy(() => import('./sections/NewsletterSection'));
+const FooterSection = lazy(() => import('./sections/FooterSection'));
+
+// Import smaller shared components without lazy loading
+import LoadingSpinner from '../shared/LoadingSpinner';
+import FloatingActionButton from './components/FloatingActionButton';
+
+/**
+ * Main landing page that assembles all sections
+ * Uses lazy loading to improve initial page load performance
+ */
+const LandingPage: React.FC = () => {
+  // Fallback for suspense
+  const sectionFallback = (
+    <div className="flex justify-center items-center py-24">
+      <LoadingSpinner size="lg" />
+    </div>
+  );
+
+  // Error boundary fallback
+  const ErrorFallback = ({ error, resetErrorBoundary }: any) => (
+    <div className="text-center py-12">
+      <h3 className="text-xl font-bold text-red-600 mb-4">Something went wrong:</h3>
+      <p className="mb-4">{error.message}</p>
+      <button
+        onClick={resetErrorBoundary}
+        className="px-4 py-2 bg-primary text-white rounded-lg"
+      >
+        Try again
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-background dark:bg-background-dark">
+      {/* Hero section */}
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={sectionFallback}>
+          <HeroSection />
+        </Suspense>
+      </ErrorBoundary>
+      
+      {/* Dashboard Preview */}
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={sectionFallback}>
+          <DashboardPreview />
+        </Suspense>
+      </ErrorBoundary>
+
+      {/* Interactive Workflow Demo */}
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={sectionFallback}>
+          <WorkflowDemoSection />
+        </Suspense>
+      </ErrorBoundary>
+      
+      {/* Features Section */}
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={sectionFallback}>
+          <FeaturesSection />
+        </Suspense>
+      </ErrorBoundary>
+      
+      {/* AI Explainer */}
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={sectionFallback}>
+          <AIExplainerSection />
+        </Suspense>
+      </ErrorBoundary>
+
+      {/* Competitor Comparison */}
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={sectionFallback}>
+          <ComparisonSection />
+        </Suspense>
+      </ErrorBoundary>
+      
+      {/* Testimonials */}
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={sectionFallback}>
+          <TestimonialsSection />
+        </Suspense>
+      </ErrorBoundary>
+      
+      {/* Pricing Section */}
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={sectionFallback}>
+          <PricingSection />
+        </Suspense>
+      </ErrorBoundary>
+      
+      {/* FAQ Section */}
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={sectionFallback}>
+          <FaqSection />
+        </Suspense>
+      </ErrorBoundary>
+      
+      {/* Newsletter Signup */}
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={sectionFallback}>
+          <NewsletterSection />
+        </Suspense>
+      </ErrorBoundary>
+      
+      {/* Footer */}
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={sectionFallback}>
+          <FooterSection />
+        </Suspense>
+      </ErrorBoundary>
+      
+      {/* Floating Action Button - always visible */}
+      <FloatingActionButton />
+    </div>
+  );
+};
+
+export default LandingPage; 

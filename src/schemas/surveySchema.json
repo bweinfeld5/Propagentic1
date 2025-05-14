@@ -1,0 +1,137 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["category", "description", "urgency"],
+  "properties": {
+    "category": {
+      "type": "string",
+      "enum": [
+        "plumbing",
+        "electrical",
+        "hvac",
+        "appliance",
+        "structural",
+        "pest",
+        "other"
+      ]
+    },
+    "subcategory": {
+      "type": "object",
+      "properties": {
+        "plumbing": {
+          "type": "string",
+          "enum": ["leak", "clog", "water_pressure", "hot_water", "fixture", "other"]
+        },
+        "electrical": {
+          "type": "string",
+          "enum": ["outlet", "lighting", "breaker", "wiring", "appliance", "other"]
+        },
+        "hvac": {
+          "type": "string",
+          "enum": ["no_heat", "no_cooling", "weak_airflow", "noise", "thermostat", "other"]
+        },
+        "appliance": {
+          "type": "string",
+          "enum": ["refrigerator", "stove", "dishwasher", "washer", "dryer", "other"]
+        },
+        "structural": {
+          "type": "string",
+          "enum": ["wall", "ceiling", "floor", "window", "door", "other"]
+        },
+        "pest": {
+          "type": "string",
+          "enum": ["rodents", "insects", "birds", "other"]
+        }
+      }
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 1000
+    },
+    "location": {
+      "type": "object",
+      "required": ["room"],
+      "properties": {
+        "room": {
+          "type": "string",
+          "enum": [
+            "kitchen",
+            "bathroom",
+            "bedroom",
+            "living_room",
+            "dining_room",
+            "laundry",
+            "garage",
+            "outdoor",
+            "other"
+          ]
+        },
+        "details": {
+          "type": "string",
+          "maxLength": 200
+        }
+      }
+    },
+    "urgency": {
+      "type": "string",
+      "enum": ["emergency", "urgent", "moderate", "low"],
+      "description": {
+        "emergency": "Immediate threat to safety or property",
+        "urgent": "Major inconvenience, needs attention within 24h",
+        "moderate": "Functional but problematic, fix within week",
+        "low": "Minor issue, can be scheduled"
+      }
+    },
+    "availability": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["day", "timeRanges"],
+        "properties": {
+          "day": {
+            "type": "string",
+            "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+          },
+          "timeRanges": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "morning",
+                "afternoon",
+                "evening"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "media": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "url"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["image", "video"]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "caption": {
+            "type": "string",
+            "maxLength": 200
+          }
+        }
+      },
+      "maxItems": 5
+    },
+    "tenant_notes": {
+      "type": "string",
+      "maxLength": 500
+    }
+  }
+} 

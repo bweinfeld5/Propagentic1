@@ -1,0 +1,225 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function isLandlord() {
+      return isSignedIn() && getRole() == 'landlord';
+    }
+    
+    function isTenant() {
+      return isSignedIn() && getRole() == 'tenant';
+    }
+    
+    function isContractor() {
+      return isSignedIn() && getRole() == 'contractor';
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && getRole() == 'admin';
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function isPropertyOwner(propertyId) {
+      let property = get(/databases/$(database)/documents/properties/$(propertyId));
+      return isSignedIn() && property.data.landlordId == request.auth.uid;
+    }
+    
+    function isPropertyTenant(propertyId) {
+      let property = get(/databases/$(database)/documents/properties/$(propertyId));
+      return isSignedIn() && (request.auth.uid in property.data.tenants);
+    }
+    
+    // Validate inputs for security
+    function isValidString(field, maxLength) {
+      return field is string && field.size() <= maxLength;
+    }
+    
+    function isValidStringArray(array, maxEntries, maxLength) {
+      return array is list && array.size() <= maxEntries && 
+        array.every(item => item is string && item.size() <= maxLength);
+    }
+    
+    function sanitizedData() {
+      let data = request.resource.data;
+      return request.resource.data;
+    }
+    
+    // User profiles
+    match /users/{userId} {
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId) && 
+        (!('role' in request.resource.data) || request.resource.data.role == resource.data.role);
+      
+      // Basic validation
+      function isValidUser() {
+        let data = request.resource.data;
+        return isValidString(data.displayName, 100) &&
+               isValidString(data.email, 100) &&
+               isValidString(data.role, 20);
+      }
+    }
+    
+    // Landlord Profiles
+    match /landlordProfiles/{landlordId} {
+      allow read: if isSignedIn() && (isOwner(landlordId) || 
+                                      isAdmin() || 
+                                      exists(/databases/$(database)/documents/contractorProfiles/$(request.auth.uid)/clients/$(landlordId)) ||
+                                      exists(/databases/$(database)/documents/tenantProfiles/$(request.auth.uid)/landlords/$(landlordId)));
+      allow create: if isSignedIn() && isOwner(landlordId) && isLandlord();
+      allow update: if isSignedIn() && isOwner(landlordId) && isLandlord();
+      
+      // Contractor relationships (sub-collection)
+      match /contractors/{contractorId} {
+        allow read: if isSignedIn() && (isOwner(landlordId) || isOwner(contractorId) || isAdmin());
+        allow write: if isSignedIn() && isOwner(landlordId);
+      }
+    }
+    
+    // Contractor Profiles
+    match /contractorProfiles/{contractorId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isOwner(contractorId) && isContractor();
+      allow update: if isSignedIn() && (isOwner(contractorId) || isAdmin());
+      
+      // Only admins can update ratings; contractors cannot modify their own ratings
+      allow update: if isSignedIn() && isOwner(contractorId) && 
+        !('averageRating' in request.resource.data) && 
+        !('totalRatings' in request.resource.data) && 
+        !('totalRatingSum' in request.resource.data);
+    }
+    
+    // Tenant Profiles
+    match /tenantProfiles/{tenantId} {
+      allow read: if isSignedIn() && (isOwner(tenantId) || 
+                                     isAdmin() || 
+                                     exists(/databases/$(database)/documents/properties/{propertyId}/tenants/$(tenantId)));
+      allow create: if isSignedIn() && isOwner(tenantId) && isTenant();
+      allow update: if isSignedIn() && isOwner(tenantId);
+    }
+    
+    // Properties
+    match /properties/{propertyId} {
+      allow read: if isSignedIn() && (isPropertyOwner(propertyId) || 
+                                     isPropertyTenant(propertyId) || 
+                                     isAdmin());
+      allow create: if isSignedIn() && isLandlord();
+      allow update: if isSignedIn() && isPropertyOwner(propertyId);
+      allow delete: if isSignedIn() && isPropertyOwner(propertyId);
+      
+      // Validate property data
+      function isValidProperty() {
+        let data = request.resource.data;
+        return isValidString(data.name, 100) &&
+               isValidString(data.address, 200) &&
+               isValidString(data.landlordId, 100) &&
+               (data.landlordId == request.auth.uid || isAdmin());
+      }
+      
+      // Tenants sub-collection
+      match /tenants/{tenantId} {
+        allow read: if isSignedIn() && (isPropertyOwner(propertyId) || isOwner(tenantId) || isAdmin());
+        allow write: if isSignedIn() && isPropertyOwner(propertyId);
+      }
+    }
+    
+    // Maintenance Tickets
+    match /tickets/{ticketId} {
+      // Read permissions:
+      // - Tenant who created the ticket
+      // - Landlord who owns the property
+      // - Assigned contractor
+      // - Admin
+      allow read: if isSignedIn() && 
+        (
+resource.data.tenantId == request.auth.uid || 
+         isPropertyOwner(resource.data.propertyId) || 
+         resource.data.contractorId == request.auth.uid || 
+         isAdmin());
+      
+      // Create permissions:
+      // - Only tenants can create tickets
+      // - Tenant can only create tickets for properties they are assigned to
+      allow create: if isSignedIn() && 
+        isTenant() && 
+        request.resource.data.tenantId == request.auth.uid &&
+        isPropertyTenant(request.resource.data.propertyId) &&
+        isValidTicket();
+      
+      // Update permissions:
+      // - Landlord can update if they own the property
+      // - Assigned contractor can update status and progress
+      // - Admin can update anything
+      allow update: if isSignedIn() && 
+        (isPropertyOwner(resource.data.propertyId) || 
+         (resource.data.contractorId == request.auth.uid && isContractor() && isLimitedUpdate()) ||
+         isAdmin());
+         
+      // Validate ticket data
+      function isValidTicket() {
+        let data = request.resource.data;
+        return isValidString(data.description, 1000) &&
+               isValidString(data.issueType, 50) &&
+               isValidString(data.urgencyLevel, 20) &&
+               isValidStringArray(data.photos, 10, 500);
+      }
+      
+      // Ensure contractor can only update specific fields
+      function isLimitedUpdate() {
+        let allowedFields = ['status', 'progressUpdates', 'updatedAt'];
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowedFields);
+      }
+      
+      // Feedback sub-collection
+      match /feedback/{userId} {
+        // Only the ticket tenant, property landlord, assigned contractor, or admin can read feedback
+        allow read: if isSignedIn() && 
+          (resource.data.tenantId == request.auth.uid || 
+           isPropertyOwner(get(/databases/$(database)/documents/tickets/$(ticketId)).data.propertyId) || 
+           get(/databases/$(database)/documents/tickets/$(ticketId)).data.contractorId == request.auth.uid || 
+           isAdmin());
+        
+        // Only the tenant who created the ticket or admin can create feedback
+        allow create: if isSignedIn() && 
+          (get(/databases/$(database)/documents/tickets/$(ticketId)).data.tenantId == request.auth.uid || isAdmin()) &&
+          request.resource.data.tenantId == request.auth.uid &&
+          isValidFeedback();
+        
+        // No one can update feedback once submitted
+        allow update, delete: if false;
+        
+        // Validate feedback data
+        function isValidFeedback() {
+          let data = request.resource.data;
+          return data.rating >= 1 && 
+                 data.rating <= 5 && 
+                 isValidString(data.comment, 500);
+        }
+      }
+    }
+    
+    // Notifications
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isAdmin();
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+    
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 

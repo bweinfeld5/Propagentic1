@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>JS Test</title>
+</head>
+<body>
+  <h1>JavaScript Loading Test</h1>
+  <p>This page tests if JavaScript files are being properly served.</p>
+  <div id="result">Testing...</div>
+
+  <script>
+    document.getElementById('result').innerText = 'JavaScript is working!';
+    
+    // Try to load the main bundle
+    const script = document.createElement('script');
+    script.src = '/static/js/main.900a4c18.js'; // Updated to match actual bundle
+    script.onerror = () => {
+      document.getElementById('result').innerText = 'Error: Failed to load JavaScript bundle!';
+    };
+    script.onload = () => {
+      document.getElementById('result').innerText += ' Bundle loaded successfully!';
+    };
+    document.body.appendChild(script);
+  </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+    // functions/tsconfig.json
+    {
+        "compilerOptions": {
+          "module": "CommonJS",
+          "noImplicitReturns": true,
+          "noUnusedLocals": true,
+          "outDir": "lib", // Compile JS to the 'lib' directory
+          "sourceMap": true,
+          "strict": true,
+          "target": "es2017", // Or a target compatible with your Node.js version
+           "esModuleInterop": true, // Add this for better compatibility
+           "skipLibCheck": true,    // Add this to avoid issues with node_modules types
+           "resolveJsonModule": true // Allow importing JSON files
+        },
+        "compileOnSave": true,
+        "include": [
+          "src" // Only compile files in the 'src' directory
+        ]
+      }

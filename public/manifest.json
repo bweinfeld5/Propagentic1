@@ -1,0 +1,20 @@
+{
+  "short_name": "Propagentic",
+  "name": "Propagentic Property Management",
+  "description": "AI-powered property management platform for landlords, tenants, and contractors",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#008080",
+  "background_color": "#ffffff",
+  "orientation": "portrait",
+  "splash_pages": null,
+  "prefer_related_applications": false,
+  "categories": ["productivity", "business", "utilities"]
+} 

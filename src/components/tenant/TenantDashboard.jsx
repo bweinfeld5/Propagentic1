@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { collection, query, where, orderBy, onSnapshot, doc, getDoc, updateDoc, setDoc, getFirestore, runTransaction, increment, limit, startAfter } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, doc, getDoc, updateDoc, setDoc, getFirestore, runTransaction, increment, limit, startAfter, getDocs } from 'firebase/firestore';
 import { db, auth, callFunction } from '../../firebase/config';
 import TenantRequestForm from './TenantRequestForm';
 import NotificationPreferences from '../notifications/NotificationPreferences';
@@ -24,6 +24,20 @@ const TenantDashboard = () => {
   const [hasMore, setHasMore] = useState(true);
   // Refs to store unsubscribe functions
   const unsubscribeRefs = useRef({});
+
+  // COMPONENT_TRACE_LOGGER
+  useEffect(() => {
+    console.log('COMPONENT_LOADED: TenantDashboard.jsx');
+    // Save to local storage for debugging
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('LAST_COMPONENT_LOADED', 'TenantDashboard.jsx');
+        localStorage.setItem('LAST_COMPONENT_LOAD_TIME', new Date().toISOString());
+      } catch (e) {
+        console.error('Could not write to localStorage');
+      }
+    }
+  }, []);
   // Filter state
   const [statusFilter, setStatusFilter] = useState('all');
   const [showSettings, setShowSettings] = useState(false);

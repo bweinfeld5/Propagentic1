@@ -98,6 +98,7 @@ const StatusListener = ({ onStatusUpdate, toastManager }) => {
       const propertiesRef = collection(db, 'properties');
       const propertyQuery = query(propertiesRef, where('landlordId', '==', landlordId));
       
+      // eslint-disable-next-line no-undef
       const propertySnapshot = await getDocs(propertyQuery);
       const propertyIds = propertySnapshot.docs.map(doc => doc.id);
       

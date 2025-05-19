@@ -2,8 +2,10 @@ const defaultTheme = require('tailwindcss/defaultTheme');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: 'class', // Ensure dark mode is enabled via class
-  content: ["./src/**/*.{js,jsx,ts,tsx}"],
+  darkMode: ['class', '[data-theme="dark"]'],
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+  ],
   theme: {
     extend: {
       colors: {
@@ -77,17 +79,22 @@ module.exports = {
           subtle: '#EFF6FF', // blue-50
           darkSubtle: '#1E3A8A', // blue-900
         },
+        pa: {
+          blue: {
+            600: '#1742BF',
+            50: '#E7F0FF'
+          },
+          orange: {
+            500: '#FF8A30'
+          }
+        }
       },
       fontFamily: {
         sans: [
           'Inter',
           ...defaultTheme.fontFamily.sans, // Include Tailwind defaults
         ],
-        display: [
-          'Poppins',
-          'Inter',
-          ...defaultTheme.fontFamily.sans,
-        ]
+        display: ['"Noto Sans Display"', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif']
       },
       boxShadow: {
         // Keep existing or define new shadows using new palette

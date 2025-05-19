@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { doc, getDoc, updateDoc, arrayUnion, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayUnion, collection, query, where, getDocs, setDoc } from 'firebase/firestore';
 import { db, callFunction } from '../../firebase/config';
 
 // Email validation regex

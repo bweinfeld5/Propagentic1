@@ -34,6 +34,23 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// Add this error handler before rendering the app
+// Suppress ResizeObserver loop error
+const suppressResizeObserverLoopError = () => {
+  const resizeObserverError = /^ResizeObserver loop completed with undelivered notifications/;
+  
+  const originalError = window.console.error;
+  window.console.error = (...args) => {
+    if (args[0] && resizeObserverError.test(args[0])) {
+      // Ignore ResizeObserver loop error
+      return;
+    }
+    originalError.apply(window.console, args);
+  };
+};
+
+suppressResizeObserverLoopError();
+
 // Render the React application with proper error handling
 try {
   console.log('Attempting to render React app using createRoot...');

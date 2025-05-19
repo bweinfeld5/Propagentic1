@@ -30,6 +30,10 @@ export {
     acceptPropertyInvite,
     rejectPropertyInvite
 } from './userRelationships';
+export { sendInviteEmail } from './invites'; // Export the new invite email function
+
+// Invite Code Functions
+export { redeemInviteCode } from './inviteCode';
 
 // Notification Trigger Functions
 export {

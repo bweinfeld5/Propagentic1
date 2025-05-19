@@ -9,7 +9,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import dataService from '../../services/dataService';
 import PropertyCard from '../../components/landlord/PropertyCard';
-import TicketCard from '../../components/tickets/TicketCard';
+import TicketCard from '../../components/dashboard/TicketCard';
 import Button from '../../components/ui/Button';
 import AddPropertyModal from '../../components/landlord/AddPropertyModal';
 import InviteTenantModal from '../../components/landlord/InviteTenantModal';

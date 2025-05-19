@@ -19,30 +19,26 @@ import {
   LandlordProfile,
   ContractorProfile
 } from '../../models/schema';
-import { 
-  userConverter, 
-  createNewUser, 
-  createNewTenantUser, 
-  createNewLandlordUser, 
-  createNewContractorUser,
-  createNewLandlordProfile,
-  createNewContractorProfile
-} from '../../models/converters';
-
-// Collection references
-const usersCollection = collection(db, 'users').withConverter(userConverter);
-const landlordProfilesCollection = collection(db, 'landlordProfiles');
-const contractorProfilesCollection = collection(db, 'contractorProfiles');
 
 /**
  * Get a user by ID
  */
 export async function getUserById(userId: string): Promise<User | null> {
-  const userDoc = doc(db, 'users', userId).withConverter(userConverter);
+  const userDoc = doc(db, 'users', userId);
   const userSnapshot = await getDoc(userDoc);
   
   if (userSnapshot.exists()) {
-    return userSnapshot.data();
+    const data = userSnapshot.data();
+    return {
+      uid: userSnapshot.id,
+      role: data.role,
+      name: data.name,
+      email: data.email,
+      phone: data.phone || '',
+      linkedTo: data.linkedTo || [],
+      createdAt: data.createdAt,
+      profileComplete: data.profileComplete || false
+    };
   }
   
   return null;
@@ -52,11 +48,22 @@ export async function getUserById(userId: string): Promise<User | null> {
  * Find a user by email
  */
 export async function getUserByEmail(email: string): Promise<User | null> {
-  const q = query(usersCollection, where('email', '==', email));
+  const q = query(collection(db, 'users'), where('email', '==', email));
   const querySnapshot = await getDocs(q);
   
   if (!querySnapshot.empty) {
-    return querySnapshot.docs[0].data();
+    const userSnapshot = querySnapshot.docs[0];
+    const data = userSnapshot.data();
+    return {
+      uid: userSnapshot.id,
+      role: data.role,
+      name: data.name,
+      email: data.email,
+      phone: data.phone || '',
+      linkedTo: data.linkedTo || [],
+      createdAt: data.createdAt,
+      profileComplete: data.profileComplete || false
+    };
   }
   
   return null;
@@ -66,32 +73,33 @@ export async function getUserByEmail(email: string): Promise<User | null> {
  * Create a new user
  */
 export async function createUser(
-  userId: string,
+  uid: string,
   role: User['role'],
   name: string,
   email: string,
   phone?: string
 ): Promise<User> {
-  const userRef = doc(db, 'users', userId);
-  const userData = createNewUser(userId, role, name, email, phone);
+  const user: User = {
+    uid,
+    role,
+    name,
+    email,
+    phone: phone || '',
+    linkedTo: [],
+    createdAt: Timestamp.now(),
+    profileComplete: false
+  };
   
-  await setDoc(userRef, userData);
+  await setDoc(doc(db, 'users', uid), user);
   
-  // Create role-specific profile if needed
-  if (role === 'landlord') {
-    await createLandlordProfile(userId);
-  } else if (role === 'contractor') {
-    await createContractorProfile(userId);
-  }
-  
-  return userData;
+  return user;
 }
 
 /**
  * Create a new tenant user
  */
 export async function createTenantUser(
-  userId: string,
+  uid: string,
   name: string,
   email: string,
   landlordId: string,
@@ -99,72 +107,77 @@ export async function createTenantUser(
   unitNumber: string,
   phone?: string
 ): Promise<TenantUser> {
-  const userRef = doc(db, 'users', userId);
-  const userData = createNewTenantUser(
-    userId, 
-    name, 
-    email, 
-    landlordId, 
-    propertyId, 
-    unitNumber, 
-    phone
-  );
+  const user: TenantUser = {
+    uid,
+    role: 'tenant',
+    name,
+    email,
+    phone: phone || '',
+    linkedTo: [],
+    createdAt: Timestamp.now(),
+    profileComplete: false,
+    landlordId,
+    propertyId,
+    unitNumber
+  };
   
-  await setDoc(userRef, userData);
+  await setDoc(doc(db, 'users', uid), user);
   
-  // Add tenant to landlord's profile
-  const landlordProfileRef = doc(db, 'landlordProfiles', landlordId);
-  const landlordProfileSnapshot = await getDoc(landlordProfileRef);
-  
-  if (landlordProfileSnapshot.exists()) {
-    await updateDoc(landlordProfileRef, {
-      tenants: [...(landlordProfileSnapshot.data().tenants || []), userId]
-    });
-  }
-  
-  return userData;
+  return user;
 }
 
 /**
  * Create a new landlord user
  */
 export async function createLandlordUser(
-  userId: string,
+  uid: string,
   name: string,
   email: string,
   phone?: string
 ): Promise<LandlordUser> {
-  const userRef = doc(db, 'users', userId);
-  const userData = createNewLandlordUser(userId, name, email, phone);
+  const user: LandlordUser = {
+    uid,
+    role: 'landlord',
+    name,
+    email,
+    phone: phone || '',
+    linkedTo: [],
+    createdAt: Timestamp.now(),
+    profileComplete: false
+  };
   
-  await setDoc(userRef, userData);
+  await setDoc(doc(db, 'users', uid), user);
   
-  // Create landlord profile
-  await createLandlordProfile(userId);
-  
-  return userData;
+  return user;
 }
 
 /**
  * Create a new contractor user
  */
 export async function createContractorUser(
-  userId: string,
+  uid: string,
   name: string,
   email: string,
   skills: string[] = [],
   phone?: string,
   companyId?: string
 ): Promise<ContractorUser> {
-  const userRef = doc(db, 'users', userId);
-  const userData = createNewContractorUser(userId, name, email, skills, phone, companyId);
+  const user: ContractorUser = {
+    uid,
+    role: 'contractor',
+    name,
+    email,
+    phone: phone || '',
+    linkedTo: [],
+    createdAt: Timestamp.now(),
+    profileComplete: false,
+    contractorSkills: skills,
+    companyId
+  };
   
-  await setDoc(userRef, userData);
+  await setDoc(doc(db, 'users', uid), user);
   
-  // Create contractor profile
-  await createContractorProfile(userId, skills);
-  
-  return userData;
+  return user;
 }
 
 /**
@@ -180,19 +193,27 @@ export async function updateUser(userId: string, userData: Partial<User>): Promi
 }
 
 /**
- * Create a landlord profile
+ * Create a new landlord profile
  */
-export async function createLandlordProfile(landlordId: string): Promise<LandlordProfile> {
-  const profileRef = doc(db, 'landlordProfiles', landlordId);
-  const profileData = createNewLandlordProfile(landlordId);
+export async function createLandlordProfile(
+  landlordId: string
+): Promise<LandlordProfile> {
+  const profile: LandlordProfile = {
+    landlordId,
+    userId: landlordId,
+    properties: [],
+    tenants: [],
+    contractors: [],
+    invitesSent: []
+  };
   
-  await setDoc(profileRef, profileData);
+  await setDoc(doc(db, 'landlordProfiles', landlordId), profile);
   
-  return profileData;
+  return profile;
 }
 
 /**
- * Create a contractor profile
+ * Create a new contractor profile
  */
 export async function createContractorProfile(
   contractorId: string,
@@ -200,12 +221,21 @@ export async function createContractorProfile(
   serviceArea: ContractorProfile['serviceArea'] = '',
   companyName?: string
 ): Promise<ContractorProfile> {
-  const profileRef = doc(db, 'contractorProfiles', contractorId);
-  const profileData = createNewContractorProfile(contractorId, skills, serviceArea, companyName);
+  const profile: ContractorProfile = {
+    contractorId,
+    userId: contractorId,
+    skills,
+    serviceArea,
+    availability: true,
+    preferredProperties: [],
+    rating: 0,
+    jobsCompleted: 0,
+    companyName
+  };
   
-  await setDoc(profileRef, profileData);
+  await setDoc(doc(db, 'contractorProfiles', contractorId), profile);
   
-  return profileData;
+  return profile;
 }
 
 /**
@@ -229,10 +259,20 @@ export async function getLandlordTenants(landlordId: string): Promise<User[]> {
   
   // Batch get all tenants
   for (const tenantId of tenantIds) {
-    const tenantSnapshot = await getDoc(doc(db, 'users', tenantId).withConverter(userConverter));
+    const tenantSnapshot = await getDoc(doc(db, 'users', tenantId));
     
     if (tenantSnapshot.exists()) {
-      tenants.push(tenantSnapshot.data());
+      const data = tenantSnapshot.data();
+      tenants.push({
+        uid: tenantSnapshot.id,
+        role: data.role,
+        name: data.name,
+        email: data.email,
+        phone: data.phone || '',
+        linkedTo: data.linkedTo || [],
+        createdAt: data.createdAt,
+        profileComplete: data.profileComplete || false
+      });
     }
   }
   

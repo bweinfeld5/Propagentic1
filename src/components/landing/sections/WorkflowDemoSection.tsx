@@ -407,7 +407,9 @@ const WorkflowDemoSection: React.FC<WorkflowDemoSectionProps> = () => {
                           <div>
                             <form onSubmit={handleSubmitRequest}>
                               <div className="mb-4">
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Issue Type</label>
+                                <label htmlFor="issue" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                  What&apos;s the issue?
+                                </label>
                                 <select 
                                   className="w-full rounded-md border border-neutral-300 dark:border-neutral-600 p-2 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-white focus:ring-primary focus:border-primary"
                                   value={request.issue}
@@ -421,7 +423,9 @@ const WorkflowDemoSection: React.FC<WorkflowDemoSectionProps> = () => {
                               </div>
                               
                               <div className="mb-4">
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Description</label>
+                                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                  Describe the issue in detail...
+                                </label>
                                 <textarea
                                   className="w-full rounded-md border border-neutral-300 dark:border-neutral-600 p-2 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-white focus:ring-primary focus:border-primary"
                                   rows={3}
@@ -432,13 +436,15 @@ const WorkflowDemoSection: React.FC<WorkflowDemoSectionProps> = () => {
                               </div>
                               
                               <div className="mb-4">
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Photo</label>
-                                <div className="border border-dashed border-neutral-300 dark:border-neutral-600 rounded-md p-4 text-center">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-10 w-10 text-neutral-400 dark:text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <label htmlFor="photo" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                  Upload a photo of the issue
+                                </label>
+                                <div className="border border-dashed border-gray-300 dark:border-gray-600 rounded-md p-4 text-center">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-10 w-10 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                   </svg>
-                                  <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Click to upload or drag and drop</p>
-                                  <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-500">PNG, JPG up to 5MB</p>
+                                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Click to upload or drag and drop</p>
+                                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">PNG, JPG up to 5MB</p>
                                 </div>
                               </div>
                               
@@ -568,10 +574,13 @@ const WorkflowDemoSection: React.FC<WorkflowDemoSectionProps> = () => {
                                   />
                                 </div>
                                 <div className="ml-3">
-                                  <p className="font-medium text-neutral-900 dark:text-white">{contractor.name}</p>
-                                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                                    {contractor.specialty} specialist, {contractor.rating} ★ ({contractor.reviews} reviews)
-                                  </p>
+                                  <div className="font-medium text-gray-800 dark:text-white">{contractor.name}</div>
+                                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    {contractor.specialty} - {contractor.rating} stars ({contractor.reviews} reviews)
+                                  </div>
+                                  <div className="mt-1 text-xs font-semibold text-green-600 dark:text-green-400">
+                                    {contractor.matchPercentage}% Match
+                                  </div>
                                 </div>
                               </div>
                             </div>

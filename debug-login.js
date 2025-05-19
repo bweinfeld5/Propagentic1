@@ -5,14 +5,16 @@ const { initializeApp } = require('firebase/app');
 const { getFirestore, collection, query, where, getDocs, doc, updateDoc } = require('firebase/firestore');
 const { getAuth, signInWithEmailAndPassword } = require('firebase/auth');
 
-// Your Firebase configuration
+// Updated Firebase configuration to match src/firebase/config.js
 const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY || "AIzaSyA1j5o9uI3NFeufUuJOKR3-TQzQk-mh8JE",
+  apiKey: "AIzaSyDcsJWLoVoC_kPORoVJA_-mG3LIWfbU-rw",
   authDomain: "propagentic.firebaseapp.com",
+  databaseURL: "https://propagentic-default-rtdb.firebaseio.com",
   projectId: "propagentic",
-  storageBucket: "propagentic.appspot.com",
-  messagingSenderId: "859812091492",
-  appId: "1:859812091492:web:8e9e6c8fbfecbc8fa8f1e5"
+  storageBucket: "propagentic.firebasestorage.app",
+  messagingSenderId: "121286300748",
+  appId: "1:121286300748:web:0c69ea6ff643c8f75110e9",
+  measurementId: "G-7DTWZQH28H"
 };
 
 // Initialize Firebase

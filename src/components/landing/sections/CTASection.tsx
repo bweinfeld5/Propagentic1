@@ -195,7 +195,7 @@ const CTASection: React.FC<CTASectionProps> = ({
                     Thank you for your interest!
                   </h3>
                   <p className="text-neutral-600 dark:text-neutral-300 mb-8">
-                    We've sent an email with instructions to get started with your free trial.
+                    We&apos;ve sent an email with instructions to get started with your free trial.
                   </p>
                   <button
                     onClick={() => setIsSubmitted(false)}

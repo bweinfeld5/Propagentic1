@@ -13,20 +13,27 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { ContractorProfile, ContractorUser } from '../../models/schema';
-import { contractorProfileConverter, landlordProfileConverter } from '../../models/converters';
-
-// Collection references
-const contractorProfilesCollection = collection(db, 'contractorProfiles').withConverter(contractorProfileConverter);
 
 /**
  * Get a contractor profile by ID
  */
 export async function getContractorProfileById(contractorId: string): Promise<ContractorProfile | null> {
-  const profileDoc = doc(db, 'contractorProfiles', contractorId).withConverter(contractorProfileConverter);
+  const profileDoc = doc(db, 'contractorProfiles', contractorId);
   const profileSnapshot = await getDoc(profileDoc);
   
   if (profileSnapshot.exists()) {
-    return profileSnapshot.data();
+    const data = profileSnapshot.data();
+    return {
+      contractorId: profileSnapshot.id,
+      userId: data.userId,
+      skills: data.skills || [],
+      serviceArea: data.serviceArea || '',
+      availability: data.availability || true,
+      preferredProperties: data.preferredProperties || [],
+      rating: data.rating || 0,
+      jobsCompleted: data.jobsCompleted || 0,
+      companyName: data.companyName
+    };
   }
   
   return null;
@@ -53,12 +60,21 @@ export async function getLandlordContractors(landlordId: string): Promise<Contra
   
   // Batch get all contractors
   for (const contractorId of contractorIds) {
-    const contractorSnapshot = await getDoc(
-      doc(db, 'contractorProfiles', contractorId).withConverter(contractorProfileConverter)
-    );
+    const contractorSnapshot = await getDoc(doc(db, 'contractorProfiles', contractorId));
     
     if (contractorSnapshot.exists()) {
-      contractors.push(contractorSnapshot.data());
+      const data = contractorSnapshot.data();
+      contractors.push({
+        contractorId: contractorSnapshot.id,
+        userId: data.userId,
+        skills: data.skills || [],
+        serviceArea: data.serviceArea || '',
+        availability: data.availability || true,
+        preferredProperties: data.preferredProperties || [],
+        rating: data.rating || 0,
+        jobsCompleted: data.jobsCompleted || 0,
+        companyName: data.companyName
+      });
     }
   }
   
@@ -77,7 +93,7 @@ export async function searchContractors(
   }
 ): Promise<ContractorProfile[]> {
   // Start with a base query
-  let baseQuery = contractorProfilesCollection;
+  const baseQuery = collection(db, 'contractorProfiles');
   
   // Build query based on search parameters
   const queryConstraints = [];
@@ -104,7 +120,20 @@ export async function searchContractors(
     : query(baseQuery);
   
   const querySnapshot = await getDocs(q);
-  let results = querySnapshot.docs.map(doc => doc.data());
+  let results = querySnapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      contractorId: doc.id,
+      userId: data.userId || doc.id,
+      skills: data.skills || [],
+      serviceArea: data.serviceArea || '',
+      availability: data.availability || true,
+      preferredProperties: data.preferredProperties || [],
+      rating: data.rating || 0,
+      jobsCompleted: data.jobsCompleted || 0,
+      companyName: data.companyName
+    } as ContractorProfile;
+  });
   
   // If we have skills filter, apply it in-memory
   if (searchParams.skills && searchParams.skills.length > 0) {
@@ -137,7 +166,7 @@ export async function addContractorToRolodex(
   landlordId: string,
   contractorId: string
 ): Promise<void> {
-  const landlordProfileRef = doc(db, 'landlordProfiles', landlordId).withConverter(landlordProfileConverter);
+  const landlordProfileRef = doc(db, 'landlordProfiles', landlordId);
   const landlordProfileSnapshot = await getDoc(landlordProfileRef);
   
   if (landlordProfileSnapshot.exists()) {
@@ -159,7 +188,7 @@ export async function removeContractorFromRolodex(
   landlordId: string,
   contractorId: string
 ): Promise<void> {
-  const landlordProfileRef = doc(db, 'landlordProfiles', landlordId).withConverter(landlordProfileConverter);
+  const landlordProfileRef = doc(db, 'landlordProfiles', landlordId);
   const landlordProfileSnapshot = await getDoc(landlordProfileRef);
   
   if (landlordProfileSnapshot.exists()) {

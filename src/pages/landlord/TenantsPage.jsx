@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { auth, db } from '../../firebase/config'; // Import auth and db
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; // Import Firestore functions
 import dataService from '../../services/dataService'; 
-import inviteService from '../../services/firestore/inviteService'; // Import the new invite service
 import Button from '../../components/ui/Button'; 
 import { UserPlusIcon, UsersIcon } from '@heroicons/react/24/outline'; 
 // Assuming a TenantTable or TenantCard component will be created or exists
 // import TenantTable from '../../components/landlord/TenantTable'; 
 import InviteTenantModal from '../../components/landlord/InviteTenantModal'; // Reuse invite modal
+import { api } from '../../services/api'; // Import the new API service
+import { CreateInviteSchema } from '../../schemas/inviteSchema'; // Import the Zod schema
+import toast from 'react-hot-toast'; // Import toast
 
 const TenantsPage = () => {
   const [tenants, setTenants] = useState([]);
@@ -29,7 +31,7 @@ const TenantsPage = () => {
     }
 
     // Configure dataService (if not done globally)
-    dataService.configure({ currentUser });
+    dataService.configure({ isDemoMode: false, currentUser });
 
     setTenantsLoading(true);
     setTenantsError(null);
@@ -100,31 +102,42 @@ const TenantsPage = () => {
      if (!propertyId) {
        // Alert handled within modal now
        console.error("Property ID missing in handleSendInvite");
+       toast.error("Property ID is missing. Please select a property.");
        throw new Error("Property ID missing");
      }
-     // Authentication check handled by inviteService
+
+     const currentUser = auth.currentUser;
+     if (!currentUser) {
+       toast.error("You must be logged in to send invites.");
+       throw new Error("User not authenticated");
+     }
+     const landlordId = currentUser.uid;
 
      // Optional: Get property name and landlord name for better invite data
      const selectedProperty = properties.find(p => p.id === propertyId);
      const propertyName = selectedProperty?.name || 'Unknown Property';
-     const landlordName = dataService.currentUser?.displayName || 'Your Landlord';
+     const landlordName = currentUser?.displayName || 'Your Landlord';
+
+     const inviteData = {
+        tenantEmail,
+        propertyId,
+        landlordId,
+        propertyName,
+        landlordName,
+        // unitNumber: selectedProperty?.unitNumber || undefined, // Add if available and needed by schema/modal
+     };
 
      try {
-       // Use the invite service
-       await inviteService.createInvite({
-            propertyId,
-            tenantEmail,
-            propertyName, // Pass name for better notification
-            landlordName // Pass name for better notification
-       });
-       console.log('Invite creation initiated via inviteService.');
-       // Use toast notification (Step 6)
-       alert('Tenant invitation sent successfully!');
+       // Use the api service with Zod schema
+       await api.create('invites', inviteData, CreateInviteSchema, landlordId);
+       console.log('Invite creation initiated via api.create.');
+       toast.success('Tenant invitation sent successfully!');
      } catch (error) {
        console.error("Error creating invite record:", error);
-       alert(`Failed to send invitation: ${error.message}`); 
-       // Use toast notification (Step 6)
-       throw error; 
+       // Check if it's an ApiError with a message, otherwise use a generic one
+       const errorMessage = (error as any)?.message || "Failed to send invitation.";
+       toast.error(errorMessage);
+       throw error;
      }
   };
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import dataService from '../../services/dataService';
 import Button from '../../components/ui/Button';
-import { HomeIcon, EnvelopeOpenIcon, ExclamationTriangleIcon, TicketIcon, ArrowUpTrayIcon, BellAlertIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, EnvelopeOpenIcon, ExclamationTriangleIcon, TicketIcon, ArrowUpTrayIcon, BellAlertIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
 import { query, collection, where, getDocs, addDoc, serverTimestamp, orderBy, onSnapshot } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"; // Import storage functions
 import { db, storage } from '../../firebase/config'; // Import storage
@@ -13,6 +13,21 @@ import toast from 'react-hot-toast';
 import { getPendingInvitesForTenant, acceptInvite, deleteInvite } from '../../services/firestore/inviteService';
 
 const TenantDashboard = () => {
+  console.log('RENDERING TenantDashboard.JSX'); // DEBUG LINE
+  // COMPONENT_TRACE_LOGGER
+  useEffect(() => {
+    console.log('COMPONENT_LOADED: TenantDashboard.jsx');
+    // Save to local storage for debugging
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('LAST_COMPONENT_LOADED', 'TenantDashboard.jsx');
+        localStorage.setItem('LAST_COMPONENT_LOAD_TIME', new Date().toISOString());
+      } catch (e) {
+        console.error('Could not write to localStorage');
+      }
+    }
+  }, []);
+
   const { currentUser, userProfile, loading: authLoading, fetchUserProfile } = useAuth();
   const [pendingInvites, setPendingInvites] = useState([]);
   const [propertyDetails, setPropertyDetails] = useState(null);
@@ -40,7 +55,7 @@ const TenantDashboard = () => {
         return; 
     }
     
-    dataService.configure({ currentUser });
+    dataService.configure({ isDemoMode: false, currentUser });
 
     const fetchData = async () => {
       if (!isMounted) return;
@@ -51,12 +66,22 @@ const TenantDashboard = () => {
       setMaintenanceRequests([]);
 
       try {
-        // Re-fetch profile in case it changed (e.g., after accepting invite)
-        // Use the profile from context if available, otherwise fetch
+        console.log('[TenantDashboard] Fetching data. CurrentUser:', currentUser, 'User Profile from context:', userProfile);
         const currentProfile = userProfile || await fetchUserProfile(currentUser.uid);
+        console.log('[TenantDashboard] Fetched currentProfile:', currentProfile);
+
+        if (!currentProfile) {
+          console.warn('[TenantDashboard] No user profile found. Attempting to fetch invites.');
+          if (!currentUser?.email) {
+            console.error('[TenantDashboard] Cannot fetch invites: currentUser email is missing.');
+            setError("User email not found. Cannot fetch invitations.");
+            setIsLoading(false);
+            return;
+          }
+        }
         
         if (currentProfile?.propertyId) {
-          console.log('Tenant associated with property:', currentProfile.propertyId);
+          console.log('[TenantDashboard] Tenant associated with property:', currentProfile.propertyId);
           const details = await dataService.getPropertyById(currentProfile.propertyId);
           if (!isMounted) return;
           setPropertyDetails(details);
@@ -82,7 +107,13 @@ const TenantDashboard = () => {
           });
           
         } else {
-          console.log('Fetching pending invites for:', currentUser.email);
+          console.log('[TenantDashboard] No propertyId found. Fetching pending invites for email:', currentUser?.email);
+          if (!currentUser?.email) {
+            console.error('[TenantDashboard] Critical error: Attempting to fetch invites without an email.');
+            setError("Unable to fetch invites: User email is not available.");
+            setIsLoading(false);
+            return;
+          }
           const invitesCollectionRef = collection(db, 'invites');
           const invitesQuery = query(
             invitesCollectionRef,
@@ -103,7 +134,7 @@ const TenantDashboard = () => {
         }
       } catch (err) {
         if (!isMounted) return;
-        console.error("Error fetching tenant dashboard data:", err);
+        console.error("[TenantDashboard] Error in fetchData try block:", err);
         setError(err.message || "Failed to load dashboard data.");
       } finally {
          if (isMounted) {
@@ -246,6 +277,7 @@ const TenantDashboard = () => {
 
   return (
     <div>
+      {/* <p>DEBUG: JSX VERSION</p> */}
       <h1 className="text-2xl font-semibold text-content dark:text-content-dark mb-6">
         Tenant Dashboard
       </h1>
@@ -271,20 +303,15 @@ const TenantDashboard = () => {
             You have pending property invitations!
           </h2>
           <div className="space-y-4">
-            {pendingInvites.map(invite => {
-              const isAccepting = inviteActionLoading[invite.id] === 'accepting';
-              const isRejecting = inviteActionLoading[invite.id] === 'rejecting';
-              const isDisabled = isAccepting || isRejecting;
-              return (
-                <InvitationCard 
-                  key={invite.id} 
-                  invite={invite} 
-                  onAccept={handleAcceptInvite} 
-                  onDecline={handleDeclineInvite} 
-                  isProcessing={isProcessingInvite} 
-                />
-              );
-            })}
+            {pendingInvites.map(invite => (
+              <InvitationCard 
+                key={invite.id} 
+                invite={invite} 
+                onAccept={handleAcceptInvite} 
+                onDecline={handleDeclineInvite} 
+                isProcessing={isProcessingInvite} 
+              />
+            ))}
           </div>
         </div>
       )}
@@ -302,10 +329,17 @@ const TenantDashboard = () => {
       )}
       
       {/* Display Placeholder if no property and no invites */}
-       {!propertyDetails && pendingInvites.length === 0 && !error && (
-           <div className="bg-background dark:bg-background-darkSubtle p-6 rounded-lg shadow border border-border dark:border-border-dark text-center">
-                <p className="text-content-secondary dark:text-content-darkSecondary">You are not currently associated with a property and have no pending invitations.</p>
-                <p className="text-sm text-content-subtle dark:text-content-darkSubtle mt-2">Ask your landlord to send an invitation to your email address ({currentUser.email}).</p>
+       {!propertyDetails && pendingInvites.length === 0 && !isLoading && !authLoading && !error && (
+           <div className="bg-background dark:bg-background-darkSubtle p-8 rounded-lg shadow-md border border-border dark:border-border-dark text-center flex flex-col items-center">
+                <EnvelopeIcon className="w-16 h-16 text-primary dark:text-primary-light mb-6" />
+                <h3 className="text-xl font-semibold text-content dark:text-content-dark mb-2">You're not yet connected to a property.</h3>
+                <p className="text-content-secondary dark:text-content-darkSecondary max-w-md mx-auto mb-1">
+                    To get started, please ask your property manager to send an invitation to your email address:
+                </p>
+                <p className="text-md font-medium text-accent dark:text-accent-dark mb-4">{currentUser.email}</p>
+                <p className="text-sm text-content-subtle dark:text-content-darkSubtle max-w-md mx-auto">
+                    Once they send it, your invitation will appear here automatically. If you've already been invited, it might take a moment to show up.
+                </p>
            </div>
        )}
 

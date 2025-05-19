@@ -22,7 +22,7 @@ const MaintenancePage = () => {
       return;
     }
 
-    dataService.configure({ currentUser });
+    dataService.configure({ isDemoMode: false, currentUser });
     setTicketsLoading(true);
     setTicketsError(null);
     let ticketsUnsubscribe = null;

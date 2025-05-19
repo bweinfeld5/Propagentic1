@@ -414,4 +414,13 @@ export const getDemoTenantsForProperty = (propertyId) => {
  */
 export const getDemoNotificationsForUser = (userId) => {
   return demoNotifications.filter(notification => notification.userId === userId);
+};
+
+/**
+ * Get properties for a tenant based on TenantIds included in properties
+ * @param {string} tenantId - Tenant ID
+ * @returns {Array} - Array of property objects
+ */
+export const getDemoPropertiesForTenant = (tenantId) => {
+  return demoProperties.filter(p => p.tenants?.includes(tenantId));
 }; 

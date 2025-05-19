@@ -35,8 +35,9 @@ service cloud.firestore {
     }
 
     function isPropertyTenant(propertyId) {
-      let prop = get(/databases/$(database)/documents/properties/$(propertyId));
-      return prop.data.tenants.hasAny([request.auth.uid]);
+      let propDoc = get(/databases/$(database)/documents/properties/$(propertyId));
+      return (propDoc.data.containsKey('tenants') && propDoc.data.tenants is list && request.auth.uid in propDoc.data.tenants) || 
+             (propDoc.data.containsKey('tenantId') && propDoc.data.tenantId == request.auth.uid);
     }
 
     function isValidString(field, max) {
@@ -62,12 +63,48 @@ service cloud.firestore {
              (arr.size() >= 10 ? (arr[9] is string && arr[9].size() <= maxLength) : true);
     }
 
-    function isValidTicket(data) {
-      return isValidString(data.description, 1000) &&
-             isValidString(data.issueType, 50) &&
-             isValidString(data.urgencyLevel, 20) &&
-             isValidStringArray(data.photos, 10, 500);
+    // --- Maintenance Ticket (existing /tickets) Validation ---
+    function isAllowedTicketStatus(status) {
+      return status in ['new', 'pending_classification', 'classified', 'pending_assignment', 'assigned', 'in_progress', 'pending_review', 'completed', 'rejected', 'cancelled', 'on_hold', 'escalated'];
     }
+
+    function isAllowedUrgencyLevel(level) {
+      return level in ['low', 'medium', 'high', 'critical'];
+    }
+
+    function isAllowedIssueType(type) {
+      return type in [
+        'plumbing_leak', 'plumbing_clog', 'plumbing_no_hot_water', 'plumbing_toilet', 'plumbing_other',
+        'electrical_outlet', 'electrical_light', 'electrical_panel', 'electrical_other',
+        'hvac_no_heat', 'hvac_no_ac', 'hvac_thermostat', 'hvac_noise', 'hvac_other',
+        'appliance_refrigerator', 'appliance_oven', 'appliance_dishwasher', 'appliance_washer_dryer', 'appliance_other',
+        'structural_door', 'structural_window', 'structural_wall_ceiling', 'structural_roof', 'structural_other',
+        'pest_control_rodents', 'pest_control_insects', 'pest_control_other',
+        'landscaping_general', 'landscaping_irrigation',
+        'safety_smoke_detector', 'safety_co_detector', 'safety_lock',
+        'general_cleaning', 'general_other'
+      ];
+    }
+
+    function isValidCreateTicketData(data, request) {
+      return data.containsKey('propertyId') && data.propertyId is string && data.propertyId.size() > 0 &&
+             data.containsKey('tenantId') && data.tenantId == request.auth.uid && // Ensure tenantId matches creator
+             data.containsKey('issueType') && isAllowedIssueType(data.issueType) &&
+             data.containsKey('description') && data.description is string && data.description.size() > 0 && data.description.size() <= 1000 &&
+             data.containsKey('urgencyLevel') && isAllowedUrgencyLevel(data.urgencyLevel) &&
+             (!data.containsKey('photos') || (data.photos is list && data.photos.size() <= 10 && (data.photos.size() == 0 || data.photos[0] is string))) && 
+             // Ensure client doesn't set system fields on create
+             !data.containsKey('status') && 
+             !data.containsKey('createdAt') && 
+             !data.containsKey('updatedAt') &&
+             !data.containsKey('ticketId') && // id is set by Firestore
+             !data.containsKey('contractorId') &&
+             !data.containsKey('timeline') &&
+             !data.containsKey('feedback');
+    }
+    
+    // Deprecated isValidTicket function (commented out in original proposed change)
+    // function isValidTicket(data) { ... }
 
     function isLimitedUpdate(data, resourceData) {
       let allowed = ['status', 'progressUpdates', 'updatedAt'];
@@ -78,12 +115,38 @@ service cloud.firestore {
       return data.rating >= 1 && data.rating <= 5 && isValidString(data.comment, 500);
     }
 
+    // --- Invite Validation (new /invites) ---
+    function isAllowedInviteStatus(status) {
+      return status in ['pending', 'accepted', 'declined', 'revoked', 'expired'];
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    function isValidCreateInviteData(data, request) {
+      return data.containsKey('tenantEmail') && isValidEmail(data.tenantEmail) &&
+             data.containsKey('propertyId') && data.propertyId is string && data.propertyId.size() > 0 &&
+             data.containsKey('landlordId') && data.landlordId == request.auth.uid &&
+             (!data.containsKey('propertyName') || (data.propertyName is string && data.propertyName.size() <= 100)) &&
+             (!data.containsKey('landlordName') || (data.landlordName is string && data.landlordName.size() <= 100)) &&
+             (!data.containsKey('unitNumber') || (data.unitNumber is string && data.unitNumber.size() <= 20)) &&
+             !data.containsKey('status') &&
+             !data.containsKey('createdAt') &&
+             !data.containsKey('expiresAt') &&
+             !data.containsKey('id') &&
+             !data.containsKey('inviteId') && // inviteId is Firestore doc ID
+             !data.containsKey('tenantId') && // tenantId is set on accept
+             !data.containsKey('acceptedAt'); // acceptedAt is set on accept
+    }
+
     // MATCHES BEGIN HERE
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId);
       allow update: if isOwner(userId) &&
-        (!('role' in request.resource.data) || request.resource.data.role == resource.data.role);
+        (!('role' in request.resource.data) || request.resource.data.role == resource.data.role) &&
+        (!('userType' in request.resource.data) || request.resource.data.userType == resource.data.userType);
     }
 
     match /landlordProfiles/{landlordId} {
@@ -113,8 +176,8 @@ service cloud.firestore {
     }
 
     match /properties/{propertyId} {
-      allow read: if isPropertyOwner(propertyId) || isPropertyTenant(propertyId) || isAdmin();
-      allow create: if isLandlord();
+      allow read: if isSignedIn() && (isPropertyOwner(propertyId) || isPropertyTenant(propertyId) || isAdmin());
+      allow create: if isLandlord() && request.resource.data.landlordId == request.auth.uid;
       allow update, delete: if isPropertyOwner(propertyId);
 
       match /tenants/{tenantId} {
@@ -124,28 +187,44 @@ service cloud.firestore {
     }
 
     match /tickets/{ticketId} {
-      allow read: if
+      allow read: if isSignedIn() && (
         resource.data.tenantId == request.auth.uid ||
         isPropertyOwner(resource.data.propertyId) ||
-        resource.data.contractorId == request.auth.uid ||
-        isAdmin();
+        (resource.data.containsKey('contractorId') && resource.data.contractorId == request.auth.uid) ||
+        isAdmin()
+      );
 
       allow create: if isTenant() &&
-        request.resource.data.tenantId == request.auth.uid &&
         isPropertyTenant(request.resource.data.propertyId) &&
-        isValidTicket(request.resource.data);
+        isValidCreateTicketData(request.resource.data, request); 
 
-      allow update: if
-        isPropertyOwner(resource.data.propertyId) ||
-        (resource.data.contractorId == request.auth.uid && isContractor() &&
-         isLimitedUpdate(request.resource.data, resource.data)) ||
-        isAdmin();
+      allow update: if isSignedIn() && (
+        (
+          isPropertyOwner(resource.data.propertyId) &&
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'contractorId', 'notes', 'timeline', 'updatedAt', 'urgencyLevel', 'issueType'])) &&
+          (request.resource.data.containsKey('status') ? isAllowedTicketStatus(request.resource.data.status) : true) &&
+          (request.resource.data.containsKey('urgencyLevel') ? isAllowedUrgencyLevel(request.resource.data.urgencyLevel) : true) &&
+          (request.resource.data.containsKey('issueType') ? isAllowedIssueType(request.resource.data.issueType) : true)
+        ) ||
+        (
+          resource.data.containsKey('contractorId') && resource.data.contractorId == request.auth.uid && isContractor() &&
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'timeline', 'photos', 'notes', 'updatedAt'])) &&
+          (request.resource.data.containsKey('status') ? isAllowedTicketStatus(request.resource.data.status) : true)
+        ) ||
+        (
+          resource.data.tenantId == request.auth.uid && isTenant() &&
+          ( (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['comments', 'additionalPhotos', 'updatedAt'])) || 
+            (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']) && request.resource.data.status == 'cancelled' && resource.data.status in ['new', 'pending_classification', 'classified']) )
+        ) ||
+        isAdmin()
+      );
 
       match /feedback/{userId} {
         allow read: if
           get(/databases/$(database)/documents/tickets/$(ticketId)).data.tenantId == request.auth.uid ||
           isPropertyOwner(get(/databases/$(database)/documents/tickets/$(ticketId)).data.propertyId) ||
-          get(/databases/$(database)/documents/tickets/$(ticketId)).data.contractorId == request.auth.uid ||
+          (get(/databases/$(database)/documents/tickets/$(ticketId)).data.containsKey('contractorId') && 
+           get(/databases/$(database)/documents/tickets/$(ticketId)).data.contractorId == request.auth.uid) ||
           isAdmin();
 
         allow create: if
@@ -161,6 +240,103 @@ service cloud.firestore {
       allow read, update, delete: if isSignedIn() &&
         resource.data.userId == request.auth.uid;
       allow create: if isAdmin();
+    }
+
+    // Invite Code Rules - Add after the other collection rules
+    match /inviteCodes/{codeId} {
+      // Define rate limiting for invite code access
+      function rateLimitInviteCodeAccess() {
+        return request.time.toMillis() - 
+          (getAfter(/databases/$(database)/documents/users/$(request.auth.uid)/metadata/rateLimit).data.lastInviteCodeAccess || 0)
+          > 5000; // 5 seconds between attempts for rate limiting
+      }
+      
+      // Allow reading invite codes if:
+      // 1. The user is authenticated
+      // 2. They're either the landlord who created the code OR they're validating a code they possess
+      allow get: if request.auth != null && 
+        (resource.data.landlordId == request.auth.uid || 
+         resource.data.code == request.query.code);
+      
+      // Allow creating invite codes if:
+      // 1. The user is authenticated
+      // 2. The user is the landlord specified in the code
+      // 3. Required fields are present
+      allow create: if request.auth != null && 
+        request.resource.data.landlordId == request.auth.uid &&
+        request.resource.data.code is string && 
+        request.resource.data.propertyId is string;
+      
+      // Allow listing a landlord's invite codes if:
+      // 1. The user is authenticated
+      // 2. They're querying for their own landlordId
+      allow list: if request.auth != null &&
+        request.query.limit <= 20 &&
+        request.query.where("landlordId", "==", request.auth.uid) != null;
+      
+      // Only allow updating invite codes for marking them as used
+      // with an atomicity check to prevent race conditions
+      allow update: if request.auth != null &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(["used", "usedBy", "usedAt"]) &&
+        request.resource.data.usedBy == request.auth.uid &&
+        !resource.data.used; // Cannot update an already used code
+    }
+
+    match /invites/{inviteId} {
+      allow read: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid ||
+        (resource.data.containsKey('tenantEmail') && resource.data.tenantEmail == request.auth.token.email) || 
+        isAdmin()
+      );
+
+      allow list: if isSignedIn() && (
+        (isLandlord() && request.query.filters[0][0] == 'landlordId' && request.query.filters[0][2] == request.auth.uid) ||
+        // TEMPORARY SIMPLIFIED RULE FOR TENANT TESTING:
+        (isTenant() && request.auth.token.email != null) || 
+        isAdmin()
+      );
+
+      allow create: if isLandlord() &&
+        request.resource.data.landlordId == request.auth.uid &&
+        isValidCreateInviteData(request.resource.data, request) &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.containsKey('expiresAt');
+
+      allow update: if isSignedIn() && (
+        (
+          isTenant() &&
+          (resource.data.tenantEmail == request.auth.token.email) &&
+          resource.data.status == 'pending' && 
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'acceptedAt', 'tenantId', 'updatedAt']) &&
+          (request.resource.data.status == 'accepted' ?
+            (isAllowedInviteStatus(request.resource.data.status) && 
+             request.resource.data.acceptedAt == request.time && 
+             request.resource.data.tenantId == request.auth.uid &&
+             request.resource.data.updatedAt == request.time) : 
+           (request.resource.data.status == 'declined' ? 
+             (isAllowedInviteStatus(request.resource.data.status) && 
+              !request.resource.data.containsKey('acceptedAt') && 
+              !request.resource.data.containsKey('tenantId') &&
+              request.resource.data.updatedAt == request.time) : 
+            false)
+          )
+        ) ||
+        (
+          isLandlord() && resource.data.landlordId == request.auth.uid &&
+          resource.data.status == 'pending' && 
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+          request.resource.data.status == 'revoked' &&
+          request.resource.data.updatedAt == request.time
+        ) ||
+        isAdmin()
+      );
+
+      allow delete: if isSignedIn() && (
+        (isLandlord() && resource.data.landlordId == request.auth.uid && resource.data.status != 'accepted') ||
+        (isTenant() && resource.data.tenantEmail == request.auth.token.email && resource.data.status == 'declined') ||
+        isAdmin()
+      );
     }
 
     // Default fallback

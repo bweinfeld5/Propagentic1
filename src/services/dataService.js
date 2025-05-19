@@ -3,7 +3,7 @@
  * Automatically switches between Firebase and demo data based on the current mode
  */
 
-import { db } from '../firebase/config';
+import { firebaseApp, db, auth, functions, storage, callFunction } from '../firebase/config';
 import { 
   doc, 
   collection, 
@@ -17,11 +17,24 @@ import {
   serverTimestamp,
   onSnapshot,
   collectionGroup,
-  limit
+  limit,
+  orderBy,
+  setDoc,
+  writeBatch,
+  runTransaction,
+  Timestamp,
+  increment,
+  arrayUnion,
+  arrayRemove,
+  startAfter
 } from 'firebase/firestore';
 import * as demoData from '../utils/demoData';
 import { resilientFirestoreOperation } from '../utils/retryUtils';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+
+let currentUser = null;
+let isDemoMode = false;
+let propertiesUnsubscribe = null; // Declare propertiesUnsubscribe here
 
 /**
  * Data service class with methods that work with both real and demo data
@@ -442,9 +455,94 @@ class DataService {
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
+        const propertyData = docSnap.data();
+        // Process and enhance the property data for tenant dashboard
+        
+        // Format the address as a single string if it's structured
+        let formattedAddress = '';
+        if (propertyData.address) {
+          const addr = propertyData.address;
+          formattedAddress = [
+            addr.street,
+            addr.city ? (addr.city + (addr.state ? ', ' : '')) : '',
+            addr.state,
+            addr.zip
+          ].filter(Boolean).join(' ');
+        } else if (propertyData.formattedAddress) {
+          // Use pre-formatted address if available
+          formattedAddress = propertyData.formattedAddress;
+        }
+        
+        // Determine main photo URL
+        let photoUrl = null;
+        if (propertyData.photos && propertyData.photos.length > 0) {
+          // Use the first photo as the main photo
+          photoUrl = propertyData.photos[0];
+        } else if (propertyData.photoUrl) {
+          // Use the photoUrl field if it exists
+          photoUrl = propertyData.photoUrl;
+        } else if (propertyData.mainImage) {
+          // Or try the mainImage field
+          photoUrl = propertyData.mainImage;
+        }
+        
+        // If current user is a tenant, filter units to only show relevant units
+        let unitInfo = null;
+        if (this.currentUser && propertyData.units) {
+          const currentUserId = this.currentUser.uid;
+          // Check if tenant is assigned to a specific unit
+          const tenantUnit = propertyData.units.find(unit => 
+            (unit.tenantId === currentUserId) || 
+            (unit.tenants && unit.tenants.includes(currentUserId))
+          );
+          
+          if (tenantUnit) {
+            unitInfo = {
+              unitNumber: tenantUnit.unitNumber || tenantUnit.number || tenantUnit.id,
+              floor: tenantUnit.floor,
+              bedrooms: tenantUnit.bedrooms,
+              bathrooms: tenantUnit.bathrooms,
+              // Include any other relevant unit details
+            };
+          }
+        }
+        
+        // Include property manager info if available
+        let managerInfo = null;
+        if (propertyData.managerId || propertyData.landlordId) {
+          const managerId = propertyData.managerId || propertyData.landlordId;
+          try {
+            const managerRef = doc(db, 'users', managerId);
+            const managerSnap = await getDoc(managerRef);
+            if (managerSnap.exists()) {
+              const managerData = managerSnap.data();
+              managerInfo = {
+                name: managerData.displayName || managerData.name || 'Property Manager',
+                email: managerData.email,
+                phone: managerData.phone,
+                // Include any other relevant manager details
+              };
+            }
+          } catch (error) {
+            console.warn('Could not fetch property manager details:', error);
+          }
+        }
+        
+        // Calculate property capacity if available
+        let capacity = null;
+        if (propertyData.units && Array.isArray(propertyData.units)) {
+          capacity = propertyData.units.length;
+        }
+        
         return {
           id: docSnap.id,
-          ...docSnap.data()
+          ...propertyData,
+          // Add enhanced fields
+          formattedAddress,
+          photoUrl,
+          unitInfo,
+          managerInfo,
+          capacity,
         };
       }
       
@@ -905,6 +1003,163 @@ class DataService {
     };
 
     return propertiesUnsubscribe; // Return the master unsubscribe function
+  }
+
+  /**
+   * Get properties for a specific tenant
+   * @param {string} tenantId - Tenant ID
+   * @returns {Promise<Array>} Array of property objects
+   */
+  async getPropertiesForTenant(tenantId) {
+    if (!tenantId) {
+      throw new Error('Tenant ID is required');
+    }
+
+    if (this.isDemoMode) {
+      // For demo mode, return mock tenant properties
+      return demoData.getDemoPropertiesForTenant ? 
+             demoData.getDemoPropertiesForTenant(tenantId) : 
+             [];
+    }
+
+    const getPropertiesOperation = async () => {
+      try {
+        console.log(`Fetching properties for tenant: ${tenantId}`);
+        
+        // Attempt different strategies to find tenant properties
+        
+        // Strategy 1: Check user profile for property assignments
+        try {
+          const userDoc = await getDoc(doc(db, 'users', tenantId));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            
+            // If user has a direct propertyId assignment
+            if (userData.propertyId) {
+              const property = await this.getPropertyById(userData.propertyId);
+              if (property) {
+                console.log(`Found property directly assigned to tenant: ${property.id}`);
+                return [property];
+              }
+            }
+            
+            // If user has multiple properties
+            if (userData.properties && Array.isArray(userData.properties)) {
+              if (userData.properties.length > 0) {
+                console.log(`Found ${userData.properties.length} properties in user profile`);
+                // If properties are IDs, fetch them
+                if (typeof userData.properties[0] === 'string') {
+                  const propertyPromises = userData.properties.map(id => this.getPropertyById(id));
+                  const properties = await Promise.all(propertyPromises);
+                  return properties.filter(p => p !== null);
+                }
+                // If properties are objects with IDs, fetch them
+                else if (userData.properties[0].id) {
+                  const propertyPromises = userData.properties.map(p => this.getPropertyById(p.id));
+                  const properties = await Promise.all(propertyPromises);
+                  return properties.filter(p => p !== null);
+                }
+                // If properties are embedded, return them directly
+                else {
+                  return userData.properties;
+                }
+              }
+            }
+          }
+        } catch (profileError) {
+          console.warn("Error checking user profile for properties:", profileError);
+        }
+        
+        // Strategy 2: Check property records for tenant references (property.tenants array)
+        try {
+          const propertiesWithTenantRef = query(
+            collection(db, 'properties'),
+            where('tenants', 'array-contains', tenantId)
+          );
+          
+          const querySnapshot = await getDocs(propertiesWithTenantRef);
+          if (!querySnapshot.empty) {
+            console.log(`Found ${querySnapshot.docs.length} properties with tenant in 'tenants' array`);
+            return querySnapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }));
+          }
+        } catch (arrayContainsError) {
+          console.warn("Error querying properties with tenant reference:", arrayContainsError);
+        }
+        
+        // Strategy 3: Check for units containing this tenant
+        try {
+          // First attempt: Try units as nested array in properties
+          const propertiesWithUnitTenant = query(
+            collection(db, 'properties')
+          );
+          
+          const allProperties = await getDocs(propertiesWithUnitTenant);
+          const matchingProperties = [];
+          
+          // Manually filter properties with units containing this tenant
+          allProperties.forEach(propertyDoc => {
+            const propertyData = propertyDoc.data();
+            if (propertyData.units && Array.isArray(propertyData.units)) {
+              // Check if any unit contains this tenant
+              const hasTenant = propertyData.units.some(unit => 
+                unit.tenantId === tenantId || 
+                (unit.tenants && Array.isArray(unit.tenants) && unit.tenants.includes(tenantId))
+              );
+              
+              if (hasTenant) {
+                matchingProperties.push({
+                  id: propertyDoc.id,
+                  ...propertyData
+                });
+              }
+            }
+          });
+          
+          if (matchingProperties.length > 0) {
+            console.log(`Found ${matchingProperties.length} properties with tenant in units`);
+            return matchingProperties;
+          }
+        } catch (unitsError) {
+          console.warn("Error searching units for tenant:", unitsError);
+        }
+        
+        // Strategy 4: Check tenantProperties collection if it exists
+        try {
+          const tenantPropertiesRef = collection(db, 'tenantProperties');
+          const tenantPropertiesQuery = query(
+            tenantPropertiesRef,
+            where('tenantId', '==', tenantId)
+          );
+          
+          const tenantPropertiesSnapshot = await getDocs(tenantPropertiesQuery);
+          if (!tenantPropertiesSnapshot.empty) {
+            console.log(`Found ${tenantPropertiesSnapshot.docs.length} entries in tenantProperties collection`);
+            
+            // Extract property IDs and fetch full property data
+            const propertyIds = tenantPropertiesSnapshot.docs.map(doc => doc.data().propertyId);
+            const uniqueIds = [...new Set(propertyIds)]; // Remove duplicates
+            
+            const propertyPromises = uniqueIds.map(id => this.getPropertyById(id));
+            const properties = await Promise.all(propertyPromises);
+            return properties.filter(p => p !== null);
+          }
+        } catch (tenantPropertiesError) {
+          console.warn("Error checking tenantProperties collection:", tenantPropertiesError);
+        }
+        
+        // No properties found using any method
+        console.log(`No properties found for tenant: ${tenantId}`);
+        return [];
+      } catch (error) {
+        console.error('Error retrieving tenant properties:', error);
+        throw error;
+      }
+    };
+
+    return await resilientFirestoreOperation(getPropertiesOperation);
   }
 }
 

@@ -16,20 +16,23 @@ import {
   Property,
   MaintenanceTicket,
   LandlordProfile,
-  ContractorProfile,
-  Invite
+  ContractorProfile
 } from './schema';
+
+import { Invite } from '../types/invite';
+import { createTypedConverter, safeCast } from '../utils/TypeUtils';
 
 /**
  * Helper function to create a Firestore converter for any model type
+ * @deprecated Use createTypedConverter from utils/TypeUtils.ts instead
  */
 function createConverter<T extends { [key: string]: any }>(
   idField: keyof T
 ): FirestoreDataConverter<T> {
   return {
     toFirestore(model: WithFieldValue<T>): DocumentData {
-      // Remove the ID field from the data before storing
-      const { [idField]: id, ...data } = model as any;
+      // Remove the ID fields from the data before storing
+      const { [idField]: id, id: docId, ...data } = model as any;
       
       // Filter out undefined fields
       const filteredData = Object.entries(data).reduce((acc, [key, value]) => {
@@ -47,12 +50,12 @@ function createConverter<T extends { [key: string]: any }>(
       options?: SnapshotOptions
     ): T {
       const data = snapshot.data(options);
-      
-      // Add the document ID to the data
-      return {
+      const result = {
         ...data,
-        [idField]: snapshot.id
-      } as T;
+        [idField]: snapshot.id,
+        id: snapshot.id
+      };
+      return safeCast<T>(result);
     }
   };
 }
@@ -60,32 +63,32 @@ function createConverter<T extends { [key: string]: any }>(
 /**
  * Converter for User document
  */
-export const userConverter = createConverter<User>('uid');
+export const userConverter = createTypedConverter<User>('uid');
 
 /**
  * Converter for Property document
  */
-export const propertyConverter = createConverter<Property>('propertyId');
+export const propertyConverter = createTypedConverter<Property>('propertyId');
 
 /**
  * Converter for MaintenanceTicket document
  */
-export const maintenanceTicketConverter = createConverter<MaintenanceTicket>('ticketId');
+export const maintenanceTicketConverter = createTypedConverter<MaintenanceTicket>('ticketId');
 
 /**
  * Converter for LandlordProfile document
  */
-export const landlordProfileConverter = createConverter<LandlordProfile>('landlordId');
+export const landlordProfileConverter = createTypedConverter<LandlordProfile>('landlordId');
 
 /**
  * Converter for ContractorProfile document
  */
-export const contractorProfileConverter = createConverter<ContractorProfile>('contractorId');
+export const contractorProfileConverter = createTypedConverter<ContractorProfile>('contractorId');
 
 /**
  * Converter for Invite document
  */
-export const inviteConverter = createConverter<Invite>('inviteId');
+export const inviteConverter = createTypedConverter<Invite>('inviteId');
 
 /**
  * Helper functions for creating new documents with default values
@@ -265,7 +268,7 @@ export function createNewInvite(
   email: string,
   role: Invite['role'],
   landlordId?: string,
-  propertyId?: string,
+  propertyId: string = '',
   unitNumber?: string
 ): Invite {
   const now = Timestamp.now();
@@ -276,6 +279,7 @@ export function createNewInvite(
   );
   
   return {
+    id: inviteId,
     inviteId,
     email,
     role,

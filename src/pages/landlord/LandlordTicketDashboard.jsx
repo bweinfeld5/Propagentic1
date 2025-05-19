@@ -28,7 +28,7 @@ const LandlordTicketDashboard = () => { // Rename later if needed
     console.log("Setting up properties subscription...");
     setIsLoading(true);
     setError(null); // Clear previous errors
-    dataService.configure({ currentUser });
+    dataService.configure({ isDemoMode: false, currentUser });
 
     // --- Attempt to load from cache first ---
     let cacheLoaded = false;
@@ -73,6 +73,7 @@ const LandlordTicketDashboard = () => { // Rename later if needed
         console.error("Error subscribing to properties:", err);
         setError(err.message || "Failed to load properties.");
         // Don't set loading false if cache was loaded, allow cached view
+         
         if (!cacheLoaded) {
             setProperties([]); // Clear properties on definite error
             setIsLoading(false);
@@ -110,6 +111,7 @@ const LandlordTicketDashboard = () => { // Rename later if needed
   // --- Render Logic ---
   const renderContent = () => {
       // Show skeleton loaders while initially loading and no cache exists
+     // eslint-disable-next-line no-undef
      if (isLoading && !cacheLoaded) {
        return <LoadingSkeleton type="propertyList" count={3} />; // Implement in Step 5
      }

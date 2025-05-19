@@ -114,7 +114,7 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
                     <path d="M9.983 3V12C9.983 16.4183 6.40131 20 2.00098 20H1.98098C2.52798 16.4183 6.11498 12 9.98198 12H10.983V3H9.983ZM21.983 3V12C21.983 16.4183 18.4013 20 14.001 20H13.981C14.528 16.4183 18.115 12 21.982 12H22.983V3H21.983Z" />
                   </svg>
                   <p className="text-gray-700 dark:text-gray-200 mb-4 italic">
-                    "{testimonial.quote}"
+                    &quot;{testimonial.quote}&quot;
                   </p>
                 </div>
               </SafeMotion.div>

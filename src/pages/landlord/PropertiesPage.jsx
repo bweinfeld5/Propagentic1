@@ -26,8 +26,8 @@ const PropertiesPage = () => {
         return;
     }
     
-    // Configure dataService (important if not done globally)
-    dataService.configure({ currentUser });
+    // Configure the data service
+    dataService.configure({ isDemoMode: false, currentUser });
 
     setPropertiesLoading(true);
     setPropertiesError(null);

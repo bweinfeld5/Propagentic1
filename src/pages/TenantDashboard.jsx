@@ -97,6 +97,18 @@ const TenantDashboard = () => {
 
   // Handle form submission success
   const handleRequestSuccess = () => {
+  // COMPONENT_TRACE_LOGGER
+  console.log('COMPONENT_LOADED: TenantDashboard.jsx');
+  // Save to local storage for debugging
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('LAST_COMPONENT_LOADED', 'TenantDashboard.jsx');
+      localStorage.setItem('LAST_COMPONENT_LOAD_TIME', new Date().toISOString());
+    } catch (e) {
+      console.error('Could not write to localStorage');
+    }
+  }
+
     toast.success('Maintenance request submitted successfully!');
   };
 

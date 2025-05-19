@@ -1,6 +1,7 @@
 import React from 'react';
 import useTheme from '../../hooks/useTheme';
 import { SafeMotion } from '../shared/SafeMotion';
+import { AnimatePresence } from 'framer-motion';
  // Direct import might be needed if SafeMotion doesn't export it reliably
 
 // Sun Icon

@@ -9,7 +9,7 @@ import InvitationBanner from '../../components/InvitationBanner';
 import PropertyList from '../../components/PropertyList';
 import { Skeleton } from '../../components/ui/Skeleton';
 import Button from '../../components/ui/Button';
-import { acceptInvite, declineInvite, getPendingInvitesForTenant } from '../../services/firestore/inviteService';
+import inviteService from '../../services/firestore/inviteService';
 import dataService from '../../services/dataService';
 
 const TenantDashboard: React.FC = () => {
@@ -42,7 +42,7 @@ const TenantDashboard: React.FC = () => {
         
         // Fetch pending invites
         if (currentUser.email) {
-          const invites = await getPendingInvitesForTenant(currentUser.email);
+          const invites = await inviteService.getPendingInvitesForTenant(currentUser.email);
           setPendingInvites(invites || []);
         }
         
@@ -74,12 +74,12 @@ const TenantDashboard: React.FC = () => {
       return;
     }
     
-    return acceptInvite(inviteId, currentUser.uid);
+    return inviteService.updateInviteStatus(inviteId, 'accepted', currentUser.uid);
   };
   
   // Handle invite decline
   const handleDeclineInvite = async (inviteId: string) => {
-    return declineInvite(inviteId);
+    return inviteService.updateInviteStatus(inviteId, 'declined');
   };
   
   // Handle maintenance request

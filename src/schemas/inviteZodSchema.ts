@@ -1,4 +1,3 @@
-// This file should only contain schema definitions
 import { z } from 'zod';
 
 export const InviteStatus = {
@@ -35,5 +34,3 @@ export const InviteSchema = z.object({
     bathrooms: z.number().optional(),
   }).optional(),
 });
-
-export type InviteData = z.infer<typeof InviteSchema>;

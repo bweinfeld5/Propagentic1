@@ -110,13 +110,13 @@ describe('DataService - Property Methods', () => {
     it('returns a property with full details when found', async () => {
       const mockPropertyDocData = { ...firestoreProperty };
       const mockManagerData = { ...mockLandlord };
-
+      
       mockGetDoc
         .mockResolvedValueOnce({ exists: () => true, data: () => mockPropertyDocData, id: mockProperty.id })  // For property
         .mockResolvedValueOnce({ exists: () => true, data: () => mockManagerData, id: mockLandlord.id }); // For manager
-
+      
       const result = await dataService.getPropertyById(mockProperty.id);
-
+      
       expect(mockDoc).toHaveBeenCalledWith(mockDbInstance, 'properties', mockProperty.id);
       expect(mockDoc).toHaveBeenCalledWith(mockDbInstance, 'users', firestoreProperty.managerId); 
       expect(result).toBeTruthy();
@@ -190,7 +190,7 @@ describe('DataService - Property Methods', () => {
         empty: false,
         docs: [{ id: mockProperty.id, data: () => mockPropertyWithTenantInUnit }],
       };
-
+      
       mockGetDoc.mockResolvedValueOnce({ exists: () => true, data: () => mockTenantNoDirectProperties, id: mockTenant.id }); // User profile
       // This setup assumes getDocs is called on a collection of all properties
       mockGetDocs.mockResolvedValueOnce(mockQuerySnapshot); // For properties query
@@ -208,7 +208,7 @@ describe('DataService - Property Methods', () => {
       mockGetDocs.mockResolvedValueOnce({ empty: true, docs: [] }); 
       // If it tries tenantProperties collection
       mockGetDocs.mockResolvedValueOnce({ empty: true, docs: [] }); 
-
+      
       const result = await dataService.getPropertiesForTenant(mockTenant.id);
       expect(result).toEqual([]);
     });

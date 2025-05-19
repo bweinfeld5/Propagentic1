@@ -1,128 +1,153 @@
-import { Timestamp } from 'firebase/firestore';
-import { Invite, InviteBase } from '../../types/invite';
-import api, { FirestoreDocument, ApiError } from '../api';
-import { CreateInviteSchema, type CreateInviteData, InviteSchema } from '../../schemas/inviteSchema';
+import { 
+  collection, 
+  doc, 
+  addDoc, 
+  updateDoc, 
+  getDocs,
+  query, 
+  where,
+  serverTimestamp,
+  Timestamp 
+} from 'firebase/firestore';
+import { db } from '../../firebase/config';
+import { CreateInviteSchema } from '../../schemas/CreateInviteSchema';
 
-/**
- * Get an invite by ID
- */
-export async function getInviteById(inviteId: string): Promise<FirestoreDocument<InviteBase> | null> {
-  return api.getById<InviteBase>('invites', inviteId, InviteSchema);
+export type InviteStatus = 'pending' | 'accepted' | 'declined' | 'expired' | 'deleted';
+export type EmailStatus = 'pending' | 'sent' | 'failed';
+
+export interface InviteData {
+  tenantEmail: string;
+  propertyId: string;
+  landlordId: string;
+  propertyName?: string;
+  landlordName?: string;
+  unitId?: string;
+  unitNumber?: string;
 }
 
-/**
- * Get invite by email
- */
-export async function getInviteByEmail(email: string): Promise<FirestoreDocument<InviteBase> | null> {
-  const queryOptions = {
-    filters: [
-      { field: 'tenantEmail', operator: '==' as const, value: email },
-      { field: 'status', operator: '==' as const, value: 'pending' },
-    ],
-    limit: 1,
-  };
-  const invites = await api.getAll<InviteBase>('invites', queryOptions, InviteSchema);
-  return invites.length > 0 ? invites[0] : null;
-}
-
-/**
- * Get pending invites for tenant
- */
-export async function getPendingInvitesForTenant(tenantEmail: string): Promise<FirestoreDocument<InviteBase>[]> {
-  if (!tenantEmail) {
-    throw new Error('Tenant email is required');
-  }
-
-  try {
-    const queryOptions = {
-      filters: [
-        { field: 'tenantEmail', operator: '==' as const, value: tenantEmail.toLowerCase() },
-        { field: 'status', operator: '==' as const, value: 'pending' },
-      ],
-    };
-    const invites = await api.getAll<InviteBase>('invites', queryOptions, InviteSchema);
-    
-    return invites;
-  } catch (err: unknown) {
-    const apiError = err as ApiError;
-    console.error('Error getting pending invites:', apiError.message, apiError.originalError);
-    throw new Error(`Failed to load pending invitations: ${apiError.message}`);
-  }
+export interface InviteDocument extends InviteData {
+  id: string;
+  status: InviteStatus;
+  emailSentStatus: EmailStatus;
+  createdAt: Date;
+  updatedAt?: Date;
+  expiresAt: Date;
+  acceptedAt?: Date;
+  declinedAt?: Date;
+  deletedAt?: Date;
+  tenantId?: string;
 }
 
 /**
  * Create a new invite
  */
-export async function createInvite(
-  inviteInput: CreateInviteData
-): Promise<string> {
-  const now = Timestamp.now();
-  const expiresAt = new Timestamp(
-    now.seconds + 7 * 24 * 60 * 60,
-    now.nanoseconds
-  );
+export const createInvite = async (inviteData: InviteData): Promise<string> => {
+  try {
+    const validatedData = CreateInviteSchema.parse(inviteData);
+    
+    // Set expiration date (7 days from now)
+    const now = Timestamp.now();
+    const expiresAt = new Timestamp(
+      now.seconds + 7 * 24 * 60 * 60,
+      now.nanoseconds
+    );
 
-  const dataForApiCreate = {
-    ...inviteInput,
-    tenantEmail: inviteInput.tenantEmail.toLowerCase(),
-    expiresAt: expiresAt,
-  };
-
-  return api.create<typeof CreateInviteSchema>(
-    'invites',
-    dataForApiCreate,
-    CreateInviteSchema
-  );
-}
-
-/**
- * Update an invite
- */
-export async function updateInvite(
-  docId: string,
-  updateData: Partial<Omit<InviteBase, 'propertyId' | 'tenantEmail' | 'landlordId'>>
-): Promise<void> {
-  return api.update('invites', docId, updateData, InviteSchema);
-}
+    const inviteRef = collection(db, 'invites');
+    const docRef = await addDoc(inviteRef, {
+      ...validatedData,
+      tenantEmail: validatedData.tenantEmail.toLowerCase(),
+      status: 'pending' as InviteStatus,
+      createdAt: serverTimestamp(),
+      expiresAt,
+      emailSentStatus: 'pending' as EmailStatus
+    });
+    
+    return docRef.id;
+  } catch (error) {
+    console.error('Error creating invite:', error);
+    throw error;
+  }
+};
 
 /**
- * Delete an invite
+ * Get pending invites for tenant email
  */
-export async function deleteInvite(inviteId: string): Promise<void> {
-  return api.delete('invites', inviteId);
-}
+export const getPendingInvitesForTenant = async (tenantEmail: string): Promise<InviteDocument[]> => {
+  try {
+    if (!tenantEmail) throw new Error('Tenant email is required');
+
+    const invitesRef = collection(db, 'invites');
+    const q = query(
+      invitesRef,
+      where('tenantEmail', '==', tenantEmail.toLowerCase()),
+      where('status', '==', 'pending')
+    );
+
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as InviteDocument[];
+  } catch (error) {
+    console.error('Error getting pending invites:', error);
+    throw error;
+  }
+};
 
 /**
- * Accept an invite
+ * Update invite status
  */
-export async function acceptInvite(inviteId: string, userId: string): Promise<void> {
-  const updateData: Partial<InviteBase> = {
-    status: 'accepted',
-    tenantId: userId,
-  };
-  await api.update('invites', inviteId, updateData, InviteSchema);
-}
+export const updateInviteStatus = async (
+  inviteId: string, 
+  status: InviteStatus, 
+  tenantId?: string
+): Promise<void> => {
+  try {
+    const inviteRef = doc(db, 'invites', inviteId);
+    const updateData: Record<string, any> = {
+      status,
+      updatedAt: serverTimestamp()
+    };
+
+    if (status === 'accepted' && tenantId) {
+      updateData.tenantId = tenantId;
+      updateData.acceptedAt = serverTimestamp();
+    }
+
+    if (status === 'declined') {
+      updateData.declinedAt = serverTimestamp();
+    }
+
+    await updateDoc(inviteRef, updateData);
+  } catch (error) {
+    console.error('Error updating invite status:', error);
+    throw error;
+  }
+};
 
 /**
- * Decline an invite
+ * Delete invite
  */
-export async function declineInvite(inviteId: string): Promise<void> {
-  const updateData: Partial<InviteBase> = {
-    status: 'declined',
-  };
-  await api.update('invites', inviteId, updateData, InviteSchema);
-}
+export const deleteInvite = async (inviteId: string): Promise<void> => {
+  try {
+    const inviteRef = doc(db, 'invites', inviteId);
+    await updateDoc(inviteRef, {
+      status: 'deleted' as InviteStatus,
+      deletedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error deleting invite:', error);
+    throw error;
+  }
+};
 
-// Re-export functions as part of the default export
+// Export all functions as default object
 const inviteService = {
-  getInviteById,
-  getInviteByEmail,
-  getPendingInvitesForTenant,
   createInvite,
-  updateInvite,
-  deleteInvite,
-  acceptInvite,
-  declineInvite
+  updateInviteStatus,
+  getPendingInvitesForTenant,
+  deleteInvite
 };
 
 export default inviteService; 

@@ -11,6 +11,14 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType;
     }
 
+    // NEW: Development/debugging mode function
+    function isDevMode() {
+      // Replace with your specific development condition - like IP range, header, etc.
+      // For now, we'll create a simple flag that you can set in your app
+      return request.auth != null && (request.auth.token.email.matches('.*@propagentic.com$') ||
+                                    request.auth.token.email.matches('.*@example.com$'));
+    }
+
     function isLandlord() { 
       return isSignedIn() && 
         (getRole() == 'landlord' || 
@@ -142,9 +150,9 @@ service cloud.firestore {
 
     // MATCHES BEGIN HERE
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) &&
+      allow read: if isOwner(userId) || isAdmin() || isDevMode();
+      allow create: if isOwner(userId) || isDevMode();
+      allow update: if isOwner(userId) || isDevMode() ||
         (!('role' in request.resource.data) || request.resource.data.role == resource.data.role) &&
         (!('userType' in request.resource.data) || request.resource.data.userType == resource.data.userType);
     }
@@ -176,14 +184,31 @@ service cloud.firestore {
     }
 
     match /properties/{propertyId} {
-      allow read: if isSignedIn() && (isPropertyOwner(propertyId) || isPropertyTenant(propertyId) || isAdmin());
-      allow create: if isLandlord() && request.resource.data.landlordId == request.auth.uid;
-      allow update, delete: if isPropertyOwner(propertyId);
+      allow read: if isSignedIn() && (
+        isPropertyOwner(propertyId) || 
+        isPropertyTenant(propertyId) || 
+        isAdmin() ||
+        isLandlord() || // Allow any landlord to read any property for debugging
+        isDevMode()
+      );
+      allow create: if (isLandlord() && request.resource.data.landlordId == request.auth.uid) || isDevMode();
+      allow update, delete: if isPropertyOwner(propertyId) || isDevMode();
 
       match /tenants/{tenantId} {
-        allow read: if isPropertyOwner(propertyId) || isOwner(tenantId) || isAdmin();
-        allow write: if isPropertyOwner(propertyId);
+        allow read: if isPropertyOwner(propertyId) || isOwner(tenantId) || isAdmin() || isDevMode();
+        allow write: if isPropertyOwner(propertyId) || isDevMode();
       }
+    }
+
+    // Add a specific rule for the tenants collection (if it exists at the root level)
+    match /tenants/{tenantId} {
+      allow read: if isSignedIn() && (
+        isOwner(tenantId) ||
+        isLandlord() || // Let landlords read tenant data
+        isAdmin() ||
+        isDevMode()
+      );
+      allow write: if isLandlord() || isOwner(tenantId) || isAdmin() || isDevMode();
     }
 
     match /tickets/{ticketId} {
@@ -191,7 +216,9 @@ service cloud.firestore {
         resource.data.tenantId == request.auth.uid ||
         isPropertyOwner(resource.data.propertyId) ||
         (resource.data.containsKey('contractorId') && resource.data.contractorId == request.auth.uid) ||
-        isAdmin()
+        isAdmin() ||
+        isLandlord() || // Allow any landlord to read any ticket
+        isDevMode()
       );
 
       allow create: if isTenant() &&
@@ -341,6 +368,7 @@ service cloud.firestore {
 
     // Default fallback
     match /{document=**} {
+      allow read, write: if isDevMode();
       allow read, write: if false;
     }
   }

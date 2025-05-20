@@ -103,10 +103,32 @@
         }
       })();
     </script>
+
+    <!-- Fallback resources to ensure availability -->
+    <link rel="stylesheet" href="%PUBLIC_URL%/assets/css/resources-fallback.css" />
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <div id="portal-root"></div>
+    <!-- Error handler for resource loading -->
+    <script>
+      window.addEventListener('error', function(event) {
+        // Only handle resource loading errors
+        if (event.target && (event.target.tagName === 'LINK' || event.target.tagName === 'SCRIPT' || event.target.tagName === 'IMG')) {
+          console.warn('Resource failed to load:', event.target.src || event.target.href);
+          
+          // Create a custom event for the app to handle
+          const resourceErrorEvent = new CustomEvent('resourceLoadError', {
+            detail: {
+              element: event.target,
+              url: event.target.src || event.target.href,
+              type: event.target.tagName.toLowerCase()
+            }
+          });
+          document.dispatchEvent(resourceErrorEvent);
+        }
+      }, true);
+    </script>
   </body>
 </html>

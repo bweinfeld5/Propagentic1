@@ -16,5 +16,11 @@
   "orientation": "portrait",
   "splash_pages": null,
   "prefer_related_applications": false,
-  "categories": ["productivity", "business", "utilities"]
+  "categories": ["productivity", "business", "utilities"],
+  "web_accessible_resources": [
+    {
+      "resources": ["*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 } 

@@ -5,38 +5,66 @@
 If you see error messages like:
 
 ```
-FirebaseError: Firestore operation failed: Missing or insufficient permissions.
-```
-
-Or these specific subscription errors:
-
-```
 Subscription with field 'landlordId' failed: FirebaseError: Missing or insufficient permissions.
 Subscription with field 'ownerId' failed: FirebaseError: Missing or insufficient permissions.
 Subscription with field 'createdBy' failed: FirebaseError: Missing or insufficient permissions.
 ```
 
-This means your Firebase security rules are blocking access to the data you're trying to read or write.
+This indicates your Firestore security rules are preventing access to data.
 
-## The Fix
+## The Fix - Standardizing on the 'landlordId' Field
 
-We've updated the Firestore security rules to:
+We've made two complementary changes to fix this issue:
 
-1. **Add a development mode** that grants more permissions when using test emails:
-   - Any email ending with `@propagentic.com` or `@example.com`
-   - This makes testing and debugging easier
+1. **Simplified Property Queries**:
+   - Now using only the `landlordId` field to query properties instead of trying multiple fields
+   - Removed the multi-field fallback approach that was causing permission errors
+   - All property documents should use `landlordId` as the standard field for ownership
 
-2. **Make properties collection more accessible to landlords**:
-   - Allows any landlord to read any property
-   - Previous rules only allowed landlords to read properties they owned
+2. **Updated Firestore Security Rules**:
+   - Rules now directly check the `landlordId` field instead of using a helper function
+   - Added support for legacy field names in the read operations for backwards compatibility
+   - Create operations now enforce using the `landlordId` field
+   - Added better debugging and comments to make troubleshooting easier
 
-3. **Add explicit rules for the tenants collection**:
-   - Allows landlords to read tenant data
-   - Ensures owners can access their own data
+## How to Create Properties Correctly
 
-4. **Make tickets viewable by any landlord**:
-   - Helps with debugging ticketing system issues
-   - Provides visibility across all properties
+When creating new properties, always include the `landlordId` field:
+
+```javascript
+// CORRECT way to create a property
+await dataService.createProperty({
+  name: "Oak Apartments",
+  address: "123 Oak Street",
+  landlordId: currentUser.uid, // Required field
+  // ... other property fields
+});
+```
+
+## Migration for Existing Properties
+
+If you have existing properties using different field names, you should migrate them:
+
+```javascript
+// Add this to your admin scripts
+const propertyRef = doc(db, 'properties', propertyId);
+await updateDoc(propertyRef, {
+  landlordId: property.ownerId || property.owner || property.userId || property.createdBy
+});
+```
+
+## Development Mode
+
+During development, you can use test emails with domains ending in `@propagentic.com` or `@example.com` to get broader permissions for debugging.
+
+## Testing Your Changes
+
+After updating your code:
+
+1. Log in with your landlord account
+2. Check the console for query messages
+3. Verify you only see queries using the `landlordId` field
+4. Confirm no more "Missing or insufficient permissions" errors
 
 ## For Production
 

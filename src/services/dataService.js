@@ -112,76 +112,21 @@ class DataService {
 
     const getPropertiesOperation = async () => {
       try {
-        // Try multiple field names that might be used for landlord reference
-        const possibleFieldNames = ['landlordId', 'ownerId', 'owner', 'userId', 'createdBy'];
-        let allProperties = [];
-        let successes = [];
-        let failures = [];
+        // Use landlordId as the standard field name
+        console.log('Querying properties with landlordId field');
+        const q = query(
+          collection(db, 'properties'), 
+          where('landlordId', '==', this.currentUser.uid)
+        );
         
-        console.log(`Attempting property queries with ${possibleFieldNames.length} potential field names`);
+        const querySnapshot = await getDocs(q);
+        const properties = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
         
-        // Try each field name
-        for (const fieldName of possibleFieldNames) {
-          try {
-            const q = query(
-              collection(db, 'properties'), 
-              where(fieldName, '==', this.currentUser.uid)
-            );
-            
-            console.log(`Trying query with field: ${fieldName}`);
-            const querySnapshot = await getDocs(q);
-            const properties = querySnapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data()
-            }));
-            
-            console.log(`Query with field '${fieldName}' returned ${properties.length} properties`);
-            
-            // Add unique properties based on ID
-            const existingIds = new Set(allProperties.map(p => p.id));
-            const newProperties = properties.filter(p => !existingIds.has(p.id));
-            allProperties.push(...newProperties);
-            
-            successes.push({field: fieldName, count: properties.length});
-          } catch (fieldError) {
-            console.error(`Query with field '${fieldName}' failed:`, fieldError);
-            failures.push({field: fieldName, error: fieldError.message});
-          }
-        }
-        
-        console.log('Property query results:', {
-          totalPropertiesFound: allProperties.length,
-          successfulQueries: successes,
-          failedQueries: failures
-        });
-        
-        // If we found any properties, return them
-        if (allProperties.length > 0) {
-          return allProperties;
-        }
-        
-        // If no properties found with any field, try one more approach with collection group query
-        try {
-          console.log('Attempting collection group query as last resort');
-          // This works if properties are in subcollections instead of root collection
-          const groupQuery = query(
-            collectionGroup(db, 'properties'),
-            where('createdBy', '==', this.currentUser.uid)
-          );
-          
-          const groupSnapshot = await getDocs(groupQuery);
-          const groupProperties = groupSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-          
-          console.log(`Collection group query returned ${groupProperties.length} properties`);
-          return groupProperties;
-        } catch (groupError) {
-          console.error('Collection group query failed:', groupError);
-          // If all queries failed, throw the original error
-          throw new Error('Failed to find properties with any known field name');
-        }
+        console.log(`Query returned ${properties.length} properties`);
+        return properties;
       } catch (error) {
         console.error('Error fetching properties:', error);
         throw error;
@@ -190,8 +135,8 @@ class DataService {
 
     // Use resilient operation for Firestore calls
     return await resilientFirestoreOperation(getPropertiesOperation, {
-      operationName: 'Multi-field property query',
-      maxRetries: 2 // Lower retries since we're already trying multiple approaches
+      operationName: 'Properties query',
+      maxRetries: 2
     });
   }
 
@@ -230,109 +175,33 @@ class DataService {
         return () => {};
       }
 
-      // Try to use the new multi-field approach
-      let unsubscribeFunctions = [];
-      let activePropertyIds = new Set(); // Track already-seen property IDs
-      let isFirstSuccessfulQuery = true; // Track if we need to call onData
-
-      // Helper function to handle property data
-      const handlePropertyData = (properties) => {
-        // Filter out properties we've already seen
-        const newProperties = properties.filter(prop => !activePropertyIds.has(prop.id));
-        
-        // Add new property IDs to our set
-        newProperties.forEach(prop => activePropertyIds.add(prop.id));
-
-        // Combine with existing properties if not the first successful query
-        if (isFirstSuccessfulQuery) {
-          console.log(`First successful query with ${properties.length} properties`);
+      // Set up subscription using just the landlordId field
+      console.log('Setting up properties subscription with landlordId field');
+      
+      const q = query(
+        collection(db, 'properties'),
+        where('landlordId', '==', userId)
+      );
+      
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const properties = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          
+          console.log(`Properties subscription returned ${properties.length} properties`);
           onData(properties);
-          isFirstSuccessfulQuery = false;
-        } else if (newProperties.length > 0) {
-          console.log(`Additional query found ${newProperties.length} new properties`);
-          // For subsequent queries, we need to get the current data first and combine
-          this.getPropertiesForCurrentLandlord()
-            .then(allProperties => {
-              console.log(`Updated properties with ${allProperties.length} total properties`);
-              onData(allProperties);
-            })
-            .catch(err => {
-              console.error('Failed to get updated property list', err);
-            });
+        },
+        (error) => {
+          console.error('Properties subscription failed:', error);
+          onError(error);
         }
-      };
-
-      // Try multiple field names that might be used for landlord reference
-      const possibleFieldNames = ['landlordId', 'ownerId', 'owner', 'userId', 'createdBy'];
+      );
       
-      console.log(`Attempting property subscriptions with ${possibleFieldNames.length} potential field names`);
-      
-      // Set up subscriptions for each field name
-      for (const fieldName of possibleFieldNames) {
-        try {
-          console.log(`Setting up subscription with field: ${fieldName}`);
-          
-          const q = query(
-            collection(db, 'properties'),
-            where(fieldName, '==', userId)
-          );
-          
-          const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-              const properties = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-              }));
-              
-              console.log(`Subscription with field '${fieldName}' returned ${properties.length} properties`);
-              
-              if (properties.length > 0) {
-                handlePropertyData(properties);
-              }
-            },
-            (error) => {
-              console.error(`Subscription with field '${fieldName}' failed:`, error);
-              // We don't call onError here as we're trying multiple fields
-              // Only call onError if all subscriptions fail
-            }
-          );
-          
-          unsubscribeFunctions.push(unsubscribe);
-        } catch (error) {
-          console.error(`Failed to set up subscription with field '${fieldName}':`, error);
-        }
-      }
-      
-      // If we couldn't set up any subscriptions, fall back to one-time query
-      if (unsubscribeFunctions.length === 0) {
-        console.error('All subscriptions failed, falling back to one-time query');
-        
-        // Try a one-time query using the multi-field approach
-        this.getPropertiesForCurrentLandlord()
-          .then(properties => {
-            console.log(`One-time query fallback returned ${properties.length} properties`);
-            onData(properties);
-          })
-          .catch(error => {
-            console.error('Fallback query also failed:', error);
-            onError(error);
-          });
-        
-        return () => {}; // Return a no-op cleanup function
-      }
-      
-      // Return a combined unsubscribe function
-      return () => {
-        console.log(`Unsubscribing from ${unsubscribeFunctions.length} property subscriptions`);
-        unsubscribeFunctions.forEach(unsubscribe => {
-          try {
-            unsubscribe();
-          } catch (error) {
-            console.error('Error unsubscribing:', error);
-          }
-        });
-      };
+      // Return unsubscribe function
+      return unsubscribe;
     } catch (error) {
       console.error('Error setting up properties subscription:', error);
       onError(error);
@@ -591,7 +460,7 @@ class DataService {
   /**
    * Create a new property
    * @param {Object} propertyData - Property data
-   * @returns {Promise<Object>} Created property object
+   * @returns {Promise<Object>} Created property
    */
   async createProperty(propertyData) {
     if (!this.currentUser) {
@@ -600,25 +469,32 @@ class DataService {
 
     if (this.isDemoMode) {
       // Generate a fake ID for demo mode
-      const newId = `demo-property-${Date.now()}`;
-      const newProperty = {
+      const newId = `demo-prop-${Date.now()}`;
+      return {
         id: newId,
         ...propertyData,
-        landlordId: this.currentUser.uid,
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      
-      console.log('Demo mode: Created property', newProperty);
-      return newProperty;
     }
 
     const createPropertyOperation = async () => {
+      // Ensure landlordId is set properly
+      if (!propertyData.landlordId) {
+        propertyData.landlordId = this.currentUser.uid;
+      }
+
+      // For backward compatibility, maintain any legacy fields that might be expected
+      // but ensure they match landlordId
+      if (!propertyData.ownerId) {
+        propertyData.ownerId = propertyData.landlordId;
+      }
+      
       const propertyWithMetadata = {
         ...propertyData,
-        landlordId: this.currentUser.uid,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        createdBy: this.currentUser.uid
       };
       
       const docRef = await addDoc(collection(db, 'properties'), propertyWithMetadata);

@@ -43,7 +43,9 @@ export interface InviteDocument extends InviteData {
  */
 export const createInvite = async (inviteData: InviteData): Promise<string> => {
   try {
+    console.log('Creating invite with data:', inviteData);
     const validatedData = CreateInviteSchema.parse(inviteData);
+    console.log('Data validated successfully');
     
     // Set expiration date (7 days from now)
     const now = Timestamp.now();
@@ -53,6 +55,7 @@ export const createInvite = async (inviteData: InviteData): Promise<string> => {
     );
 
     const inviteRef = collection(db, 'invites');
+    console.log('Adding document to invites collection...');
     const docRef = await addDoc(inviteRef, {
       ...validatedData,
       tenantEmail: validatedData.tenantEmail.toLowerCase(),
@@ -62,6 +65,7 @@ export const createInvite = async (inviteData: InviteData): Promise<string> => {
       emailSentStatus: 'pending' as EmailStatus
     });
     
+    console.log(`Invite created successfully with ID: ${docRef.id}`);
     return docRef.id;
   } catch (error) {
     console.error('Error creating invite:', error);

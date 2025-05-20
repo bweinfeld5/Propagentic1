@@ -11,10 +11,9 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType;
     }
 
-    // NEW: Development/debugging mode function
+    // Development/debugging mode function
     function isDevMode() {
       // Replace with your specific development condition - like IP range, header, etc.
-      // For now, we'll create a simple flag that you can set in your app
       return request.auth != null && (request.auth.token.email.matches('.*@propagentic.com$') ||
                                     request.auth.token.email.matches('.*@example.com$'));
     }
@@ -44,31 +43,12 @@ service cloud.firestore {
 
     function isPropertyTenant(propertyId) {
       let propDoc = get(/databases/$(database)/documents/properties/$(propertyId));
-      return (propDoc.data.containsKey('tenants') && propDoc.data.tenants is list && request.auth.uid in propDoc.data.tenants) || 
-             (propDoc.data.containsKey('tenantId') && propDoc.data.tenantId == request.auth.uid);
+      return ('tenants' in propDoc.data && propDoc.data.tenants is list && request.auth.uid in propDoc.data.tenants) || 
+             ('tenantId' in propDoc.data && propDoc.data.tenantId == request.auth.uid);
     }
 
     function isValidString(field, max) {
       return field is string && field.size() <= max;
-    }
-
-    function isValidStringArray(arr, maxEntries, maxLength) {
-      return arr is list && arr.size() <= maxEntries && 
-             (arr.size() == 0 || isArrayOfStringsWithinLength(arr, maxLength));
-    }
-
-    function isArrayOfStringsWithinLength(arr, maxLength) {
-      // Limit to checking first 10 items (practical limit for validation)
-      return (arr.size() >= 1 ? (arr[0] is string && arr[0].size() <= maxLength) : true) &&
-             (arr.size() >= 2 ? (arr[1] is string && arr[1].size() <= maxLength) : true) &&
-             (arr.size() >= 3 ? (arr[2] is string && arr[2].size() <= maxLength) : true) &&
-             (arr.size() >= 4 ? (arr[3] is string && arr[3].size() <= maxLength) : true) &&
-             (arr.size() >= 5 ? (arr[4] is string && arr[4].size() <= maxLength) : true) &&
-             (arr.size() >= 6 ? (arr[5] is string && arr[5].size() <= maxLength) : true) &&
-             (arr.size() >= 7 ? (arr[6] is string && arr[6].size() <= maxLength) : true) &&
-             (arr.size() >= 8 ? (arr[7] is string && arr[7].size() <= maxLength) : true) &&
-             (arr.size() >= 9 ? (arr[8] is string && arr[8].size() <= maxLength) : true) &&
-             (arr.size() >= 10 ? (arr[9] is string && arr[9].size() <= maxLength) : true);
     }
 
     // --- Maintenance Ticket (existing /tickets) Validation ---
@@ -95,28 +75,20 @@ service cloud.firestore {
     }
 
     function isValidCreateTicketData(data, request) {
-      return data.containsKey('propertyId') && data.propertyId is string && data.propertyId.size() > 0 &&
-             data.containsKey('tenantId') && data.tenantId == request.auth.uid && // Ensure tenantId matches creator
-             data.containsKey('issueType') && isAllowedIssueType(data.issueType) &&
-             data.containsKey('description') && data.description is string && data.description.size() > 0 && data.description.size() <= 1000 &&
-             data.containsKey('urgencyLevel') && isAllowedUrgencyLevel(data.urgencyLevel) &&
-             (!data.containsKey('photos') || (data.photos is list && data.photos.size() <= 10 && (data.photos.size() == 0 || data.photos[0] is string))) && 
+      return 'propertyId' in data && data.propertyId is string && data.propertyId.size() > 0 &&
+             'tenantId' in data && data.tenantId == request.auth.uid && // Ensure tenantId matches creator
+             'issueType' in data && isAllowedIssueType(data.issueType) &&
+             'description' in data && data.description is string && data.description.size() > 0 && data.description.size() <= 1000 &&
+             'urgencyLevel' in data && isAllowedUrgencyLevel(data.urgencyLevel) &&
+             (!('photos' in data) || (data.photos is list && data.photos.size() <= 10 && (data.photos.size() == 0 || data.photos[0] is string))) && 
              // Ensure client doesn't set system fields on create
-             !data.containsKey('status') && 
-             !data.containsKey('createdAt') && 
-             !data.containsKey('updatedAt') &&
-             !data.containsKey('ticketId') && // id is set by Firestore
-             !data.containsKey('contractorId') &&
-             !data.containsKey('timeline') &&
-             !data.containsKey('feedback');
-    }
-    
-    // Deprecated isValidTicket function (commented out in original proposed change)
-    // function isValidTicket(data) { ... }
-
-    function isLimitedUpdate(data, resourceData) {
-      let allowed = ['status', 'progressUpdates', 'updatedAt'];
-      return data.diff(resourceData).affectedKeys().hasOnly(allowed);
+             !('status' in data) && 
+             !('createdAt' in data) && 
+             !('updatedAt' in data) &&
+             !('ticketId' in data) && // id is set by Firestore
+             !('contractorId' in data) &&
+             !('timeline' in data) &&
+             !('feedback' in data);
     }
 
     function isValidFeedback(data) {
@@ -133,19 +105,19 @@ service cloud.firestore {
     }
 
     function isValidCreateInviteData(data, request) {
-      return data.containsKey('tenantEmail') && isValidEmail(data.tenantEmail) &&
-             data.containsKey('propertyId') && data.propertyId is string && data.propertyId.size() > 0 &&
-             data.containsKey('landlordId') && data.landlordId == request.auth.uid &&
-             (!data.containsKey('propertyName') || (data.propertyName is string && data.propertyName.size() <= 100)) &&
-             (!data.containsKey('landlordName') || (data.landlordName is string && data.landlordName.size() <= 100)) &&
-             (!data.containsKey('unitNumber') || (data.unitNumber is string && data.unitNumber.size() <= 20)) &&
-             !data.containsKey('status') &&
-             !data.containsKey('createdAt') &&
-             !data.containsKey('expiresAt') &&
-             !data.containsKey('id') &&
-             !data.containsKey('inviteId') && // inviteId is Firestore doc ID
-             !data.containsKey('tenantId') && // tenantId is set on accept
-             !data.containsKey('acceptedAt'); // acceptedAt is set on accept
+      return 'tenantEmail' in data && isValidEmail(data.tenantEmail) &&
+             'propertyId' in data && data.propertyId is string && data.propertyId.size() > 0 &&
+             'landlordId' in data && data.landlordId == request.auth.uid &&
+             (!('propertyName' in data) || (data.propertyName is string && data.propertyName.size() <= 100)) &&
+             (!('landlordName' in data) || (data.landlordName is string && data.landlordName.size() <= 100)) &&
+             (!('unitNumber' in data) || (data.unitNumber is string && data.unitNumber.size() <= 20)) &&
+             !('status' in data) &&
+             !('createdAt' in data) &&
+             !('expiresAt' in data) &&
+             !('id' in data) &&
+             !('inviteId' in data) && // inviteId is Firestore doc ID
+             !('tenantId' in data) && // tenantId is set on accept
+             !('acceptedAt' in data); // acceptedAt is set on accept
     }
 
     // MATCHES BEGIN HERE
@@ -185,14 +157,25 @@ service cloud.firestore {
 
     match /properties/{propertyId} {
       allow read: if isSignedIn() && (
-        isPropertyOwner(propertyId) || 
+        // Allow property owners (with logging for debugging)
+        (resource.data.landlordId == request.auth.uid) || 
+        // Legacy field support if needed
+        (resource.data.ownerId == request.auth.uid) ||
+        // Support alternative keys that might be present
+        (resource.data.owner == request.auth.uid) ||
+        // Other permission checks
         isPropertyTenant(propertyId) || 
         isAdmin() ||
-        isLandlord() || // Allow any landlord to read any property for debugging
+        // Development mode access for easier debugging
         isDevMode()
       );
-      allow create: if (isLandlord() && request.resource.data.landlordId == request.auth.uid) || isDevMode();
-      allow update, delete: if isPropertyOwner(propertyId) || isDevMode();
+      // Create rule requires landlordId field to be set properly
+      allow create: if isLandlord() && 
+                    request.resource.data.landlordId == request.auth.uid &&
+                    (!('ownerId' in request.resource.data) || request.resource.data.ownerId == request.auth.uid) &&
+                    (!('owner' in request.resource.data) || request.resource.data.owner == request.auth.uid);
+      // Update and delete only allowed for property owner (using consistent field) or dev mode
+      allow update, delete: if (resource.data.landlordId == request.auth.uid) || isDevMode();
 
       match /tenants/{tenantId} {
         allow read: if isPropertyOwner(propertyId) || isOwner(tenantId) || isAdmin() || isDevMode();
@@ -215,7 +198,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (
         resource.data.tenantId == request.auth.uid ||
         isPropertyOwner(resource.data.propertyId) ||
-        (resource.data.containsKey('contractorId') && resource.data.contractorId == request.auth.uid) ||
+        ('contractorId' in resource.data && resource.data.contractorId == request.auth.uid) ||
         isAdmin() ||
         isLandlord() || // Allow any landlord to read any ticket
         isDevMode()
@@ -229,14 +212,14 @@ service cloud.firestore {
         (
           isPropertyOwner(resource.data.propertyId) &&
           (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'contractorId', 'notes', 'timeline', 'updatedAt', 'urgencyLevel', 'issueType'])) &&
-          (request.resource.data.containsKey('status') ? isAllowedTicketStatus(request.resource.data.status) : true) &&
-          (request.resource.data.containsKey('urgencyLevel') ? isAllowedUrgencyLevel(request.resource.data.urgencyLevel) : true) &&
-          (request.resource.data.containsKey('issueType') ? isAllowedIssueType(request.resource.data.issueType) : true)
+          (('status' in request.resource.data) ? isAllowedTicketStatus(request.resource.data.status) : true) &&
+          (('urgencyLevel' in request.resource.data) ? isAllowedUrgencyLevel(request.resource.data.urgencyLevel) : true) &&
+          (('issueType' in request.resource.data) ? isAllowedIssueType(request.resource.data.issueType) : true)
         ) ||
         (
-          resource.data.containsKey('contractorId') && resource.data.contractorId == request.auth.uid && isContractor() &&
+          'contractorId' in resource.data && resource.data.contractorId == request.auth.uid && isContractor() &&
           (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'timeline', 'photos', 'notes', 'updatedAt'])) &&
-          (request.resource.data.containsKey('status') ? isAllowedTicketStatus(request.resource.data.status) : true)
+          (('status' in request.resource.data) ? isAllowedTicketStatus(request.resource.data.status) : true)
         ) ||
         (
           resource.data.tenantId == request.auth.uid && isTenant() &&
@@ -250,7 +233,7 @@ service cloud.firestore {
         allow read: if
           get(/databases/$(database)/documents/tickets/$(ticketId)).data.tenantId == request.auth.uid ||
           isPropertyOwner(get(/databases/$(database)/documents/tickets/$(ticketId)).data.propertyId) ||
-          (get(/databases/$(database)/documents/tickets/$(ticketId)).data.containsKey('contractorId') && 
+          ('contractorId' in get(/databases/$(database)/documents/tickets/$(ticketId)).data && 
            get(/databases/$(database)/documents/tickets/$(ticketId)).data.contractorId == request.auth.uid) ||
           isAdmin();
 
@@ -271,13 +254,6 @@ service cloud.firestore {
 
     // Invite Code Rules - Add after the other collection rules
     match /inviteCodes/{codeId} {
-      // Define rate limiting for invite code access
-      function rateLimitInviteCodeAccess() {
-        return request.time.toMillis() - 
-          (getAfter(/databases/$(database)/documents/users/$(request.auth.uid)/metadata/rateLimit).data.lastInviteCodeAccess || 0)
-          > 5000; // 5 seconds between attempts for rate limiting
-      }
-      
       // Allow reading invite codes if:
       // 1. The user is authenticated
       // 2. They're either the landlord who created the code OR they're validating a code they possess
@@ -299,7 +275,7 @@ service cloud.firestore {
       // 2. They're querying for their own landlordId
       allow list: if request.auth != null &&
         request.query.limit <= 20 &&
-        request.query.where("landlordId", "==", request.auth.uid) != null;
+        request.query == {"landlordId": request.auth.uid};
       
       // Only allow updating invite codes for marking them as used
       // with an atomicity check to prevent race conditions
@@ -312,7 +288,7 @@ service cloud.firestore {
     match /invites/{inviteId} {
       allow read: if isSignedIn() && (
         resource.data.landlordId == request.auth.uid ||
-        (resource.data.containsKey('tenantEmail') && resource.data.tenantEmail == request.auth.token.email) || 
+        ('tenantEmail' in resource.data && resource.data.tenantEmail == request.auth.token.email) || 
         isAdmin()
       );
 
@@ -328,7 +304,7 @@ service cloud.firestore {
         isValidCreateInviteData(request.resource.data, request) &&
         request.resource.data.status == 'pending' &&
         request.resource.data.createdAt == request.time &&
-        request.resource.data.containsKey('expiresAt');
+        'expiresAt' in request.resource.data;
 
       allow update: if isSignedIn() && (
         (
@@ -343,8 +319,8 @@ service cloud.firestore {
              request.resource.data.updatedAt == request.time) : 
            (request.resource.data.status == 'declined' ? 
              (isAllowedInviteStatus(request.resource.data.status) && 
-              !request.resource.data.containsKey('acceptedAt') && 
-              !request.resource.data.containsKey('tenantId') &&
+              !('acceptedAt' in request.resource.data) && 
+              !('tenantId' in request.resource.data) &&
               request.resource.data.updatedAt == request.time) : 
             false)
           )
@@ -364,6 +340,14 @@ service cloud.firestore {
         (isTenant() && resource.data.tenantEmail == request.auth.token.email && resource.data.status == 'declined') ||
         isAdmin()
       );
+    }
+
+    // Add rules for mail collection to enable email sending
+    match /mail/{document} {
+      // Allow authenticated users to create mail documents
+      allow create: if request.auth != null;
+      // Only allow system/admin to read mail documents
+      allow read, update, delete: if false;
     }
 
     // Default fallback

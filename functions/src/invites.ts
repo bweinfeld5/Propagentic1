@@ -14,6 +14,11 @@ import * as nodemailer from 'nodemailer';
 //   },
 // });
 
+// Initialize admin if not already done
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
 // Example using a generic SMTP provider (replace with your provider's details)
 const mailTransport = nodemailer.createTransport({
   host: functions.config().smtp?.host || 'YOUR_SMTP_HOST',
@@ -34,6 +39,8 @@ export const sendInviteEmail = functions.firestore
     const inviteData = snap.data();
     const inviteId = snap.id;
 
+    console.log(`Processing new invite: ${inviteId}`, { config: functions.config().smtp });
+
     if (!inviteData) {
       console.error('No data associated with the event');
       return;
@@ -45,6 +52,12 @@ export const sendInviteEmail = functions.firestore
 
     if (!tenantEmail) {
       console.error('Tenant email is missing from invite data:', inviteId);
+      // Update the invite status to reflect the error
+      await admin.firestore().collection('invites').doc(inviteId).update({ 
+        emailSentStatus: 'failed', 
+        emailError: 'Missing tenant email',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
       return;
     }
 
@@ -67,16 +80,34 @@ export const sendInviteEmail = functions.firestore
       \`,
     };
 
+    console.log(`Attempting to send email to ${tenantEmail}`, mailOptions);
+
     try {
-      await mailTransport.sendMail(mailOptions);
-      console.log('Invitation email sent to:', tenantEmail, 'for invite ID:', inviteId);
+      // Mark as processing
+      await admin.firestore().collection('invites').doc(inviteId).update({ 
+        emailSentStatus: 'processing',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
       
-      // Optionally, update the invite document with a 'emailSentAt' timestamp or status
-      // await admin.firestore().collection('invites').doc(inviteId).update({ emailSentStatus: 'sent', emailSentAt: admin.firestore.FieldValue.serverTimestamp() });
+      // Send the email
+      const info = await mailTransport.sendMail(mailOptions);
+      console.log('Invitation email sent to:', tenantEmail, 'for invite ID:', inviteId, 'Response:', info.response);
+      
+      // Update the invite document with success status
+      await admin.firestore().collection('invites').doc(inviteId).update({ 
+        emailSentStatus: 'sent', 
+        emailSentAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
 
     } catch (error) {
       console.error('There was an error sending the email for invite ID:', inviteId, error);
-      // Optionally, update the invite document with an 'emailSentStatus': 'failed'
-      // await admin.firestore().collection('invites').doc(inviteId).update({ emailSentStatus: 'failed', emailError: (error as Error).message });
+      
+      // Update the invite document with failure status
+      await admin.firestore().collection('invites').doc(inviteId).update({ 
+        emailSentStatus: 'failed', 
+        emailError: (error as Error).message,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
     }
   }); 

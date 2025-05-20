@@ -9,14 +9,45 @@ module.exports = override(
   }),
 
   (config) => {
-    // --- Fix react-refresh module import errors ---
-    // Check if FAST_REFRESH is explicitly set to false
-    if (process.env.FAST_REFRESH === 'false') {
-      console.log("Disabling Fast Refresh features");
-      // Filter out any plugins related to react-refresh
-      config.plugins = config.plugins.filter(plugin => 
-        !plugin.constructor || plugin.constructor.name !== 'ReactRefreshPlugin'
-      );
+    // --- Disable React Fast Refresh regardless of environment ---
+    // This tackles the react-refresh/runtime.js issue
+    console.log("Disabling React Fast Refresh for all builds");
+    
+    // 1. Filter out the ReactRefreshPlugin
+    config.plugins = config.plugins.filter(
+      plugin => !plugin.constructor || plugin.constructor.name !== 'ReactRefreshPlugin'
+    );
+    
+    // 2. Remove react-refresh/runtime.js from entry points
+    if (config.entry) {
+      if (Array.isArray(config.entry)) {
+        config.entry = config.entry.filter(
+          entry => !entry || !entry.includes('react-refresh/runtime.js')
+        );
+      } else if (typeof config.entry === 'object') {
+        Object.keys(config.entry).forEach(key => {
+          if (Array.isArray(config.entry[key])) {
+            config.entry[key] = config.entry[key].filter(
+              entry => !entry || !entry.includes('react-refresh/runtime.js')
+            );
+          }
+        });
+      }
+    }
+    
+    // 3. Remove any babel plugins related to react-refresh
+    if (config.module && config.module.rules) {
+      config.module.rules.forEach(rule => {
+        if (rule.use && Array.isArray(rule.use)) {
+          rule.use.forEach(loader => {
+            if (loader.loader && loader.loader.includes('babel-loader') && loader.options && loader.options.plugins) {
+              loader.options.plugins = loader.options.plugins.filter(
+                plugin => !plugin || (Array.isArray(plugin) && !plugin[0]?.includes('react-refresh'))
+              );
+            }
+          });
+        }
+      });
     }
 
     // --- Webpack 5 Polyfills --- 
@@ -45,6 +76,14 @@ module.exports = override(
       new webpack.ProvidePlugin({
         process: require.resolve('process/browser'),
         Buffer: ['buffer', 'Buffer'],
+      })
+    );
+
+    // Define environment variables to disable Fast Refresh
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        'process.env.FAST_REFRESH': JSON.stringify(false),
+        '__REACT_REFRESH_RUNTIME__': 'false',
       })
     );
 

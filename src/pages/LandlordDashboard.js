@@ -10,6 +10,8 @@ import OverviewCards from '../components/landlord/OverviewCards';
 import RequestFeed from '../components/landlord/RequestFeed';
 import PropertyTable from '../components/landlord/PropertyTable';
 import TenantTable from '../components/landlord/TenantTable';
+import InviteTenantModal from '../components/landlord/InviteTenantModal';
+import Button from '../components/ui/Button';
 
 const LandlordDashboard = () => {
   const { currentUser, userProfile, loading: authLoading } = useAuth();
@@ -26,13 +28,55 @@ const LandlordDashboard = () => {
   const [ticketLoadingError, setTicketLoadingError] = useState(null);
   const [propertiesLoaded, setPropertiesLoaded] = useState(false);
   const [ticketsLoading, setTicketsLoading] = useState(true);
+  const [isInviteModalOpen, setInviteModalOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
 
-  // Basic redirect and auth loading check
+  // Improved auth and user role check with error handling
   useEffect(() => {
-    if (!authLoading && (!currentUser || userProfile?.userType !== 'landlord')) {
-      navigate('/login');
+    console.log('[AuthEffect] Running: authLoading:', authLoading, 'currentUser:', !!currentUser, 'userProfile:', userProfile ? userProfile.userType : 'null');
+
+    if (authLoading) {
+      console.log('[AuthEffect] Waiting for auth to load...');
+      return; 
     }
-  }, [currentUser, userProfile, authLoading, navigate]);
+
+    if (!currentUser) {
+      console.log('[AuthEffect] No current user, navigating to login.');
+      navigate('/login');
+      return;
+    }
+
+    // Wait for userProfile to be loaded
+    if (!userProfile) {
+      console.log('[AuthEffect] User exists, but profile not yet loaded, waiting...');
+      // It's possible setLoadingData(true) should not be here if profile is not yet ready
+      // We want to avoid triggering data fetches with an incomplete profile.
+      return;
+    }
+    
+    // Check if user is a landlord
+    const userType = userProfile.userType || userProfile.role;
+    console.log('[AuthEffect] User and profile loaded. User type:', userType);
+
+    if (userType !== 'landlord') {
+      console.error(`[AuthEffect] User has invalid role for landlord dashboard: ${userType || 'undefined'}`);
+      setError(`You don't have landlord permissions. Your role: ${userType || 'undefined'}.`);
+      navigate('/login'); // Or a more appropriate page like /unauthorized
+      return;
+    }
+    
+    // If we get here, we have a valid landlord user - configure data service
+    console.log('[AuthEffect] Configuring data service for landlord.');
+    dataService.configure({ 
+      isDemoMode, 
+      currentUser, // currentUser already has uid, email, etc.
+      userType: 'landlord' // Explicitly pass 'landlord'
+    });
+    
+    console.log('[AuthEffect] Setting loadingData to true to trigger data fetch.');
+    setLoadingData(true); // This will trigger the property and ticket fetching effects
+    setError(null); // Clear any previous errors
+  }, [currentUser, userProfile, authLoading, navigate, isDemoMode]);
 
   // Helper function to load properties from localStorage cache
   const loadFromCache = () => {
@@ -88,16 +132,36 @@ const LandlordDashboard = () => {
     }
   }, [properties, currentUser?.uid]);
 
-  // Fetch properties using the data service
+  // Fetch properties using the data service - Modified to depend on userProfile AND loadingData
   useEffect(() => {
-    if (!currentUser) return;
-    setLoadingData(true);
-    setError(null); // Reset error state
-    setPropertiesLoaded(false);
+    console.log('[PropertiesEffect] Running: authLoading:', authLoading, 'currentUser:', !!currentUser, 'userProfile:', userProfile ? userProfile.userType : 'null', 'loadingData:', loadingData);
+    // Skip if auth isn't complete or not in data loading phase
+    if (authLoading || !loadingData) {
+      console.log('[PropertiesEffect] Skipping: Auth loading or not in data loading phase.');
+      return;
+    }
+    
+    // Skip if we don't have a user or valid profile yet
+    if (!currentUser || !userProfile) {
+      console.log('[PropertiesEffect] Skipping: No current user or user profile.');
+      return;
+    }
+    
+    // Skip if user doesn't have landlord role (already checked in AuthEffect, but good for safety)
+    const userType = userProfile.userType || userProfile.role;
+    if (userType !== 'landlord') {
+      console.log('[PropertiesEffect] Skipping: User is not a landlord.');
+      return;
+    }
+        
+    // Reset states
+    setError(null);
+    setPropertiesLoaded(false); // Ensure this is reset before fetch
+    console.log('[PropertiesEffect] Proceeding to fetch properties.');
 
     const fetchProperties = withAsyncErrorTracking(async () => {
       try {
-        console.log('Fetching properties for user:', currentUser.uid);
+        console.log('Fetching properties for landlord:', currentUser.uid);
         // Subscribe to properties with real-time updates
         const unsubscribe = dataService.subscribeToProperties(
           // Success callback
@@ -134,11 +198,15 @@ const LandlordDashboard = () => {
         unsubscribe();
       }
     };
-  }, [currentUser, isDemoMode]);
+  }, [currentUser, userProfile, authLoading, loadingData, isDemoMode]);
 
   // Fetch maintenance tickets - update to depend on propertiesLoaded
   useEffect(() => {
-    if (!currentUser || !propertiesLoaded) return; // Only run when properties are loaded
+    console.log('[TicketsEffect] Running: currentUser:', !!currentUser, 'propertiesLoaded:', propertiesLoaded);
+    if (!currentUser || !propertiesLoaded) {
+      console.log('[TicketsEffect] Skipping: No current user or properties not loaded.');
+      return; 
+    }
     
     setTicketsLoading(true);
     setTicketLoadingError(null);
@@ -165,7 +233,11 @@ const LandlordDashboard = () => {
 
   // Fetch tenants data 
   useEffect(() => {
-    if (!currentUser) return;
+    console.log('[TenantsEffect] Running: currentUser:', !!currentUser, 'properties.length:', properties.length);
+    if (!currentUser || properties.length === 0) {
+      console.log('[TenantsEffect] Skipping: No current user or no properties.');
+      return;
+    }
     
     const fetchTenants = withAsyncErrorTracking(async () => {
       try {
@@ -520,15 +592,12 @@ const LandlordDashboard = () => {
                 </svg>
                 Add New Property
               </button>
-              <button className="w-full py-2.5 px-4 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="8.5" cy="7" r="4"></circle>
-                  <line x1="20" y1="8" x2="20" y2="14"></line>
-                  <line x1="23" y1="11" x2="17" y2="11"></line>
-                </svg>
+              <Button
+                variant="primary"
+                onClick={() => setInviteModalOpen(true)}
+              >
                 Invite Tenant
-              </button>
+              </Button>
               <button className="w-full py-2.5 px-4 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -639,6 +708,16 @@ const LandlordDashboard = () => {
           {/* Toast notifications would be rendered here */}
         </div>
       </div>
+
+      <InviteTenantModal
+        isOpen={isInviteModalOpen}
+        onClose={() => setInviteModalOpen(false)}
+        properties={properties}
+        onInviteSuccess={() => {
+          setInviteModalOpen(false);
+          refreshTenants();
+        }}
+      />
     </div>
   );
 };

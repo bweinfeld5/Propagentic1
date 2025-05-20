@@ -50,11 +50,47 @@ class DataService {
    * @param {Object} config - Configuration object
    * @param {boolean} config.isDemoMode - Whether demo mode is active
    * @param {Object} config.currentUser - Currently authenticated user
+   * @param {string} config.userType - User type (optional)
    */
-  configure({ isDemoMode, currentUser }) {
+  configure({ isDemoMode, currentUser, userType }) {
     this.isDemoMode = isDemoMode;
     this.currentUser = currentUser;
-    console.log(`DataService configured: demoMode=${isDemoMode}, user=${currentUser?.uid}`);
+    
+    // Ensure userType is properly set even if missing
+    if (userType) {
+      // If explicitly provided, use it
+      this.currentUser.userType = userType;
+      this.currentUser.role = userType; // For backwards compatibility
+    } else if (currentUser) {
+      // Extract from user profile if available
+      if (currentUser.userType) {
+        // userType already exists on currentUser object
+        this.currentUser.role = currentUser.userType; // Ensure role matches
+      } else if (currentUser.role) {
+        // role exists but userType doesn't
+        this.currentUser.userType = currentUser.role;
+      }
+      
+      // If still missing both userType and role, check for profile data
+      if (!this.currentUser.userType && !this.currentUser.role) {
+        // Try to get from localStorage as a fallback
+        try {
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            const userData = JSON.parse(storedUser);
+            if (userData.userType) {
+              this.currentUser.userType = userData.userType;
+              this.currentUser.role = userData.userType;
+              console.log(`Set userType from localStorage: ${userData.userType}`);
+            }
+          }
+        } catch (e) {
+          console.error('Error reading user data from localStorage:', e);
+        }
+      }
+    }
+    
+    console.log(`DataService configured: demoMode=${isDemoMode}, user=${currentUser?.uid}, userType=${this.currentUser?.userType || 'undefined'}`);
   }
 
   /**

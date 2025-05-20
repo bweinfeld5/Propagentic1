@@ -13,7 +13,7 @@ import {
   ClockIcon,
   DocumentTextIcon,
   BuildingOfficeIcon as OfficeBuildingIcon,
-  EnvelopeIcon as MailIcon,
+  EnvelopeIcon,
   UsersIcon,
   Cog8ToothIcon
 } from '@heroicons/react/24/outline';

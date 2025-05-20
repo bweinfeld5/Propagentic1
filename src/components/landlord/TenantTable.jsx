@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserCircleIcon, MailIcon, PhoneIcon, EyeIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import { UserCircleIcon, EnvelopeIcon, PhoneIcon, EyeIcon, CalendarIcon } from '@heroicons/react/24/outline';
 
 const TenantTable = ({ tenants = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -105,7 +105,7 @@ const TenantTable = ({ tenants = [] }) => {
                           className="text-gray-400 hover:text-teal-600 flex items-center"
                           title={tenant.email}
                         >
-                          <MailIcon className="h-4 w-4" />
+                          <EnvelopeIcon className="h-4 w-4" />
                           <span className="sr-only">Email</span>
                         </a>
                       )}

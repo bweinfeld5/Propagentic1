@@ -37,8 +37,12 @@ const TenantDashboard: React.FC = () => {
       setIsError(false);
       
       try {
-        // Configure data service
-        dataService.configure({ isDemoMode: false, currentUser });
+        // Configure data service with explicit userType
+        dataService.configure({ 
+          isDemoMode: false, 
+          currentUser,
+          userType: userProfile?.userType || userProfile?.role || 'tenant' // Ensure userType is set
+        });
         
         // Fetch pending invites
         if (currentUser.email) {

@@ -9,6 +9,16 @@ module.exports = override(
   }),
 
   (config) => {
+    // --- Fix react-refresh module import errors ---
+    // Check if FAST_REFRESH is explicitly set to false
+    if (process.env.FAST_REFRESH === 'false') {
+      console.log("Disabling Fast Refresh features");
+      // Filter out any plugins related to react-refresh
+      config.plugins = config.plugins.filter(plugin => 
+        !plugin.constructor || plugin.constructor.name !== 'ReactRefreshPlugin'
+      );
+    }
+
     // --- Webpack 5 Polyfills --- 
     // Necessary for dependencies that expect Node.js core modules
     config.resolve.fallback = {

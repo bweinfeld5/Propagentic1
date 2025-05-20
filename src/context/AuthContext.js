@@ -85,18 +85,27 @@ export const AuthProvider = ({ children }) => {
         let needsUpdate = false;
         const updates = {};
         
-        // If userType exists but role doesn't, add role
+        // Ensure both userType and role fields exist and match
+        // If one exists but not the other, copy the value
         if (profileData.userType && !profileData.role) {
           updates.role = profileData.userType;
           needsUpdate = true;
           console.log('Adding missing role field based on userType');
-        }
-        
-        // If role exists but userType doesn't, add userType
-        if (profileData.role && !profileData.userType) {
+        } else if (profileData.role && !profileData.userType) {
           updates.userType = profileData.role;
           needsUpdate = true;
           console.log('Adding missing userType field based on role');
+        } else if (!profileData.userType && !profileData.role) {
+          // Default to tenant if neither exists (should be very rare)
+          updates.userType = 'tenant';
+          updates.role = 'tenant';
+          needsUpdate = true;
+          console.log('WARNING: User has no role or userType. Defaulting to tenant.');
+        } else if (profileData.userType !== profileData.role) {
+          // If both exist but don't match, use userType as source of truth
+          updates.role = profileData.userType;
+          needsUpdate = true;
+          console.log('Fixing mismatch between userType and role fields');
         }
         
         // If onboardingComplete is missing, add it with reasonable default
@@ -109,13 +118,19 @@ export const AuthProvider = ({ children }) => {
         
         // Update document if needed
         if (needsUpdate) {
-          console.log('Updating user document with missing fields:', updates);
+          console.log('Updating user document with missing/fixed fields:', updates);
           await setDoc(userDocRef, updates, { merge: true });
           
           // Refresh profile data after update
           const updatedDoc = await getDoc(userDocRef);
           profileData = updatedDoc.data();
           console.log('Updated user profile data:', profileData);
+        }
+        
+        // Validate that we now have required fields
+        if (!profileData.userType || !profileData.role) {
+          console.error('Critical error: User still missing required fields after attempted repair');
+          // You might want to log this to a monitoring service
         }
         
         // Update the user profile state

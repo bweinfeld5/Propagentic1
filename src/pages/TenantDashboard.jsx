@@ -9,6 +9,7 @@ import HeaderBar from '../components/layout/HeaderBar';
 import NotificationPanel from '../components/layout/NotificationPanel';
 import { Toaster, toast } from 'react-hot-toast';
 import { BellIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import dataService from '../services/dataService';
 
 const TenantDashboard = () => {
   const { currentUser, userProfile } = useAuth();
@@ -31,9 +32,22 @@ const TenantDashboard = () => {
     }
   }, [currentUser, userProfile, navigate]);
 
-  // Fetch tickets with Firestore subscriptions for live updates
+  // Create useEffect for configuration and initial data loading
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+
+    if (userProfile) {
+      // Configure data service with correct user type
+      console.log('Configuring data service for tenant dashboard');
+      dataService.configure({ 
+        isDemoMode: false, 
+        currentUser,
+        userType: userProfile.userType || userProfile.role || 'tenant' // Explicitly set tenant type
+      });
+    }
 
     const fetchTickets = async () => {
       try {
@@ -92,8 +106,10 @@ const TenantDashboard = () => {
       }
     };
     
-    fetchTickets();
-  }, [currentUser]);
+    if (currentUser && userProfile) {
+      fetchTickets();
+    }
+  }, [currentUser, userProfile, navigate]);
 
   // Handle form submission success
   const handleRequestSuccess = () => {

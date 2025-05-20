@@ -17,7 +17,8 @@
     "eject": "react-scripts eject",
     "typecheck": "npx tsc --noEmit",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
-    "start:safe": "cross-env DISABLE_FORK_TS_CHECKER=true CHOKIDAR_USEPOLLING=true react-app-rewired start",
+    "start:safe": "cross-env DISABLE_ESLINT_PLUGIN=true CHOKIDAR_USEPOLLING=true react-app-rewired start",
+    "start:fix": "cross-env FAST_REFRESH=false DISABLE_ESLINT_PLUGIN=true CHOKIDAR_USEPOLLING=true react-app-rewired start",
     "start:legacy": "cross-env NODE_OPTIONS=--openssl-legacy-provider DISABLE_FORK_TS_CHECKER=true CHOKIDAR_USEPOLLING=true react-scripts start",
     "clear-cache": "rm -rf node_modules/.cache",
     "clean-start": "npm run clear-cache && npm run start:safe",
@@ -92,7 +93,7 @@
     "tryer": "^1.0.1",
     "underscore": "1.13.6",
     "uuid": "^11.1.0",
-    "zod": "^3.24.4"
+    "zod": "^3.25.4"
   },
   "author": "",
   "license": "ISC",
@@ -136,9 +137,11 @@
     "cross-env": "^7.0.3",
     "cross-spawn": "^5.1.0",
     "crypto-browserify": "^3.12.0",
+    "css-loader": "^7.1.2",
     "customize-cra": "^1.0.0",
     "eslint": "^9.26.0",
     "eslint-plugin-react": "^7.37.5",
+    "file-loader": "^6.2.0",
     "globals": "^16.1.0",
     "jest-environment-jsdom": "^29.7.0",
     "jsdom": "^26.1.0",
@@ -151,6 +154,7 @@
     "react-scripts": "^5.0.1",
     "rimraf": "^3.0.2",
     "stream-browserify": "^3.0.0",
+    "style-loader": "^4.0.0",
     "tailwindcss": "~3.3.0",
     "ts-jest": "^29.3.3",
     "typescript": "5.8.3",
@@ -175,5 +179,8 @@
       "react": "^19.1.0",
       "react-dom": "^19.1.0"
     }
+  },
+  "engines": {
+    "node": "20"
   }
 }

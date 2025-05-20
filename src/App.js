@@ -16,7 +16,7 @@ const LandingPage = lazy(() => import('./components/landing/LandingPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const TenantDashboard = lazy(() => import('./pages/tenant/TenantDashboard'));
-const LandlordDashboard = lazy(() => import('./pages/landlord/LandlordDashboard'));
+const LandlordDashboard = lazy(() => import('./pages/LandlordDashboard'));
 const ContractorDashboard = lazy(() => import('./components/contractor/ContractorDashboard'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 const OnboardingSurvey = lazy(() => import('./components/onboarding/OnboardingSurvey'));

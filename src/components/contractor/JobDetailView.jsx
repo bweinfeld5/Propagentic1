@@ -7,7 +7,7 @@ import {
   MapPinIcon as LocationMarkerIcon, 
   UserIcon, 
   PhoneIcon, 
-  EnvelopeIcon as MailIcon, 
+  EnvelopeIcon,
   PhotoIcon as PhotographIcon,
   ChatBubbleLeftRightIcon as ChatAlt2Icon,
   CheckCircleIcon,
@@ -233,7 +233,7 @@ const JobDetailView = ({ job, isReadOnly = false }) => {
                 )}
                 {job.tenantEmail && (
                   <p className="text-gray-700 flex items-center mt-1">
-                    <MailIcon className="h-4 w-4 mr-2 text-gray-500" />
+                    <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-500" />
                     <a href={`mailto:${job.tenantEmail}`} className="text-teal-600 hover:text-teal-800">
                       {job.tenantEmail}
                     </a>
@@ -262,7 +262,7 @@ const JobDetailView = ({ job, isReadOnly = false }) => {
                 )}
                 {job.landlordEmail && (
                   <p className="text-gray-700 flex items-center mt-1">
-                    <MailIcon className="h-4 w-4 mr-2 text-gray-500" />
+                    <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-500" />
                     <a href={`mailto:${job.landlordEmail}`} className="text-teal-600 hover:text-teal-800">
                       {job.landlordEmail}
                     </a>

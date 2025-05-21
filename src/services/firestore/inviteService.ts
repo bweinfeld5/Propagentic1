@@ -7,7 +7,8 @@ import {
   query, 
   where,
   serverTimestamp,
-  Timestamp 
+  Timestamp,
+  deleteDoc
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { CreateInviteSchema } from '../../schemas/CreateInviteSchema';
@@ -130,16 +131,33 @@ export const updateInviteStatus = async (
 };
 
 /**
+ * Decline an invite - updates status to declined
+ */
+export const declineInvite = async (inviteId: string): Promise<void> => {
+  try {
+    if (!inviteId) throw new Error('Invite ID is required');
+    
+    const inviteRef = doc(db, 'invites', inviteId);
+    await updateDoc(inviteRef, {
+      status: 'declined' as InviteStatus,
+      declinedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error declining invite:', error);
+    throw error;
+  }
+};
+
+/**
  * Delete invite
  */
 export const deleteInvite = async (inviteId: string): Promise<void> => {
   try {
+    if (!inviteId) throw new Error('Invite ID is required');
+    
     const inviteRef = doc(db, 'invites', inviteId);
-    await updateDoc(inviteRef, {
-      status: 'deleted' as InviteStatus,
-      deletedAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
+    await deleteDoc(inviteRef);
   } catch (error) {
     console.error('Error deleting invite:', error);
     throw error;
@@ -151,7 +169,8 @@ const inviteService = {
   createInvite,
   updateInviteStatus,
   getPendingInvitesForTenant,
-  deleteInvite
+  deleteInvite,
+  declineInvite
 };
 
 export default inviteService; 

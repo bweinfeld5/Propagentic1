@@ -129,10 +129,11 @@ describe('InviteService Tests', () => {
       // by api.update with the correct status and an updatedAt timestamp.
       expect(mockUpdateDoc).toHaveBeenCalledWith(
         expect.objectContaining({ id: mockInvite.inviteId }), // Check that the doc ref has the correct id
-        {
+        expect.objectContaining({
           status: 'declined',
+          declinedAt: expect.anything(),
           updatedAt: expect.anything() // api.update adds updatedAt
-        }
+        })
       );
     });
 

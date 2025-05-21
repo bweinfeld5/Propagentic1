@@ -87,50 +87,27 @@ const HeroSection = () => {
       </div>
       
       {/* Glassy Navigation Bar */}
-      <div className={`
-        sticky top-0 z-50 w-full 
-        transition-all duration-300 ease-in-out 
-        ${isScrolled 
+      <nav className={`sticky top-0 z-50 w-full transition-all duration-300 ease-in-out ${
+        isScrolled 
           ? 'backdrop-blur-md bg-white/10 shadow-lg border-b border-white/20' // More visible when scrolled
           : 'backdrop-blur-sm bg-transparent' // More transparent when at top
-        }
-      `}>
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <img src={Logo} alt="Propagentic Logo" className="h-8" />
-            </div>
-            
-            <div className="hidden md:flex space-x-8">
-              <Link to="/" className="text-white hover:text-white/80 font-medium">
-                Home
-              </Link>
-              <Link to="/pricing" className="text-white hover:text-white/80 font-medium">
-                Pricing
-              </Link>
-              <Link to="/about" className="text-white hover:text-white/80 font-medium">
-                About
-              </Link>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <Link to="/login" className="text-white hover:text-white/80 font-medium">
-                Log In
-              </Link>
-              <Link to="/signup" className={`
-                bg-white/10 px-4 py-2 rounded-md font-medium 
-                ${isScrolled 
-                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md' 
-                  : 'backdrop-blur-md hover:bg-white/20 text-white'
-                } 
-                transition duration-300
-              `}>
-                Sign Up
-              </Link>
-            </div>
+      }`}>
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center">
+            <img src={Logo} alt="Propagentic Logo" className="h-8" />
+          </div>
+          <div className="hidden md:flex space-x-8">
+            <Link to="/" className="text-white hover:text-white/80 font-medium">Home</Link>
+            <Link to="/pricing" className="text-white hover:text-white/80 font-medium">Pricing</Link>
+            <Link to="/about" className="text-white hover:text-white/80 font-medium">About</Link>
+            <Link to="/demo" className="text-white hover:text-white/80 font-medium">Demo</Link>
+          </div>
+          <div className="flex items-center space-x-4">
+            <Link to="/login" className="text-white hover:text-white/80 font-medium">Log In</Link>
+            <Link to="/signup" className={`bg-white/10 px-4 py-2 rounded-md font-medium ${isScrolled ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md' : 'backdrop-blur-md hover:bg-white/20 text-white'} transition duration-300`}>Sign Up</Link>
           </div>
         </div>
-      </div>
+      </nav>
       
       {/* Hero Content */}
       <div className="container mx-auto px-8 pt-16 pb-24 md:py-24 relative z-10">

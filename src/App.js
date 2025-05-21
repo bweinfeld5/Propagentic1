@@ -159,56 +159,51 @@ function App() {
               <DataServiceProvider>
                 <NotificationProvider>
                   <Router>
-                    <GlassyHeader />
                     <Suspense fallback={<UniversalLoadingSpinner message="Loading page..." />}>
                     <Routes>
                       {/* Public routes */}
                       <Route path="/" element={<Navigate to="/propagentic/new" replace />} />
                       <Route path="/propagentic/new" element={<LandingPage />} />
-                      <Route path="/pricing" element={<PricingPage />} />
-                      <Route path="/about" element={<AboutPage />} />
-                      <Route path="/demo" element={<DemoPage />} />
-                      <Route path="/svg-test" element={<SVGTest />} />
-                      <Route path="/blueprint-test" element={<BlueprintTest />} />
-                      
-                      {/* Authentication routes */}
-                      <Route path="/login" element={<LoginPage />} />
-                      <Route path="/register" element={<RegisterPage />} />
-                      <Route path="/signup" element={<RegisterPage />} />
-                      <Route path="/auth" element={<AuthPage />} />
-                      
-                      {/* User specific dashboard routes */}
-                      <Route path="/dashboard" element={<PrivateRoute><RoleBasedRedirect /></PrivateRoute>} />
-                      <Route path="/tenant/dashboard" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />
-                      <Route path="/landlord/dashboard" element={<PrivateRoute><LandlordDashboard /></PrivateRoute>} />
-                      <Route path="/contractor/dashboard" element={<PrivateRoute><ContractorDashboard /></PrivateRoute>} />
-                      
-                      {/* Maintenance routes */}
-                      <Route path="/maintenance/new" element={<PrivateRoute><MaintenanceSurvey /></PrivateRoute>} />
-                      
-                      {/* Onboarding routes */}
-                      <Route path="/onboarding" element={<PrivateRoute><OnboardingSurvey /></PrivateRoute>} />
-                      <Route path="/landlord-onboarding" element={<PrivateRoute><LandlordOnboarding /></PrivateRoute>} />
-                      <Route path="/contractor-onboarding" element={<PrivateRoute><ContractorOnboardingPage /></PrivateRoute>} />
-                      
-                        {/* AI Example Routes */}
-                        <Route path="/ai-examples" element={<AIExamples />} />
-                        <Route path="/ai-tutorial" element={<AITutorial />} />
-
-                        {/* UI Showcase Routes */}
-                        <Route path="/showcase/components" element={<ComponentsShowcasePage />} />
-                        <Route path="/showcase/ui-test" element={<TestUIComponents />} />
-                        <Route path="/showcase/simple-ui" element={<SimpleUIShowcase />} />
-                        
-                        {/* Fallback/Not Found - Redirect to login or a dedicated 404 page */}
-                      <Route path="*" element={<Navigate to="/login" />} />
+                      {/* Render GlassyHeader for all other routes */}
+                      <Route
+                        path="*"
+                        element={
+                          <>
+                            <GlassyHeader />
+                            <Routes>
+                              <Route path="/pricing" element={<PricingPage />} />
+                              <Route path="/about" element={<AboutPage />} />
+                              <Route path="/demo" element={<DemoPage />} />
+                              <Route path="/svg-test" element={<SVGTest />} />
+                              <Route path="/blueprint-test" element={<BlueprintTest />} />
+                              <Route path="/login" element={<LoginPage />} />
+                              <Route path="/register" element={<RegisterPage />} />
+                              <Route path="/signup" element={<RegisterPage />} />
+                              <Route path="/auth" element={<AuthPage />} />
+                              <Route path="/dashboard" element={<PrivateRoute><RoleBasedRedirect /></PrivateRoute>} />
+                              <Route path="/tenant/dashboard" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />
+                              <Route path="/landlord/dashboard" element={<PrivateRoute><LandlordDashboard /></PrivateRoute>} />
+                              <Route path="/contractor/dashboard" element={<PrivateRoute><ContractorDashboard /></PrivateRoute>} />
+                              <Route path="/maintenance/new" element={<PrivateRoute><MaintenanceSurvey /></PrivateRoute>} />
+                              <Route path="/onboarding" element={<PrivateRoute><OnboardingSurvey /></PrivateRoute>} />
+                              <Route path="/landlord-onboarding" element={<PrivateRoute><LandlordOnboarding /></PrivateRoute>} />
+                              <Route path="/contractor-onboarding" element={<PrivateRoute><ContractorOnboardingPage /></PrivateRoute>} />
+                              <Route path="/ai-examples" element={<AIExamples />} />
+                              <Route path="/ai-tutorial" element={<AITutorial />} />
+                              <Route path="/showcase/components" element={<ComponentsShowcasePage />} />
+                              <Route path="/showcase/ui-test" element={<TestUIComponents />} />
+                              <Route path="/showcase/simple-ui" element={<SimpleUIShowcase />} />
+                              {/* Fallback/Not Found - Redirect to login or a dedicated 404 page */}
+                              <Route path="*" element={<Navigate to="/login" />} />
+                            </Routes>
+                          </>
+                        }
+                      />
                     </Routes>
                     </Suspense>
-                    
                     <div id="app-loaded" style={{ position: 'fixed', bottom: 0, right: 0, padding: '5px', background: 'rgba(0,0,0,0.1)', fontSize: '10px', zIndex: 9999, pointerEvents: 'none' }}>
                       App Loaded
                     </div>
-                    
                     <LocalStorageDebug />
                   </Router>
                 </NotificationProvider>

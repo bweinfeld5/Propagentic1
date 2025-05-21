@@ -130,17 +130,20 @@ exports.addContractorToRolodex = (0, https_1.onCall)(async (request) => {
 exports.acceptPropertyInvite = (0, https_1.onCall)(async (request) => {
     // 1. Authentication Check: Ensure the user is authenticated.
     if (!request.auth) {
+        logger.error("acceptPropertyInvite: Unauthenticated call.");
         throw new https_1.HttpsError("unauthenticated", "The function must be called while authenticated.");
     }
     const tenantUid = request.auth.uid;
     const tenantEmail = request.auth.token.email;
     const inviteId = request.data.inviteId;
     if (!inviteId) {
+        logger.error("acceptPropertyInvite: Missing inviteId argument.");
         throw new https_1.HttpsError("invalid-argument", "Invite ID is required.");
     }
     logger.info(`Tenant ${tenantUid} attempting to accept invite ${inviteId}`);
     const inviteRef = db.collection("invites").doc(inviteId);
     const tenantUserRef = db.collection("users").doc(tenantUid);
+    let landlordProfileRef = null;
     try {
         // 2. Run as transaction for atomicity
         await db.runTransaction(async (transaction) => {
@@ -157,25 +160,49 @@ exports.acceptPropertyInvite = (0, https_1.onCall)(async (request) => {
             // Assert data exists after checking exists
             const inviteData = inviteSnap.data();
             const tenantUserData = tenantUserSnap.data();
+            const propertyId = inviteData.propertyId;
+            const landlordId = inviteData.landlordId;
             // Verify tenant email matches the invite
             if (inviteData.tenantEmail !== tenantEmail) {
+                logger.warn(`Permission Denied: Invite email (${inviteData.tenantEmail}) != Auth email (${tenantEmail}) for invite ${inviteId}`);
                 throw new https_1.HttpsError("permission-denied", "This invitation is not for you.");
             }
             // Verify invite status is pending
             if (inviteData.status !== "pending") {
                 throw new https_1.HttpsError("failed-precondition", `This invitation has already been ${inviteData.status}.`);
             }
-            // Verify tenant is not already linked to a property
-            if (tenantUserData.propertyId) {
-                throw new https_1.HttpsError("failed-precondition", "You are already associated with a property.");
-            }
-            const propertyId = inviteData.propertyId;
-            const landlordId = inviteData.landlordId;
+            // Check required data from invite
             if (!propertyId || !landlordId) {
+                logger.error(`Invite ${inviteId} is missing propertyId or landlordId.`);
                 throw new https_1.HttpsError("internal", "Invite data is incomplete.");
             }
             const propertyRef = db.collection("properties").doc(propertyId);
-            const landlordProfileRef = db.collection("landlordProfiles").doc(landlordId);
+            landlordProfileRef = db.collection("landlordProfiles").doc(landlordId);
+            // Check if property exists within transaction
+            const propertySnap = await transaction.get(propertyRef);
+            if (!propertySnap.exists) {
+                logger.error(`Property ${propertyId} from invite ${inviteId} not found.`);
+                throw new https_1.HttpsError("not-found", "The property associated with this invite no longer exists.");
+            }
+            // Check if tenant is already linked to THIS property (idempotency)
+            // If using single property model (as current code does): Check if tenantUserData.propertyId exists AT ALL
+            // Let's stick to the single property model for now based on existing code:
+            if (tenantUserData.propertyId) {
+                if (tenantUserData.propertyId === propertyId) {
+                    logger.warn(`Tenant ${tenantUid} already linked to property ${propertyId}. Invite ${inviteId} acceptance is idempotent.`);
+                    // Don't throw error, just update invite status and proceed if needed, or return early?
+                    // For simplicity, let's just update the invite and return.
+                    transaction.update(inviteRef, {
+                        status: "accepted",
+                        acceptedAt: admin.firestore.FieldValue.serverTimestamp()
+                    });
+                    return; // Exit transaction early
+                }
+                else {
+                    logger.error(`Tenant ${tenantUid} is already associated with a different property (${tenantUserData.propertyId}). Cannot accept invite ${inviteId} for property ${propertyId}.`);
+                    throw new https_1.HttpsError("failed-precondition", "You are already associated with a different property.");
+                }
+            }
             // 4. Perform Updates
             // Update invite status
             transaction.update(inviteRef, {
@@ -225,12 +252,14 @@ exports.acceptPropertyInvite = (0, https_1.onCall)(async (request) => {
 exports.rejectPropertyInvite = (0, https_1.onCall)(async (request) => {
     // 1. Authentication Check
     if (!request.auth) {
+        logger.error("rejectPropertyInvite: Unauthenticated call.");
         throw new https_1.HttpsError("unauthenticated", "The function must be called while authenticated.");
     }
     const tenantUid = request.auth.uid;
     const tenantEmail = request.auth.token.email;
     const inviteId = request.data.inviteId;
     if (!inviteId) {
+        logger.error("rejectPropertyInvite: Missing inviteId argument.");
         throw new https_1.HttpsError("invalid-argument", "Invite ID is required.");
     }
     logger.info(`Tenant ${tenantUid} attempting to reject invite ${inviteId}`);
@@ -246,14 +275,16 @@ exports.rejectPropertyInvite = (0, https_1.onCall)(async (request) => {
             // Assert data exists after checking exists
             const inviteData = inviteSnap.data();
             if (inviteData.tenantEmail !== tenantEmail) {
+                logger.warn(`Permission Denied: Invite email (${inviteData.tenantEmail}) != Auth email (${tenantEmail}) for invite ${inviteId}`);
                 throw new https_1.HttpsError("permission-denied", "This invitation is not for you.");
             }
             if (inviteData.status !== "pending") {
+                logger.warn(`Invite ${inviteId} has status ${inviteData.status}, cannot reject.`);
                 throw new https_1.HttpsError("failed-precondition", "This invitation is no longer pending.");
             }
             // 3. Perform Update
             transaction.update(inviteRef, {
-                status: "rejected",
+                status: "declined",
                 rejectedAt: admin.firestore.FieldValue.serverTimestamp()
             });
         });

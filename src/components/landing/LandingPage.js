@@ -9,10 +9,12 @@ import Testimonials from './Testimonials';
 import PricingSection from './PricingSection';
 import AboutFounder from '../about/AboutFounder';
 import AIExplainerSection from './AIExplainerSection';
+import StickyHeader from './newComponents/StickyHeader';
 
 const LandingPage = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-propagentic-neutral-dark">
+      <StickyHeader />
       {/* 1. Hero section with navigation and role selector */}
       <HeroSection />
       

@@ -2,10 +2,10 @@
 
 /* Base styles for public transparent header */
 .transparent-header {
-  background-color: transparent !important;
-  backdrop-filter: none !important;
-  border: none !important;
-  box-shadow: none !important;
+  background-color: rgba(67, 56, 202, 0.8) !important;
+  backdrop-filter: blur(8px) !important;
+  border-bottom: 1px solid rgba(79, 70, 229, 0.2) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
   width: 100%;
   left: 0;
   top: 0;

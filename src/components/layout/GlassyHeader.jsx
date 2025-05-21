@@ -36,7 +36,7 @@ const GlassyHeader = () => {
   const { getOfflineStatus } = useConnection ? useConnection() : { getOfflineStatus: () => 'online' };
   
   // UI state
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -62,7 +62,7 @@ const GlassyHeader = () => {
   // Handle scroll effect for transparency
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      setIsScrolled(window.scrollY >= 0);
     };
     
     // Check initial scroll position

@@ -129,7 +129,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
         
         {/* Content container */}
-        <div className="relative z-10 min-h-screen w-full">
+        <div className="relative z-10 min-h-screen w-full pt-16">
           {/* Main promotional banner like Stripe */}
           <div className="container mx-auto px-6 pt-28 pb-32 md:pt-36 md:pb-40">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">

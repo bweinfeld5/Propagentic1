@@ -115,13 +115,16 @@ exports.createNotificationOnInvite = (0, firestore_1.onDocumentCreated)('invites
     // 4. Write Notification Document
     try {
         const notificationRef = adminDb.collection('users').doc(tenantUid).collection('notifications');
-        const addedDoc = await notificationRef.add(notificationData);
-        console.log(`Invite ${inviteId}: Notification ${addedDoc.id} created successfully for user ${tenantUid}.`);
+        // Add the notification document
+        await notificationRef.add(notificationData);
+        console.log(`Invite ${inviteId}: Notification created successfully for user ${tenantUid}.`);
         return null; // Successful execution
     }
     catch (error) {
-        console.error(`Invite ${inviteId}: Failed to write notification for user ${tenantUid}:`, error);
-        // Optional: Update invite status to 'error_creating_notification'?
+        // Log error but don't prevent function completion, as invite itself was created
+        console.error(`Invite ${inviteId}: CRITICAL ERROR - Failed to write notification for user ${tenantUid}:`, error);
+        // Optional: Update invite status to 'error_notification_failed'?
+        // await snapshot.ref.update({ status: 'error_notification_failed', errorDetails: 'Failed to create notification document.' });
         return null; // Exit on error during notification write
     }
     console.log(`--- Function End: createNotificationOnInvite (Invite ID: ${inviteId}) ---`);

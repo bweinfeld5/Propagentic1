@@ -8,11 +8,11 @@ import Button from '../../ui/Button';
 
 const HeaderTabs = () => {
   const { currentUser } = useAuth();
-  const [isSticky, setIsSticky] = useState(false);
+  const [isSticky, setIsSticky] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsSticky(window.scrollY > 10);
+      setIsSticky(window.scrollY >= 0);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -21,12 +21,12 @@ const HeaderTabs = () => {
   return (
     <UIComponentErrorBoundary componentName="Header Navigation">
       <SafeMotion.header
-        className={`fixed top-0 left-0 right-0 z-30 transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isSticky
             ? 'bg-background/80 dark:bg-background-dark/80 backdrop-blur-md shadow-md border-b border-border dark:border-border-dark'
             : 'bg-transparent'
         }`}
-        initial={{ y: -100 }}
+        initial={{ y: 0 }}
         animate={{ y: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       >
@@ -46,9 +46,9 @@ const HeaderTabs = () => {
             <div className="flex items-center space-x-8">
               <nav className="hidden md:flex items-center space-x-6">
                 <NavLink to="/propagentic/new" isSticky={isSticky}>Home</NavLink>
+                <NavLink to="/pricing" isSticky={isSticky}>Pricing</NavLink>
                 <NavLink to="/about" isSticky={isSticky}>About</NavLink>
                 <NavLink to="/demo" isSticky={isSticky}>Demo</NavLink>
-                <NavLink to="/pricing" isSticky={isSticky}>Pricing</NavLink>
               </nav>
               
               <div className="flex items-center space-x-4">
@@ -64,18 +64,18 @@ const HeaderTabs = () => {
                   <>
                     <Button 
                       to="/auth?tab=login"
-                      variant="ghost-inverse"
+                      variant={isSticky ? 'primary' : 'light'}
                       size="sm"
-                      className={isSticky ? '!text-content dark:!text-content-dark hover:!bg-neutral-100 dark:hover:!bg-neutral-800' : ''}
+                      className={isSticky ? 'text-content dark:text-content-dark hover:bg-neutral-100 dark:hover:bg-neutral-800' : ''}
                     >
-                      Login
+                      Log In
                     </Button>
                     <Button 
                       to="/auth?tab=signup"
                       variant={isSticky ? 'primary' : 'light'}
                       size="sm"
                     >
-                      Sign Up Free
+                      Sign Up
                     </Button>
                   </>
                 )}

@@ -93,7 +93,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
 
             <div className="flex items-center space-x-2">
               <Button
-                variant="text"
+                variant="ghost"
                 onClick={() => onView(doc)}
                 className="text-content-secondary dark:text-content-darkSecondary hover:text-primary dark:hover:text-primary-light"
               >
@@ -101,7 +101,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
               </Button>
               
               <Button
-                variant="text"
+                variant="ghost"
                 onClick={() => {
                   const date = prompt('Enter new expiration date (YYYY-MM-DD)');
                   if (date) {
@@ -117,7 +117,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
               </Button>
 
               <Button
-                variant="text"
+                variant="ghost"
                 onClick={() => onDelete(doc.id)}
                 className="text-content-secondary dark:text-content-darkSecondary hover:text-error dark:hover:text-error-light"
               >

@@ -1,6 +1,6 @@
 # Task ID: 1
 # Title: Upgrade Firebase Storage for Document Management
-# Status: in-progress
+# Status: done
 # Dependencies: None
 # Priority: high
 # Description: Upgrade Firebase Storage to support secure file uploads, multiple file formats, and implement security rules for document management.

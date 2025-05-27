@@ -9,7 +9,7 @@ service firebase.storage {
     
     function isContractor() {
       return isAuthenticated() && 
-        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'contractor';
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.userType == 'contractor';
     }
     
     function isValidDocumentType() {
@@ -25,7 +25,16 @@ service firebase.storage {
       return request.auth.uid == userId;
     }
 
-    // Document storage rules
+    // Contractor W9 form uploads
+    match /contractors/{userId}/w9/{fileName} {
+      allow read: if isAuthenticated() && isOwner(userId);
+      allow write: if isAuthenticated() && 
+                     isOwner(userId) && 
+                     isValidDocumentType() && 
+                     isValidFileSize();
+    }
+
+    // General document storage rules
     match /documents/{userId}/{documentType}/{fileName} {
       allow read: if isAuthenticated() && isOwner(userId);
       allow create: if isAuthenticated() && 
@@ -34,6 +43,15 @@ service firebase.storage {
                       isValidDocumentType() && 
                       isValidFileSize();
       allow delete: if isAuthenticated() && isOwner(userId);
+    }
+
+    // Contractor documents (more specific path)
+    match /contractors/{userId}/documents/{fileName} {
+      allow read: if isAuthenticated() && isOwner(userId);
+      allow write: if isAuthenticated() && 
+                     isOwner(userId) && 
+                     isValidDocumentType() && 
+                     isValidFileSize();
     }
   }
 } 

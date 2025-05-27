@@ -12,6 +12,7 @@ import {
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { getAnalytics, isSupported } from "firebase/analytics";
+import { stripeConfig, getStripe } from './stripeConfig';
 
 // Firebase configuration object (Merged from firebaseConfig.js)
 // TODO: Use environment variables in production
@@ -90,7 +91,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Export all Firebase services
-export { app, auth, db, storage, functions, analytics };
+export { app, auth, db, storage, functions, analytics, stripeConfig, getStripe };
 
 // Helper for using callable functions
 export const callFunction = async (name, data) => {

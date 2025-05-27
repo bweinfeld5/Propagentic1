@@ -65,7 +65,7 @@ class DocumentService {
   async updateDocument(documentId: string, updates: Partial<Document>): Promise<void> {
     try {
       const docRef = doc(db, this.collectionName, documentId);
-      const updateData = { ...updates };
+      const updateData: any = { ...updates };
       
       // Convert Date objects to Timestamps
       if (updates.expirationDate) {

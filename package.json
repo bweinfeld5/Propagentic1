@@ -60,6 +60,8 @@
     "@headlessui/react": "^2.2.1",
     "@heroicons/react": "^2.2.0",
     "@sendgrid/mail": "^8.1.5",
+    "@stripe/react-stripe-js": "^3.7.0",
+    "@stripe/stripe-js": "^7.3.0",
     "ajv": "^8.17.1",
     "babel-plugin-polyfill-corejs2": "^0.4.13",
     "bfj": "^9.1.2",

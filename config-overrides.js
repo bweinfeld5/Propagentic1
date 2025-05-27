@@ -87,7 +87,26 @@ module.exports = override(
       })
     );
 
+    // --- Suppress source map warnings from intro.js ---
+    // The intro.js library has malformed source maps that cause warnings
+    config.module.rules.push({
+      test: /intro\.js/,
+      use: ['source-map-loader'],
+      enforce: 'pre',
+      exclude: /node_modules\/intro\.js/
+    });
+
+    // Configure webpack to ignore source map warnings from intro.js
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      {
+        module: /intro\.js/,
+      },
+      /Failed to parse source map from.*intro\.js/,
+    ];
+
     console.log("Applied core module fallbacks and polyfills.");
+    console.log("Configured to suppress intro.js source map warnings.");
     return config;
   }
 );

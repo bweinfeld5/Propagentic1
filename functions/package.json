@@ -23,6 +23,7 @@
     "nodemailer": "^7.0.3",
     "openai": "^4.91.0",
     "sourcemap-codec": "^1.4.8",
+    "stripe": "^18.1.1",
     "webidl-conversions": "^7.0.0"
   },
   "devDependencies": {

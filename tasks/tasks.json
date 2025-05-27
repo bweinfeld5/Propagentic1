@@ -8,7 +8,7 @@
       "testStrategy": "Test file uploads, format support, security rule enforcement, and document expiration tracking. Verify encryption and access controls.",
       "priority": "high",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "done",
       "subtasks": []
     },
     {
@@ -67,7 +67,7 @@
       "testStrategy": "Test payment setup, ACH, W-9 collection, bank verification, and error handling. Validate security and data storage.",
       "priority": "high",
       "dependencies": [],
-      "status": "pending",
+      "status": "in-progress",
       "subtasks": []
     },
     {

@@ -1,0 +1,11 @@
+# Task ID: 6
+# Title: Integrate Stripe Connect for Payments
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Integrate Stripe Connect for contractor payments, ACH, W-9 collection, bank account verification, and multiple payment methods.
+# Details:
+Implement Stripe Connect integration. Add ACH, W-9 form collection, bank account verification, and support for multiple payment methods. Store payment info securely.
+
+# Test Strategy:
+Test payment setup, ACH, W-9 collection, bank verification, and error handling. Validate security and data storage.

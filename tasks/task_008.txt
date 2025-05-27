@@ -1,0 +1,11 @@
+# Task ID: 8
+# Title: Implement Accessibility and Auto-save Features
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Add ARIA labels, keyboard navigation, screen reader support, high contrast mode, text size adjustment, auto-save, and progress indicators.
+# Details:
+Implement ARIA labels, keyboard navigation, screen reader support, high contrast mode, text size adjustment. Add auto-save, progress indicators, and email link for resume.
+
+# Test Strategy:
+Test accessibility features, auto-save, progress indicators, and resume functionality.

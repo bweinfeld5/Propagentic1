@@ -18,8 +18,8 @@
   "dependencies": {
     "destroy": "^1.2.0",
     "dotenv": "^16.4.7",
-    "firebase-admin": "^12.6.0",
-    "firebase-functions": "^6.0.1",
+    "firebase-admin": "^13.4.0",
+    "firebase-functions": "^6.3.2",
     "nodemailer": "^7.0.3",
     "openai": "^4.91.0",
     "sourcemap-codec": "^1.4.8",

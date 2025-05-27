@@ -1,0 +1,11 @@
+# Task ID: 7
+# Title: Optimize Mobile Onboarding Experience
+# Status: pending
+# Dependencies: 2, 3, 4
+# Priority: medium
+# Description: Add camera integration, mobile UI improvements, SMS verification, offline support, and resume-later functionality.
+# Details:
+Implement camera integration for document capture. Enhance mobile UI. Add SMS verification via gateway. Support offline form completion and resume-later.
+
+# Test Strategy:
+Test camera integration, mobile UI, SMS verification, offline support, and resume-later flow.

@@ -120,6 +120,14 @@ service cloud.firestore {
              !('acceptedAt' in data); // acceptedAt is set on accept
     }
 
+    // Helper function for document validation
+    function isValidDocumentData() {
+      return request.resource.data.keys().hasAll(['name', 'type', 'url', 'userId', 'documentType']) &&
+             request.resource.data.userId == request.auth.uid &&
+             request.resource.data.type in ['application/pdf', 'image/jpeg', 'image/png'] &&
+             request.resource.data.documentType in ['license', 'certification', 'insurance', 'other'];
+    }
+
     // MATCHES BEGIN HERE
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin() || isDevMode();
@@ -348,6 +356,23 @@ service cloud.firestore {
       allow create: if request.auth != null;
       // Only allow system/admin to read mail documents
       allow read, update, delete: if false;
+    }
+
+    // Contractor documents collection
+    match /contractor_documents/{documentId} {
+      allow read: if isSignedIn() && 
+                    (isOwner(resource.data.userId) || 
+                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+      
+      allow create: if isContractor() && 
+                      isValidDocumentData();
+      
+      allow update: if isContractor() && 
+                      isOwner(resource.data.userId) && 
+                      isValidDocumentData();
+      
+      allow delete: if isContractor() && 
+                      isOwner(resource.data.userId);
     }
 
     // Default fallback

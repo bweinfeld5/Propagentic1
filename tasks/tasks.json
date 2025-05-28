@@ -21,7 +21,7 @@
       "dependencies": [
         1
       ],
-      "status": "pending",
+      "status": "in-progress",
       "subtasks": []
     },
     {
@@ -67,7 +67,7 @@
       "testStrategy": "Test payment setup, ACH, W-9 collection, bank verification, and error handling. Validate security and data storage.",
       "priority": "high",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "done",
       "subtasks": []
     },
     {

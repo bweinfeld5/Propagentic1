@@ -1,6 +1,6 @@
 # Task ID: 2
 # Title: Implement Secure Document Upload and OCR Verification
-# Status: pending
+# Status: in-progress
 # Dependencies: 1
 # Priority: high
 # Description: Build secure file upload interface and integrate OCR for automated document verification.

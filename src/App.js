@@ -17,7 +17,9 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const TenantDashboard = lazy(() => import('./pages/tenant/TenantDashboard'));
 const LandlordDashboard = lazy(() => import('./pages/LandlordDashboard'));
-const ContractorDashboard = lazy(() => import('./components/contractor/ContractorDashboard'));
+const ContractorDashboard = lazy(() => import('./components/contractor/EnhancedContractorDashboard'));
+const ContractorDashboardDemo = lazy(() => import('./pages/ContractorDashboardDemo'));
+const OriginalContractorDashboard = lazy(() => import('./components/contractor/ContractorDashboard'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 const OnboardingSurvey = lazy(() => import('./components/onboarding/OnboardingSurvey'));
 const LandlordOnboarding = lazy(() => import('./components/onboarding/LandlordOnboarding'));
@@ -184,6 +186,8 @@ function App() {
                               <Route path="/tenant/dashboard" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />
                               <Route path="/landlord/dashboard" element={<PrivateRoute><LandlordDashboard /></PrivateRoute>} />
                               <Route path="/contractor/dashboard" element={<PrivateRoute><ContractorDashboard /></PrivateRoute>} />
+                              <Route path="/contractor/dashboard/enhanced" element={<ContractorDashboardDemo />} />
+                              <Route path="/contractor/dashboard/original" element={<PrivateRoute><OriginalContractorDashboard /></PrivateRoute>} />
                               <Route path="/maintenance/new" element={<PrivateRoute><MaintenanceSurvey /></PrivateRoute>} />
                               <Route path="/onboarding" element={<PrivateRoute><OnboardingSurvey /></PrivateRoute>} />
                               <Route path="/landlord-onboarding" element={<PrivateRoute><LandlordOnboarding /></PrivateRoute>} />

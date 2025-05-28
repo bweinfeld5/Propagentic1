@@ -401,194 +401,194 @@ const ContractorOnboarding = () => {
         <div className="border-b border-gray-200 pb-4">
           <h4 className="text-md font-medium text-gray-800 mb-3">Business Information</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
-                Company/Business Name (if applicable)
-              </label>
-              <input
-                type="text"
-                id="companyName"
-                name="companyName"
-                value={formData.companyName}
-                onChange={handleChange}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="yearsExperience" className="block text-sm font-medium text-gray-700">
-                Years of Experience
-              </label>
-              <select
-                id="yearsExperience"
-                name="yearsExperience"
-                value={formData.yearsExperience}
-                onChange={handleChange}
-                className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-              >
-                <option value="0-2">0-2 years</option>
-                <option value="3-5">3-5 years</option>
-                <option value="5-10">5-10 years</option>
-                <option value="10-15">10-15 years</option>
-                <option value="15+">15+ years</option>
-              </select>
-            </div>
+        <div>
+          <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
+            Company/Business Name (if applicable)
+          </label>
+          <input
+            type="text"
+            id="companyName"
+            name="companyName"
+            value={formData.companyName}
+            onChange={handleChange}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+          />
+        </div>
+        <div>
+          <label htmlFor="yearsExperience" className="block text-sm font-medium text-gray-700">
+            Years of Experience
+          </label>
+          <select
+            id="yearsExperience"
+            name="yearsExperience"
+            value={formData.yearsExperience}
+            onChange={handleChange}
+            className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+          >
+            <option value="0-2">0-2 years</option>
+            <option value="3-5">3-5 years</option>
+            <option value="5-10">5-10 years</option>
+            <option value="10-15">10-15 years</option>
+            <option value="15+">15+ years</option>
+          </select>
+        </div>
           </div>
           <div className="mt-4">
-            <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
-              Professional Bio
-            </label>
-            <textarea
-              id="bio"
-              name="bio"
-              rows="3"
-              value={formData.bio}
-              onChange={handleChange}
-              placeholder="Tell us about your experience, skills, and qualifications..."
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-            />
-          </div>
+          <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
+            Professional Bio
+          </label>
+          <textarea
+            id="bio"
+            name="bio"
+            rows="3"
+            value={formData.bio}
+            onChange={handleChange}
+            placeholder="Tell us about your experience, skills, and qualifications..."
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+          />
         </div>
+      </div>
 
         {/* Services Offered */}
         <div className="border-b border-gray-200 pb-4">
           <h4 className="text-md font-medium text-gray-800 mb-3">Services Offered</h4>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Services You Provide * <span className="text-red-500">Required</span>
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-4 rounded-lg">
-              {SERVICE_TYPES.map(service => (
-                <div key={service.id} className="flex items-start">
-                  <div className="flex items-center h-5">
-                    <input
-                      id={`service-${service.id}`}
-                      name={`service-${service.id}`}
-                      type="checkbox"
-                      checked={formData.serviceTypes.includes(service.id)}
-                      onChange={() => handleServiceTypeChange(service.id)}
-                      className="focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300 rounded"
-                    />
-                  </div>
-                  <div className="ml-3 text-sm">
-                    <label htmlFor={`service-${service.id}`} className="font-medium text-gray-700">
-                      {service.name}
-                    </label>
-                  </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Services You Provide * <span className="text-red-500">Required</span>
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-4 rounded-lg">
+            {SERVICE_TYPES.map(service => (
+              <div key={service.id} className="flex items-start">
+                <div className="flex items-center h-5">
+                  <input
+                    id={`service-${service.id}`}
+                    name={`service-${service.id}`}
+                    type="checkbox"
+                    checked={formData.serviceTypes.includes(service.id)}
+                    onChange={() => handleServiceTypeChange(service.id)}
+                    className="focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300 rounded"
+                  />
                 </div>
-              ))}
-            </div>
-            {formData.serviceTypes.length === 0 && (
-              <p className="mt-2 text-xs text-red-600">Please select at least one service.</p>
-            )}
+                <div className="ml-3 text-sm">
+                  <label htmlFor={`service-${service.id}`} className="font-medium text-gray-700">
+                    {service.name}
+                  </label>
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div>
-              <label htmlFor="hourlyRate" className="block text-sm font-medium text-gray-700">
-                Hourly Rate ($)
-              </label>
-              <input
-                type="text"
-                id="hourlyRate"
-                name="hourlyRate"
-                value={formData.hourlyRate}
-                onChange={handleChange}
-                placeholder="e.g., 75"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-              />
-              <p className="mt-1 text-xs text-gray-500">Enter your standard hourly rate for general work.</p>
-            </div>
-            <div>
-              <label htmlFor="serviceArea" className="block text-sm font-medium text-gray-700">
-                Service Area * <span className="text-red-500">Required</span>
-              </label>
-              <input
-                type="text"
-                id="serviceArea"
-                name="serviceArea"
-                value={formData.serviceArea}
-                onChange={handleChange}
-                required
-                placeholder="e.g., San Francisco Bay Area, 30-mile radius of Chicago, etc."
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-              />
-              <p className="mt-1 text-xs text-gray-500">Specify the geographic area where you're available to work.</p>
-            </div>
-          </div>
+          {formData.serviceTypes.length === 0 && (
+            <p className="mt-2 text-xs text-red-600">Please select at least one service.</p>
+          )}
         </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div>
+          <label htmlFor="hourlyRate" className="block text-sm font-medium text-gray-700">
+            Hourly Rate ($)
+          </label>
+          <input
+            type="text"
+            id="hourlyRate"
+            name="hourlyRate"
+            value={formData.hourlyRate}
+            onChange={handleChange}
+            placeholder="e.g., 75"
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+          />
+          <p className="mt-1 text-xs text-gray-500">Enter your standard hourly rate for general work.</p>
+        </div>
+        <div>
+          <label htmlFor="serviceArea" className="block text-sm font-medium text-gray-700">
+            Service Area * <span className="text-red-500">Required</span>
+          </label>
+          <input
+            type="text"
+            id="serviceArea"
+            name="serviceArea"
+            value={formData.serviceArea}
+            onChange={handleChange}
+            required
+            placeholder="e.g., San Francisco Bay Area, 30-mile radius of Chicago, etc."
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+          />
+          <p className="mt-1 text-xs text-gray-500">Specify the geographic area where you're available to work.</p>
+        </div>
+      </div>
+    </div>
 
         {/* Contact & Availability */}
         <div className="border-b border-gray-200 pb-4">
           <h4 className="text-md font-medium text-gray-800 mb-3">Contact & Availability</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                readOnly
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-50 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-              />
-              <p className="mt-1 text-xs text-gray-500">Email address cannot be changed.</p>
-            </div>
-            <div>
-              <label htmlFor="preferredContactMethod" className="block text-sm font-medium text-gray-700">
-                Preferred Contact Method
-              </label>
-              <select
-                id="preferredContactMethod"
-                name="preferredContactMethod"
-                value={formData.preferredContactMethod}
-                onChange={handleChange}
-                className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-              >
-                <option value="email">Email</option>
-                <option value="phone">Phone</option>
-                <option value="text">Text Message</option>
-              </select>
-            </div>
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            Email
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            readOnly
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-50 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+          />
+          <p className="mt-1 text-xs text-gray-500">Email address cannot be changed.</p>
+        </div>
+        <div>
+          <label htmlFor="preferredContactMethod" className="block text-sm font-medium text-gray-700">
+            Preferred Contact Method
+          </label>
+          <select
+            id="preferredContactMethod"
+            name="preferredContactMethod"
+            value={formData.preferredContactMethod}
+            onChange={handleChange}
+            className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+          >
+            <option value="email">Email</option>
+            <option value="phone">Phone</option>
+            <option value="text">Text Message</option>
+          </select>
+        </div>
           </div>
           <div className="mt-4">
-            <label htmlFor="availabilityNotes" className="block text-sm font-medium text-gray-700">
-              Availability
-            </label>
-            <textarea
-              id="availabilityNotes"
-              name="availabilityNotes"
-              rows="3"
-              value={formData.availabilityNotes}
-              onChange={handleChange}
-              placeholder="e.g., Available weekdays 8am-5pm, emergency services available 24/7"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-            />
-          </div>
+          <label htmlFor="availabilityNotes" className="block text-sm font-medium text-gray-700">
+            Availability
+          </label>
+          <textarea
+            id="availabilityNotes"
+            name="availabilityNotes"
+            rows="3"
+            value={formData.availabilityNotes}
+            onChange={handleChange}
+            placeholder="e.g., Available weekdays 8am-5pm, emergency services available 24/7"
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+          />
         </div>
+      </div>
 
         {/* Business Verification */}
-        <div>
+    <div>
           <h4 className="text-md font-medium text-gray-800 mb-3">Business Verification (Optional)</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="taxId" className="block text-sm font-medium text-gray-700">
-                Tax ID / EIN (optional)
-              </label>
-              <input
-                type="text"
-                id="taxId"
-                name="taxId"
-                value={formData.taxId}
-                onChange={handleChange}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                This information is for verification purposes and will be kept secure.
-              </p>
-            </div>
-            <div>
+        <div>
+          <label htmlFor="taxId" className="block text-sm font-medium text-gray-700">
+            Tax ID / EIN (optional)
+          </label>
+          <input
+            type="text"
+            id="taxId"
+            name="taxId"
+            value={formData.taxId}
+            onChange={handleChange}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            This information is for verification purposes and will be kept secure.
+          </p>
+        </div>
+        <div>
               <label htmlFor="website" className="block text-sm font-medium text-gray-700">
                 Website (optional)
               </label>
@@ -604,19 +604,19 @@ const ContractorOnboarding = () => {
             </div>
           </div>
           <div className="mt-4">
-            <label htmlFor="insuranceInfo" className="block text-sm font-medium text-gray-700">
-              Insurance Information (optional)
-            </label>
-            <input
-              type="text"
-              id="insuranceInfo"
-              name="insuranceInfo"
-              value={formData.insuranceInfo}
-              onChange={handleChange}
-              placeholder="e.g., Liability Insurance Policy #12345"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-            />
-          </div>
+          <label htmlFor="insuranceInfo" className="block text-sm font-medium text-gray-700">
+            Insurance Information (optional)
+          </label>
+          <input
+            type="text"
+            id="insuranceInfo"
+            name="insuranceInfo"
+            value={formData.insuranceInfo}
+            onChange={handleChange}
+            placeholder="e.g., Liability Insurance Policy #12345"
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+          />
+        </div>
         </div>
       </div>
     </div>
@@ -651,23 +651,23 @@ const ContractorOnboarding = () => {
     <div>
       <h3 className="text-lg font-medium text-gray-900 mb-4">Payment Methods</h3>
       <PaymentMethodsManager onComplete={handlePaymentMethodsComplete} />
-      
-      <div className="bg-gray-50 p-4 rounded-md mt-6">
+        
+        <div className="bg-gray-50 p-4 rounded-md mt-6">
         <h4 className="text-base font-medium text-gray-900 mb-2">Setup Complete!</h4>
-        <p className="text-sm text-gray-700 mb-4">
+          <p className="text-sm text-gray-700 mb-4">
           Congratulations! You've completed all the required steps to start receiving jobs and payments.
           Your profile will be displayed to landlords looking to hire contractors.
-        </p>
-        
-        <div className="text-sm text-gray-700">
-          <p className="font-medium">Services Selected:</p>
-          <ul className="mt-1 list-disc list-inside pl-2">
-            {formData.serviceTypes.map(serviceId => (
-              <li key={serviceId}>
-                {SERVICE_TYPES.find(s => s.id === serviceId)?.name || serviceId}
-              </li>
-            ))}
-          </ul>
+          </p>
+          
+          <div className="text-sm text-gray-700">
+            <p className="font-medium">Services Selected:</p>
+            <ul className="mt-1 list-disc list-inside pl-2">
+              {formData.serviceTypes.map(serviceId => (
+                <li key={serviceId}>
+                  {SERVICE_TYPES.find(s => s.id === serviceId)?.name || serviceId}
+                </li>
+              ))}
+            </ul>
         </div>
       </div>
     </div>

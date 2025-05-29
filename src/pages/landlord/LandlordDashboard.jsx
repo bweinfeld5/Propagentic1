@@ -13,10 +13,14 @@ import {
   MagnifyingGlassIcon,
   Square3Stack3DIcon,
   ClipboardDocumentListIcon,
-  ArrowTrendingUpIcon
+  ArrowTrendingUpIcon,
+  UserGroupIcon,
+  ChatBubbleLeftRightIcon,
+  CloudArrowUpIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext';
 import BulkPropertyImport from '../../components/landlord/BulkPropertyImport';
+import CommunicationCenter from '../../components/communication/CommunicationCenter';
 
 // Phase 1.2 Components
 import DragDropDashboard from '../../components/dashboard/DragDropDashboard';
@@ -181,6 +185,18 @@ const LandlordDashboard = () => {
       label: 'Documents',
       icon: DocumentTextIcon,
       view: 'documents'
+    },
+    {
+      id: 'communications',
+      label: 'Communications',
+      icon: ChatBubbleLeftRightIcon,
+      view: 'communications'
+    },
+    {
+      id: 'import',
+      label: 'Import Properties',
+      icon: CloudArrowUpIcon,
+      view: 'import'
     }
   ];
 
@@ -318,6 +334,10 @@ const LandlordDashboard = () => {
         return renderMaintenanceView();
       case 'documents':
         return renderDocumentsView();
+      case 'communications':
+        return <CommunicationCenter userRole="landlord" currentUser={currentUser} />;
+      case 'import':
+        return <BulkPropertyImport />;
       default:
         return renderDefaultDashboard();
     }

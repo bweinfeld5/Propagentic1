@@ -188,20 +188,20 @@ const W9FormUpload: React.FC<W9FormUploadProps> = ({ onComplete }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-background-darkSubtle rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold text-content dark:text-content-dark mb-4">
+    <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
+      <h4 className="text-lg font-semibold text-gray-900 mb-4">
         W-9 Form Upload
-      </h2>
+      </h4>
 
       <div className="space-y-4">
-        <p className="text-content-secondary dark:text-content-darkSecondary">
+        <p className="text-gray-600">
           Please upload a completed W-9 form. This is required for tax purposes.
           You can download a blank W-9 form from the{' '}
           <a
             href="https://www.irs.gov/pub/irs-pdf/fw9.pdf"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary hover:text-primary-dark dark:hover:text-primary-light underline"
+            className="text-orange-600 hover:text-orange-700 underline font-medium"
           >
             IRS website
           </a>
@@ -209,16 +209,30 @@ const W9FormUpload: React.FC<W9FormUploadProps> = ({ onComplete }) => {
         </p>
 
         {error && (
-          <div className="bg-error/10 border-l-4 border-error text-error p-4 rounded">
-            <p className="font-medium">Upload Error</p>
-            <p className="text-sm mt-1">{error}</p>
+          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
+            <div className="flex">
+              <svg className="w-5 h-5 text-red-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.314 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <div>
+                <p className="font-medium">Upload Error</p>
+                <p className="text-sm mt-1">{error}</p>
+              </div>
+            </div>
           </div>
         )}
 
         {uploadStatus === 'complete' && downloadUrl && (
-          <div className="bg-success/10 border-l-4 border-success text-success p-4 rounded">
-            <p className="font-medium">✅ W-9 Form Uploaded Successfully</p>
-            <p className="text-sm mt-1">Your tax document has been securely stored.</p>
+          <div className="bg-green-50 border border-green-200 text-green-800 p-4 rounded-lg">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="font-medium">✅ W-9 Form Uploaded Successfully</p>
+                <p className="text-sm mt-1">Your tax document has been securely stored.</p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -247,12 +261,12 @@ const W9FormUpload: React.FC<W9FormUploadProps> = ({ onComplete }) => {
             </Button>
 
             {file && uploadStatus !== 'complete' && (
-              <div className="bg-background-subtle dark:bg-background-darkSubtle p-3 rounded border">
+              <div className="bg-gray-50 border border-gray-200 p-3 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-content-secondary dark:text-content-darkSecondary truncate flex-1 mr-2">
+                  <span className="text-sm text-gray-600 truncate flex-1 mr-2">
                     📄 {file.name}
                   </span>
-                  <span className="text-xs text-content-secondary dark:text-content-darkSecondary">
+                  <span className="text-xs text-gray-500">
                     {(file.size / 1024 / 1024).toFixed(2)}MB
                   </span>
                 </div>
@@ -262,16 +276,16 @@ const W9FormUpload: React.FC<W9FormUploadProps> = ({ onComplete }) => {
             {uploadStatus === 'uploading' && (
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-content-secondary dark:text-content-darkSecondary">
+                  <span className="text-sm text-gray-600">
                     Uploading...
                   </span>
-                  <span className="text-sm font-medium text-primary">
+                  <span className="text-sm font-medium text-orange-600">
                     {uploadProgress.toFixed(0)}%
                   </span>
                 </div>
-                <div className="w-full bg-background-subtle dark:bg-background-darkSubtle rounded-full h-2">
+                <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    className="bg-orange-500 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
@@ -308,7 +322,7 @@ const W9FormUpload: React.FC<W9FormUploadProps> = ({ onComplete }) => {
         </div>
 
         {process.env.NODE_ENV === 'development' && (
-          <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded text-sm">
+          <div className="mt-4 p-3 bg-gray-100 rounded text-sm">
             <strong>Debug Info:</strong>
             <div>Status: {uploadStatus}</div>
             <div>Progress: {uploadProgress.toFixed(1)}%</div>

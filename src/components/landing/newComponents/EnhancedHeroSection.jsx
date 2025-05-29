@@ -141,7 +141,7 @@ const EnhancedHeroSection = () => {
                 variants={itemVariants}
               >
                 <Button 
-                  to={`/auth?tab=signup&role=${selectedRole.toLowerCase()}`}
+                  to={`/signup?role=${selectedRole.toLowerCase()}`}
                   variant="light"
                   size="lg"
                   className="px-10 py-4 font-semibold"

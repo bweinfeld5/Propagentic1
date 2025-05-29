@@ -1,259 +1,341 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
-import Logo from '../../assets/images/logo.svg';
-import LandlordDashboardDemo from './LandlordDashboardDemo';
-import ContractorDashboardDemo from './ContractorDashboardDemo';
-import TenantDashboardDemo from './TenantDashboardDemo';
+import { UnifiedHeader } from '../layout/headers';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../../firebase/config';
+
+// Simple dashboard demo loader
+const EnhancedDashboardDemo = lazy(() => import('./EnhancedDashboardDemo'));
+
+// Simple loading skeleton
+const DashboardSkeleton = () => (
+  <div className="relative max-w-4xl mx-auto animate-pulse">
+    <div className="bg-gray-300 rounded-lg aspect-[16/10] p-4">
+      <div className="bg-gray-200 rounded h-full p-4 space-y-3">
+        <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+        <div className="grid grid-cols-3 gap-3 mt-6">
+          <div className="h-16 bg-gray-300 rounded"></div>
+          <div className="h-16 bg-gray-300 rounded"></div>
+          <div className="h-16 bg-gray-300 rounded"></div>
+        </div>
+        <div className="h-32 bg-gray-300 rounded mt-6"></div>
+      </div>
+    </div>
+  </div>
+);
+
+// Simple email validation
+const validateEmail = (email) => {
+  if (!email) return ['Email address is required'];
+  if (!email.includes('@')) return ['Email must contain @ symbol'];
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) return ['Please enter a valid email address'];
+  return [];
+};
 
 const HeroSection = () => {
   const [selectedRole, setSelectedRole] = useState('Landlord');
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState('');
+  const [emailErrors, setEmailErrors] = useState([]);
+  const [hasInteracted, setHasInteracted] = useState(false);
   
-  // Role-based content
-  const roleContent = {
+  // Simple role content
+  const roleContent = useMemo(() => ({
     Landlord: {
-      headline: "Cut maintenance response times by 65%",
-      description: "Verified contractors. Real-time tracking. Done in a click.",
-      image: "landlord-dashboard.png"
-    },
-    Contractor: {
-      headline: "Get matched with more jobs — instantly",
-      description: "Verified contractors. Real-time tracking. Done in a click.",
-      image: "contractor-dashboard.png"
+      headline: "No more midnight",
+      highlightWord: "maintenance",
+      endingWords: "calls",
+      tagline: "Property management that actually works.",
+      description: "Work orders auto-route to vetted pros while you sleep.",
+      ctaText: "Start managing smarter"
     },
     Tenant: {
-      headline: "Submit & track issues in real time",
-      description: "Verified contractors. Real-time tracking. Done in a click.",
-      image: "tenant-dashboard.png"
+      headline: "Repairs in one tap",
+      highlightWord: "",
+      endingWords: "",
+      tagline: "Rental experience made simple.",
+      description: "Snap a photo → track status → get it fixed, hassle-free.",
+      ctaText: "Make renting easier"
+    },
+    Contractor: {
+      headline: "Skip bidding—jobs already approved",
+      highlightWord: "",
+      endingWords: "",
+      tagline: "More jobs, better matches.",
+      description: "Pre-priced work orders land directly in your queue.",
+      ctaText: "Join our network"
     }
-  };
+  }), []);
 
-  // Save role preference to localStorage
-  useEffect(() => {
-    localStorage.setItem('preferredRole', selectedRole);
-  }, [selectedRole]);
-  
-  // Load preferred role from localStorage on initial load
+  // Simple email submission
+  const handleEmailSubmit = useCallback(async (e) => {
+    e.preventDefault();
+    setHasInteracted(true);
+    
+    const errors = validateEmail(email);
+    setEmailErrors(errors);
+    
+    if (errors.length > 0) {
+      setSubmitStatus('error');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus('');
+
+    try {
+      await addDoc(collection(db, 'mail'), {
+        to: email,
+        message: {
+          subject: 'Welcome to Propagentic - You\'re In!',
+          text: `Thanks for your interest in Propagentic! We'll keep you updated on our latest features.`
+        },
+        metadata: {
+          source: 'hero_section',
+          role: selectedRole.toLowerCase(),
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      setSubmitStatus('success');
+      setEmail('');
+      setEmailErrors([]);
+      setHasInteracted(false);
+      
+      setTimeout(() => setSubmitStatus(''), 5000);
+
+    } catch (error) {
+      console.error('Error subscribing:', error);
+      setSubmitStatus('error');
+      setEmailErrors(['Unable to subscribe. Please try again later.']);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [email, selectedRole]);
+
+  // Simple role change
+  const handleRoleChange = useCallback((role) => {
+    setSelectedRole(role);
+    localStorage.setItem('preferredRole', role);
+  }, []);
+
+  // Simple email change
+  const handleEmailChange = useCallback((e) => {
+    const value = e.target.value;
+    setEmail(value);
+    
+    if (hasInteracted && value) {
+      const errors = validateEmail(value);
+      setEmailErrors(errors);
+      if (errors.length === 0) setSubmitStatus('');
+    }
+  }, [hasInteracted]);
+
+  // Load saved role
   useEffect(() => {
     const savedRole = localStorage.getItem('preferredRole');
     if (savedRole && ['Landlord', 'Contractor', 'Tenant'].includes(savedRole)) {
       setSelectedRole(savedRole);
     }
   }, []);
-  
-  // Animation for the "See How It Works" arrow
-  const [isHovered, setIsHovered] = useState(false);
-  
-  // Dashboard transition state
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  
-  // Handle role change with animation
-  const handleRoleChange = (role) => {
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setSelectedRole(role);
-      setTimeout(() => {
-        setIsTransitioning(false);
-      }, 300);
-    }, 300);
-  };
 
-  // Add scroll state for navbar effect
-  const [isScrolled, setIsScrolled] = useState(false);
-  
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const currentContent = roleContent[selectedRole];
 
   return (
-    <div className="relative overflow-hidden min-h-screen">
-      {/* Enhanced gradient background - made stronger and positioned to be behind all content */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-700 opacity-95"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-400/40 via-transparent to-transparent"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-indigo-700/50 to-transparent"></div>
-        
-        {/* Added subtle grid pattern for texture */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="h-full w-full" style={{
-            backgroundImage: 'linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, .1) 25%, rgba(255, 255, 255, .1) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .1) 75%, rgba(255, 255, 255, .1) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(255, 255, 255, .1) 25%, rgba(255, 255, 255, .1) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .1) 75%, rgba(255, 255, 255, .1) 76%, transparent 77%, transparent)',
-            backgroundSize: '50px 50px'
-          }}></div>
-        </div>
-      </div>
+    <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800">
+      <UnifiedHeader variant="marketing" />
       
-      {/* Glassy Navigation Bar */}
-      <nav className={`sticky top-0 z-50 w-full transition-all duration-300 ease-in-out ${
-        isScrolled 
-          ? 'backdrop-blur-md bg-white/10 shadow-lg border-b border-white/20' // More visible when scrolled
-          : 'backdrop-blur-sm bg-transparent' // More transparent when at top
-      }`}>
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <img src={Logo} alt="Propagentic Logo" className="h-8" />
-          </div>
-          <div className="hidden md:flex space-x-8">
-            <Link to="/" className="text-white hover:text-white/80 font-medium">Home</Link>
-            <Link to="/pricing" className="text-white hover:text-white/80 font-medium">Pricing</Link>
-            <Link to="/about" className="text-white hover:text-white/80 font-medium">About</Link>
-            <Link to="/demo" className="text-white hover:text-white/80 font-medium">Demo</Link>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Link to="/login" className="text-white hover:text-white/80 font-medium">Log In</Link>
-            <Link to="/signup" className={`bg-white/10 px-4 py-2 rounded-md font-medium ${isScrolled ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md' : 'backdrop-blur-md hover:bg-white/20 text-white'} transition duration-300`}>Sign Up</Link>
-          </div>
-        </div>
-      </nav>
-      
-      {/* Hero Content */}
-      <div className="container mx-auto px-8 pt-16 pb-24 md:py-24 relative z-10">
-        <div className="flex flex-col md:flex-row items-center max-w-7xl mx-auto">
-          <div className="md:w-1/2 md:pr-16">
-            {/* Large role selector cards - without icons */}
-            <div className="flex flex-wrap gap-4 mb-10">
-              {['Landlord', 'Contractor', 'Tenant'].map((role) => (
-                <button
-                  key={role}
-                  onClick={() => handleRoleChange(role)}
-                  className={`flex items-center justify-center px-8 py-4 rounded-xl transition-all duration-300 ${
-                    selectedRole === role
-                      ? 'bg-white text-indigo-900 shadow-lg transform scale-105'
-                      : 'bg-white/20 text-white hover:bg-white/30'
-                  }`}
-                >
-                  <span className="font-medium">{role}</span>
-                </button>
-              ))}
+      {/* Simple main content */}
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-16 md:py-24 relative z-10">
+        <div className="flex flex-col lg:flex-row items-center max-w-7xl mx-auto gap-12 lg:gap-20">
+          
+          {/* Left Content */}
+          <div className="w-full lg:w-1/2 text-center lg:text-left">
+            {/* Simple Role Selector */}
+            <div className="flex justify-center lg:justify-start gap-1 mb-10 sm:mb-12">
+              <div className="flex bg-white/20 backdrop-blur-sm p-1 rounded-xl border border-white/20">
+                {['Landlord', 'Tenant', 'Contractor'].map((role) => (
+                  <button
+                    key={role}
+                    onClick={() => handleRoleChange(role)}
+                    className={`px-6 sm:px-8 py-3 text-sm sm:text-base font-semibold transition-all duration-200 ease-out focus:outline-none rounded-lg ${
+                      selectedRole === role
+                        ? 'bg-white text-gray-700 shadow-lg'
+                        : 'text-white hover:text-white/90 hover:bg-white/10'
+                    }`}
+                    aria-pressed={selectedRole === role}
+                    aria-label={`Select ${role} view`}
+                  >
+                    {role}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight mb-6">
-              {roleContent[selectedRole].headline}
-            </h1>
-            <p className="text-xl text-white mb-10 max-w-xl">
-              {roleContent[selectedRole].description}
-            </p>
-            
-            {/* Email input and CTA buttons */}
+            {/* Simple Content */}
             <div className="mb-8">
-              <form className="flex flex-col sm:flex-row gap-3 mb-6">
-                <input
-                  type="email"
-                  placeholder="Work email"
-                  className="px-4 py-3 rounded-lg bg-white text-indigo-900 placeholder-indigo-400 border border-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                />
-                <button
-                  type="submit"
-                  className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-500 transition duration-150 shadow-md flex items-center justify-center"
-                >
-                  <span>Get Started Free</span>
-                  <span className="ml-2">✅</span>
-                </button>
-              </form>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4 sm:mb-6">
+                {currentContent.headline}
+                {currentContent.highlightWord && (
+                  <>
+                    {' '}
+                    <span className="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 bg-clip-text text-transparent font-bold">
+                      {currentContent.highlightWord}
+                    </span>
+                    {currentContent.endingWords && ` ${currentContent.endingWords}`}
+                  </>
+                )}
+              </h1>
               
-              <Link 
-                to="/how-it-works" 
-                className="inline-flex items-center border border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white/10 transition duration-150"
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-              >
-                <span>See How It Works</span>
-                <span className={`ml-2 transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`}>→</span>
-              </Link>
+              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-white/95 mb-3 sm:mb-4">
+                {currentContent.tagline}
+              </h2>
+              
+              <p className="text-base sm:text-lg text-white/85 mb-8 sm:mb-10 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+                {currentContent.description}
+              </p>
+            </div>
+            
+            {/* Simple Email Form */}
+            <div className="mb-8 sm:mb-10">
+              {submitStatus === 'success' ? (
+                <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-6 py-4 rounded-xl mb-6 shadow-sm" role="alert">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 mr-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 11-16 0 8 8 0 0116 0zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <span className="font-semibold">You're on the list!</span>
+                      <p className="text-sm mt-1">Check your email for confirmation.</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleEmailSubmit} className="space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto lg:mx-0">
+                    <div className="flex-1">
+                      <label htmlFor="email-input" className="sr-only">Work email address</label>
+                      <input
+                        id="email-input"
+                        type="email"
+                        value={email}
+                        onChange={handleEmailChange}
+                        placeholder="Work email"
+                        className={`w-full px-4 py-3 rounded-xl bg-white text-gray-900 placeholder-gray-400 border-2 focus:outline-none focus:ring-0 transition-all duration-200 ${
+                          emailErrors.length > 0 && hasInteracted
+                            ? 'border-red-400 focus:border-red-500' 
+                            : email && emailErrors.length === 0 && hasInteracted
+                            ? 'border-emerald-400 focus:border-emerald-500'
+                            : 'border-gray-100 focus:border-orange-300'
+                        }`}
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || (hasInteracted && emailErrors.length > 0)}
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 sm:px-10 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent shadow-lg disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200"
+                    >
+                      {isSubmitting ? (
+                        <span className="flex items-center justify-center">
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span className="hidden sm:inline">Joining...</span>
+                          <span className="sm:hidden">...</span>
+                        </span>
+                      ) : (
+                        <>
+                          <span className="hidden sm:inline">{currentContent.ctaText}</span>
+                          <span className="sm:hidden">Get Started</span>
+                          <span className="ml-2">→</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  
+                  {/* Simple error messages */}
+                  {emailErrors.length > 0 && hasInteracted && (
+                    <div className="space-y-1" role="alert">
+                      {emailErrors.map((error, index) => (
+                        <p key={index} className="text-red-200 text-sm flex items-center">
+                          <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          {error}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </form>
+              )}
+              
+              {/* Simple secondary action */}
+              <div className="mt-6">
+                <Link 
+                  to="/how-it-works" 
+                  className="inline-flex items-center text-white/90 hover:text-white font-medium transition-colors duration-200"
+                >
+                  <span>See How It Works</span>
+                  <span className="ml-2">→</span>
+                </Link>
+              </div>
             </div>
           </div>
           
-          <div className="md:w-1/2 mt-12 md:mt-0">
-            <div className="relative">
-              {/* Adding depth to the dashboard mockup with custom transition */}
-              <div className="relative transform perspective-1000 hover:scale-105 transition-transform duration-500 shadow-2xl rounded-xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-purple-500/20 rounded-xl"></div>
-                
-                {/* Dashboard with custom transition */}
-                <div className={`relative z-10 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-                  {selectedRole === 'Landlord' && <LandlordDashboardDemo />}
-                  {selectedRole === 'Contractor' && <ContractorDashboardDemo />}
-                  {selectedRole === 'Tenant' && <TenantDashboardDemo />}
+          {/* Right Content - Dashboard Demo */}
+          <div className="w-full lg:w-1/2">
+            <div className="relative max-w-4xl mx-auto">
+              <Suspense fallback={<DashboardSkeleton />}>
+                <div className="relative z-10">
+                  <EnhancedDashboardDemo role={selectedRole} />
                 </div>
+              </Suspense>
                 
-                {/* Floating testimonial bubble */}
-                <div className="absolute -top-10 -right-5 bg-white rounded-lg p-3 shadow-lg w-52 transform rotate-2 z-20">
-                  <p className="text-sm font-medium text-gray-800">
-                    "Tickets closed 3x faster since switching!"
-                  </p>
-                  <div className="absolute -bottom-2 left-6 w-4 h-4 bg-white transform rotate-45"></div>
-                </div>
-                
-                {/* Activity pulse indicator */}
-                <div className="absolute top-5 right-5 flex items-center">
-                  <span className="relative flex h-3 w-3 mr-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                  </span>
-                  <span className="text-xs text-white bg-black/30 px-2 py-1 rounded-full">Live Data</span>
-                </div>
+              {/* Simple testimonial */}
+              <div className="absolute -top-2 sm:-top-4 -right-2 sm:-right-4 bg-white rounded-xl p-3 sm:p-4 shadow-xl w-44 sm:w-56 transform rotate-1 z-20 border border-gray-100">
+                <p className="text-sm font-semibold text-gray-800">
+                  "Tickets closed 3x faster since switching!"
+                </p>
+                <div className="absolute -bottom-2 left-6 w-4 h-4 bg-white transform rotate-45 border-r border-b border-gray-100"></div>
               </div>
             </div>
             
-            {/* Testimonial Quote */}
-            <div className="mt-8 bg-white p-6 rounded-lg shadow-lg border border-indigo-100">
-              <p className="italic text-indigo-900 mb-4">
+            {/* Simple testimonial quote */}
+            <div className="mt-8 sm:mt-10 bg-white/95 p-6 sm:p-8 rounded-xl shadow-lg border border-white/20 max-w-4xl mx-auto">
+              <blockquote className="italic text-gray-900 mb-4 text-base sm:text-lg">
                 "We solved more issues in 2 weeks with Propagentic than all of last quarter."
-              </p>
+              </blockquote>
               <div className="flex items-center">
-                <div className="h-10 w-10 rounded-full bg-indigo-300 mr-3"></div>
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-orange-300 mr-4 flex-shrink-0"></div>
                 <div>
-                  <p className="font-semibold text-indigo-900">Rachel T.</p>
-                  <p className="text-sm text-indigo-700/80">Regional Property Manager</p>
+                  <p className="font-semibold text-gray-900 text-base sm:text-lg">Rachel T.</p>
+                  <p className="text-sm sm:text-base text-gray-700">Regional Property Manager</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
       
-      {/* Trust badges/logos with improved contrast */}
-      <div className="container mx-auto px-6 py-8 relative z-10">
-        <p className="text-center text-white text-sm mb-6">Trusted by forward-thinking property managers</p>
-        <div className="flex flex-wrap justify-center gap-8 items-center">
-          <div className="h-8 w-32 bg-white/20 rounded-md"></div>
-          <div className="h-8 w-24 bg-white/20 rounded-md"></div>
-          <div className="h-8 w-36 bg-white/20 rounded-md"></div>
-          <div className="h-8 w-28 bg-white/20 rounded-md"></div>
+      {/* Simple trust section */}
+      <section className="container mx-auto px-4 sm:px-6 py-8 sm:py-10 relative z-10">
+        <p className="text-center text-white/80 text-sm sm:text-base mb-6 sm:mb-8 font-medium">
+          Trusted by forward-thinking property managers
+        </p>
+        <div className="flex flex-wrap justify-center gap-6 sm:gap-8 lg:gap-12 items-center">
+          {[1, 2, 3, 4].map((index) => (
+            <div 
+              key={index} 
+              className="w-28 sm:w-36 h-8 sm:h-10 bg-white/30 rounded-lg shadow-sm hover:bg-white/40 transition-colors duration-200"
+            ></div>
+          ))}
         </div>
-      </div>
-      
-      {/* Security Badges with improved visibility */}
-      <div className="container mx-auto px-6 py-8 flex flex-wrap justify-center gap-6 relative z-10">
-        <div className="flex items-center space-x-2 text-sm text-white">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-          </svg>
-          <span>GDPR-Compliant</span>
-        </div>
-        <div className="flex items-center space-x-2 text-sm text-white">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-          </svg>
-          <span>SOC2-Ready</span>
-        </div>
-        <div className="flex items-center space-x-2 text-sm text-white">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-          </svg>
-          <span>Firebase Secured</span>
-        </div>
-      </div>
-      
-      {/* Wave divider - adding more contrast for the wave */}
-      <div className="absolute bottom-0 left-0 right-0 z-10">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" className="w-full">
-          <path fill="#ffffff" fillOpacity="1" d="M0,96L80,106.7C160,117,320,139,480,154.7C640,171,800,181,960,165.3C1120,149,1280,107,1360,85.3L1440,64L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
-        </svg>
-      </div>
+      </section>
     </div>
   );
 };

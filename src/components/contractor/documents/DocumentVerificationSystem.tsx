@@ -8,7 +8,10 @@ import {
   EyeIcon,
   ArrowPathIcon,
   ShieldCheckIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  DocumentArrowUpIcon,
+  DocumentMagnifyingGlassIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import Button from '../../ui/Button';
 import FileUpload from './FileUpload';
@@ -46,6 +49,18 @@ interface UploadedDocument {
 interface VerificationSystemProps {
   contractorId: string;
   onVerificationComplete?: (isVerified: boolean) => void;
+}
+
+interface Document {
+  id: string;
+  name: string;
+  type: 'license' | 'insurance' | 'certification' | 'identification' | 'other';
+  status: 'pending' | 'approved' | 'rejected';
+  uploadDate: Date;
+  expiryDate?: Date;
+  reviewDate?: Date;
+  reviewNotes?: string;
+  fileUrl?: string;
 }
 
 const DocumentVerificationSystem: React.FC<VerificationSystemProps> = ({
@@ -105,6 +120,64 @@ const DocumentVerificationSystem: React.FC<VerificationSystemProps> = ({
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [overallVerificationStatus, setOverallVerificationStatus] = useState<'pending' | 'approved' | 'rejected'>('pending');
+
+  const [activeTab, setActiveTab] = useState<'upload' | 'status'>('status');
+  const [uploadType, setUploadType] = useState<string>('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [expiryDate, setExpiryDate] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  
+  // Mock documents data
+  const [documents, setDocuments] = useState<Document[]>([
+    {
+      id: '1',
+      name: 'Contractor License',
+      type: 'license',
+      status: 'approved',
+      uploadDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), // 30 days ago
+      expiryDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 335), // 335 days from now
+      reviewDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 28), // 28 days ago
+      fileUrl: '#'
+    },
+    {
+      id: '2',
+      name: 'Liability Insurance',
+      type: 'insurance',
+      status: 'pending',
+      uploadDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
+      expiryDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 180), // 180 days from now
+      fileUrl: '#'
+    },
+    {
+      id: '3',
+      name: 'Certification',
+      type: 'certification',
+      status: 'rejected',
+      uploadDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), // 5 days ago
+      reviewDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
+      reviewNotes: 'Document is illegible. Please resubmit a clearer copy.',
+      fileUrl: '#'
+    },
+    {
+      id: '4',
+      name: 'ID Verification',
+      type: 'identification',
+      status: 'approved',
+      uploadDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60), // 60 days ago
+      reviewDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 59), // 59 days ago
+      fileUrl: '#'
+    }
+  ]);
+  
+  // Document type options
+  const documentTypes = [
+    { value: 'license', label: 'Contractor License' },
+    { value: 'insurance', label: 'Liability Insurance' },
+    { value: 'certification', label: 'Professional Certification' },
+    { value: 'identification', label: 'ID Verification' },
+    { value: 'other', label: 'Other Document' }
+  ];
 
   // Load contractor documents
   useEffect(() => {
@@ -227,7 +300,7 @@ const DocumentVerificationSystem: React.FC<VerificationSystemProps> = ({
     return requiredDocs.every(doc => doc.verificationStatus === 'approved');
   };
 
-  const handleResubmitDocument = (documentId: string) => {
+  const handleResubmit = (documentId: string) => {
     // Logic to allow resubmission of rejected documents
     setSelectedDocumentType(documentId);
   };
@@ -249,206 +322,348 @@ const DocumentVerificationSystem: React.FC<VerificationSystemProps> = ({
     }
   };
 
+  // Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0]);
+      setUploadError(null);
+    }
+  };
+  
+  // Handle document upload
+  const handleUpload = () => {
+    if (!selectedFile || !uploadType) {
+      setUploadError('Please select a document type and file');
+      return;
+    }
+    
+    setIsUploading(true);
+    setUploadError(null);
+    
+    // Simulate upload delay
+    setTimeout(() => {
+      // In a real app, this would upload to Firebase Storage
+      const newDocument: Document = {
+        id: `doc-${Date.now()}`,
+        name: documentTypes.find(type => type.value === uploadType)?.label || 'Document',
+        type: uploadType as any,
+        status: 'pending',
+        uploadDate: new Date(),
+        expiryDate: expiryDate ? new Date(expiryDate) : undefined,
+        fileUrl: '#'
+      };
+      
+      setDocuments([...documents, newDocument]);
+      setSelectedFile(null);
+      setUploadType('');
+      setExpiryDate('');
+      setIsUploading(false);
+      setActiveTab('status');
+    }, 2000);
+  };
+  
+  // Get status badge
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return (
+          <span className="flex items-center text-green-700 bg-green-100 px-2.5 py-0.5 rounded-full text-xs font-medium">
+            <CheckCircleIcon className="w-3 h-3 mr-1" />
+            Approved
+          </span>
+        );
+      case 'pending':
+        return (
+          <span className="flex items-center text-orange-700 bg-orange-100 px-2.5 py-0.5 rounded-full text-xs font-medium">
+            <ClockIcon className="w-3 h-3 mr-1" />
+            Pending
+          </span>
+        );
+      case 'rejected':
+        return (
+          <span className="flex items-center text-red-700 bg-red-100 px-2.5 py-0.5 rounded-full text-xs font-medium">
+            <XCircleIcon className="w-3 h-3 mr-1" />
+            Rejected
+          </span>
+        );
+      default:
+        return (
+          <span className="flex items-center text-gray-700 bg-gray-100 px-2.5 py-0.5 rounded-full text-xs font-medium">
+            Unknown
+          </span>
+        );
+    }
+  };
+  
+  // Get document icon
+  const getDocumentIcon = (type: string) => {
+    switch (type) {
+      case 'license':
+        return <DocumentCheckIcon className="w-5 h-5 text-blue-600" />;
+      case 'insurance':
+        return <DocumentCheckIcon className="w-5 h-5 text-purple-600" />;
+      case 'certification':
+        return <DocumentCheckIcon className="w-5 h-5 text-green-600" />;
+      case 'identification':
+        return <DocumentMagnifyingGlassIcon className="w-5 h-5 text-orange-600" />;
+      default:
+        return <DocumentCheckIcon className="w-5 h-5 text-gray-600" />;
+    }
+  };
+  
+  // Check verification status
+  const getVerificationStatus = () => {
+    const requiredDocs = ['license', 'insurance', 'identification'];
+    const approvedRequiredDocs = documents.filter(
+      doc => requiredDocs.includes(doc.type) && doc.status === 'approved'
+    );
+    
+    if (approvedRequiredDocs.length === requiredDocs.length) {
+      return {
+        status: 'complete',
+        message: 'Verification complete. You are eligible to receive job assignments.',
+        icon: CheckCircleIcon,
+        color: 'text-green-600',
+        bgColor: 'bg-green-50',
+        borderColor: 'border-green-200'
+      };
+    } else if (documents.some(doc => doc.status === 'rejected')) {
+      return {
+        status: 'rejected',
+        message: 'One or more documents have been rejected. Please resubmit.',
+        icon: ExclamationTriangleIcon,
+        color: 'text-red-600',
+        bgColor: 'bg-red-50',
+        borderColor: 'border-red-200'
+      };
+    } else {
+      return {
+        status: 'incomplete',
+        message: `${approvedRequiredDocs.length}/${requiredDocs.length} required documents verified.`,
+        icon: ClockIcon,
+        color: 'text-orange-600',
+        bgColor: 'bg-orange-50',
+        borderColor: 'border-orange-200'
+      };
+    }
+  };
+  
+  const verificationStatus = getVerificationStatus();
+  const StatusIcon = verificationStatus.icon;
+
   return (
-    <div className="space-y-8">
-      {/* Verification Status Overview */}
-      <div className="bg-background dark:bg-background-darkSubtle rounded-xl border border-border dark:border-border-dark p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <ShieldCheckIcon className="w-8 h-8 text-primary" />
-            <div>
-              <h2 className="text-2xl font-bold text-content dark:text-content-dark">
-                Document Verification
-              </h2>
-              <p className="text-content-secondary dark:text-content-darkSecondary">
-                Complete verification to start receiving jobs
-              </p>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-3xl font-bold text-primary">
-              {calculateCompletionPercentage()}%
-            </div>
-            <div className="text-sm text-content-secondary dark:text-content-darkSecondary">
-              Complete
-            </div>
+    <div className="space-y-6">
+      {/* Verification Status */}
+      <div className={`${verificationStatus.bgColor} ${verificationStatus.borderColor} border rounded-xl p-4 shadow-md`}>
+        <div className="flex items-center">
+          <StatusIcon className={`w-6 h-6 ${verificationStatus.color} mr-3`} />
+          <div>
+            <h3 className={`font-semibold ${verificationStatus.color}`}>Verification Status: {verificationStatus.status}</h3>
+            <p className="text-gray-600 text-sm">{verificationStatus.message}</p>
           </div>
         </div>
-
-        {/* Progress Bar */}
-        <div className="w-full bg-background-subtle dark:bg-background-dark rounded-full h-3 mb-4">
-          <div
-            className="bg-gradient-to-r from-primary to-secondary h-3 rounded-full transition-all duration-500"
-            style={{ width: `${calculateCompletionPercentage()}%` }}
-          />
-        </div>
-
-        {isFullyVerified() && (
-          <div className="bg-success/10 border border-success/20 rounded-lg p-4 flex items-center space-x-3">
-            <CheckCircleIcon className="w-6 h-6 text-success" />
-            <div>
-              <p className="font-medium text-success">Verification Complete!</p>
-              <p className="text-sm text-success/80">
-                You're now eligible to receive job assignments
-              </p>
+      </div>
+      
+      {/* Tabs */}
+      <div className="flex bg-orange-100 rounded-lg p-1">
+        <button
+          onClick={() => setActiveTab('status')}
+          className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+            activeTab === 'status'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Document Status
+        </button>
+        <button
+          onClick={() => setActiveTab('upload')}
+          className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+            activeTab === 'upload'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Upload Documents
+        </button>
+      </div>
+      
+      {/* Content */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-md">
+        {activeTab === 'status' ? (
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Documents</h3>
+            
+            {documents.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <DocumentCheckIcon className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-gray-500 font-medium">No documents uploaded</h3>
+                <p className="text-gray-400 text-sm mt-1">
+                  Upload your documents to get verified
+                </p>
+                <button
+                  onClick={() => setActiveTab('upload')}
+                  className="mt-4 px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors duration-200"
+                >
+                  Upload Documents
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {documents.map((document) => (
+                  <div 
+                    key={document.id}
+                    className={`border rounded-lg p-4 ${
+                      document.status === 'rejected' 
+                        ? 'border-red-200 bg-red-50' 
+                        : document.status === 'approved'
+                          ? 'border-green-200 bg-green-50'
+                          : 'border-orange-200 bg-orange-50'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start">
+                        <div className="p-2 bg-white rounded-lg shadow-sm mr-3">
+                          {getDocumentIcon(document.type)}
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900">{document.name}</h4>
+                          <div className="flex items-center mt-1 space-x-2">
+                            {getStatusBadge(document.status)}
+                            <span className="text-xs text-gray-500">
+                              Uploaded: {document.uploadDate.toLocaleDateString()}
+                            </span>
+                          </div>
+                          {document.expiryDate && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Expires: {document.expiryDate.toLocaleDateString()}
+                            </p>
+                          )}
+                          {document.reviewNotes && (
+                            <div className="mt-2 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg p-2">
+                              <p className="font-medium">Review Notes:</p>
+                              <p>{document.reviewNotes}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        {document.status === 'rejected' && (
+                          <button
+                            onClick={() => handleResubmit(document.id)}
+                            className="p-1.5 rounded-lg bg-orange-100 text-orange-700 hover:bg-orange-200"
+                            aria-label="Resubmit document"
+                          >
+                            <ArrowPathIcon className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteDocument(document.id)}
+                          className="p-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
+                          aria-label="Delete document"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload New Document</h3>
+            
+            <div className="space-y-4">
+              {/* Document Type */}
+              <div>
+                <label htmlFor="document-type" className="block text-sm font-medium text-gray-700 mb-1">
+                  Document Type
+                </label>
+                <select
+                  id="document-type"
+                  value={uploadType}
+                  onChange={(e) => setUploadType(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Select document type</option>
+                  {documentTypes.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* File Upload */}
+              <div>
+                <label htmlFor="document-file" className="block text-sm font-medium text-gray-700 mb-1">
+                  Upload File
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-orange-500 transition-colors duration-200">
+                  <input
+                    id="document-file"
+                    type="file"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                    accept=".pdf,.jpg,.jpeg,.png"
+                  />
+                  <label htmlFor="document-file" className="cursor-pointer">
+                    <DocumentArrowUpIcon className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-700 mb-1">
+                      {selectedFile ? selectedFile.name : 'Click to upload or drag and drop'}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      PDF, JPG or PNG (max. 10MB)
+                    </p>
+                  </label>
+                </div>
+              </div>
+              
+              {/* Expiry Date */}
+              <div>
+                <label htmlFor="expiry-date" className="block text-sm font-medium text-gray-700 mb-1">
+                  Expiry Date (if applicable)
+                </label>
+                <input
+                  id="expiry-date"
+                  type="date"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                />
+              </div>
+              
+              {/* Error Message */}
+              {uploadError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {uploadError}
+                </div>
+              )}
+              
+              {/* Submit Button */}
+              <div className="flex justify-end">
+                <button
+                  onClick={handleUpload}
+                  disabled={isUploading || !selectedFile || !uploadType}
+                  className="px-6 py-2 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isUploading ? (
+                    <span className="flex items-center">
+                      <ArrowPathIcon className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading...
+                    </span>
+                  ) : (
+                    'Upload Document'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         )}
-      </div>
-
-      {/* Required Documents Checklist */}
-      <div className="bg-background dark:bg-background-darkSubtle rounded-xl border border-border dark:border-border-dark p-6">
-        <h3 className="text-xl font-semibold text-content dark:text-content-dark mb-6 flex items-center">
-          <DocumentCheckIcon className="w-6 h-6 mr-2" />
-          Required Documents
-        </h3>
-
-        <div className="space-y-4">
-          {requiredDocuments.map((reqDoc) => (
-            <div
-              key={reqDoc.id}
-              className={`border rounded-lg p-4 transition-all duration-200 ${getVerificationStatusColor(reqDoc.verificationStatus)}`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-start space-x-4">
-                  <div className="mt-1">
-                    {getVerificationStatusIcon(reqDoc.verificationStatus)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <h4 className="font-medium text-content dark:text-content-dark">
-                        {reqDoc.name}
-                      </h4>
-                      {reqDoc.required && (
-                        <span className="text-xs bg-error/20 text-error px-2 py-1 rounded">
-                          Required
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-content-secondary dark:text-content-darkSecondary mt-1">
-                      {reqDoc.description}
-                    </p>
-                    
-                    {reqDoc.uploadedDocument && (
-                      <div className="mt-2 space-y-1">
-                        <p className="text-sm text-content dark:text-content-dark">
-                          Uploaded: {reqDoc.uploadedDocument.name}
-                        </p>
-                        {reqDoc.uploadedDocument.expirationDate && (
-                          <p className="text-sm text-content-secondary dark:text-content-darkSecondary">
-                            Expires: {reqDoc.uploadedDocument.expirationDate.toLocaleDateString()}
-                          </p>
-                        )}
-                        {reqDoc.verificationStatus === 'rejected' && reqDoc.uploadedDocument.rejectionReason && (
-                          <p className="text-sm text-error bg-error/10 p-2 rounded">
-                            Rejection reason: {reqDoc.uploadedDocument.rejectionReason}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  {reqDoc.uploadedDocument && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleViewDocument(reqDoc.uploadedDocument!)}
-                    >
-                      <EyeIcon className="w-4 h-4" />
-                    </Button>
-                  )}
-                  
-                  {(reqDoc.verificationStatus === 'not_submitted' || reqDoc.verificationStatus === 'rejected') && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedDocumentType(reqDoc.id)}
-                    >
-                      {reqDoc.verificationStatus === 'rejected' ? (
-                        <>
-                          <ArrowPathIcon className="w-4 h-4 mr-1" />
-                          Resubmit
-                        </>
-                      ) : (
-                        'Upload'
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* File Upload Section */}
-      {selectedDocumentType && (
-        <div className="bg-background dark:bg-background-darkSubtle rounded-xl border border-border dark:border-border-dark p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-semibold text-content dark:text-content-dark">
-              Upload Document: {requiredDocuments.find(d => d.id === selectedDocumentType)?.name}
-            </h3>
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedDocumentType('')}
-            >
-              Cancel
-            </Button>
-          </div>
-          
-          <FileUpload
-            onUploadComplete={(url, metadata) => handleFileUpload(url, metadata, selectedDocumentType)}
-            onUploadError={handleUploadError}
-            userId={contractorId}
-            documentType={selectedDocumentType as any}
-            allowedFileTypes={['application/pdf', 'image/jpeg', 'image/png']}
-            maxFileSize={10 * 1024 * 1024} // 10MB
-          />
-        </div>
-      )}
-
-      {/* Uploaded Documents List */}
-      {uploadedDocuments.length > 0 && (
-        <div className="bg-background dark:bg-background-darkSubtle rounded-xl border border-border dark:border-border-dark p-6">
-          <h3 className="text-xl font-semibold text-content dark:text-content-dark mb-6 flex items-center">
-            <DocumentTextIcon className="w-6 h-6 mr-2" />
-            All Documents
-          </h3>
-          
-          <DocumentList
-            documents={uploadedDocuments.map(doc => ({
-              id: doc.id,
-              name: doc.name,
-              type: doc.type,
-              url: doc.url,
-              uploadedAt: doc.uploadedAt,
-              expirationDate: doc.expirationDate,
-              status: doc.status
-            }))}
-            onDelete={handleDeleteDocument}
-            onView={(document) => handleViewDocument(uploadedDocuments.find(d => d.id === document.id)!)}
-            onUpdateExpiration={(docId, date) => {
-              // Handle expiration date update
-              updateDoc(doc(db, 'contractorDocuments', docId), {
-                expirationDate: date
-              });
-            }}
-          />
-        </div>
-      )}
-
-      {/* Verification Tips */}
-      <div className="bg-info/10 border border-info/20 rounded-lg p-4">
-        <h4 className="font-medium text-info mb-2">Verification Tips</h4>
-        <ul className="text-sm text-info/80 space-y-1">
-          <li>• Ensure all documents are clear and legible</li>
-          <li>• Upload documents in PDF, JPEG, or PNG format</li>
-          <li>• Make sure documents are current and not expired</li>
-          <li>• Verification typically takes 1-2 business days</li>
-          <li>• You'll receive email notifications about verification status</li>
-        </ul>
       </div>
     </div>
   );

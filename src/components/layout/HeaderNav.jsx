@@ -98,7 +98,7 @@ const HeaderNav = () => {
           onClick={toggleDemoMode}
           className={`px-3 py-1 text-xs font-medium rounded-full ${
             isDemoMode 
-              ? 'bg-blue-500 text-white hover:bg-blue-600' 
+              ? 'bg-primary text-white hover:bg-primary-dark' 
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >

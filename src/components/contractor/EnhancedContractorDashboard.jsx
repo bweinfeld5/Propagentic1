@@ -169,36 +169,36 @@ const EnhancedContractorDashboard = () => {
       case 'approved':
         return {
           icon: CheckCircleIcon,
-          color: 'text-success',
-          bgColor: 'bg-success/10',
-          borderColor: 'border-success/20',
+          color: 'text-green-600',
+          bgColor: 'bg-green-50',
+          borderColor: 'border-green-200',
           message: 'Verification Complete',
           description: 'You\'re eligible to receive job assignments'
         };
       case 'pending':
         return {
           icon: ClockIcon,
-          color: 'text-warning',
-          bgColor: 'bg-warning/10',
-          borderColor: 'border-warning/20',
+          color: 'text-orange-600',
+          bgColor: 'bg-orange-50',
+          borderColor: 'border-orange-200',
           message: 'Verification Pending',
           description: 'Complete document verification to start receiving jobs'
         };
       case 'rejected':
         return {
           icon: XCircleIcon,
-          color: 'text-error',
-          bgColor: 'bg-error/10',
-          borderColor: 'border-error/20',
+          color: 'text-red-600',
+          bgColor: 'bg-red-50',
+          borderColor: 'border-red-200',
           message: 'Verification Required',
           description: 'Please resubmit required documents'
         };
       default:
         return {
           icon: ExclamationTriangleIcon,
-          color: 'text-content-secondary',
-          bgColor: 'bg-background-subtle',
-          borderColor: 'border-border',
+          color: 'text-gray-600',
+          bgColor: 'bg-gray-50',
+          borderColor: 'border-gray-200',
           message: 'Verification Status Unknown',
           description: 'Check your verification status'
         };
@@ -310,17 +310,17 @@ const EnhancedContractorDashboard = () => {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-background dark:bg-background-darkSubtle rounded-xl border border-border dark:border-border-dark p-6">
-          <h3 className="text-lg font-semibold text-content dark:text-content-dark mb-4">
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl border border-orange-200 p-6 shadow-lg">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Recent Activity
           </h3>
           {tickets.length === 0 ? (
             <div className="text-center py-8">
-              <ClipboardDocumentListIcon className="w-12 h-12 mx-auto text-content-secondary dark:text-content-darkSecondary mb-4" />
-              <p className="text-content-secondary dark:text-content-darkSecondary">
+              <ClipboardDocumentListIcon className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-600">
                 No recent activity
               </p>
-              <p className="text-sm text-content-secondary dark:text-content-darkSecondary mt-1">
+              <p className="text-sm text-gray-500 mt-1">
                 Job assignments will appear here
               </p>
             </div>
@@ -329,13 +329,13 @@ const EnhancedContractorDashboard = () => {
               {tickets.slice(0, 5).map((ticket) => (
                 <div
                   key={ticket.id}
-                  className="flex items-center justify-between p-3 bg-background dark:bg-background-dark rounded-lg border border-border dark:border-border-dark"
+                  className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200 hover:bg-orange-100 transition-colors duration-200"
                 >
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-content dark:text-content-dark">
+                    <p className="text-sm font-medium text-gray-900">
                       {ticket.issueType?.replace('_', ' ') || 'Maintenance Request'}
                     </p>
-                    <p className="text-xs text-content-secondary dark:text-content-darkSecondary">
+                    <p className="text-xs text-gray-600">
                       {ticket.propertyName} • {ticket.updatedAt.toLocaleDateString()}
                     </p>
                   </div>
@@ -361,64 +361,64 @@ const EnhancedContractorDashboard = () => {
   const renderJobsTab = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-content dark:text-content-dark">
+        <h3 className="text-lg font-semibold text-gray-900">
           Job Assignments
         </h3>
-        <div className="text-sm text-content-secondary dark:text-content-darkSecondary">
+        <div className="text-sm text-gray-600">
           {tickets.length} total jobs
         </div>
       </div>
 
       {tickets.length === 0 ? (
-        <div className="bg-background dark:bg-background-darkSubtle rounded-xl border border-border dark:border-border-dark p-12 text-center">
-          <ClipboardDocumentListIcon className="w-16 h-16 mx-auto text-content-secondary dark:text-content-darkSecondary mb-4" />
-          <h3 className="text-lg font-medium text-content dark:text-content-dark mb-2">
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl border border-orange-200 p-12 text-center shadow-lg">
+          <ClipboardDocumentListIcon className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
             No Job Assignments
           </h3>
-          <p className="text-content-secondary dark:text-content-darkSecondary">
+          <p className="text-gray-600">
             You'll see jobs here when landlords assign maintenance requests to you.
           </p>
         </div>
       ) : (
-        <div className="bg-background dark:bg-background-darkSubtle rounded-xl border border-border dark:border-border-dark overflow-hidden">
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl border border-orange-200 overflow-hidden shadow-lg">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border dark:divide-border-dark">
-              <thead className="bg-background-subtle dark:bg-background-dark">
+            <table className="min-w-full divide-y divide-orange-200">
+              <thead className="bg-orange-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-content-secondary dark:text-content-darkSecondary uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Property
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-content-secondary dark:text-content-darkSecondary uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Issue
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-content-secondary dark:text-content-darkSecondary uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-content-secondary dark:text-content-darkSecondary uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-content-secondary dark:text-content-darkSecondary uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border dark:divide-border-dark">
+              <tbody className="divide-y divide-orange-200">
                 {tickets.map((ticket) => (
-                  <tr key={ticket.id} className="hover:bg-background-subtle dark:hover:bg-background-dark">
+                  <tr key={ticket.id} className="hover:bg-orange-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-content dark:text-content-dark">
+                      <div className="text-sm font-medium text-gray-900">
                         {ticket.propertyName || 'Unknown Property'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-content dark:text-content-dark capitalize">
+                      <div className="text-sm text-gray-900 capitalize">
                         {ticket.issueType?.replace('_', ' ') || 'Unknown'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusPill status={ticket.status} />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-content-secondary dark:text-content-darkSecondary">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {ticket.updatedAt.toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -439,13 +439,13 @@ const EnhancedContractorDashboard = () => {
   const renderVerificationTab = () => (
     <div className="space-y-6">
       <div className="flex items-center space-x-3">
-        <ShieldCheckIcon className="w-8 h-8 text-primary" />
+        <ShieldCheckIcon className="w-8 h-8 text-orange-600" />
         <div>
-          <h3 className="text-lg font-semibold text-content dark:text-content-dark">
+          <h3 className="text-lg font-semibold text-gray-900">
             Document Verification
           </h3>
-          <p className="text-content-secondary dark:text-content-darkSecondary">
-            Complete verification to start receiving job assignments
+          <p className="text-gray-600">
+            Upload and manage your verification documents
           </p>
         </div>
       </div>
@@ -462,12 +462,12 @@ const EnhancedContractorDashboard = () => {
   const renderNotificationsTab = () => (
     <div className="space-y-6">
       <div className="flex items-center space-x-3">
-        <BellIcon className="w-8 h-8 text-primary" />
+        <BellIcon className="w-8 h-8 text-orange-600" />
         <div>
-          <h3 className="text-lg font-semibold text-content dark:text-content-dark">
+          <h3 className="text-lg font-semibold text-gray-900">
             Notifications
           </h3>
-          <p className="text-content-secondary dark:text-content-darkSecondary">
+          <p className="text-gray-600">
             Stay updated on your verification status and job assignments
           </p>
         </div>
@@ -488,12 +488,24 @@ const EnhancedContractorDashboard = () => {
   // Show loading state while auth is loading
   if (authLoading || (loading && !error)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background dark:bg-background-dark">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary dark:border-primary-light mx-auto mb-4"></div>
-          <p className="text-content-secondary dark:text-content-darkSecondary">
-            {authLoading ? 'Authenticating...' : 'Loading your dashboard...'}
-          </p>
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Orange gradient background */}
+        <div className="absolute inset-0 z-0">
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(135deg, #f97316 0%, #ea580c 100%)`
+            }}
+          />
+        </div>
+        
+        <div className="relative z-10 min-h-screen flex items-center justify-center">
+          <div className="text-center bg-white/95 backdrop-blur-sm rounded-xl p-8 shadow-2xl border border-orange-200">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">
+              {authLoading ? 'Authenticating...' : 'Loading your dashboard...'}
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -502,16 +514,26 @@ const EnhancedContractorDashboard = () => {
   // Show error state with option to continue in offline mode
   if (error) {
     return (
-      <div className="min-h-screen bg-background dark:bg-background-dark">
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Orange gradient background */}
+        <div className="absolute inset-0 z-0">
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(135deg, #f97316 0%, #ea580c 100%)`
+            }}
+          />
+        </div>
+        
         {/* Header */}
-        <div className="bg-background dark:bg-background-darkSubtle border-b border-border dark:border-border-dark">
+        <div className="relative z-10 bg-white/95 backdrop-blur-sm border-b border-orange-200 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <div>
-                <h1 className="text-2xl font-bold text-content dark:text-content-dark">
+                <h1 className="text-2xl font-bold text-gray-900">
                   Contractor Dashboard
                 </h1>
-                <p className="text-sm text-content-secondary dark:text-content-darkSecondary">
+                <p className="text-sm text-red-600">
                   Connection issue detected
                 </p>
               </div>
@@ -519,27 +541,29 @@ const EnhancedContractorDashboard = () => {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-16">
-            <ExclamationTriangleIcon className="w-16 h-16 text-error mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-content dark:text-content-dark mb-2">
-              Connection Issue
-            </h2>
-            <p className="text-error mb-6 max-w-md mx-auto">{error}</p>
-            <div className="space-y-4">
-              <Button onClick={() => window.location.reload()}>
-                Retry Connection
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setError(null);
-                  setLoading(false);
-                  // Continue with empty data
-                }}
-              >
-                Continue Offline
-              </Button>
+            <div className="bg-white/95 backdrop-blur-sm rounded-xl p-8 shadow-2xl border border-orange-200 max-w-md mx-auto">
+              <ExclamationTriangleIcon className="w-16 h-16 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Connection Issue
+              </h2>
+              <p className="text-red-600 mb-6">{error}</p>
+              <div className="space-y-4">
+                <Button onClick={() => window.location.reload()}>
+                  Retry Connection
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setError(null);
+                    setLoading(false);
+                    // Continue with empty data
+                  }}
+                >
+                  Continue Offline
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -548,16 +572,58 @@ const EnhancedContractorDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background dark:bg-background-dark">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Orange gradient background matching onboarding pages */}
+      <div className="absolute inset-0 z-0">
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: `
+              radial-gradient(ellipse 800px 600px at 20% 80%, rgba(251, 146, 60, 0.4) 0%, transparent 50%),
+              radial-gradient(ellipse 600px 800px at 80% 20%, rgba(249, 115, 22, 0.4) 0%, transparent 50%),
+              radial-gradient(ellipse 400px 600px at 60% 60%, rgba(245, 101, 101, 0.3) 0%, transparent 50%),
+              radial-gradient(ellipse 500px 400px at 40% 40%, rgba(251, 191, 36, 0.3) 0%, transparent 50%),
+              radial-gradient(ellipse 700px 500px at 10% 10%, rgba(252, 211, 77, 0.3) 0%, transparent 50%),
+              linear-gradient(135deg, #f97316 0%, #ea580c 100%)
+            `
+          }}
+        />
+        {/* Flowing curves overlay */}
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+          <path
+            d="M0,400 Q300,300 600,400 T1200,400 L1200,800 L0,800 Z"
+            fill="url(#gradient1)"
+            fillOpacity="0.1"
+          />
+          <path
+            d="M0,500 Q400,350 800,500 T1200,500 L1200,800 L0,800 Z"
+            fill="url(#gradient2)"
+            fillOpacity="0.15"
+          />
+          <defs>
+            <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#fb923c" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+            <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ea580c" />
+              <stop offset="50%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
       {/* Header */}
-      <div className="bg-background dark:bg-background-darkSubtle border-b border-border dark:border-border-dark">
+      <div className="relative z-10 bg-white/95 backdrop-blur-sm border-b border-orange-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div>
-              <h1 className="text-2xl font-bold text-content dark:text-content-dark">
+              <h1 className="text-2xl font-bold text-gray-900">
                 Contractor Dashboard
               </h1>
-              <p className="text-sm text-content-secondary dark:text-content-darkSecondary">
+              <p className="text-sm text-gray-600">
                 Manage your jobs and verification status
               </p>
             </div>
@@ -569,7 +635,7 @@ const EnhancedContractorDashboard = () => {
               >
                 <BellIcon className="w-5 h-5" />
                 {contractorStats.newJobs > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-error text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     {contractorStats.newJobs}
                   </span>
                 )}
@@ -585,7 +651,7 @@ const EnhancedContractorDashboard = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Navigation Tabs */}
         <div className="mb-8">
           <nav className="flex space-x-8">
@@ -598,16 +664,16 @@ const EnhancedContractorDashboard = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                className={`flex items-center px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 transform hover:scale-105 ${
                   activeTab === tab.id
-                    ? 'bg-primary text-white shadow-md'
-                    : 'text-content-secondary dark:text-content-darkSecondary hover:text-content dark:hover:text-content-dark hover:bg-background-subtle dark:hover:bg-background-darkSubtle'
+                    ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg hover:shadow-xl'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60 backdrop-blur-sm shadow-sm'
                 }`}
               >
                 <tab.icon className="w-5 h-5 mr-2" />
                 {tab.label}
                 {tab.id === 'notifications' && contractorStats.newJobs > 0 && (
-                  <span className="ml-2 bg-error text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     {contractorStats.newJobs}
                   </span>
                 )}
@@ -627,9 +693,9 @@ const EnhancedContractorDashboard = () => {
         {/* Settings Panel */}
         {showSettings && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-background dark:bg-background-darkSubtle rounded-xl border border-border dark:border-border-dark p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="bg-white rounded-xl border border-orange-200 p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto shadow-2xl">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-content dark:text-content-dark">
+                <h3 className="text-lg font-semibold text-gray-900">
                   Settings & Preferences
                 </h3>
                 <Button

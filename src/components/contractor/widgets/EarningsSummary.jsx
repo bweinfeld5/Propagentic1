@@ -135,11 +135,11 @@ const EarningsSummary = () => {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-orange-200 p-6 shadow-lg">
         <div className="animate-pulse">
-          <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-6"></div>
-          <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-4"></div>
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+          <div className="h-5 bg-orange-200 rounded w-32 mb-6"></div>
+          <div className="h-12 bg-orange-200 rounded w-24 mb-4"></div>
+          <div className="h-4 bg-orange-200 rounded w-20"></div>
         </div>
       </div>
     );
@@ -150,26 +150,26 @@ const EarningsSummary = () => {
   const TrendIcon = getTrendIcon(currentTrend);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow duration-200">
+    <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-orange-200 p-6 hover:shadow-xl transition-all duration-200 shadow-lg">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center">
-            <CurrencyDollarIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+            <CurrencyDollarIcon className="w-5 h-5 text-green-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-gray-900">
             Earnings
           </h3>
         </div>
         
         {/* Timeframe Toggle */}
-        <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+        <div className="flex bg-orange-100 rounded-lg p-1">
           <button
             onClick={() => setTimeframe('week')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
               timeframe === 'week'
-                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
             }`}
           >
             Week
@@ -178,8 +178,8 @@ const EarningsSummary = () => {
             onClick={() => setTimeframe('month')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
               timeframe === 'month'
-                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
             }`}
           >
             Month
@@ -190,7 +190,7 @@ const EarningsSummary = () => {
       {/* Main Amount */}
       <div className="mb-6">
         <div className="flex items-end space-x-3">
-          <span className="text-3xl font-bold text-gray-900 dark:text-white">
+          <span className="text-3xl font-bold text-gray-900">
             {formatCurrency(currentEarnings)}
           </span>
           {TrendIcon && currentTrend !== 0 && (

@@ -111,22 +111,34 @@ const StripeOnboarding: React.FC<StripeOnboardingProps> = ({ onComplete }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-background-darkSubtle rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold text-content dark:text-content-dark mb-4">
+    <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
+      <h4 className="text-lg font-semibold text-gray-900 mb-4">
         Payment Account Setup
-      </h2>
+      </h4>
+
+      <p className="text-gray-600 mb-6">
+        Set up your payment account to receive payments for completed jobs. This process is secure and handled by Stripe.
+      </p>
 
       {error && (
-        <div className="mb-4 bg-error/10 border-l-4 border-error text-error p-4 rounded">
-          {error}
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
+          <div className="flex">
+            <svg className="w-5 h-5 text-red-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.314 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <div>
+              <p className="font-medium">Payment Setup Notice</p>
+              <p className="text-sm mt-1">{error}</p>
+            </div>
+          </div>
         </div>
       )}
 
       <div className="space-y-4">
         {accountStatus.isEnabled ? (
-          <div className="flex items-center text-success">
+          <div className="flex items-center p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
             <svg
-              className="h-5 w-5 mr-2"
+              className="h-5 w-5 mr-3 text-green-600"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -136,11 +148,11 @@ const StripeOnboarding: React.FC<StripeOnboardingProps> = ({ onComplete }) => {
             >
               <path d="M5 13l4 4L19 7" />
             </svg>
-            <span>Your payment account is active</span>
+            <span className="font-medium">Your payment account is active and ready to receive payments</span>
           </div>
         ) : accountStatus.needsRefresh ? (
           <div>
-            <p className="text-content-secondary dark:text-content-darkSecondary mb-4">
+            <p className="text-gray-600 mb-4">
               Your account needs attention. Please complete the verification process to receive payments.
             </p>
             <Button
@@ -154,9 +166,6 @@ const StripeOnboarding: React.FC<StripeOnboardingProps> = ({ onComplete }) => {
           </div>
         ) : (
           <div>
-            <p className="text-content-secondary dark:text-content-darkSecondary mb-4">
-              Set up your payment account to receive payments for completed jobs. This process is secure and handled by Stripe.
-            </p>
             <div className="space-y-3">
               <Button
                 variant="primary"

@@ -62,21 +62,18 @@ const HeaderTabs = () => {
                   </Button>
                 ) : (
                   <>
-                    <Button 
-                      to="/auth?tab=login"
-                      variant={isSticky ? 'primary' : 'light'}
-                      size="sm"
-                      className={isSticky ? 'text-content dark:text-content-dark hover:bg-neutral-100 dark:hover:bg-neutral-800' : ''}
+                    <Link 
+                      to="/login" 
+                      className="text-white/90 hover:text-white font-medium transition-colors duration-200"
                     >
                       Log In
-                    </Button>
-                    <Button 
-                      to="/auth?tab=signup"
-                      variant={isSticky ? 'primary' : 'light'}
-                      size="sm"
+                    </Link>
+                    <Link 
+                      to="/signup" 
+                      className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium border border-white/20 transition-all duration-200"
                     >
                       Sign Up
-                    </Button>
+                    </Link>
                   </>
                 )}
               </div>

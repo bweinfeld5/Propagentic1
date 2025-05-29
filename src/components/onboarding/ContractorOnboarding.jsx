@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
@@ -80,7 +80,7 @@ const ContractorOnboarding = () => {
         navigate(`/${userProfile.userType || 'dashboard'}`);
       } else if (userProfile.onboardingComplete) {
         // Redirect contractors who have completed onboarding
-        navigate('/contractor');
+        navigate('/contractor/dashboard');
       }
       
       // Pre-fill email from profile
@@ -260,6 +260,11 @@ const ContractorOnboarding = () => {
       ...prev,
       6: true
     }));
+    
+    // Automatically proceed to submit the form when the final step is completed
+    setTimeout(() => {
+      handleSubmit({ preventDefault: () => {} });
+    }, 500);
   };
 
   // Submit form to Firestore
@@ -290,8 +295,8 @@ const ContractorOnboarding = () => {
       
       console.log('Contractor onboarding complete, redirecting to dashboard');
       
-      // Redirect to contractor dashboard
-      navigate('/contractor');
+      // Redirect to contractor dashboard immediately
+      navigate('/contractor/dashboard');
     } catch (error) {
       console.error('Error saving onboarding data:', error);
       setError(`Error saving your information: ${error.message}`);
@@ -300,7 +305,7 @@ const ContractorOnboarding = () => {
     }
   };
 
-  // Progress indicator
+  // Progress indicator with orange theme
   const ProgressIndicator = () => {
     return (
       <div className="mb-8 flex justify-center">
@@ -308,10 +313,10 @@ const ContractorOnboarding = () => {
           {[1, 2, 3, 4, 5, 6].map((step) => (
             <React.Fragment key={step}>
               <div 
-                className={`rounded-full h-8 w-8 flex items-center justify-center border-2 
+                className={`rounded-full h-8 w-8 flex items-center justify-center border-2 text-sm font-medium
                   ${currentStep >= step 
-                    ? 'border-teal-500 bg-teal-500 text-white' 
-                    : 'border-gray-300 text-gray-300'}`}
+                    ? 'border-orange-500 bg-orange-500 text-white' 
+                    : 'border-gray-300 text-gray-400'}`}
               >
                 {stepCompletion[step] ? (
                   <svg className="h-4 w-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -324,7 +329,7 @@ const ContractorOnboarding = () => {
               {step < 6 && (
                 <div 
                   className={`w-10 h-1 mx-1 
-                    ${currentStep > step ? 'bg-teal-500' : 'bg-gray-300'}`}
+                    ${currentStep > step ? 'bg-orange-500' : 'bg-gray-300'}`}
                 />
               )}
             </React.Fragment>
@@ -337,14 +342,14 @@ const ContractorOnboarding = () => {
   // Step 1: Basic Information
   const renderStep1 = () => (
     <div>
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Tell Us About Yourself</h3>
-      <p className="text-sm text-gray-600 mb-4">
+      <h3 className="text-xl font-semibold text-gray-900 mb-6">Tell Us About Yourself</h3>
+      <p className="text-gray-600 mb-6">
         This information will be displayed to landlords looking for contractors.
       </p>
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div>
-          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-            First Name * <span className="text-red-500">Required</span>
+          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+            First Name
           </label>
           <input
             type="text"
@@ -353,12 +358,12 @@ const ContractorOnboarding = () => {
             value={formData.firstName}
             onChange={handleChange}
             required
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
           />
         </div>
         <div>
-          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-            Last Name * <span className="text-red-500">Required</span>
+          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+            Last Name
           </label>
           <input
             type="text"
@@ -367,12 +372,12 @@ const ContractorOnboarding = () => {
             value={formData.lastName}
             onChange={handleChange}
             required
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
           />
         </div>
         <div>
-          <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
-            Phone Number * <span className="text-red-500">Required</span>
+          <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
+            Phone Number
           </label>
           <input
             type="tel"
@@ -381,10 +386,10 @@ const ContractorOnboarding = () => {
             value={formData.phoneNumber}
             onChange={handleChange}
             required
-            placeholder="e.g., (555) 123-4567"
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+            placeholder="(555) 123-4567"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-2 text-sm text-gray-500">
             Your phone number will be used by landlords to contact you about jobs.
           </p>
         </div>
@@ -395,201 +400,197 @@ const ContractorOnboarding = () => {
   // Step 2: Services & Availability (merged from steps 2, 3, 4, 5)
   const renderStep2 = () => (
     <div>
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Services & Availability</h3>
-      <div className="space-y-6">
+      <h3 className="text-xl font-semibold text-gray-900 mb-6">Services & Availability</h3>
+      <div className="space-y-8">
         {/* Business Information */}
-        <div className="border-b border-gray-200 pb-4">
-          <h4 className="text-md font-medium text-gray-800 mb-3">Business Information</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
-            Company/Business Name (if applicable)
-          </label>
-          <input
-            type="text"
-            id="companyName"
-            name="companyName"
-            value={formData.companyName}
-            onChange={handleChange}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-          />
-        </div>
-        <div>
-          <label htmlFor="yearsExperience" className="block text-sm font-medium text-gray-700">
-            Years of Experience
-          </label>
-          <select
-            id="yearsExperience"
-            name="yearsExperience"
-            value={formData.yearsExperience}
-            onChange={handleChange}
-            className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-          >
-            <option value="0-2">0-2 years</option>
-            <option value="3-5">3-5 years</option>
-            <option value="5-10">5-10 years</option>
-            <option value="10-15">10-15 years</option>
-            <option value="15+">15+ years</option>
-          </select>
-        </div>
+        <div className="border-b border-gray-200 pb-6">
+          <h4 className="text-lg font-medium text-gray-800 mb-4">Business Information</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-2">
+                Company/Business Name <span className="text-gray-400">(Optional)</span>
+              </label>
+              <input
+                type="text"
+                id="companyName"
+                name="companyName"
+                value={formData.companyName}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+              />
+            </div>
+            <div>
+              <label htmlFor="yearsExperience" className="block text-sm font-medium text-gray-700 mb-2">
+                Years of Experience
+              </label>
+              <select
+                id="yearsExperience"
+                name="yearsExperience"
+                value={formData.yearsExperience}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
+              >
+                <option value="0-2">0-2 years</option>
+                <option value="3-5">3-5 years</option>
+                <option value="5-10">5-10 years</option>
+                <option value="10-15">10-15 years</option>
+                <option value="15+">15+ years</option>
+              </select>
+            </div>
           </div>
-          <div className="mt-4">
-          <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
-            Professional Bio
-          </label>
-          <textarea
-            id="bio"
-            name="bio"
-            rows="3"
-            value={formData.bio}
-            onChange={handleChange}
-            placeholder="Tell us about your experience, skills, and qualifications..."
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-          />
+          <div className="mt-6">
+            <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
+              Professional Bio
+            </label>
+            <textarea
+              id="bio"
+              name="bio"
+              rows="4"
+              value={formData.bio}
+              onChange={handleChange}
+              placeholder="Tell us about your experience, skills, and qualifications..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+            />
+          </div>
         </div>
-      </div>
 
         {/* Services Offered */}
-        <div className="border-b border-gray-200 pb-4">
-          <h4 className="text-md font-medium text-gray-800 mb-3">Services Offered</h4>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Services You Provide * <span className="text-red-500">Required</span>
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-4 rounded-lg">
-            {SERVICE_TYPES.map(service => (
-              <div key={service.id} className="flex items-start">
-                <div className="flex items-center h-5">
+        <div className="border-b border-gray-200 pb-6">
+          <h4 className="text-lg font-medium text-gray-800 mb-4">Services Offered</h4>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Services You Provide
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-orange-50 p-6 rounded-lg border border-orange-200">
+              {SERVICE_TYPES.map(service => (
+                <div key={service.id} className="flex items-center">
                   <input
                     id={`service-${service.id}`}
                     name={`service-${service.id}`}
                     type="checkbox"
                     checked={formData.serviceTypes.includes(service.id)}
                     onChange={() => handleServiceTypeChange(service.id)}
-                    className="focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300 rounded"
+                    className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                   />
-                </div>
-                <div className="ml-3 text-sm">
-                  <label htmlFor={`service-${service.id}`} className="font-medium text-gray-700">
+                  <label htmlFor={`service-${service.id}`} className="ml-3 text-sm font-medium text-gray-700">
                     {service.name}
                   </label>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            {formData.serviceTypes.length === 0 && (
+              <p className="mt-2 text-sm text-red-600">Please select at least one service.</p>
+            )}
           </div>
-          {formData.serviceTypes.length === 0 && (
-            <p className="mt-2 text-xs text-red-600">Please select at least one service.</p>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div>
+              <label htmlFor="hourlyRate" className="block text-sm font-medium text-gray-700 mb-2">
+                Hourly Rate ($) <span className="text-gray-400">(Optional)</span>
+              </label>
+              <input
+                type="text"
+                id="hourlyRate"
+                name="hourlyRate"
+                value={formData.hourlyRate}
+                onChange={handleChange}
+                placeholder="75"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+              />
+              <p className="mt-2 text-sm text-gray-500">Enter your standard hourly rate for general work.</p>
+            </div>
+            <div>
+              <label htmlFor="serviceArea" className="block text-sm font-medium text-gray-700 mb-2">
+                Service Area
+              </label>
+              <input
+                type="text"
+                id="serviceArea"
+                name="serviceArea"
+                value={formData.serviceArea}
+                onChange={handleChange}
+                required
+                placeholder="e.g., San Francisco Bay Area, 30-mile radius of Chicago, etc."
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+              />
+              <p className="mt-2 text-sm text-gray-500">Specify the geographic area where you're available to work.</p>
+            </div>
+          </div>
         </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <div>
-          <label htmlFor="hourlyRate" className="block text-sm font-medium text-gray-700">
-            Hourly Rate ($)
-          </label>
-          <input
-            type="text"
-            id="hourlyRate"
-            name="hourlyRate"
-            value={formData.hourlyRate}
-            onChange={handleChange}
-            placeholder="e.g., 75"
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-          />
-          <p className="mt-1 text-xs text-gray-500">Enter your standard hourly rate for general work.</p>
-        </div>
-        <div>
-          <label htmlFor="serviceArea" className="block text-sm font-medium text-gray-700">
-            Service Area * <span className="text-red-500">Required</span>
-          </label>
-          <input
-            type="text"
-            id="serviceArea"
-            name="serviceArea"
-            value={formData.serviceArea}
-            onChange={handleChange}
-            required
-            placeholder="e.g., San Francisco Bay Area, 30-mile radius of Chicago, etc."
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-          />
-          <p className="mt-1 text-xs text-gray-500">Specify the geographic area where you're available to work.</p>
-        </div>
-      </div>
-    </div>
 
         {/* Contact & Availability */}
-        <div className="border-b border-gray-200 pb-4">
-          <h4 className="text-md font-medium text-gray-800 mb-3">Contact & Availability</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            readOnly
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-50 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-          />
-          <p className="mt-1 text-xs text-gray-500">Email address cannot be changed.</p>
-        </div>
-        <div>
-          <label htmlFor="preferredContactMethod" className="block text-sm font-medium text-gray-700">
-            Preferred Contact Method
-          </label>
-          <select
-            id="preferredContactMethod"
-            name="preferredContactMethod"
-            value={formData.preferredContactMethod}
-            onChange={handleChange}
-            className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-          >
-            <option value="email">Email</option>
-            <option value="phone">Phone</option>
-            <option value="text">Text Message</option>
-          </select>
-        </div>
+        <div className="border-b border-gray-200 pb-6">
+          <h4 className="text-lg font-medium text-gray-800 mb-4">Contact & Availability</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                readOnly
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-gray-50"
+              />
+              <p className="mt-2 text-sm text-gray-500">Email address cannot be changed.</p>
+            </div>
+            <div>
+              <label htmlFor="preferredContactMethod" className="block text-sm font-medium text-gray-700 mb-2">
+                Preferred Contact Method
+              </label>
+              <select
+                id="preferredContactMethod"
+                name="preferredContactMethod"
+                value={formData.preferredContactMethod}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-gray-50"
+              >
+                <option value="email">Email</option>
+                <option value="phone">Phone</option>
+                <option value="text">Text Message</option>
+              </select>
+            </div>
           </div>
-          <div className="mt-4">
-          <label htmlFor="availabilityNotes" className="block text-sm font-medium text-gray-700">
-            Availability
-          </label>
-          <textarea
-            id="availabilityNotes"
-            name="availabilityNotes"
-            rows="3"
-            value={formData.availabilityNotes}
-            onChange={handleChange}
-            placeholder="e.g., Available weekdays 8am-5pm, emergency services available 24/7"
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-          />
+          <div className="mt-6">
+            <label htmlFor="availabilityNotes" className="block text-sm font-medium text-gray-700 mb-2">
+              Availability
+            </label>
+            <textarea
+              id="availabilityNotes"
+              name="availabilityNotes"
+              rows="4"
+              value={formData.availabilityNotes}
+              onChange={handleChange}
+              placeholder="e.g., Available weekdays 8am-5pm, emergency services available 24/7"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+            />
+          </div>
         </div>
-      </div>
 
         {/* Business Verification */}
-    <div>
-          <h4 className="text-md font-medium text-gray-800 mb-3">Business Verification (Optional)</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="taxId" className="block text-sm font-medium text-gray-700">
-            Tax ID / EIN (optional)
-          </label>
-          <input
-            type="text"
-            id="taxId"
-            name="taxId"
-            value={formData.taxId}
-            onChange={handleChange}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-          />
-          <p className="mt-1 text-xs text-gray-500">
-            This information is for verification purposes and will be kept secure.
-          </p>
-        </div>
-        <div>
-              <label htmlFor="website" className="block text-sm font-medium text-gray-700">
+        <div className="border-b border-gray-200 pb-6">
+          <h4 className="text-lg font-medium text-gray-800 mb-4">Business Verification (Optional)</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="taxId" className="block text-sm font-medium text-gray-700 mb-2">
+                Tax ID / EIN (optional)
+              </label>
+              <input
+                type="text"
+                id="taxId"
+                name="taxId"
+                value={formData.taxId}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+              />
+              <p className="mt-2 text-sm text-gray-500">
+                This information is for verification purposes and will be kept secure.
+              </p>
+            </div>
+            <div>
+              <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-2">
                 Website (optional)
               </label>
               <input
@@ -599,24 +600,24 @@ const ContractorOnboarding = () => {
                 value={formData.website}
                 onChange={handleChange}
                 placeholder="https://yourbusiness.com"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
               />
             </div>
           </div>
-          <div className="mt-4">
-          <label htmlFor="insuranceInfo" className="block text-sm font-medium text-gray-700">
-            Insurance Information (optional)
-          </label>
-          <input
-            type="text"
-            id="insuranceInfo"
-            name="insuranceInfo"
-            value={formData.insuranceInfo}
-            onChange={handleChange}
-            placeholder="e.g., Liability Insurance Policy #12345"
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-          />
-        </div>
+          <div className="mt-6">
+            <label htmlFor="insuranceInfo" className="block text-sm font-medium text-gray-700 mb-2">
+              Insurance Information (optional)
+            </label>
+            <input
+              type="text"
+              id="insuranceInfo"
+              name="insuranceInfo"
+              value={formData.insuranceInfo}
+              onChange={handleChange}
+              placeholder="e.g., Liability Insurance Policy #12345"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -625,7 +626,7 @@ const ContractorOnboarding = () => {
   // Step 3: W-9 Form Upload
   const renderStep3 = () => (
     <div>
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Tax Documentation</h3>
+      <h3 className="text-xl font-semibold text-gray-900 mb-6">Tax Documentation</h3>
       <W9FormUpload onComplete={handleW9Upload} />
     </div>
   );
@@ -633,7 +634,7 @@ const ContractorOnboarding = () => {
   // Step 4: Stripe Connect Onboarding
   const renderStep4 = () => (
     <div>
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Payment Account Setup</h3>
+      <h3 className="text-xl font-semibold text-gray-900 mb-6">Payment Account Setup</h3>
       <StripeOnboarding onComplete={handleStripeOnboardingComplete} />
     </div>
   );
@@ -641,7 +642,7 @@ const ContractorOnboarding = () => {
   // Step 5: Bank Account Verification
   const renderStep5 = () => (
     <div>
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Bank Account Verification</h3>
+      <h3 className="text-xl font-semibold text-gray-900 mb-6">Bank Account Verification</h3>
       <BankAccountVerification onComplete={handleBankAccountComplete} />
     </div>
   );
@@ -649,26 +650,40 @@ const ContractorOnboarding = () => {
   // Step 6: Payment Methods Setup
   const renderStep6 = () => (
     <div>
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Payment Methods</h3>
+      <h3 className="text-xl font-semibold text-gray-900 mb-6">Payment Methods</h3>
       <PaymentMethodsManager onComplete={handlePaymentMethodsComplete} />
         
-        <div className="bg-gray-50 p-4 rounded-md mt-6">
-        <h4 className="text-base font-medium text-gray-900 mb-2">Setup Complete!</h4>
-          <p className="text-sm text-gray-700 mb-4">
-          Congratulations! You've completed all the required steps to start receiving jobs and payments.
+      <div className="bg-gray-50 p-6 rounded-lg mt-6">
+        <h4 className="text-base font-medium text-gray-900 mb-2">Almost Done!</h4>
+        <p className="text-sm text-gray-700 mb-4">
+          Complete the payment method setup above, and we'll automatically finalize your profile.
           Your profile will be displayed to landlords looking to hire contractors.
-          </p>
-          
-          <div className="text-sm text-gray-700">
-            <p className="font-medium">Services Selected:</p>
-            <ul className="mt-1 list-disc list-inside pl-2">
-              {formData.serviceTypes.map(serviceId => (
-                <li key={serviceId}>
-                  {SERVICE_TYPES.find(s => s.id === serviceId)?.name || serviceId}
-                </li>
-              ))}
-            </ul>
+        </p>
+        
+        <div className="text-sm text-gray-700">
+          <p className="font-medium">Services Selected:</p>
+          <ul className="mt-1 list-disc list-inside pl-2">
+            {formData.serviceTypes.map(serviceId => (
+              <li key={serviceId}>
+                {SERVICE_TYPES.find(s => s.id === serviceId)?.name || serviceId}
+              </li>
+            ))}
+          </ul>
         </div>
+        
+        {stepCompletion[6] && (
+          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="text-sm font-medium text-green-800">Setup Complete!</p>
+                <p className="text-sm text-green-600">Finalizing your profile and redirecting to your dashboard...</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -695,76 +710,160 @@ const ContractorOnboarding = () => {
 
   // Main render
   if (!currentUser) {
-    return null; // Or a loading spinner
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl w-full bg-white rounded-lg shadow-lg p-6">
-        <div className="flex justify-end mb-2">
-          <HomeNavLink showOnAuth={true} />
-        </div>
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Contractor Onboarding</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Complete all steps to start receiving job assignments and payments.
-          </p>
-        </div>
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Orange gradient background matching login/signup pages */}
+      <div className="absolute inset-0 z-0">
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: `
+              radial-gradient(ellipse 800px 600px at 20% 80%, rgba(251, 146, 60, 0.4) 0%, transparent 50%),
+              radial-gradient(ellipse 600px 800px at 80% 20%, rgba(249, 115, 22, 0.4) 0%, transparent 50%),
+              radial-gradient(ellipse 400px 600px at 60% 60%, rgba(245, 101, 101, 0.3) 0%, transparent 50%),
+              radial-gradient(ellipse 500px 400px at 40% 40%, rgba(251, 191, 36, 0.3) 0%, transparent 50%),
+              radial-gradient(ellipse 700px 500px at 10% 10%, rgba(252, 211, 77, 0.3) 0%, transparent 50%),
+              linear-gradient(135deg, #f97316 0%, #ea580c 100%)
+            `
+          }}
+        />
+        {/* Flowing curves overlay */}
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+          <path
+            d="M0,400 Q300,300 600,400 T1200,400 L1200,800 L0,800 Z"
+            fill="url(#gradient1)"
+            fillOpacity="0.1"
+          />
+          <path
+            d="M0,500 Q400,350 800,500 T1200,500 L1200,800 L0,800 Z"
+            fill="url(#gradient2)"
+            fillOpacity="0.15"
+          />
+          <defs>
+            <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#fb923c" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+            <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ea580c" />
+              <stop offset="50%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
 
-        <ProgressIndicator />
-        
-        {error && (
-          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-            <p>{error}</p>
-          </div>
-        )}
-        
-        <form onSubmit={currentStep === 6 ? handleSubmit : (e) => e.preventDefault()}>
-          {renderStepContent()}
-          
-          <div className="mt-8 flex justify-between">
-            {currentStep > 1 ? (
-              <button
-                type="button"
-                onClick={handleBack}
-                className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
-              >
-                Back
-              </button>
-            ) : (
-              <div></div> // Empty div to maintain layout with flex justify-between
+      {/* PropAgentic logo */}
+      <div className="absolute top-8 left-8 z-20">
+        <Link to="/" className="text-white text-xl font-bold tracking-tight hover:opacity-80 transition-opacity">
+          propagentic
+        </Link>
+      </div>
+
+      {/* Back to Home link */}
+      <div className="absolute top-8 right-8 z-20">
+        <Link 
+          to="/" 
+          className="flex items-center text-white/90 hover:text-white font-medium transition-colors duration-200"
+        >
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          Back to Home
+        </Link>
+      </div>
+      
+      {/* Main content */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-3xl">
+          <div className="bg-white rounded-xl shadow-2xl p-8 backdrop-blur-sm border border-white/20">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Contractor Onboarding</h1>
+              <p className="text-gray-600">Complete all steps to start receiving job assignments and payments</p>
+            </div>
+
+            <ProgressIndicator />
+            
+            {/* Error message */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm animate-in slide-in-from-top duration-300">
+                {error}
+              </div>
             )}
             
-            {currentStep < 6 ? (
-              <button
-                type="button"
-                onClick={handleNext}
-                disabled={loading}
-                className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50"
-              >
-                {loading ? 'Processing...' : 'Next'}
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={loading || !Object.values(stepCompletion).every(Boolean)}
-                className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50"
-              >
-                {loading ? (
-                  <div className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Completing Setup...
-                  </div>
+            {/* Step content */}
+            <form onSubmit={currentStep === 6 ? handleSubmit : (e) => e.preventDefault()}>
+              {renderStepContent()}
+              
+              {/* Navigation buttons */}
+              <div className="flex justify-between mt-8">
+                {currentStep > 1 ? (
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    disabled={currentStep === 6 && stepCompletion[6]}
+                    className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
                 ) : (
-                  'Complete Setup'
+                  <div></div>
                 )}
-              </button>
-            )}
+                
+                {currentStep < 6 ? (
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={loading}
+                    className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg font-medium hover:from-orange-700 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-75 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+                  >
+                    {loading ? (
+                      <span className="flex items-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Processing...
+                      </span>
+                    ) : (
+                      'Next'
+                    )}
+                  </button>
+                ) : currentStep === 6 && !stepCompletion[6] ? (
+                  <div className="text-sm text-gray-500 font-medium">
+                    Complete payment setup above to finish
+                  </div>
+                ) : currentStep === 6 && stepCompletion[6] ? (
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-75 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+                  >
+                    {loading ? (
+                      <span className="flex items-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Finalizing Setup...
+                      </span>
+                    ) : (
+                      '✅ Setup Complete'
+                    )}
+                  </button>
+                ) : null}
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

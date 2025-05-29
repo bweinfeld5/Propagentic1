@@ -396,7 +396,7 @@ const AboutPage = () => {
               Join PropAgentic today and experience the future of efficient, AI-powered property management.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button to="/auth?tab=signup" variant="light" size="lg">Get Started Free</Button>
+              <Button to="/signup" variant="light" size="lg">Get Started Free</Button>
               <Button to="/demo" variant="outline-inverse" size="lg">Schedule Demo</Button>
             </div>
           </div>

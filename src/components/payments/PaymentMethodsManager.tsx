@@ -134,12 +134,12 @@ const PaymentMethodsManager: React.FC<PaymentMethodsManagerProps> = ({ onComplet
       <div
         key={method.id}
         className={`flex items-center justify-between p-4 border rounded-lg ${
-          method.isDefault ? 'border-primary' : 'border-border dark:border-border-dark'
+          method.isDefault ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
         }`}
       >
         <div className="flex items-center space-x-4">
           {/* Icon based on payment method type */}
-          <div className="text-content-secondary dark:text-content-darkSecondary">
+          <div className="text-gray-600">
             {isCard ? (
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h.01M11 15h.01M15 15h.01M19 15h.01M7 12h.01M11 12h.01M15 12h.01M19 12h.01M3 10h18M3 6h18" />
@@ -154,20 +154,20 @@ const PaymentMethodsManager: React.FC<PaymentMethodsManagerProps> = ({ onComplet
           {/* Payment method details */}
           <div>
             {isCard && (
-              <div className="text-content dark:text-content-dark">
+              <div className="text-gray-900">
                 {method.brand} •••• {method.last4}
-                <span className="text-sm text-content-secondary dark:text-content-darkSecondary ml-2">
+                <span className="text-sm text-gray-500 ml-2">
                   Expires {method.expiryMonth}/{method.expiryYear}
                 </span>
               </div>
             )}
             {isBankAccount && (
-              <div className="text-content dark:text-content-dark">
+              <div className="text-gray-900">
                 {method.bankName} •••• {method.last4}
               </div>
             )}
             {method.isDefault && (
-              <span className="text-sm text-primary dark:text-primary-light">
+              <span className="text-sm text-orange-600 font-medium">
                 Default payment method
               </span>
             )}
@@ -190,7 +190,7 @@ const PaymentMethodsManager: React.FC<PaymentMethodsManagerProps> = ({ onComplet
             variant="ghost"
             onClick={() => handleRemovePaymentMethod(method.id)}
             disabled={loading || method.isDefault}
-            className="text-sm text-error hover:text-error-dark"
+            className="text-sm text-red-600 hover:text-red-700"
           >
             Remove
           </Button>
@@ -200,20 +200,32 @@ const PaymentMethodsManager: React.FC<PaymentMethodsManagerProps> = ({ onComplet
   };
 
   return (
-    <div className="bg-white dark:bg-background-darkSubtle rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold text-content dark:text-content-dark mb-4">
+    <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
+      <h4 className="text-lg font-semibold text-gray-900 mb-4">
         Payment Methods
-      </h2>
+      </h4>
+
+      <p className="text-gray-600 mb-6">
+        Manage your payment methods for receiving payments from completed jobs.
+      </p>
 
       {error && (
-        <div className="mb-4 bg-error/10 border-l-4 border-error text-error p-4 rounded">
-          {error}
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
+          <div className="flex">
+            <svg className="w-5 h-5 text-red-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.314 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <div>
+              <p className="font-medium">Payment Methods Notice</p>
+              <p className="text-sm mt-1">{error}</p>
+            </div>
+          </div>
         </div>
       )}
 
       <div className="space-y-4">
         {paymentMethods.length === 0 ? (
-          <p className="text-content-secondary dark:text-content-darkSecondary">
+          <p className="text-gray-600">
             No payment methods added yet.
           </p>
         ) : (

@@ -42,7 +42,7 @@ const DashboardLayout = () => {
   if (!isReady || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-500"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
         <p className="ml-2 text-gray-600">Loading...</p>
       </div>
     );
@@ -100,7 +100,7 @@ const DashboardLayout = () => {
           
           {/* Demo Mode Indicator */}
           {isDemoMode && (
-            <div className="bg-blue-500 text-white text-center py-1 px-4 text-sm font-medium">
+            <div className="bg-primary text-white text-center py-1 px-4 text-sm font-medium">
               DEMO MODE - No backend connection required
             </div>
           )}

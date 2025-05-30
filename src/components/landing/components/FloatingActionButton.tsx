@@ -27,7 +27,7 @@ const FloatingActionButton: React.FC = () => {
   
   return (
     <Link 
-      to="/auth?tab=signup" 
+      to="/signup" 
       className="fixed bottom-6 right-6 bg-primary hover:bg-primary-dark text-white p-4 rounded-full shadow-lg transition-all duration-300 z-50"
       aria-label="Sign up"
     >

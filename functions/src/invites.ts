@@ -69,7 +69,7 @@ export const sendInviteEmail = functions.firestore
       from: `"${APP_NAME}" <${functions.config().email?.from || 'noreply@your-propagentic-app.com'}>`, // Configure your "from" email
       to: tenantEmail,
       subject: `You're Invited to Join ${propertyName} on ${APP_NAME}!`,
-      html: \`
+      html: `
         <p>Hello,</p>
         <p>${landlordName} has invited you to join ${propertyName} on ${APP_NAME}.</p>
         <p>Please click the link below to accept your invitation and set up your account:</p>
@@ -77,7 +77,7 @@ export const sendInviteEmail = functions.firestore
         <p>If you were not expecting this invitation, you can safely ignore this email.</p>
         <p>Thanks,</p>
         <p>The ${APP_NAME} Team</p>
-      \`,
+      `,
     };
 
     console.log(`Attempting to send email to ${tenantEmail}`, mailOptions);

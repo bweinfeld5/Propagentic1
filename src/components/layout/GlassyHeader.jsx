@@ -173,7 +173,7 @@ const GlassyHeader = () => {
                 onClick={toggleDemoMode}
                 className={`px-3 py-1 text-xs font-medium rounded-full ${
                   isDemoMode 
-                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                    ? 'bg-primary text-white hover:bg-primary-dark' 
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
@@ -274,7 +274,7 @@ const GlassyHeader = () => {
                       to="/dashboard" 
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                         isScrolled
-                          ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md' 
+                          ? 'bg-primary text-white hover:bg-primary-dark shadow-md' 
                           : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm'
                       }`}
                     >
@@ -292,7 +292,7 @@ const GlassyHeader = () => {
                         to="/signup" 
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                           isScrolled
-                            ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md' 
+                            ? 'bg-primary text-white hover:bg-primary-dark shadow-md' 
                             : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm'
                         }`}
                       >
@@ -326,7 +326,7 @@ const GlassyHeader = () => {
           
           {/* Mobile Menu - Animated */}
           {mobileMenuOpen && (
-            <div className="md:hidden bg-indigo-900/95 backdrop-blur-lg border-b border-indigo-800/50">
+            <div className="md:hidden bg-primary-700/95 backdrop-blur-lg border-b border-primary-600/50">
               <div className="px-4 pt-2 pb-4 space-y-1 sm:px-6">
                 <MobileNavLink to="/" onClick={() => setMobileMenuOpen(false)}>Home</MobileNavLink>
                 <MobileNavLink to="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</MobileNavLink>
@@ -336,7 +336,7 @@ const GlassyHeader = () => {
                   {currentUser ? (
                     <Link 
                       to="/dashboard" 
-                      className="text-center bg-indigo-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-indigo-500 transition-colors"
+                      className="text-center bg-primary text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Dashboard
@@ -345,14 +345,14 @@ const GlassyHeader = () => {
                     <>
                       <Link 
                         to="/login" 
-                        className="text-center text-white py-2 text-sm font-medium hover:bg-indigo-800/50 rounded-lg transition-colors"
+                        className="text-center text-white py-2 text-sm font-medium hover:bg-primary-600/50 rounded-lg transition-colors"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Log In
                       </Link>
                       <Link 
                         to="/signup" 
-                        className="text-center bg-indigo-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-indigo-500 transition-colors"
+                        className="text-center bg-primary text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Sign Up

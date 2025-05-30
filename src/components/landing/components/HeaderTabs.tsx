@@ -19,8 +19,8 @@ const HeaderTabs: React.FC = () => {
           <Link to="/about" className="text-white hover:text-primary-light transition duration-150">About</Link>
         </div>
         <div className="flex items-center space-x-4">
-          <Link to="/auth" className="text-white font-medium hover:text-primary-light transition duration-150">Log in</Link>
-          <Link to="/auth?tab=signup" className="bg-white text-primary px-4 py-2 rounded-lg hover:bg-gray-100 transform hover:-translate-y-0.5 transition duration-150">Sign up</Link>
+          <Link to="/login" className="text-white font-medium hover:text-primary-light transition duration-150">Log in</Link>
+          <Link to="/signup" className="bg-white text-primary px-4 py-2 rounded-lg hover:bg-gray-100 transform hover:-translate-y-0.5 transition duration-150">Sign up</Link>
         </div>
       </div>
     </nav>

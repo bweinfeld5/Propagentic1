@@ -1,0 +1,11 @@
+# Task ID: 3
+# Title: Develop Enhanced Scheduling System
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Create a scheduling system with weekly availability, emergency toggle, timezone support, recurring patterns, and calendar integration.
+# Details:
+Build UI for setting weekly availability, emergency toggle, and timezone selection. Support recurring patterns. Integrate Google Calendar/iCal. Store schedules in Firebase.
+
+# Test Strategy:
+Test scheduling UI, timezone handling, recurring patterns, and calendar sync. Validate data persistence and error handling.

@@ -13,9 +13,11 @@ const StatusPill = ({ status, className = '' }) => {
     const normalizedStatus = status?.toLowerCase() || 'default';
 
     switch (normalizedStatus) {
-      // Use primary (Teal) for new/submitted
+      // Use primary (Orange) for new/submitted/active PropAgentic statuses
       case 'new':
       case 'submitted':
+      case 'active':
+      case 'featured':
         return 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-light';
       
       // Use warning (Amber) for in progress/assigned
@@ -38,6 +40,12 @@ const StatusPill = ({ status, className = '' }) => {
       case 'pending':
       case 'waiting':
         return 'bg-info-subtle text-info dark:bg-info-darkSubtle dark:text-blue-300';
+      
+      // Orange priority variant for high-priority items
+      case 'urgent':
+      case 'priority':
+      case 'hot':
+        return 'bg-primary-100 text-primary-800 dark:bg-primary-900/50 dark:text-primary-200';
       
       // Default neutral style
       default:

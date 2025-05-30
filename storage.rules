@@ -1,0 +1,57 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isContractor() {
+      return isAuthenticated() && 
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.userType == 'contractor';
+    }
+    
+    function isValidDocumentType() {
+      return request.resource.contentType.matches('application/pdf') ||
+             request.resource.contentType.matches('image/.*');
+    }
+    
+    function isValidFileSize() {
+      return request.resource.size <= 5 * 1024 * 1024; // 5MB
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Contractor W9 form uploads
+    match /contractors/{userId}/w9/{fileName} {
+      allow read: if isAuthenticated() && isOwner(userId);
+      allow write: if isAuthenticated() && 
+                     isOwner(userId) && 
+                     isValidDocumentType() && 
+                     isValidFileSize();
+    }
+
+    // General document storage rules
+    match /documents/{userId}/{documentType}/{fileName} {
+      allow read: if isAuthenticated() && isOwner(userId);
+      allow create: if isAuthenticated() && 
+                      isContractor() && 
+                      isOwner(userId) && 
+                      isValidDocumentType() && 
+                      isValidFileSize();
+      allow delete: if isAuthenticated() && isOwner(userId);
+    }
+
+    // Contractor documents (more specific path)
+    match /contractors/{userId}/documents/{fileName} {
+      allow read: if isAuthenticated() && isOwner(userId);
+      allow write: if isAuthenticated() && 
+                     isOwner(userId) && 
+                     isValidDocumentType() && 
+                     isValidFileSize();
+    }
+  }
+} 

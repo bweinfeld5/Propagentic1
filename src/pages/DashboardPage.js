@@ -1,15 +1,8 @@
 import React from 'react';
+import Dashboard from '../components/dashboard/Dashboard';
 
 const DashboardPage = () => {
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold text-content dark:text-content-dark">Dashboard</h1>
-      {/* Dashboard content goes here */}
-      <p className="mt-2 text-content-secondary dark:text-content-darkSecondary">
-        Welcome to your dashboard.
-      </p>
-    </div>
-  );
+  return <Dashboard />;
 };
 
 export default DashboardPage; 

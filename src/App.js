@@ -12,12 +12,16 @@ import LocalStorageDebug from './components/shared/LocalStorageDebug';
 import UniversalLoadingSpinner from './components/shared/UniversalLoadingSpinner';
 
 // Lazy load page components
-const LandingPage = lazy(() => import('./components/landing/LandingPage'));
+const LandingPage = lazy(() => import('./components/landing/LandingPage.tsx'));
+const CanvasLandingPage = lazy(() => import('./pages/CanvasLandingPage.tsx'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const TenantDashboard = lazy(() => import('./pages/tenant/TenantDashboard'));
-const LandlordDashboard = lazy(() => import('./pages/LandlordDashboard'));
-const ContractorDashboard = lazy(() => import('./components/contractor/ContractorDashboard'));
+const LandlordDashboard = lazy(() => import('./pages/landlord/LandlordDashboard'));
+const LandlordDashboardDemo = lazy(() => import('./pages/LandlordDashboardDemoPage'));
+const ContractorDashboard = lazy(() => import('./components/contractor/EnhancedContractorDashboard'));
+const ContractorDashboardDemo = lazy(() => import('./pages/ContractorDashboardDemo'));
+const OriginalContractorDashboard = lazy(() => import('./components/contractor/ContractorDashboard'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 const OnboardingSurvey = lazy(() => import('./components/onboarding/OnboardingSurvey'));
 const LandlordOnboarding = lazy(() => import('./components/onboarding/LandlordOnboarding'));
@@ -164,6 +168,7 @@ function App() {
                       {/* Public routes */}
                       <Route path="/" element={<Navigate to="/propagentic/new" replace />} />
                       <Route path="/propagentic/new" element={<LandingPage />} />
+                      <Route path="/canvas-landing" element={<CanvasLandingPage />} />
                       {/* Render GlassyHeader for all other routes */}
                       <Route
                         path="*"
@@ -184,6 +189,8 @@ function App() {
                               <Route path="/tenant/dashboard" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />
                               <Route path="/landlord/dashboard" element={<PrivateRoute><LandlordDashboard /></PrivateRoute>} />
                               <Route path="/contractor/dashboard" element={<PrivateRoute><ContractorDashboard /></PrivateRoute>} />
+                              <Route path="/contractor/dashboard/enhanced" element={<ContractorDashboardDemo />} />
+                              <Route path="/contractor/dashboard/original" element={<PrivateRoute><OriginalContractorDashboard /></PrivateRoute>} />
                               <Route path="/maintenance/new" element={<PrivateRoute><MaintenanceSurvey /></PrivateRoute>} />
                               <Route path="/onboarding" element={<PrivateRoute><OnboardingSurvey /></PrivateRoute>} />
                               <Route path="/landlord-onboarding" element={<PrivateRoute><LandlordOnboarding /></PrivateRoute>} />
@@ -193,6 +200,7 @@ function App() {
                               <Route path="/showcase/components" element={<ComponentsShowcasePage />} />
                               <Route path="/showcase/ui-test" element={<TestUIComponents />} />
                               <Route path="/showcase/simple-ui" element={<SimpleUIShowcase />} />
+                              <Route path="/landlord/dashboard/demo" element={<LandlordDashboardDemo />} />
                               {/* Fallback/Not Found - Redirect to login or a dedicated 404 page */}
                               <Route path="*" element={<Navigate to="/login" />} />
                             </Routes>

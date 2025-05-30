@@ -3,10 +3,22 @@ import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, arrayUni
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, auth, storage, callFunction } from '../../firebase/config';
 import NotificationPreferences from '../notifications/NotificationPreferences';
+import DocumentVerificationSystem from './documents/DocumentVerificationSystem';
+import DocumentVerificationNotifications from '../notifications/DocumentVerificationNotifications';
+import ContractorOverviewCards from './ContractorOverviewCards';
 import Button from '../ui/Button';
 import StatusPill from '../ui/StatusPill';
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import { PhotoIcon } from '@heroicons/react/24/outline';
+import { 
+  XMarkIcon, 
+  PhotoIcon,
+  DocumentCheckIcon,
+  BellIcon,
+  Cog6ToothIcon,
+  ChartBarIcon,
+  ClipboardDocumentListIcon,
+  ShieldCheckIcon,
+  ExclamationTriangleIcon
+} from '@heroicons/react/24/outline';
 
 // Constants for validation
 const MAX_PROGRESS_UPDATE_LENGTH = 500;
@@ -38,6 +50,14 @@ const ContractorDashboard = () => {
   const unsubscribeRefs = useRef({});
   // Add this state 
   const [showSettings, setShowSettings] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [verificationStatus, setVerificationStatus] = useState('pending');
+  const [contractorStats, setContractorStats] = useState({
+    newJobs: 0,
+    activeJobs: 0,
+    completedThisMonth: 0,
+    avgCompletionTime: null
+  });
 
   useEffect(() => {
     const currentUser = auth.currentUser;
@@ -181,6 +201,30 @@ const ContractorDashboard = () => {
       });
     };
   }, [statusFilter]); // Re-run when statusFilter changes
+
+  // Calculate contractor stats
+  useEffect(() => {
+    const newJobs = tickets.filter(ticket => ticket.status === 'pending_acceptance').length;
+    const activeJobs = tickets.filter(ticket => ['assigned', 'accepted', 'in_progress', 'dispatched'].includes(ticket.status)).length;
+    
+    // Calculate completed jobs this month
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const completedThisMonth = tickets.filter(ticket => {
+      if (ticket.status === 'completed' && ticket.updatedAt) {
+        const ticketDate = ticket.updatedAt;
+        return ticketDate.getMonth() === currentMonth && ticketDate.getFullYear() === currentYear;
+      }
+      return false;
+    }).length;
+
+    setContractorStats({
+      newJobs,
+      activeJobs,
+      completedThisMonth,
+      avgCompletionTime: null // Could calculate this from completed tickets
+    });
+  }, [tickets]);
 
   // Function to load more tickets
   const loadMoreTickets = async () => {

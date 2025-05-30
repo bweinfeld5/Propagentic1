@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../firebase/config';
+import { toast } from 'react-hot-toast';
 
 // Service types for contractors
 const SERVICE_TYPES = [
@@ -17,6 +18,12 @@ const SERVICE_TYPES = [
   { id: 'appliance', name: 'Appliance Repair' },
   { id: 'general', name: 'General Handyman' }
 ];
+
+// Add imports for document management components
+import FileUpload from './documents/FileUpload';
+import DocumentList from './documents/DocumentList';
+import ExpirationTracker from './documents/ExpirationTracker';
+import { documentService } from '../../services/documentService';
 
 const ContractorProfileSettings = () => {
   const { currentUser, userProfile, fetchUserProfile } = useAuth();
@@ -45,6 +52,10 @@ const ContractorProfileSettings = () => {
     preferredContactMethod: 'email',
   });
 
+  const [documents, setDocuments] = useState([]);
+  const [isLoadingDocs, setIsLoadingDocs] = useState(true);
+  const [docError, setDocError] = useState('');
+
   // Load user data when component mounts
   useEffect(() => {
     if (userProfile) {
@@ -71,6 +82,7 @@ const ContractorProfileSettings = () => {
         setImagePreview(userProfile.profileImageUrl);
       }
     }
+    loadDocuments();
   }, [userProfile, currentUser]);
 
   const handleChange = (e) => {
@@ -194,7 +206,136 @@ const ContractorProfileSettings = () => {
     }
   };
 
+  const loadDocuments = async () => {
+    try {
+      const docs = await documentService.getUserDocuments(currentUser.uid);
+      setDocuments(docs);
+    } catch (error) {
+      setDocError('Failed to load documents');
+      console.error('Error loading documents:', error);
+    } finally {
+      setIsLoadingDocs(false);
+    }
+  };
+
+  const handleUploadComplete = async (url, metadata) => {
+    try {
+      const docInput = {
+        name: metadata.name,
+        type: metadata.type,
+        url,
+        documentType: 'license', // You might want to make this dynamic
+        metadata: {
+          size: metadata.size,
+          contentType: metadata.type,
+          lastModified: metadata.lastModified
+        }
+      };
+      
+      await documentService.addDocument(currentUser.uid, docInput);
+      await loadDocuments(); // Refresh the list
+      toast.success('Document uploaded successfully');
+    } catch (error) {
+      toast.error('Failed to save document information');
+      console.error('Error saving document:', error);
+    }
+  };
+
+  const handleDeleteDocument = async (documentId) => {
+    try {
+      const doc = documents.find(d => d.id === documentId);
+      if (!doc) return;
+      
+      await documentService.deleteDocument(documentId, doc.url);
+      setDocuments(docs => docs.filter(d => d.id !== documentId));
+      toast.success('Document deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete document');
+      console.error('Error deleting document:', error);
+    }
+  };
+
+  const handleUpdateExpiration = async (documentId, newDate) => {
+    try {
+      await documentService.updateExpirationDate(documentId, newDate);
+      await loadDocuments(); // Refresh the list
+      toast.success('Expiration date updated successfully');
+    } catch (error) {
+      toast.error('Failed to update expiration date');
+      console.error('Error updating expiration date:', error);
+    }
+  };
+
+  // Add this section to your render method
+  const renderDocumentSection = () => (
+    <div className="bg-background dark:bg-background-darkSubtle rounded-lg border border-border dark:border-border-dark p-6 mt-8">
+      <h2 className="text-2xl font-bold text-content dark:text-content-dark mb-6">
+        Documents & Licenses
+      </h2>
+
+      <div className="space-y-8">
+        {/* Document Upload */}
+        <div>
+          <h3 className="text-lg font-medium text-content dark:text-content-dark mb-4">
+            Upload New Document
+          </h3>
+          <FileUpload
+            onUploadComplete={handleUploadComplete}
+            onUploadError={(error) => toast.error(error)}
+            userId={currentUser.uid}
+            documentType="license"
+          />
+        </div>
+
+        {/* Expiration Tracker */}
+        <div>
+          <h3 className="text-lg font-medium text-content dark:text-content-dark mb-4">
+            Document Status
+          </h3>
+          <ExpirationTracker
+            documents={documents}
+            onExpirationWarning={(docId) => {
+              const doc = documents.find(d => d.id === docId);
+              if (doc) {
+                // You might want to show a modal here instead
+                const newDate = prompt('Enter new expiration date (YYYY-MM-DD)');
+                if (newDate) {
+                  handleUpdateExpiration(docId, new Date(newDate));
+                }
+              }
+            }}
+          />
+        </div>
+
+        {/* Document List */}
+        <div>
+          <h3 className="text-lg font-medium text-content dark:text-content-dark mb-4">
+            Your Documents
+          </h3>
+          {isLoadingDocs ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary dark:border-primary-light mx-auto"></div>
+              <p className="mt-2 text-content-secondary dark:text-content-darkSecondary">Loading documents...</p>
+            </div>
+          ) : docError ? (
+            <div className="text-center py-8 text-error dark:text-error-light">
+              {docError}
+            </div>
+          ) : (
+            <DocumentList
+              documents={documents}
+              onDelete={handleDeleteDocument}
+              onView={(doc) => window.open(doc.url, '_blank')}
+              onUpdateExpiration={handleUpdateExpiration}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
+    <div className="max-w-4xl mx-auto px-4 py-8">
     <div className="bg-white shadow rounded-lg overflow-hidden">
       <div className="px-6 py-5 border-b border-gray-200">
         <h2 className="text-xl font-semibold text-gray-900">Contractor Profile</h2>
@@ -545,6 +686,9 @@ const ContractorProfileSettings = () => {
           </button>
         </div>
       </form>
+      </div>
+      
+      {renderDocumentSection()}
     </div>
   );
 };

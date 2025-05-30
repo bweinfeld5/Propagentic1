@@ -135,7 +135,7 @@ const TenantsPage = () => {
      } catch (error) {
        console.error("Error creating invite record:", error);
        // Check if it's an ApiError with a message, otherwise use a generic one
-       const errorMessage = (error as any)?.message || "Failed to send invitation.";
+       const errorMessage = error?.message || "Failed to send invitation.";
        toast.error(errorMessage);
        throw error; 
      }

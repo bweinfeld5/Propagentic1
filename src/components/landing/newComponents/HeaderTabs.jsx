@@ -58,7 +58,7 @@ const HeaderTabs = () => {
           </div>
           <div className="flex items-center space-x-4">
             <Link 
-              to="/auth?tab=login" 
+              to="/login" 
               className={`${linkBaseClasses} text-white hover:text-white/80`}
             >
               Log In

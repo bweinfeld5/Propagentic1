@@ -1,0 +1,11 @@
+# Task ID: 4
+# Title: Enhance Service Details and Pricing
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Add detailed service categorization, custom pricing tiers, equipment listing, custom service definitions, and map integration.
+# Details:
+Extend form to include service categories, pricing tiers, equipment/tools, custom service fields. Integrate Google Maps API for service area mapping.
+
+# Test Strategy:
+Test service form, pricing logic, equipment listing, map integration, and data validation.

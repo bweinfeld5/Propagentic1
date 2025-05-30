@@ -30,7 +30,7 @@ const FloatingActionButton = () => {
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         >
           <Link
-            to="/auth?tab=signup"
+            to="/signup"
             className="bg-propagentic-teal text-propagentic-neutral-lightest px-6 py-3 rounded-full font-medium shadow-lg hover:bg-propagentic-teal-dark transform hover:scale-105 transition duration-200 flex items-center focus:outline-none focus:ring-2 focus:ring-propagentic-teal focus:ring-offset-2"
           >
             <span>Get Started</span>

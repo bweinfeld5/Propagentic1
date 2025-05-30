@@ -1,0 +1,11 @@
+# Task ID: 5
+# Title: Build Portfolio Management Features
+# Status: pending
+# Dependencies: 1
+# Priority: medium
+# Description: Implement photo gallery, before/after images, project descriptions, video upload, and reference collection.
+# Details:
+Develop portfolio upload interface for images/videos. Add before/after pairs, project description fields, and reference collection. Store in Firebase Storage.
+
+# Test Strategy:
+Test image/video upload, project description, reference collection, and data integrity.

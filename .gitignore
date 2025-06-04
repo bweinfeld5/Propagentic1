@@ -99,3 +99,4 @@ service-account*.json
 *\ 10.*
 *.js.map
 firebase-debug*.log
+.vercel

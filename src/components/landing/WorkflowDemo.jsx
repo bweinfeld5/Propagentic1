@@ -212,14 +212,14 @@ const WorkflowDemo = () => {
   return (
     <div className="w-full max-w-5xl mx-auto rounded-xl shadow-lg bg-white overflow-hidden">
       {/* Header with title and steps */}
-      <div className="bg-propagentic-teal text-white p-4 text-center">
-        <h2 className="text-xl md:text-2xl font-semibold">Propagentic Maintenance Workflow</h2>
+      <div className="bg-neutral-900/90 backdrop-blur-sm text-white p-4 text-center shadow-md">
+        <h2 className="text-xl md:text-2xl font-bold text-white">Propagentic Maintenance Workflow</h2>
       </div>
       
       {/* Progress bar */}
       <div className="relative h-2 bg-gray-200">
         <SafeMotion.div 
-          className="absolute h-full bg-propagentic-teal"
+          className="absolute h-full bg-teal-600"
           initial={{ width: '0%' }}
           animate={{ width: `${(currentStep / 3) * 100}%` }}
           transition={{ duration: 0.5 }}
@@ -235,12 +235,12 @@ const WorkflowDemo = () => {
             onClick={() => setCurrentStep(step)}
           >
             <div 
-              className={`rounded-full w-8 h-8 flex items-center justify-center mb-1 cursor-pointer
+              className={`rounded-full w-8 h-8 flex items-center justify-center mb-1 cursor-pointer font-bold border-2 transition-all duration-200
                 ${step === currentStep 
-                  ? 'bg-propagentic-teal text-white' 
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-md' 
                   : step < currentStep 
-                    ? 'bg-green-100 text-green-800 border border-green-500' 
-                    : 'bg-gray-100 text-gray-500 border border-gray-300'}`}
+                    ? 'bg-green-100 text-green-800 border-green-500 shadow-sm' 
+                    : 'bg-white text-gray-700 border-gray-400 hover:border-gray-500'}`}
             >
               {step < currentStep ? (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -250,7 +250,7 @@ const WorkflowDemo = () => {
                 step + 1
               )}
             </div>
-            <span className="text-xs hidden sm:inline text-center">
+            <span className="text-xs hidden sm:inline text-center text-gray-800 dark:text-gray-200 font-semibold">
               {step === 0 && "Tenant"}
               {step === 1 && "AI"}
               {step === 2 && "Landlord"}
@@ -264,20 +264,20 @@ const WorkflowDemo = () => {
       <div className="px-4 sm:px-8 md:px-12 py-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <div className="bg-propagentic-teal text-white p-1 rounded">
+            <div className="bg-blue-600 text-white p-2 rounded-lg shadow-sm">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
               </svg>
             </div>
-            <h3 className="ml-2 text-lg font-semibold">Landlord Dashboard</h3>
+            <h3 className="ml-3 text-lg font-bold text-gray-900 dark:text-gray-100">Landlord Dashboard</h3>
           </div>
           <div className="flex space-x-2">
             <button 
               onClick={toggleAutoPlay}
-              className={`text-xs px-3 py-1 rounded-full flex items-center
+              className={`text-sm px-4 py-2 rounded-lg flex items-center font-medium transition-all duration-200 shadow-sm border
                 ${isAutoPlaying 
-                  ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                  : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+                  ? 'bg-red-500 text-white hover:bg-red-600 border-red-500' 
+                  : 'bg-green-500 text-white hover:bg-green-600 border-green-500'}`}
             >
               {isAutoPlaying ? (
                 <>
@@ -299,17 +299,17 @@ const WorkflowDemo = () => {
         </div>
       
         <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm mb-4">
-          <h2 className="text-xl font-bold mb-2">Maintenance Request Details</h2>
-          <p className="text-gray-600 mb-2">{request.property} - Unit {request.unit}</p>
+          <h2 className="text-xl font-bold mb-2 text-neutral-900 dark:text-white">Maintenance Request Details</h2>
+          <p className="text-neutral-800 dark:text-neutral-200 mb-2">{request.property} - Unit {request.unit}</p>
           
           <div className="flex flex-wrap gap-2 mb-4">
             {aiAnalysis.urgency && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">
                 {aiAnalysis.urgency}
               </span>
             )}
             {aiAnalysis.category && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
                 {aiAnalysis.category}
               </span>
             )}
@@ -331,9 +331,9 @@ const WorkflowDemo = () => {
                   <div>
                     <form onSubmit={handleSubmitRequest}>
                       <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Issue Type</label>
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Issue Type</label>
                         <select 
-                          className="w-full rounded-md border border-gray-300 p-2 focus:ring-propagentic-teal focus:border-propagentic-teal"
+                          className="w-full rounded-md border border-gray-300 p-2 focus:ring-propagentic-teal focus:border-propagentic-teal text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
                           value={request.issue}
                           onChange={(e) => setRequest({...request, issue: e.target.value})}
                         >
@@ -345,9 +345,9 @@ const WorkflowDemo = () => {
                       </div>
                       
                       <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Description</label>
                         <textarea
-                          className="w-full rounded-md border border-gray-300 p-2 focus:ring-propagentic-teal focus:border-propagentic-teal"
+                          className="w-full rounded-md border border-gray-300 p-2 focus:ring-propagentic-teal focus:border-propagentic-teal text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
                           rows="3"
                           value={request.description}
                           onChange={(e) => setRequest({...request, description: e.target.value})}
@@ -356,19 +356,19 @@ const WorkflowDemo = () => {
                       </div>
                       
                       <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Photo</label>
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Photo</label>
                         <div className="border border-dashed border-gray-300 rounded-md p-4 text-center">
                           <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          <p className="mt-1 text-sm text-gray-600">Click to upload or drag and drop</p>
-                          <p className="mt-1 text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                          <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">Click to upload or drag and drop</p>
+                          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">PNG, JPG up to 5MB</p>
                         </div>
                       </div>
                       
                       <button
                         type="submit"
-                        className="w-full bg-propagentic-teal text-white py-2 px-4 rounded hover:bg-teal-600 transition duration-150"
+                        className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 focus:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 font-semibold shadow-md border border-blue-600"
                       >
                         Submit Request
                       </button>
@@ -377,13 +377,13 @@ const WorkflowDemo = () => {
                   
                   <div className="flex items-center justify-center">
                     <div className="text-center p-4 w-full max-w-xs">
-                      <div className="rounded-full mx-auto w-16 h-16 bg-gray-200 text-gray-600 flex items-center justify-center">
+                      <div className="rounded-full mx-auto w-16 h-16 bg-gray-200 text-gray-700 flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
-                      <h3 className="mt-4 text-lg font-medium">Report an Issue</h3>
-                      <p className="mt-2 text-sm text-gray-600">
+                      <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">Report an Issue</h3>
+                      <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
                         Submit your maintenance request and we'll categorize it automatically using AI.
                       </p>
                     </div>
@@ -395,38 +395,38 @@ const WorkflowDemo = () => {
               {currentStep === 1 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-lg font-medium mb-2">Issue Description</h3>
-                    <div className="bg-gray-50 p-4 rounded-md mb-4">
-                      <p>{request.description}</p>
+                    <h4 className="text-lg font-medium mb-2 text-neutral-900 dark:text-white">Issue Description</h4>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded-md mb-4">
+                      <p className="text-neutral-800 dark:text-neutral-200">{request.description}</p>
                     </div>
                     
                     <div className="mb-4">
-                      <h3 className="text-lg font-medium mb-2">AI Analysis</h3>
+                      <h4 className="text-lg font-medium mb-2 text-neutral-900 dark:text-white">AI Analysis</h4>
                       {aiAnalysis.isAnalyzing ? (
                         <div className="flex flex-col items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-propagentic-teal mb-2"></div>
-                          <p className="text-sm text-gray-600">Analyzing request...</p>
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-2"></div>
+                          <p className="text-sm text-neutral-700 dark:text-neutral-300">Analyzing request...</p>
                         </div>
                       ) : aiAnalysis.isComplete ? (
-                        <div className="bg-green-50 border border-green-200 p-4 rounded-md">
+                        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 p-4 rounded-md">
                           <div className="flex items-start mb-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600 dark:text-green-400 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                             </svg>
                             <div>
-                              <p className="font-medium">Analysis Complete</p>
-                              <p className="text-sm text-gray-600">Our AI has analyzed your maintenance request.</p>
+                              <p className="font-medium text-neutral-900 dark:text-white">Analysis Complete</p>
+                              <p className="text-sm text-neutral-700 dark:text-neutral-300">Our AI has analyzed your maintenance request.</p>
                             </div>
                           </div>
                           
                           <div className="grid grid-cols-2 gap-2 mt-4">
                             <div>
-                              <p className="text-sm text-gray-600">Category</p>
-                              <p className="font-medium">{aiAnalysis.category}</p>
+                              <p className="text-sm text-neutral-600 dark:text-neutral-400">Category</p>
+                              <p className="font-medium text-neutral-800 dark:text-neutral-200">{aiAnalysis.category}</p>
                             </div>
                             <div>
-                              <p className="text-sm text-gray-600">Urgency</p>
-                              <p className="font-medium">{aiAnalysis.urgency}</p>
+                              <p className="text-sm text-neutral-600 dark:text-neutral-400">Urgency</p>
+                              <p className="font-medium text-neutral-800 dark:text-neutral-200">{aiAnalysis.urgency}</p>
                             </div>
                           </div>
                         </div>
@@ -502,12 +502,12 @@ const WorkflowDemo = () => {
                     <div className="mt-8">
                       <button
                         onClick={handleApproveContractor}
-                        className="w-full bg-green-500 text-white py-3 px-4 rounded-md hover:bg-green-600 mb-2"
+                        className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 focus:bg-green-700 focus:ring-4 focus:ring-green-200 transition-all duration-200 font-semibold shadow-md border border-green-600 mb-3"
                       >
                         Approve Contractor
                       </button>
                       <button
-                        className="w-full bg-white text-gray-700 py-3 px-4 rounded-md border border-gray-300 hover:bg-gray-50"
+                        className="w-full bg-gray-100 text-gray-800 py-3 px-4 rounded-lg border border-gray-300 hover:bg-gray-200 focus:bg-gray-200 focus:ring-4 focus:ring-gray-200 transition-all duration-200 font-medium"
                       >
                         Assign Different Contractor
                       </button>
@@ -522,16 +522,16 @@ const WorkflowDemo = () => {
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-lg font-medium mb-2">Request Status</h3>
-                      <div className="bg-propagentic-teal bg-opacity-10 p-4 rounded-md">
+                      <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
                         <div className="flex items-center mb-4">
-                          <div className="w-10 h-10 rounded-full bg-propagentic-teal text-white flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                           </div>
                           <div className="ml-3">
-                            <p className="font-medium text-propagentic-teal">Contractor Assigned</p>
-                            <p className="text-sm">{contractor.name} has been approved for this job</p>
+                            <p className="font-semibold text-blue-800">Contractor Assigned</p>
+                            <p className="text-sm text-blue-700">{contractor.name} has been approved for this job</p>
                           </div>
                         </div>
                         
@@ -578,7 +578,7 @@ const WorkflowDemo = () => {
                           <p className="text-sm text-gray-600 mb-4">The contractor has been notified and will respond shortly.</p>
                           <button
                             onClick={handleContractorAccept}
-                            className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 font-semibold shadow-md border border-blue-600"
                           >
                             Simulate Contractor Acceptance
                           </button>
@@ -610,7 +610,7 @@ const WorkflowDemo = () => {
                     <div className="mt-auto">
                       <button
                         onClick={resetDemo}
-                        className="w-full bg-propagentic-teal text-white py-2 px-4 rounded hover:bg-teal-600"
+                        className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg hover:bg-teal-700 focus:bg-teal-700 focus:ring-4 focus:ring-teal-200 transition-all duration-200 font-semibold shadow-md border border-teal-600"
                       >
                         Reset Demo
                       </button>
@@ -627,14 +627,14 @@ const WorkflowDemo = () => {
       <div className="px-4 sm:px-8 md:px-12 py-4 border-t bg-gray-50 flex justify-between">
         <button
           onClick={goToPrevStep}
-          className={`px-4 py-2 flex items-center rounded ${
+          className={`px-6 py-3 flex items-center rounded-lg font-semibold transition-all duration-200 border-2 ${
             currentStep > 0 
-              ? 'text-propagentic-teal hover:bg-propagentic-teal hover:bg-opacity-10' 
-              : 'text-gray-400 cursor-not-allowed'
+              ? 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50 hover:border-gray-400 focus:bg-gray-50 focus:ring-4 focus:ring-gray-200 shadow-sm' 
+              : 'text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed'
           }`}
           disabled={currentStep === 0}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
           </svg>
           Previous
@@ -643,20 +643,20 @@ const WorkflowDemo = () => {
         {currentStep < 3 ? (
           <button
             onClick={goToNextStep}
-            className="px-4 py-2 flex items-center text-white bg-propagentic-teal rounded hover:bg-teal-600"
+            className="px-6 py-3 flex items-center text-white bg-blue-600 border-2 border-blue-600 rounded-lg hover:bg-blue-700 hover:border-blue-700 focus:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 font-semibold shadow-md"
           >
             Next
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
           </button>
         ) : (
           <button
             onClick={resetDemo}
-            className="px-4 py-2 flex items-center text-white bg-propagentic-teal rounded hover:bg-teal-600"
+            className="px-6 py-3 flex items-center text-white bg-teal-600 border-2 border-teal-600 rounded-lg hover:bg-teal-700 hover:border-teal-700 focus:bg-teal-700 focus:ring-4 focus:ring-teal-200 transition-all duration-200 font-semibold shadow-md"
           >
             Start Over
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
             </svg>
           </button>

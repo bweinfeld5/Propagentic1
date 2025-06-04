@@ -96,8 +96,7 @@ exports.sendInviteEmail = functions.firestore
         from: `"${APP_NAME}" <${((_a = functions.config().email) === null || _a === void 0 ? void 0 : _a.from) || 'noreply@your-propagentic-app.com'}>`, // Configure your "from" email
         to: tenantEmail,
         subject: `You're Invited to Join ${propertyName} on ${APP_NAME}!`,
-        html: 
-    } `
+        html: `
         <p>Hello,</p>
         <p>${landlordName} has invited you to join ${propertyName} on ${APP_NAME}.</p>
         <p>Please click the link below to accept your invitation and set up your account:</p>
@@ -105,40 +104,33 @@ exports.sendInviteEmail = functions.firestore
         <p>If you were not expecting this invitation, you can safely ignore this email.</p>
         <p>Thanks,</p>
         <p>The ${APP_NAME} Team</p>
-      \`,
+      `,
     };
-
-    console.log(`, Attempting, to, send, email, to, $, { tenantEmail };
-    `, mailOptions);
-
+    console.log(`Attempting to send email to ${tenantEmail}`, mailOptions);
     try {
-      // Mark as processing
-      await admin.firestore().collection('invites').doc(inviteId).update({ 
-        emailSentStatus: 'processing',
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-      
-      // Send the email
-      const info = await mailTransport.sendMail(mailOptions);
-      console.log('Invitation email sent to:', tenantEmail, 'for invite ID:', inviteId, 'Response:', info.response);
-      
-      // Update the invite document with success status
-      await admin.firestore().collection('invites').doc(inviteId).update({ 
-        emailSentStatus: 'sent', 
-        emailSentAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-
-    } catch (error) {
-      console.error('There was an error sending the email for invite ID:', inviteId, error);
-      
-      // Update the invite document with failure status
-      await admin.firestore().collection('invites').doc(inviteId).update({ 
-        emailSentStatus: 'failed', 
-        emailError: (error as Error).message,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+        // Mark as processing
+        await admin.firestore().collection('invites').doc(inviteId).update({
+            emailSentStatus: 'processing',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        // Send the email
+        const info = await mailTransport.sendMail(mailOptions);
+        console.log('Invitation email sent to:', tenantEmail, 'for invite ID:', inviteId, 'Response:', info.response);
+        // Update the invite document with success status
+        await admin.firestore().collection('invites').doc(inviteId).update({
+            emailSentStatus: 'sent',
+            emailSentAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
     }
-  }); ;
+    catch (error) {
+        console.error('There was an error sending the email for invite ID:', inviteId, error);
+        // Update the invite document with failure status
+        await admin.firestore().collection('invites').doc(inviteId).update({
+            emailSentStatus: 'failed',
+            emailError: error.message,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+    }
 });
 //# sourceMappingURL=invites.js.map

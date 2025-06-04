@@ -9,58 +9,74 @@ module.exports = override(
   }),
 
   (config) => {
-    // --- Disable React Fast Refresh regardless of environment ---
-    // This tackles the react-refresh/runtime.js issue
-    console.log("Disabling React Fast Refresh for all builds");
+    // --- COMPLETELY DISABLE FAST REFRESH ---
+    console.log("Completely disabling React Fast Refresh");
     
-    // 1. Filter out the ReactRefreshPlugin
+    // 1. Remove all ReactRefreshPlugin instances
     config.plugins = config.plugins.filter(
-      plugin => !plugin.constructor || plugin.constructor.name !== 'ReactRefreshPlugin'
+      plugin => plugin.constructor.name !== 'ReactRefreshPlugin'
     );
     
-    // 2. Remove react-refresh/runtime.js from entry points
-    if (config.entry) {
-      if (Array.isArray(config.entry)) {
-        config.entry = config.entry.filter(
-          entry => !entry || !entry.includes('react-refresh/runtime.js')
-        );
-      } else if (typeof config.entry === 'object') {
-        Object.keys(config.entry).forEach(key => {
-          if (Array.isArray(config.entry[key])) {
-            config.entry[key] = config.entry[key].filter(
-              entry => !entry || !entry.includes('react-refresh/runtime.js')
-            );
-          }
-        });
-      }
-    }
+    // 2. Remove React Refresh Webpack Plugin
+    config.plugins = config.plugins.filter(
+      plugin => !plugin.constructor.name.includes('ReactRefresh')
+    );
     
-    // 3. Remove any babel plugins related to react-refresh
+    // 3. Disable the babel preset that injects Fast Refresh
     if (config.module && config.module.rules) {
       config.module.rules.forEach(rule => {
-        if (rule.use && Array.isArray(rule.use)) {
-          rule.use.forEach(loader => {
-            if (loader.loader && loader.loader.includes('babel-loader') && loader.options && loader.options.plugins) {
-              loader.options.plugins = loader.options.plugins.filter(
-                plugin => !plugin || (Array.isArray(plugin) && !plugin[0]?.includes('react-refresh'))
-              );
+        if (rule.oneOf) {
+          rule.oneOf.forEach(oneOfRule => {
+            if (oneOfRule.use && Array.isArray(oneOfRule.use)) {
+              oneOfRule.use.forEach(loader => {
+                if (loader.loader && loader.loader.includes('babel-loader')) {
+                  if (loader.options && loader.options.presets) {
+                    loader.options.presets = loader.options.presets.map(preset => {
+                      if (Array.isArray(preset) && preset[0] && preset[0].includes('react-app')) {
+                        return [preset[0], { ...preset[1], runtime: 'classic', refresh: false }];
+                      }
+                      return preset;
+                    });
+                  }
+                  if (loader.options && loader.options.plugins) {
+                    loader.options.plugins = loader.options.plugins.filter(
+                      plugin => {
+                        if (typeof plugin === 'string') {
+                          return !plugin.includes('react-refresh');
+                        }
+                        if (Array.isArray(plugin) && plugin[0]) {
+                          return !plugin[0].includes('react-refresh');
+                        }
+                        return true;
+                      }
+                    );
+                  }
+                  // Explicitly set refresh to false
+                  if (loader.options) {
+                    loader.options.refresh = false;
+                  }
+                }
+              });
             }
           });
         }
       });
     }
 
+    // 4. Set environment variables to disable Fast Refresh
+    process.env.FAST_REFRESH = 'false';
+    process.env.REACT_REFRESH = 'false';
+    
     // --- Webpack 5 Polyfills --- 
-    // Necessary for dependencies that expect Node.js core modules
     config.resolve.fallback = {
-      ...config.resolve.fallback, // Preserve existing fallbacks
+      ...config.resolve.fallback,
       "path": require.resolve("path-browserify"),
       "os": require.resolve("os-browserify/browser"),
       "crypto": require.resolve("crypto-browserify"),
       "stream": require.resolve("stream-browserify"),
       "vm": require.resolve("vm-browserify"),
       "constants": require.resolve("constants-browserify"),
-      "fs": false, // Indicate 'fs' is not available
+      "fs": false,
       "child_process": false,
       "module": false,
       "net": false,
@@ -71,7 +87,7 @@ module.exports = override(
       "url": false
     };
 
-    // Add polyfills that CRA 5 removed
+    // Add polyfills
     config.plugins.push(
       new webpack.ProvidePlugin({
         process: require.resolve('process/browser'),
@@ -79,13 +95,41 @@ module.exports = override(
       })
     );
 
-    // Define environment variables to disable Fast Refresh
+    // Define environment to disable Fast Refresh
+    // Find and modify existing DefinePlugin instead of adding a new one
+    const definePlugin = config.plugins.find(
+      plugin => plugin.constructor.name === 'DefinePlugin'
+    );
+    
+    if (definePlugin) {
+      // Modify the existing DefinePlugin
+      definePlugin.definitions['process.env.FAST_REFRESH'] = JSON.stringify('false');
+      definePlugin.definitions['process.env.REACT_REFRESH'] = JSON.stringify('false');
+    } else {
+      // Only add if it doesn't exist
     config.plugins.push(
       new webpack.DefinePlugin({
-        'process.env.FAST_REFRESH': JSON.stringify(false),
-        '__REACT_REFRESH_RUNTIME__': 'false',
+          'process.env.FAST_REFRESH': JSON.stringify('false'),
+          'process.env.REACT_REFRESH': JSON.stringify('false')
       })
     );
+    }
+
+    // --- Suppress source map warnings from intro.js ---
+    config.module.rules.push({
+      test: /intro\.js/,
+      use: ['source-map-loader'],
+      enforce: 'pre',
+      exclude: /node_modules\/intro\.js/
+    });
+
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      {
+        module: /intro\.js/,
+      },
+      /Failed to parse source map from.*intro\.js/,
+    ];
 
     console.log("Applied core module fallbacks and polyfills.");
     return config;

@@ -45,7 +45,7 @@ const UserMenu = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login');
+      navigate('/propagentic/new');
     } catch (error) {
       console.error('Failed to log out', error);
     }

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Waitlist Permissions</title>
+</head>
+<body>
+    <h1>Test Waitlist Submission</h1>
+    <div id="status"></div>
+    <button id="testBtn">Test Waitlist Submission</button>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        // Your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBInjhlP96C6BrVJE7Ch5G_0w-YsFbnEHY",
+            authDomain: "propagentic.firebaseapp.com",
+            projectId: "propagentic",
+            storageBucket: "propagentic.appspot.com",
+            messagingSenderId: "138135792002",
+            appId: "1:138135792002:web:e491bbeb2e5f8c09c00d60"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        const statusDiv = document.getElementById('status');
+        const testBtn = document.getElementById('testBtn');
+        
+        testBtn.addEventListener('click', async () => {
+            statusDiv.innerHTML = 'Testing...';
+            
+            try {
+                // Test 1: Simple waitlist entry
+                const waitlistData = {
+                    email: 'test-' + Date.now() + '@example.com',
+                    role: 'landlord',
+                    timestamp: new Date().toISOString(),
+                    source: 'test_html',
+                    createdAt: serverTimestamp()
+                };
+                
+                console.log('Attempting to add:', waitlistData);
+                
+                const docRef = await addDoc(collection(db, 'waitlist'), waitlistData);
+                
+                statusDiv.innerHTML = `
+                    <p style="color: green;">✅ SUCCESS! Document added with ID: ${docRef.id}</p>
+                    <p>This proves Firestore permissions are working correctly.</p>
+                `;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.innerHTML = `
+                    <p style="color: red;">❌ ERROR: ${error.message}</p>
+                    <p>Code: ${error.code}</p>
+                    <details>
+                        <summary>Full Error</summary>
+                        <pre>${JSON.stringify(error, null, 2)}</pre>
+                    </details>
+                `;
+            }
+        });
+    </script>
+</body>
+</html> 

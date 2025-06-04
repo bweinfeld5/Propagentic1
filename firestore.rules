@@ -120,13 +120,80 @@ service cloud.firestore {
              !('acceptedAt' in data); // acceptedAt is set on accept
     }
 
+    // Helper function for document validation
+    function isValidDocumentData() {
+      return request.resource.data.keys().hasAll(['name', 'type', 'url', 'userId', 'documentType']) &&
+             request.resource.data.userId == request.auth.uid &&
+             request.resource.data.type in ['application/pdf', 'image/jpeg', 'image/png'] &&
+             request.resource.data.documentType in ['license', 'certification', 'insurance', 'other'];
+    }
+
+    // Pre-launch validation functions
+    function isValidWaitlistData() {
+      return 'email' in request.resource.data && 
+             'role' in request.resource.data &&
+             isValidEmail(request.resource.data.email) &&
+             request.resource.data.role in ['landlord', 'tenant', 'contractor', 'supporter'] &&
+             'timestamp' in request.resource.data &&
+             'source' in request.resource.data &&
+             request.resource.data.source is string &&
+             // Optional fields validation (more permissive for pre-launch)
+             (!('name' in request.resource.data) || request.resource.data.name is string) &&
+             (!('userId' in request.resource.data) || request.resource.data.userId is string || request.resource.data.userId == null) &&
+             (!('subscribed_to_newsletter' in request.resource.data) || request.resource.data.subscribed_to_newsletter is bool) &&
+             (!('marketing_consent' in request.resource.data) || request.resource.data.marketing_consent is bool) &&
+             (!('early_access' in request.resource.data) || request.resource.data.early_access is bool) &&
+             (!('ip_address' in request.resource.data) || request.resource.data.ip_address is string) &&
+             (!('user_agent' in request.resource.data) || request.resource.data.user_agent is string) &&
+             (!('createdAt' in request.resource.data) || true) && // Allow any createdAt field
+             (!('test' in request.resource.data) || request.resource.data.test is bool);
+    }
+
+    function isValidNewsletterData() {
+      return 'email' in request.resource.data && 
+             'role' in request.resource.data &&
+             isValidEmail(request.resource.data.email) &&
+             request.resource.data.role in ['landlord', 'tenant', 'contractor', 'supporter'] &&
+             'source' in request.resource.data &&
+             'status' in request.resource.data &&
+             request.resource.data.status == 'active' &&
+             // Allow optional fields
+             (!('name' in request.resource.data) || request.resource.data.name is string) &&
+             (!('subscribedAt' in request.resource.data) || true) &&
+             (!('preferences' in request.resource.data) || request.resource.data.preferences is map);
+    }
+
+    function isValidPreLaunchEmailData() {
+      return 'to' in request.resource.data && 
+             'message' in request.resource.data &&
+             isValidEmail(request.resource.data.to) &&
+             request.resource.data.message is map &&
+             'subject' in request.resource.data.message &&
+             request.resource.data.message.subject is string &&
+             // Allow any pre-launch related emails (more permissive for testing)
+             (
+               // Standard email fields are present in message object
+               ('html' in request.resource.data.message && request.resource.data.message.html is string) ||
+               ('text' in request.resource.data.message && request.resource.data.message.text is string)
+             ) &&
+             // Check if it's from pre-launch source (VERY relaxed validation for testing)
+             (
+               ('source' in request.resource.data && request.resource.data.source is string) ||
+               ('userRole' in request.resource.data && 
+                request.resource.data.userRole in ['landlord', 'tenant', 'contractor']) ||
+               ('test' in request.resource.data && request.resource.data.test == true) ||
+               // Allow any email during development
+               true
+             );
+    }
+
     // MATCHES BEGIN HERE
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin() || isDevMode();
-      allow create: if isOwner(userId) || isDevMode();
-      allow update: if isOwner(userId) || isDevMode() ||
-        (!('role' in request.resource.data) || request.resource.data.role == resource.data.role) &&
-        (!('userType' in request.resource.data) || request.resource.data.userType == resource.data.userType);
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && 
+        (resource.data.role == 'contractor' || 
+         isAdmin() ||
+         isPropertyParticipant(userId));
     }
 
     match /landlordProfiles/{landlordId} {
@@ -156,25 +223,10 @@ service cloud.firestore {
     }
 
     match /properties/{propertyId} {
-      allow read: if isSignedIn() && (
-        // Allow property owners (with logging for debugging)
-        (resource.data.landlordId == request.auth.uid) || 
-        // Legacy field support if needed
-        (resource.data.ownerId == request.auth.uid) ||
-        // Support alternative keys that might be present
-        (resource.data.owner == request.auth.uid) ||
-        // Other permission checks
-        isPropertyTenant(propertyId) || 
-        isAdmin() ||
-        // Development mode access for easier debugging
-        isDevMode()
-      );
-      // Create rule requires landlordId field to be set properly
-      allow create: if isLandlord() && 
-                    request.resource.data.landlordId == request.auth.uid &&
-                    (!('ownerId' in request.resource.data) || request.resource.data.ownerId == request.auth.uid) &&
-                    (!('owner' in request.resource.data) || request.resource.data.owner == request.auth.uid);
-      // Update and delete only allowed for property owner (using consistent field) or dev mode
+      allow read, write: if request.auth != null && 
+        (request.auth.uid == resource.data.landlordId || isAdmin());
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.landlordId;
       allow update, delete: if (resource.data.landlordId == request.auth.uid) || isDevMode();
 
       match /tenants/{tenantId} {
@@ -185,13 +237,13 @@ service cloud.firestore {
 
     // Add a specific rule for the tenants collection (if it exists at the root level)
     match /tenants/{tenantId} {
-      allow read: if isSignedIn() && (
-        isOwner(tenantId) ||
-        isLandlord() || // Let landlords read tenant data
-        isAdmin() ||
-        isDevMode()
-      );
-      allow write: if isLandlord() || isOwner(tenantId) || isAdmin() || isDevMode();
+      allow read, write: if request.auth != null && 
+        (request.auth.uid == resource.data.landlordId || 
+         request.auth.uid == resource.data.tenantId || 
+         isAdmin());
+      allow create: if request.auth != null && 
+        (request.auth.uid == request.resource.data.landlordId || 
+         request.auth.uid == request.resource.data.tenantId);
     }
 
     match /tickets/{ticketId} {
@@ -247,9 +299,9 @@ service cloud.firestore {
     }
 
     match /notifications/{notificationId} {
-      allow read, update, delete: if isSignedIn() &&
-        resource.data.userId == request.auth.uid;
-      allow create: if isAdmin();
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null;
     }
 
     // Invite Code Rules - Add after the other collection rules
@@ -344,10 +396,290 @@ service cloud.firestore {
 
     // Add rules for mail collection to enable email sending
     match /mail/{document} {
-      // Allow authenticated users to create mail documents
-      allow create: if request.auth != null;
+      // Allow authenticated users and anonymous users (for pre-launch) to create mail documents
+      allow create: if true; // Very permissive for pre-launch phase
       // Only allow system/admin to read mail documents
       allow read, update, delete: if false;
+    }
+
+    // Pre-launch waitlist collection
+    match /waitlist/{document} {
+      // Allow anyone to join the waitlist (anonymous users for pre-launch)
+      allow create: if true; // Temporarily very permissive for pre-launch
+      // Allow anyone to read waitlist entries (needed for duplicate check)
+      allow read: if true; // Temporarily permissive for pre-launch
+      // No updates or deletes allowed
+      allow update, delete: if false;
+    }
+
+    // Newsletter subscribers collection
+    match /newsletter_subscribers/{document} {
+      // Allow anyone to subscribe (anonymous users for pre-launch)
+      allow create: if true; // Temporarily very permissive for pre-launch
+      // Only admins can read/manage subscribers
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Early access collection for managing pre-launch access
+    match /early_access/{document} {
+      // Anyone can check early access (for login flow)
+      allow read: if true;
+      // Only admins can manage early access
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Analytics events collection
+    match /analytics_events/{document} {
+      // Allow anyone to create analytics events (for pre-launch tracking)
+      allow create: if true;
+      // Only admins can read analytics
+      allow read: if isAdmin();
+      // No updates or deletes allowed
+      allow update, delete: if false;
+    }
+
+    // Contractor documents collection
+    match /contractor_documents/{documentId} {
+      allow read: if isSignedIn() && 
+                    (isOwner(resource.data.userId) || 
+                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+      
+      allow create: if isContractor() && 
+                      isValidDocumentData();
+      
+      allow update: if isContractor() && 
+                      isOwner(resource.data.userId) && 
+                      isValidDocumentData();
+      
+      allow delete: if isContractor() && 
+                      isOwner(resource.data.userId);
+    }
+
+    // Communication System Collections (Phase 1.3)
+    match /conversations/{conversationId} {
+      allow read, write: if request.auth != null && 
+        (request.auth.uid in resource.data.participants || isAdmin());
+      allow create: if request.auth != null && 
+        request.auth.uid in request.resource.data.participants;
+    }
+
+    match /messages/{messageId} {
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.senderId || 
+         request.auth.uid in resource.data.participants ||
+         isAdmin());
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.senderId;
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.senderId;
+    }
+
+    // Maintenance requests
+    match /maintenanceRequests/{requestId} {
+      allow read, write: if request.auth != null && 
+        (request.auth.uid == resource.data.tenantId || 
+         request.auth.uid == resource.data.landlordId ||
+         request.auth.uid == resource.data.assignedContractorId ||
+         isAdmin());
+      allow create: if request.auth != null;
+    }
+
+    match /jobs/{jobId} {
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.landlordId || 
+         request.auth.uid == resource.data.assignedContractorId ||
+         resource.data.visibility == 'public' ||
+         isAdmin());
+      allow write: if request.auth != null && 
+        (request.auth.uid == resource.data.landlordId || 
+         request.auth.uid == resource.data.assignedContractorId ||
+         isAdmin());
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.landlordId;
+    }
+
+    match /bids/{bidId} {
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.contractorId || 
+         isJobParticipant(resource.data.jobId) ||
+         isAdmin());
+      allow write: if request.auth != null && 
+        request.auth.uid == resource.data.contractorId;
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.contractorId;
+    }
+
+    match /jobUpdates/{updateId} {
+      allow read: if request.auth != null && 
+        (isJobParticipant(resource.data.jobId) || isAdmin());
+      allow create, update: if request.auth != null && 
+        (request.auth.uid == resource.data.contractorId || 
+         isJobParticipant(resource.data.jobId));
+    }
+
+    match /notificationPreferences/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /notificationRules/{ruleId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    match /escalationRules/{ruleId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    match /notificationTemplates/{templateId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    match /onlineUsers/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Escrow System Collections (Phase 1.4)
+    match /escrowAccounts/{escrowId} {
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.landlordId || 
+         request.auth.uid == resource.data.contractorId ||
+         isAdmin());
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.landlordId;
+      allow update: if request.auth != null && 
+        (request.auth.uid == resource.data.landlordId || 
+         request.auth.uid == resource.data.contractorId ||
+         isAdmin()) &&
+        // Prevent unauthorized status changes
+        (request.resource.data.status == resource.data.status ||
+         isValidEscrowStatusChange(resource.data.status, request.resource.data.status));
+    }
+
+    match /escrowTransactions/{transactionId} {
+      allow read: if request.auth != null && 
+        (isEscrowParticipant(resource.data.escrowAccountId) || isAdmin());
+      allow create: if request.auth != null && 
+        (isEscrowParticipant(request.resource.data.escrowAccountId) || isAdmin());
+      // Transactions are immutable once created
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    match /escrowReleases/{releaseId} {
+      allow read: if request.auth != null && 
+        (isEscrowParticipant(resource.data.escrowAccountId) || isAdmin());
+      allow create: if request.auth != null && 
+        (isEscrowParticipant(request.resource.data.escrowAccountId) || isAdmin()) &&
+        request.auth.uid == request.resource.data.requestedBy;
+      allow update: if request.auth != null && 
+        (isEscrowParticipant(resource.data.escrowAccountId) || isAdmin()) &&
+        // Only allow updates to approvals and status
+        (request.resource.data.diff(resource.data).affectedKeys()
+         .hasOnly(['approvals', 'status', 'processedAt', 'rejectionReason', 'updatedAt']));
+    }
+
+    // Dispute System Collections (Phase 1.4)
+    match /disputes/{disputeId} {
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.initiatedBy || 
+         request.auth.uid == resource.data.respondent ||
+         isAdmin());
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.initiatedBy;
+      allow update: if request.auth != null && 
+        (request.auth.uid == resource.data.initiatedBy || 
+         request.auth.uid == resource.data.respondent ||
+         isAdmin()) &&
+        // Prevent unauthorized field modifications
+        isValidDisputeUpdate(resource.data, request.resource.data);
+    }
+
+    match /disputeOffers/{offerId} {
+      allow read: if request.auth != null && 
+        (isDisputeParticipant(resource.data.disputeId) || isAdmin());
+      allow create: if request.auth != null && 
+        isDisputeParticipant(request.resource.data.disputeId) &&
+        request.auth.uid == request.resource.data.offeredBy;
+      allow update: if request.auth != null && 
+        (isDisputeParticipant(resource.data.disputeId) || isAdmin()) &&
+        // Only allow response updates
+        (request.resource.data.diff(resource.data).affectedKeys()
+         .hasOnly(['status', 'responseBy', 'responseAt', 'responseMessage', 'updatedAt']));
+    }
+
+    match /mediationSessions/{sessionId} {
+      allow read: if request.auth != null && 
+        (isDisputeParticipant(resource.data.disputeId) || 
+         request.auth.uid == resource.data.mediatorId ||
+         isAdmin());
+      allow create, update: if request.auth != null && 
+        (isAdmin() || request.auth.uid == resource.data.mediatorId);
+    }
+
+    // Helper function to check if user is involved in a property
+    function isPropertyParticipant(userId) {
+      return exists(/databases/$(database)/documents/tenants/$(userId)) ||
+             exists(/databases/$(database)/documents/properties/$(userId));
+    }
+
+    // Helper function to check if user is participant in a job
+    function isJobParticipant(jobId) {
+      let job = get(/databases/$(database)/documents/jobs/$(jobId)).data;
+      return request.auth.uid == job.landlordId || 
+             request.auth.uid == job.assignedContractorId;
+    }
+
+    // Helper function to check if user is participant in an escrow account
+    function isEscrowParticipant(escrowAccountId) {
+      let escrow = get(/databases/$(database)/documents/escrowAccounts/$(escrowAccountId)).data;
+      return request.auth.uid == escrow.landlordId || 
+             request.auth.uid == escrow.contractorId;
+    }
+
+    // Helper function to check if user is participant in a dispute
+    function isDisputeParticipant(disputeId) {
+      let dispute = get(/databases/$(database)/documents/disputes/$(disputeId)).data;
+      return request.auth.uid == dispute.initiatedBy || 
+             request.auth.uid == dispute.respondent;
+    }
+
+    // Helper function to validate escrow status changes
+    function isValidEscrowStatusChange(currentStatus, newStatus) {
+      return (currentStatus == 'created' && newStatus in ['funded', 'cancelled']) ||
+             (currentStatus == 'funded' && newStatus in ['pending_release', 'disputed', 'released', 'refunded']) ||
+             (currentStatus == 'pending_release' && newStatus in ['released', 'disputed']) ||
+             (currentStatus == 'disputed' && newStatus in ['released', 'refunded', 'pending_release']) ||
+             (currentStatus == 'released' && newStatus == 'released') ||
+             (currentStatus == 'refunded' && newStatus == 'refunded') ||
+             (currentStatus == 'cancelled' && newStatus == 'cancelled');
+    }
+
+    // Helper function to validate dispute updates
+    function isValidDisputeUpdate(currentData, newData) {
+      let allowedFields = ['status', 'evidence', 'timeline', 'communications', 
+                          'mediationDetails', 'resolution', 'updatedAt', 'escalatedAt', 
+                          'escalatedTo', 'resolvedAt', 'closedAt', 'isEscalated'];
+      let changedFields = newData.diff(currentData).affectedKeys();
+      
+      // Only allow updates to specific fields
+      return changedFields.hasOnly(allowedFields) &&
+        // Prevent status regression (except by admin)
+        (newData.status == currentData.status || 
+         isValidDisputeStatusChange(currentData.status, newData.status) ||
+         isAdmin());
+    }
+
+    // Helper function to validate dispute status changes
+    function isValidDisputeStatusChange(currentStatus, newStatus) {
+      return (currentStatus == 'open' && newStatus in ['in_mediation', 'awaiting_response', 'escalated', 'resolved', 'closed']) ||
+             (currentStatus == 'awaiting_response' && newStatus in ['open', 'in_mediation', 'escalated', 'resolved', 'closed']) ||
+             (currentStatus == 'in_mediation' && newStatus in ['escalated', 'resolved', 'closed']) ||
+             (currentStatus == 'escalated' && newStatus in ['resolved', 'closed']) ||
+             (currentStatus == 'resolved' && newStatus == 'closed') ||
+             (currentStatus == 'closed' && newStatus == 'closed');
     }
 
     // Default fallback

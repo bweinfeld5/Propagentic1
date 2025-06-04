@@ -49,6 +49,11 @@ export type SafeMotionType = {
   header: ForwardRefExoticComponent<MotionProps & JSX.IntrinsicElements['header'] & RefAttributes<HTMLElement>>;
   footer: ForwardRefExoticComponent<MotionProps & JSX.IntrinsicElements['footer'] & RefAttributes<HTMLElement>>;
   nav: ForwardRefExoticComponent<MotionProps & JSX.IntrinsicElements['nav'] & RefAttributes<HTMLElement>>;
+  form: ForwardRefExoticComponent<MotionProps & JSX.IntrinsicElements['form'] & RefAttributes<HTMLFormElement>>;
+  section: ForwardRefExoticComponent<MotionProps & JSX.IntrinsicElements['section'] & RefAttributes<HTMLElement>>;
+  article: ForwardRefExoticComponent<MotionProps & JSX.IntrinsicElements['article'] & RefAttributes<HTMLElement>>;
+  aside: ForwardRefExoticComponent<MotionProps & JSX.IntrinsicElements['aside'] & RefAttributes<HTMLElement>>;
+  main: ForwardRefExoticComponent<MotionProps & JSX.IntrinsicElements['main'] & RefAttributes<HTMLElement>>;
 };
 
 // Type for AnimatePresence

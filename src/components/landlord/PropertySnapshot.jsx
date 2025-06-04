@@ -3,6 +3,8 @@ import { collection, query, where, orderBy, limit, getDocs } from 'firebase/fire
 import { db, auth } from '../../firebase/config';
 import { useDemoMode } from '../../context/DemoModeContext';
 import { demoProperties, demoTickets } from '../../utils/demoData';
+import { useBreakpoint, darkModeClasses } from '../../design-system';
+import { Skeleton } from '../../design-system/loading-states';
 import {
   Home,
   Users,
@@ -25,6 +27,9 @@ const PropertySnapshot = ({ onViewAllProperties }) => {
   });
   const [loading, setLoading] = useState(true);
   const { isDemoMode } = useDemoMode();
+
+  // Responsive breakpoint
+  const { isMobile, isTablet } = useBreakpoint();
 
   useEffect(() => {
     const currentUser = auth.currentUser;
@@ -166,35 +171,46 @@ const PropertySnapshot = ({ onViewAllProperties }) => {
     fetchPropertyMetrics();
   }, [isDemoMode]);
 
+  // Responsive grid columns
+  const getMainGridCols = () => {
+    if (isMobile) return 'grid-cols-1';
+    return 'grid-cols-3';
+  };
+
+  const getBottomGridCols = () => {
+    if (isMobile) return 'grid-cols-1';
+    return 'grid-cols-2';
+  };
+
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow p-4 animate-pulse">
-        <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="h-20 bg-gray-200 rounded"></div>
-          <div className="h-20 bg-gray-200 rounded"></div>
-          <div className="h-20 bg-gray-200 rounded"></div>
+      <div className={`${darkModeClasses.card.base} rounded-lg shadow p-4`}>
+        <Skeleton height="1rem" width="33%" className="mb-4" />
+        <div className={`grid ${getMainGridCols()} gap-4`}>
+          <Skeleton height="5rem" />
+          <Skeleton height="5rem" />
+          <Skeleton height="5rem" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="px-4 py-5 border-b border-gray-200 sm:px-6 flex justify-between items-center">
+    <div className={`${darkModeClasses.card.base} rounded-lg shadow overflow-hidden`}>
+      <div className={`px-4 py-5 sm:px-6 flex ${isMobile ? 'flex-col space-y-2' : 'flex-row justify-between items-center'} ${darkModeClasses.border.default} border-b`}>
         <div>
-          <h3 className="text-lg font-medium leading-6 text-gray-900 flex items-center">
-            <Home className="h-5 w-5 text-brand-600 mr-2" />
+          <h3 className={`text-lg font-medium leading-6 flex items-center ${darkModeClasses.text.primary}`}>
+            <Home className="h-5 w-5 text-brand-600 dark:text-brand-400 mr-2" />
             Property Snapshot
           </h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className={`mt-1 text-sm ${darkModeClasses.text.secondary}`}>
             Current portfolio overview
           </p>
         </div>
         
         <button
           onClick={onViewAllProperties}
-          className="inline-flex items-center text-sm font-medium text-brand-600 hover:text-brand-700"
+          className={`inline-flex items-center text-sm font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300`}
         >
           View all
           <ArrowRight className="ml-1 h-4 w-4" />
@@ -202,42 +218,44 @@ const PropertySnapshot = ({ onViewAllProperties }) => {
       </div>
       
       <div className="p-4 sm:p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-brand-50 rounded-lg p-4 border border-brand-100">
+        <div className={`grid ${getMainGridCols()} gap-4`}>
+          {/* Occupancy Rate Card */}
+          <div className={`rounded-lg p-4 border ${darkModeClasses.badge.primary}`}>
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm font-medium text-gray-500">Occupancy Rate</p>
-                <p className="text-2xl font-bold text-brand-700">{metrics.occupancyRate.toFixed(0)}%</p>
+                <p className={`text-sm font-medium ${darkModeClasses.text.secondary}`}>Occupancy Rate</p>
+                <p className={`text-2xl font-bold text-brand-700 dark:text-brand-300`}>{metrics.occupancyRate.toFixed(0)}%</p>
               </div>
-              <div className="p-2 bg-brand-100 rounded-md">
-                <Users className="h-5 w-5 text-brand-700" />
+              <div className={`p-2 rounded-md ${darkModeClasses.badge.primary}`}>
+                <Users className="h-5 w-5 text-brand-700 dark:text-brand-300" />
               </div>
             </div>
             <div className="mt-1">
-              <p className="text-xs text-gray-500">
+              <p className={`text-xs ${darkModeClasses.text.tertiary}`}>
                 {metrics.occupiedUnits} of {metrics.totalUnits} units occupied
               </p>
-              <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1.5">
+              <div className={`w-full rounded-full h-1.5 mt-1.5 ${darkModeClasses.bg.secondary}`}>
                 <div
-                  className="bg-brand-600 h-1.5 rounded-full"
+                  className="bg-brand-600 dark:bg-brand-400 h-1.5 rounded-full"
                   style={{ width: `${metrics.occupancyRate}%` }}
                 ></div>
               </div>
             </div>
           </div>
           
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+          {/* Active Requests Card */}
+          <div className={`rounded-lg p-4 border ${darkModeClasses.badge.primary}`}>
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm font-medium text-gray-500">Active Requests</p>
-                <p className="text-2xl font-bold text-blue-700">{metrics.activeRequests}</p>
+                <p className={`text-sm font-medium ${darkModeClasses.text.secondary}`}>Active Requests</p>
+                <p className={`text-2xl font-bold text-blue-700 dark:text-blue-300`}>{metrics.activeRequests}</p>
               </div>
-              <div className="p-2 bg-blue-100 rounded-md">
-                <AlertCircle className="h-5 w-5 text-blue-700" />
+              <div className={`p-2 rounded-md ${darkModeClasses.badge.primary}`}>
+                <AlertCircle className="h-5 w-5 text-blue-700 dark:text-blue-300" />
               </div>
             </div>
             <div className="mt-1">
-              <p className="text-xs text-gray-500">
+              <p className={`text-xs ${darkModeClasses.text.tertiary}`}>
                 {metrics.activeRequests === 0 ? 
                   'No maintenance issues' :
                   metrics.activeRequests === 1 ?
@@ -246,9 +264,9 @@ const PropertySnapshot = ({ onViewAllProperties }) => {
                 }
               </p>
               
-              <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1.5">
+              <div className={`w-full rounded-full h-1.5 mt-1.5 ${darkModeClasses.bg.secondary}`}>
                 <div
-                  className="bg-blue-600 h-1.5 rounded-full"
+                  className="bg-blue-600 dark:bg-blue-400 h-1.5 rounded-full"
                   style={{ 
                     width: metrics.activeRequests === 0 ? '0%' : 
                           metrics.activeRequests <= 3 ? '33%' :
@@ -259,18 +277,19 @@ const PropertySnapshot = ({ onViewAllProperties }) => {
             </div>
           </div>
           
-          <div className="bg-green-50 rounded-lg p-4 border border-green-100">
+          {/* Response Time Card */}
+          <div className={`rounded-lg p-4 border ${darkModeClasses.badge.success}`}>
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm font-medium text-gray-500">Avg Response Time</p>
-                <p className="text-2xl font-bold text-green-700">{metrics.avgResponseTime.toFixed(1)}h</p>
+                <p className={`text-sm font-medium ${darkModeClasses.text.secondary}`}>Avg Response Time</p>
+                <p className={`text-2xl font-bold ${darkModeClasses.text.success}`}>{metrics.avgResponseTime.toFixed(1)}h</p>
               </div>
-              <div className="p-2 bg-green-100 rounded-md">
-                <Clock className="h-5 w-5 text-green-700" />
+              <div className={`p-2 rounded-md ${darkModeClasses.badge.success}`}>
+                <Clock className={`h-5 w-5 ${darkModeClasses.text.success}`} />
               </div>
             </div>
             <div className="mt-1">
-              <p className="text-xs text-gray-500">
+              <p className={`text-xs ${darkModeClasses.text.tertiary}`}>
                 {metrics.avgResponseTime < 12 ? 
                   'Excellent response time' :
                   metrics.avgResponseTime < 24 ?
@@ -278,9 +297,9 @@ const PropertySnapshot = ({ onViewAllProperties }) => {
                   'Consider improving response time'}
               </p>
               
-              <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1.5">
+              <div className={`w-full rounded-full h-1.5 mt-1.5 ${darkModeClasses.bg.secondary}`}>
                 <div
-                  className="bg-green-600 h-1.5 rounded-full"
+                  className="bg-green-600 dark:bg-green-400 h-1.5 rounded-full"
                   style={{ 
                     width: metrics.avgResponseTime <= 8 ? '100%' : 
                            metrics.avgResponseTime <= 16 ? '75%' :
@@ -292,28 +311,28 @@ const PropertySnapshot = ({ onViewAllProperties }) => {
           </div>
         </div>
         
-        {/* Additional Property Overview */}
-        <div className="mt-4 grid grid-cols-2 gap-4">
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+        {/* Additional Property Overview - Responsive Grid */}
+        <div className={`mt-4 grid ${getBottomGridCols()} gap-4`}>
+          <div className={`rounded-lg p-4 border ${darkModeClasses.bg.secondary} ${darkModeClasses.border.default}`}>
             <div className="flex items-center">
-              <TrendingUp className="h-5 w-5 text-gray-700 mr-2" />
-              <span className="text-sm font-medium text-gray-700">
+              <TrendingUp className={`h-5 w-5 mr-2 ${darkModeClasses.text.secondary}`} />
+              <span className={`text-sm font-medium ${darkModeClasses.text.secondary}`}>
                 {metrics.totalProperties} {metrics.totalProperties === 1 ? 'Property' : 'Properties'}
               </span>
             </div>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className={`mt-1 text-xs ${darkModeClasses.text.tertiary}`}>
               {metrics.totalUnits} total units managed
             </p>
           </div>
           
-          <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
+          <div className={`rounded-lg p-4 border ${darkModeClasses.badge.warning}`}>
             <div className="flex items-center">
-              <Calendar className="h-5 w-5 text-yellow-700 mr-2" />
-              <span className="text-sm font-medium text-yellow-700">
+              <Calendar className={`h-5 w-5 mr-2 ${darkModeClasses.text.warning}`} />
+              <span className={`text-sm font-medium ${darkModeClasses.text.warning}`}>
                 {metrics.upcomingLeaseEnds} Leases Ending Soon
               </span>
             </div>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className={`mt-1 text-xs ${darkModeClasses.text.tertiary}`}>
               Next 30 days
             </p>
           </div>

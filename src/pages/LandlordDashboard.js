@@ -11,7 +11,9 @@ import RequestFeed from '../components/landlord/RequestFeed';
 import PropertyTable from '../components/landlord/PropertyTable';
 import TenantTable from '../components/landlord/TenantTable';
 import InviteTenantModal from '../components/landlord/InviteTenantModal';
+import PropertyDashboard from '../components/landlord/PropertyDashboard';
 import Button from '../components/ui/Button';
+import { Tabs, TabList, Tab, TabPanels, TabPanel } from '../design-system';
 
 const LandlordDashboard = () => {
   const { currentUser, userProfile, loading: authLoading } = useAuth();
@@ -30,6 +32,7 @@ const LandlordDashboard = () => {
   const [ticketsLoading, setTicketsLoading] = useState(true);
   const [isInviteModalOpen, setInviteModalOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
 
   // Improved auth and user role check with error handling
   useEffect(() => {
@@ -276,6 +279,22 @@ const LandlordDashboard = () => {
     // TODO: Implement modal to select contractor
   };
 
+  // PropertyDashboard handlers
+  const handleViewProperty = (propertyId) => {
+    // Navigate to property details - you can customize this route
+    navigate(`/landlord/properties/${propertyId}`);
+  };
+
+  const handleAddProperty = () => {
+    // Navigate to add property form - you can customize this route
+    navigate('/landlord/properties/new');
+  };
+
+  const handleViewAllProperties = () => {
+    // Switch to properties tab in current dashboard
+    setActiveTab(1);
+  };
+
   // Property filter handlers
   const filteredProperties = activeFilter === 'all' 
     ? properties 
@@ -507,200 +526,231 @@ const LandlordDashboard = () => {
         </div>
       )}
       
-      {/* 1. Overview Cards Panel */}
-      <section aria-labelledby="overview-heading">
-        <h2 id="overview-heading" className="sr-only">Dashboard Overview</h2>
-        <OverviewCards stats={dashboardStats} />
-      </section>
+      {/* Tabbed Dashboard Content */}
+      <Tabs selectedIndex={activeTab} onChange={setActiveTab}>
+        <TabList className="mb-6">
+          <Tab>Overview</Tab>
+          <Tab>Property Dashboard</Tab>
+          <Tab>Management</Tab>
+        </TabList>
+        
+        <TabPanels>
+          {/* Overview Tab */}
+          <TabPanel>
+            {/* 1. Overview Cards Panel */}
+            <section aria-labelledby="overview-heading" className="mb-6">
+              <h2 id="overview-heading" className="sr-only">Dashboard Overview</h2>
+              <OverviewCards stats={dashboardStats} />
+            </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 2. Maintenance Request Feed */}
-        <section aria-labelledby="maintenance-heading" className="lg:col-span-2">
-          <div className="bg-white rounded-xl shadow-md p-5 h-full">
-            <div className="flex items-center justify-between mb-4">
-              <h2 id="maintenance-heading" className="text-lg font-medium text-gray-900">Maintenance Requests</h2>
-              {!ticketsLoading && !ticketLoadingError && (
-                <span className="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                  {tickets.filter(t => t.status !== 'completed').length} Open
-                </span>
-              )}
-            </div>
-            
-            {/* Show ticket loading error if present */}
-            {ticketLoadingError && (
-              <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* 2. Maintenance Request Feed */}
+              <section aria-labelledby="maintenance-heading" className="lg:col-span-2">
+                <div className="bg-white rounded-xl shadow-md p-5 h-full">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 id="maintenance-heading" className="text-lg font-medium text-gray-900">Maintenance Requests</h2>
+                    {!ticketsLoading && !ticketLoadingError && (
+                      <span className="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                        {tickets.filter(t => t.status !== 'completed').length} Open
+                      </span>
+                    )}
                   </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-amber-700">{ticketLoadingError}</p>
+                  
+                  {/* Show ticket loading error if present */}
+                  {ticketLoadingError && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm text-amber-700">{ticketLoadingError}</p>
+                          <button 
+                            onClick={() => {
+                              setTicketsLoading(true);
+                              setTicketLoadingError(null);
+                              // Force a re-fetch by toggling the state
+                              setPropertiesLoaded(false);
+                              setTimeout(() => setPropertiesLoaded(true), 100);
+                            }}
+                            className="mt-2 text-xs font-medium text-amber-700 hover:text-amber-900 underline"
+                          >
+                            Retry Loading Tickets
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Show loading state */}
+                  {ticketsLoading ? (
+                    <div className="flex justify-center items-center py-8">
+                      <div className="w-8 h-8 border-t-2 border-b-2 border-teal-500 rounded-full animate-spin"></div>
+                      <span className="ml-2 text-sm text-gray-500">Loading maintenance requests...</span>
+                    </div>
+                  ) : (
+                    // Show tickets or empty state
+                    tickets.length > 0 ? (
+                      <RequestFeed requests={tickets} onAssignContractor={handleAssignContractor} />
+                    ) : (
+                      <div className="text-center py-8 px-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                        <h3 className="mt-2 text-sm font-medium text-gray-900">No maintenance requests</h3>
+                        <p className="mt-1 text-sm text-gray-500">
+                          You don't have any maintenance requests yet.
+                        </p>
+                      </div>
+                    )
+                  )}
+                </div>
+              </section>
+
+              {/* Quick Actions Panel */}
+              <section aria-labelledby="actions-heading" className="lg:col-span-1">
+                <div className="bg-white rounded-xl shadow-md p-5 h-full">
+                  <h2 id="actions-heading" className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
+                  <div className="space-y-3">
                     <button 
-                      onClick={() => {
-                        setTicketsLoading(true);
-                        setTicketLoadingError(null);
-                        // Force a re-fetch by toggling the state
-                        setPropertiesLoaded(false);
-                        setTimeout(() => setPropertiesLoaded(true), 100);
-                      }}
-                      className="mt-2 text-xs font-medium text-amber-700 hover:text-amber-900 underline"
+                      onClick={handleAddProperty}
+                      className="w-full py-2.5 px-4 bg-teal-600 text-white rounded-lg shadow hover:bg-teal-700 transition-colors flex items-center justify-center"
                     >
-                      Retry Loading Tickets
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                      </svg>
+                      Add New Property
+                    </button>
+                    <Button
+                      variant="primary"
+                      onClick={() => setInviteModalOpen(true)}
+                    >
+                      Invite Tenant
+                    </Button>
+                    <button 
+                      onClick={() => setActiveTab(1)}
+                      className="w-full py-2.5 px-4 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                      </svg>
+                      Property Dashboard
+                    </button>
+                  </div>
+
+                  {/* Recent Activity */}
+                  <div className="mt-6">
+                    <h3 className="text-sm font-medium text-gray-700 mb-3">Recent Activity</h3>
+                    <div className="space-y-3">
+                      {tickets.slice(0, 3).map((ticket, index) => (
+                        <div key={index} className="flex items-start space-x-3 border-l-2 border-blue-500 pl-3 py-1">
+                          <div className="flex-grow">
+                            <p className="text-sm font-medium text-gray-900 truncate">{ticket.title || 'Maintenance Request'}</p>
+                            <p className="text-xs text-gray-500">{new Date(ticket.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            ticket.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                            ticket.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' : 
+                            'bg-blue-100 text-blue-800'
+                          }`}>
+                            {ticket.status || 'New'}
+                          </span>
+                        </div>
+                      ))}
+
+                      {/* Show placeholder if no tickets */}
+                      {tickets.length === 0 && (
+                        <div className="text-center py-3 text-gray-500 text-sm">
+                          No recent activity
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </TabPanel>
+          
+          {/* Property Dashboard Tab */}
+          <TabPanel>
+            <PropertyDashboard
+              onViewProperty={handleViewProperty}
+              onAddProperty={handleAddProperty}
+              onViewAllProperties={handleViewAllProperties}
+            />
+          </TabPanel>
+          
+          {/* Management Tab */}
+          <TabPanel>
+            <div className="space-y-6">
+              {/* 3. Property Management Table */}
+              <section aria-labelledby="properties-heading" className="bg-white rounded-xl shadow-md p-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+                  <h2 id="properties-heading" className="text-lg font-medium text-gray-900">Properties</h2>
+                  <div className="mt-2 sm:mt-0 flex space-x-2">
+                    <button 
+                      onClick={() => setActiveFilter('all')}
+                      className={`px-3 py-1 text-xs font-medium rounded-full ${
+                        activeFilter === 'all' 
+                          ? 'bg-teal-100 text-teal-800' 
+                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                      }`}
+                    >
+                      All
+                    </button>
+                    <button 
+                      onClick={() => setActiveFilter('vacant')}
+                      className={`px-3 py-1 text-xs font-medium rounded-full ${
+                        activeFilter === 'vacant' 
+                          ? 'bg-amber-100 text-amber-800' 
+                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                      }`}
+                    >
+                      Vacant
+                    </button>
+                    <button 
+                      onClick={() => setActiveFilter('occupied')}
+                      className={`px-3 py-1 text-xs font-medium rounded-full ${
+                        activeFilter === 'occupied' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                      }`}
+                    >
+                      Fully Occupied
                     </button>
                   </div>
                 </div>
-              </div>
-            )}
-            
-            {/* Show loading state */}
-            {ticketsLoading ? (
-              <div className="flex justify-center items-center py-8">
-                <div className="w-8 h-8 border-t-2 border-b-2 border-teal-500 rounded-full animate-spin"></div>
-                <span className="ml-2 text-sm text-gray-500">Loading maintenance requests...</span>
-              </div>
-            ) : (
-              // Show tickets or empty state
-              tickets.length > 0 ? (
-                <RequestFeed requests={tickets} onAssignContractor={handleAssignContractor} />
-              ) : (
-                <div className="text-center py-8 px-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">No maintenance requests</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    You don't have any maintenance requests yet.
-                  </p>
-                </div>
-              )
-            )}
-          </div>
-        </section>
+                <PropertyTable properties={filteredProperties} />
+              </section>
 
-        {/* Quick Actions Panel */}
-        <section aria-labelledby="actions-heading" className="lg:col-span-1">
-          <div className="bg-white rounded-xl shadow-md p-5 h-full">
-            <h2 id="actions-heading" className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
-            <div className="space-y-3">
-              <button className="w-full py-2.5 px-4 bg-teal-600 text-white rounded-lg shadow hover:bg-teal-700 transition-colors flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="12" y1="8" x2="12" y2="16"></line>
-                  <line x1="8" y1="12" x2="16" y2="12"></line>
-                </svg>
-                Add New Property
-              </button>
-              <Button
-                variant="primary"
-                onClick={() => setInviteModalOpen(true)}
-              >
-                Invite Tenant
-              </Button>
-              <button className="w-full py-2.5 px-4 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-                Generate Report
-              </button>
-            </div>
-
-            {/* Recent Activity */}
-            <div className="mt-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Recent Activity</h3>
-              <div className="space-y-3">
-                {tickets.slice(0, 3).map((ticket, index) => (
-                  <div key={index} className="flex items-start space-x-3 border-l-2 border-blue-500 pl-3 py-1">
-                    <div className="flex-grow">
-                      <p className="text-sm font-medium text-gray-900 truncate">{ticket.title || 'Maintenance Request'}</p>
-                      <p className="text-xs text-gray-500">{new Date(ticket.createdAt).toLocaleDateString()}</p>
+              {/* 4. Tenant Management Section */}
+              <section aria-labelledby="tenants-heading" className="bg-white rounded-xl shadow-md p-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+                  <h2 id="tenants-heading" className="text-lg font-medium text-gray-900">Tenants</h2>
+                  <div className="relative mt-2 sm:mt-0">
+                    <input 
+                      type="text" 
+                      placeholder="Search tenants..." 
+                      className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 w-full sm:w-64"
+                    />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
                     </div>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      ticket.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                      ticket.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' : 
-                      'bg-blue-100 text-blue-800'
-                    }`}>
-                      {ticket.status || 'New'}
-                    </span>
                   </div>
-                ))}
-
-                {/* Show placeholder if no tickets */}
-                {tickets.length === 0 && (
-                  <div className="text-center py-3 text-gray-500 text-sm">
-                    No recent activity
-                  </div>
-                )}
-              </div>
+                </div>
+                <TenantTable tenants={tenants} />
+              </section>
             </div>
-          </div>
-        </section>
-      </div>
-
-      {/* 3. Property Management Table */}
-      <section aria-labelledby="properties-heading" className="bg-white rounded-xl shadow-md p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-          <h2 id="properties-heading" className="text-lg font-medium text-gray-900">Properties</h2>
-          <div className="mt-2 sm:mt-0 flex space-x-2">
-            <button 
-              onClick={() => setActiveFilter('all')}
-              className={`px-3 py-1 text-xs font-medium rounded-full ${
-                activeFilter === 'all' 
-                  ? 'bg-teal-100 text-teal-800' 
-                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-              }`}
-            >
-              All
-            </button>
-            <button 
-              onClick={() => setActiveFilter('vacant')}
-              className={`px-3 py-1 text-xs font-medium rounded-full ${
-                activeFilter === 'vacant' 
-                  ? 'bg-amber-100 text-amber-800' 
-                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-              }`}
-            >
-              Vacant
-            </button>
-            <button 
-              onClick={() => setActiveFilter('occupied')}
-              className={`px-3 py-1 text-xs font-medium rounded-full ${
-                activeFilter === 'occupied' 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-              }`}
-            >
-              Fully Occupied
-            </button>
-          </div>
-        </div>
-        <PropertyTable properties={filteredProperties} />
-      </section>
-
-      {/* 4. Tenant Management Section */}
-      <section aria-labelledby="tenants-heading" className="bg-white rounded-xl shadow-md p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-          <h2 id="tenants-heading" className="text-lg font-medium text-gray-900">Tenants</h2>
-          <div className="relative mt-2 sm:mt-0">
-            <input 
-              type="text" 
-              placeholder="Search tenants..." 
-              className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 w-full sm:w-64"
-            />
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-        <TenantTable tenants={tenants} />
-      </section>
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
 
       {/* Toast notification container */}
       <div aria-live="assertive" className="fixed inset-0 flex items-end px-4 py-6 pointer-events-none sm:p-6 sm:items-start z-50">

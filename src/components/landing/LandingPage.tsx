@@ -1,8 +1,12 @@
 import React, { lazy, Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
-// Import HeroSection from sections folder
-import HeroSection from './sections/HeroSection';
+// Import HeroSection from root folder explicitly - this one uses UnifiedHeader
+import HeroSection from './HeroSection.js';
+
+// Import new sections for enhanced landing page
+import StatsSection from './sections/StatsSection';
+import FaqSection from './sections/FaqSection';
 
 // Import other section components using lazy loading for improved performance
 const RoleProblemSolutionSection = lazy(() => import('./sections/RoleProblemSolutionSection.jsx'));
@@ -47,7 +51,7 @@ const LandingPage: React.FC = () => {
       {/* Full-page gradient background with z-index set to ensure it's behind other elements */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0" style={{
-          background: 'linear-gradient(135deg, #4169e1 0%, #7366ff 50%, #6957da 100%)',
+          background: 'linear-gradient(135deg, #F97316 0%, #FB923C 50%, #FDBA74 100%)',
           opacity: 0.98
         }}>
           {/* Subtle grid background texture */}
@@ -61,15 +65,15 @@ const LandingPage: React.FC = () => {
           {/* Add radial highlight in the center */}
           <div className="absolute inset-0 opacity-30">
             <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full">
-              <div className="w-full h-full bg-gradient-to-r from-transparent via-blue-300 to-transparent rounded-full blur-[100px]"></div>
+              <div className="w-full h-full bg-gradient-to-r from-transparent via-primary-300 to-transparent rounded-full blur-[100px]"></div>
             </div>
           </div>
           
           {/* Add subtle particle overlay */}
           <div className="absolute inset-0 opacity-10">
-            <div className="absolute w-20 h-20 top-1/4 left-1/4 bg-blue-300 rounded-full blur-xl"></div>
-            <div className="absolute w-32 h-32 bottom-1/3 right-1/3 bg-purple-300 rounded-full blur-xl"></div>
-            <div className="absolute w-24 h-24 top-1/2 right-1/4 bg-indigo-300 rounded-full blur-xl"></div>
+            <div className="absolute w-20 h-20 top-1/4 left-1/4 bg-primary-300 rounded-full blur-xl"></div>
+            <div className="absolute w-32 h-32 bottom-1/3 right-1/3 bg-primary-400 rounded-full blur-xl"></div>
+            <div className="absolute w-24 h-24 top-1/2 right-1/4 bg-primary-500 rounded-full blur-xl"></div>
           </div>
         </div>
       </div>
@@ -102,11 +106,21 @@ const LandingPage: React.FC = () => {
           </Suspense>
         </ErrorBoundary>
         
+        {/* Animated Statistics Section - Social Proof */}
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <StatsSection />
+        </ErrorBoundary>
+        
         {/* Testimonials */}
         <ErrorBoundary FallbackComponent={ErrorFallback}>
           <Suspense fallback={sectionFallback}>
             <TestimonialsSection />
           </Suspense>
+        </ErrorBoundary>
+        
+        {/* FAQ Section - Objection Handling */}
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <FaqSection />
         </ErrorBoundary>
         
         {/* Pricing Section */}

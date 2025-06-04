@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Email Sending</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        input, button { margin: 10px 0; padding: 10px; width: 100%; max-width: 400px; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 8px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Test PropAgentic Email Sending</h1>
+    
+    <div>
+        <input type="email" id="emailInput" placeholder="Enter your email" value="bweinfeld15@gmail.com">
+        <button onclick="sendTestEmail()">Send Welcome Email</button>
+    </div>
+    
+    <div id="result"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyBInjhlP96C6BrVJE7Ch5G_0w-YsFbnEHY",
+            authDomain: "propagentic.firebaseapp.com",
+            projectId: "propagentic",
+            storageBucket: "propagentic.appspot.com",
+            messagingSenderId: "138135792002",
+            appId: "1:138135792002:web:e491bbeb2e5f8c09c00d60"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        window.sendTestEmail = async function() {
+            const email = document.getElementById('emailInput').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!email) {
+                resultDiv.innerHTML = '<div class="result error">Please enter an email address</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="result">Sending email...</div>';
+            
+            try {
+                // Create the welcome email content
+                const emailData = {
+                    to: email,
+                    message: {
+                        subject: "🏠 Welcome to PropAgentic Pre-Launch!",
+                        text: `Hello!
+
+Thank you for joining the PropAgentic pre-launch waitlist! You're among the first to experience the next generation of property management technology.
+
+We'll notify you the moment PropAgentic launches.
+
+Best regards,
+The PropAgentic Team`,
+                        html: `
+<!DOCTYPE html>
+<html>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f1eb;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: white;">
+        <div style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); padding: 40px 20px; text-align: center;">
+            <h1 style="color: white; margin: 0;">Welcome to PropAgentic!</h1>
+        </div>
+        <div style="padding: 40px 30px;">
+            <h2>Hello! 👋</h2>
+            <p>Thank you for joining the PropAgentic pre-launch waitlist!</p>
+            <p>You're among the first to experience the next generation of property management technology.</p>
+            <p>We'll notify you the moment PropAgentic launches.</p>
+            <div style="text-align: center; margin: 35px 0;">
+                <div style="background: #f97316; color: white; padding: 15px 30px; border-radius: 8px; display: inline-block;">
+                    🚀 Early Access Reserved
+                </div>
+            </div>
+        </div>
+        <div style="background: #f9fafb; padding: 20px 30px; text-align: center;">
+            <p style="color: #9ca3af; font-size: 12px;">© 2025 PropAgentic. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>`
+                    },
+                    createdAt: serverTimestamp()
+                };
+                
+                console.log('Sending email to:', email);
+                const docRef = await addDoc(collection(db, 'mail'), emailData);
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <h3>✅ Email Queued Successfully!</h3>
+                        <p>Document ID: ${docRef.id}</p>
+                        <p>Check your inbox at: ${email}</p>
+                        <p><small>Note: Email delivery may take a few seconds.</small></p>
+                    </div>
+                `;
+                
+                // Check delivery status after a few seconds
+                setTimeout(async () => {
+                    try {
+                        const doc = await getDoc(doc(db, 'mail', docRef.id));
+                        const data = doc.data();
+                        if (data.delivery) {
+                            resultDiv.innerHTML += `<p>Delivery Status: ${JSON.stringify(data.delivery)}</p>`;
+                        }
+                    } catch (e) {
+                        console.log('Could not check delivery status');
+                    }
+                }, 5000);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Error Sending Email</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        };
+    </script>
+</body>
+</html> 

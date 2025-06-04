@@ -6,6 +6,7 @@ import { UIComponentErrorBoundary } from '../shared/ErrorBoundary';
 import { useAuth } from '../../context/AuthContext';
 import { useDemoMode } from '../../context/DemoModeContext';
 import { useConnection } from '../../context/ConnectionContext';
+import { ThemeToggle } from '../../design-system/dark-mode';
 import NotificationBell from '../notifications/NotificationBell';
 import NotificationPanel from './NotificationPanel';
 import NotificationErrorBoundary from '../shared/NotificationErrorBoundary';
@@ -104,7 +105,7 @@ const GlassyHeader = () => {
     setIsProfileOpen(false);
     try {
       await logout();
-      navigate('/login');
+      navigate('/propagentic/new');
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -155,11 +156,11 @@ const GlassyHeader = () => {
       return (
         <header
           ref={headerRef}
-          className="flex justify-between items-center p-4 bg-white border-b border-slate-200 sticky top-0 z-10"
+          className="flex justify-between items-center p-4 bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-700 sticky top-0 z-10"
         >
           {/* Left side: Page title */}
           <div className="flex items-center">
-            <h1 className="text-lg font-semibold text-slate-800">{getDashboardTitle()}</h1>
+            <h1 className="text-lg font-semibold text-slate-800 dark:text-gray-100">{getDashboardTitle()}</h1>
           </div>
 
           {/* Right side: Connection status, Demo mode toggle, Notifications and Profile Dropdown */}
@@ -173,13 +174,16 @@ const GlassyHeader = () => {
                 onClick={toggleDemoMode}
                 className={`px-3 py-1 text-xs font-medium rounded-full ${
                   isDemoMode 
-                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-primary text-white hover:bg-primary-dark' 
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                 }`}
               >
                 {isDemoMode ? 'Demo Mode: ON' : 'Demo Mode: OFF'}
               </button>
             )}
+
+            {/* Theme Toggle */}
+            <ThemeToggle />
 
             {/* Notification Bell */}
             <NotificationErrorBoundary>
@@ -191,20 +195,20 @@ const GlassyHeader = () => {
               <div>
                 <button
                   type="button"
-                  className="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                  className="bg-white dark:bg-gray-800 rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-gray-900"
                   id="user-menu-button"
                   aria-expanded={isProfileOpen}
                   aria-haspopup="true"
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                 >
                   <span className="sr-only">Open user menu</span>
-                  <UserCircleIcon className="h-8 w-8 rounded-full text-gray-600" />
+                  <UserCircleIcon className="h-8 w-8 rounded-full text-gray-600 dark:text-gray-400" />
                 </button>
               </div>
 
               {isProfileOpen && (
                 <div
-                  className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+                  className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 dark:ring-gray-700 focus:outline-none z-50"
                   role="menu"
                   aria-orientation="vertical"
                   aria-labelledby="user-menu-button"
@@ -212,7 +216,7 @@ const GlassyHeader = () => {
                 >
                   <Link
                     to="/profile"
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     role="menuitem"
                     onClick={() => setIsProfileOpen(false)}
                   >
@@ -220,7 +224,7 @@ const GlassyHeader = () => {
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     role="menuitem"
                   >
                     <ArrowLeftOnRectangleIcon className="w-4 h-4 mr-2" /> Sign out
@@ -257,24 +261,28 @@ const GlassyHeader = () => {
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-4">
               {/* Logo and Brand */}
-              <Link to="/" className="flex items-center space-x-3">
+              <Link to="/propagentic/new" className="flex items-center space-x-3">
                 <img src={Logo} alt="Propagentic Logo" className="h-8 w-auto" />
                 <span className="text-xl font-bold text-white">Propagentic</span>
               </Link>
               
               {/* Desktop Navigation */}
               <nav className="hidden md:flex items-center space-x-8">
-                <NavLink to="/">Home</NavLink>
+                <NavLink to="/propagentic/new">Home</NavLink>
                 <NavLink to="/pricing">Pricing</NavLink>
                 <NavLink to="/about">About</NavLink>
                 <NavLink to="/demo">Demo</NavLink>
                 <div className="ml-4 flex items-center space-x-3">
+                  {/* Theme Toggle for public pages */}
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg">
+                    <ThemeToggle />
+                  </div>
                   {currentUser ? (
                     <Link 
                       to="/dashboard" 
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                         isScrolled
-                          ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md' 
+                          ? 'bg-primary text-white hover:bg-primary-dark shadow-md' 
                           : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm'
                       }`}
                     >
@@ -292,7 +300,7 @@ const GlassyHeader = () => {
                         to="/signup" 
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                           isScrolled
-                            ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md' 
+                            ? 'bg-primary text-white hover:bg-primary-dark shadow-md' 
                             : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm'
                         }`}
                       >
@@ -326,17 +334,21 @@ const GlassyHeader = () => {
           
           {/* Mobile Menu - Animated */}
           {mobileMenuOpen && (
-            <div className="md:hidden bg-indigo-900/95 backdrop-blur-lg border-b border-indigo-800/50">
+            <div className="md:hidden bg-primary-700/95 backdrop-blur-lg border-b border-primary-600/50">
               <div className="px-4 pt-2 pb-4 space-y-1 sm:px-6">
-                <MobileNavLink to="/" onClick={() => setMobileMenuOpen(false)}>Home</MobileNavLink>
+                <MobileNavLink to="/propagentic/new" onClick={() => setMobileMenuOpen(false)}>Home</MobileNavLink>
                 <MobileNavLink to="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</MobileNavLink>
                 <MobileNavLink to="/about" onClick={() => setMobileMenuOpen(false)}>About</MobileNavLink>
                 <MobileNavLink to="/demo" onClick={() => setMobileMenuOpen(false)}>Demo</MobileNavLink>
                 <div className="pt-4 flex flex-col space-y-3">
+                  {/* Theme Toggle for mobile */}
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2">
+                    <ThemeToggle showLabel />
+                  </div>
                   {currentUser ? (
                     <Link 
                       to="/dashboard" 
-                      className="text-center bg-indigo-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-indigo-500 transition-colors"
+                      className="text-center bg-primary text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Dashboard
@@ -345,14 +357,14 @@ const GlassyHeader = () => {
                     <>
                       <Link 
                         to="/login" 
-                        className="text-center text-white py-2 text-sm font-medium hover:bg-indigo-800/50 rounded-lg transition-colors"
+                        className="text-center text-white py-2 text-sm font-medium hover:bg-primary-600/50 rounded-lg transition-colors"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Log In
                       </Link>
                       <Link 
                         to="/signup" 
-                        className="text-center bg-indigo-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-indigo-500 transition-colors"
+                        className="text-center bg-primary text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Sign Up

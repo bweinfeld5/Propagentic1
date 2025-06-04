@@ -1,0 +1,11 @@
+# Task ID: 1
+# Title: Upgrade Firebase Storage for Document Management
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Upgrade Firebase Storage to support secure file uploads, multiple file formats, and implement security rules for document management.
+# Details:
+Configure Firebase Storage to accept PDF, JPG, PNG files. Set up security rules to restrict access. Implement document expiration tracking and prepare for OCR integration. Ensure encryption for sensitive documents.
+
+# Test Strategy:
+Test file uploads, format support, security rule enforcement, and document expiration tracking. Verify encryption and access controls.

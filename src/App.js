@@ -4,20 +4,26 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ConnectionProvider } from './context/ConnectionContext';
 import { DemoModeProvider, useDemoMode } from './context/DemoModeContext';
+import { ThemeProvider } from './design-system/dark-mode';
 import DataServiceProvider from './providers/DataServiceProvider';
 import LogoLoadingAnimation from './components/shared/LogoLoadingAnimation';
 import GlassyHeader from './components/layout/GlassyHeader';
 import DashboardSidebar from './components/layout/SidebarNav';
 import LocalStorageDebug from './components/shared/LocalStorageDebug';
 import UniversalLoadingSpinner from './components/shared/UniversalLoadingSpinner';
+import PreLaunchGuard from './components/guards/PreLaunchGuard';
 
 // Lazy load page components
-const LandingPage = lazy(() => import('./components/landing/LandingPage'));
+const LandingPage = lazy(() => import('./components/landing/LandingPage.js'));
+const CanvasLandingPage = lazy(() => import('./pages/CanvasLandingPage.tsx'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const TenantDashboard = lazy(() => import('./pages/tenant/TenantDashboard'));
-const LandlordDashboard = lazy(() => import('./pages/LandlordDashboard'));
-const ContractorDashboard = lazy(() => import('./components/contractor/ContractorDashboard'));
+const LandlordDashboard = lazy(() => import('./pages/landlord/LandlordDashboard'));
+const LandlordDashboardDemo = lazy(() => import('./pages/LandlordDashboardDemoPage'));
+const ContractorDashboard = lazy(() => import('./components/contractor/EnhancedContractorDashboard'));
+const ContractorDashboardDemo = lazy(() => import('./pages/ContractorDashboardDemo'));
+const OriginalContractorDashboard = lazy(() => import('./components/contractor/ContractorDashboard'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 const OnboardingSurvey = lazy(() => import('./components/onboarding/OnboardingSurvey'));
 const LandlordOnboarding = lazy(() => import('./components/onboarding/LandlordOnboarding'));
@@ -33,6 +39,7 @@ const ComponentsShowcasePage = lazy(() => import('./pages/ComponentsShowcasePage
 const TestUIComponents = lazy(() => import('./pages/TestUIComponents'));
 const SimpleUIShowcase = lazy(() => import('./pages/SimpleUIShowcase'));
 const MaintenanceSurvey = lazy(() => import('./components/maintenance/MaintenanceSurvey'));
+const PublicPropertyDashboardDemo = lazy(() => import('./pages/PublicPropertyDashboardDemo'));
 
 // Route Guards
 const PrivateRoute = ({ children }) => {
@@ -44,7 +51,7 @@ const PrivateRoute = ({ children }) => {
      </div>;
   }
   
-  return currentUser ? children : <Navigate to="/login" />;
+  return currentUser ? children : <Navigate to="/propagentic/new" />;
 };
 
 // Role-specific redirect component
@@ -57,7 +64,7 @@ const RoleBasedRedirect = () => {
   useEffect(() => {
     if (authLoading || !currentUser) {
       if (!authLoading && !currentUser) {
-        navigate('/login');
+        navigate('/propagentic/new');
       }
       setProfileLoading(authLoading); 
       return; 
@@ -153,64 +160,73 @@ function App() {
       <div className={`transition-all duration-1000 ease-in-out ${
         showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
       }`}>
-        <AuthProvider>
-          <ConnectionProvider>
-            <DemoModeProvider>
-              <DataServiceProvider>
-                <NotificationProvider>
-                  <Router>
-                    <Suspense fallback={<UniversalLoadingSpinner message="Loading page..." />}>
-                    <Routes>
-                      {/* Public routes */}
-                      <Route path="/" element={<Navigate to="/propagentic/new" replace />} />
-                      <Route path="/propagentic/new" element={<LandingPage />} />
-                      {/* Render GlassyHeader for all other routes */}
-                      <Route
-                        path="*"
-                        element={
-                          <>
-                            <GlassyHeader />
-                            <Routes>
-                              <Route path="/pricing" element={<PricingPage />} />
-                              <Route path="/about" element={<AboutPage />} />
-                              <Route path="/demo" element={<DemoPage />} />
-                              <Route path="/svg-test" element={<SVGTest />} />
-                              <Route path="/blueprint-test" element={<BlueprintTest />} />
-                              <Route path="/login" element={<LoginPage />} />
-                              <Route path="/register" element={<RegisterPage />} />
-                              <Route path="/signup" element={<RegisterPage />} />
-                              <Route path="/auth" element={<AuthPage />} />
-                              <Route path="/dashboard" element={<PrivateRoute><RoleBasedRedirect /></PrivateRoute>} />
-                              <Route path="/tenant/dashboard" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />
-                              <Route path="/landlord/dashboard" element={<PrivateRoute><LandlordDashboard /></PrivateRoute>} />
-                              <Route path="/contractor/dashboard" element={<PrivateRoute><ContractorDashboard /></PrivateRoute>} />
-                              <Route path="/maintenance/new" element={<PrivateRoute><MaintenanceSurvey /></PrivateRoute>} />
-                              <Route path="/onboarding" element={<PrivateRoute><OnboardingSurvey /></PrivateRoute>} />
-                              <Route path="/landlord-onboarding" element={<PrivateRoute><LandlordOnboarding /></PrivateRoute>} />
-                              <Route path="/contractor-onboarding" element={<PrivateRoute><ContractorOnboardingPage /></PrivateRoute>} />
-                              <Route path="/ai-examples" element={<AIExamples />} />
-                              <Route path="/ai-tutorial" element={<AITutorial />} />
-                              <Route path="/showcase/components" element={<ComponentsShowcasePage />} />
-                              <Route path="/showcase/ui-test" element={<TestUIComponents />} />
-                              <Route path="/showcase/simple-ui" element={<SimpleUIShowcase />} />
-                              {/* Fallback/Not Found - Redirect to login or a dedicated 404 page */}
-                              <Route path="*" element={<Navigate to="/login" />} />
-                            </Routes>
-                          </>
-                        }
-                      />
-                    </Routes>
-                    </Suspense>
-                    <div id="app-loaded" style={{ position: 'fixed', bottom: 0, right: 0, padding: '5px', background: 'rgba(0,0,0,0.1)', fontSize: '10px', zIndex: 9999, pointerEvents: 'none' }}>
-                      App Loaded
-                    </div>
-                    <LocalStorageDebug />
-                  </Router>
-                </NotificationProvider>
-              </DataServiceProvider>
-            </DemoModeProvider>
-          </ConnectionProvider>
-        </AuthProvider>
+        <ThemeProvider defaultTheme="system">
+          <AuthProvider>
+            <PreLaunchGuard>
+              <ConnectionProvider>
+                <DemoModeProvider>
+                  <DataServiceProvider>
+                    <NotificationProvider>
+                      <Router>
+                        <Suspense fallback={<UniversalLoadingSpinner message="Loading page..." />}>
+                        <Routes>
+                        {/* Public routes */}
+                        <Route path="/" element={<Navigate to="/propagentic/new" replace />} />
+                        <Route path="/propagentic/new" element={<LandingPage />} />
+                        <Route path="/canvas-landing" element={<CanvasLandingPage />} />
+                        {/* Render GlassyHeader for all other routes */}
+                        <Route
+                          path="*"
+                          element={
+                            <>
+                              <GlassyHeader />
+                              <Routes>
+                                <Route path="/pricing" element={<PricingPage />} />
+                                <Route path="/about" element={<AboutPage />} />
+                                <Route path="/demo" element={<DemoPage />} />
+                                <Route path="/property-dashboard-demo" element={<PublicPropertyDashboardDemo />} />
+                                <Route path="/svg-test" element={<SVGTest />} />
+                                <Route path="/blueprint-test" element={<BlueprintTest />} />
+                                <Route path="/login" element={<LoginPage />} />
+                                <Route path="/register" element={<RegisterPage />} />
+                                <Route path="/signup" element={<RegisterPage />} />
+                                <Route path="/auth" element={<AuthPage />} />
+                                <Route path="/dashboard" element={<PrivateRoute><RoleBasedRedirect /></PrivateRoute>} />
+                                <Route path="/tenant/dashboard" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />
+                                <Route path="/landlord/dashboard" element={<PrivateRoute><LandlordDashboard /></PrivateRoute>} />
+                                <Route path="/contractor/dashboard" element={<PrivateRoute><ContractorDashboard /></PrivateRoute>} />
+                                <Route path="/contractor/dashboard/enhanced" element={<ContractorDashboardDemo />} />
+                                <Route path="/contractor/dashboard/original" element={<PrivateRoute><OriginalContractorDashboard /></PrivateRoute>} />
+                                <Route path="/maintenance/new" element={<PrivateRoute><MaintenanceSurvey /></PrivateRoute>} />
+                                <Route path="/onboarding" element={<PrivateRoute><OnboardingSurvey /></PrivateRoute>} />
+                                <Route path="/landlord-onboarding" element={<PrivateRoute><LandlordOnboarding /></PrivateRoute>} />
+                                <Route path="/contractor-onboarding" element={<PrivateRoute><ContractorOnboardingPage /></PrivateRoute>} />
+                                <Route path="/ai-examples" element={<AIExamples />} />
+                                <Route path="/ai-tutorial" element={<AITutorial />} />
+                                <Route path="/showcase/components" element={<ComponentsShowcasePage />} />
+                                <Route path="/showcase/ui-test" element={<TestUIComponents />} />
+                                <Route path="/showcase/simple-ui" element={<SimpleUIShowcase />} />
+                                <Route path="/landlord/dashboard/demo" element={<LandlordDashboardDemo />} />
+                                {/* Fallback/Not Found - Redirect to login or a dedicated 404 page */}
+                                <Route path="*" element={<Navigate to="/login" />} />
+                              </Routes>
+                            </>
+                          }
+                        />
+                      </Routes>
+                      </Suspense>
+                      <div id="app-loaded" style={{ position: 'fixed', bottom: 0, right: 0, padding: '5px', background: 'rgba(0,0,0,0.1)', fontSize: '10px', zIndex: 9999, pointerEvents: 'none' }}>
+                        App Loaded
+                      </div>
+                      <LocalStorageDebug />
+                    </Router>
+                  </NotificationProvider>
+                </DataServiceProvider>
+              </DemoModeProvider>
+            </ConnectionProvider>
+            </PreLaunchGuard>
+          </AuthProvider>
+        </ThemeProvider>
       </div>
     </>
   );

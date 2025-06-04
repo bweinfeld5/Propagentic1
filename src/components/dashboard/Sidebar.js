@@ -10,14 +10,14 @@ const Sidebar = () => {
   const getNavItemClasses = (path) => {
     return `flex items-center px-2 py-2 text-sm font-medium rounded-md ${
       location.pathname === path
-        ? 'bg-indigo-800 text-white'
-        : 'text-indigo-100 hover:bg-indigo-600'
+        ? 'bg-primary-dark text-white'
+        : 'text-primary-100 hover:bg-primary'
     }`;
   };
 
   return (
     <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
-      <div className="flex-1 flex flex-col min-h-0 bg-indigo-700">
+      <div className="flex-1 flex flex-col min-h-0 bg-primary">
         <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
           <div className="flex items-center flex-shrink-0 px-4">
             <h1 className="text-white font-bold text-xl">PropagenticPM</h1>
@@ -25,7 +25,7 @@ const Sidebar = () => {
           <nav className="mt-5 flex-1 px-2 space-y-1">
             <Link to="/dashboard" className={getNavItemClasses('/dashboard')}>
               <svg
-                className="mr-3 h-6 w-6 text-indigo-300"
+                className="mr-3 h-6 w-6 text-primary-300"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -43,7 +43,7 @@ const Sidebar = () => {
             </Link>
             <Link to="/tickets" className={getNavItemClasses('/tickets')}>
               <svg
-                className="mr-3 h-6 w-6 text-indigo-300"
+                className="mr-3 h-6 w-6 text-primary-300"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -60,7 +60,7 @@ const Sidebar = () => {
             </Link>
             <Link to="/properties" className={getNavItemClasses('/properties')}>
               <svg
-                className="mr-3 h-6 w-6 text-indigo-300"
+                className="mr-3 h-6 w-6 text-primary-300"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -77,7 +77,7 @@ const Sidebar = () => {
             </Link>
             <Link to="/contractors" className={getNavItemClasses('/contractors')}>
               <svg
-                className="mr-3 h-6 w-6 text-indigo-300"
+                className="mr-3 h-6 w-6 text-primary-300"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -94,7 +94,7 @@ const Sidebar = () => {
             </Link>
             <Link to="/create-ticket" className={getNavItemClasses('/create-ticket')}>
               <svg
-                className="mr-3 h-6 w-6 text-indigo-300"
+                className="mr-3 h-6 w-6 text-primary-300"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"

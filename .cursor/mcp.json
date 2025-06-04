@@ -1,0 +1,7 @@
+{
+  "default_provider": "openai",
+  "models": {
+    "openai": "gpt-4o-mini",
+    "perplexity": "sonar-pro"
+  }
+}

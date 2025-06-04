@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { doc, setDoc, serverTimestamp, getDoc, addDoc, collection } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from '../../firebase/config';
-import { getFirebaseErrorMessage } from '../../utils/ErrorHandling';
+import { formatFirebaseError } from '../../utils/errorHandling';
 import { toast } from 'react-hot-toast';
 
 // Category options for maintenance requests
@@ -179,7 +179,7 @@ const MaintenanceRequestForm: React.FC = () => {
       navigate("/maintenance/my-requests");
     } catch (error) {
       console.error("Error submitting maintenance request:", error);
-      setError(getFirebaseErrorMessage(error));
+      setError(formatFirebaseError(error));
     } finally {
       setLoading(false);
     }

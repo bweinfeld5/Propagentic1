@@ -3,7 +3,7 @@ import { collection, query, where, getDocs, getDoc, doc, updateDoc, addDoc, serv
 import { db, auth } from '../../firebase/config';
 import { useNavigate } from 'react-router-dom';
 import { Contractor } from '../../utils/DataModel';
-import { getFirebaseErrorMessage } from '../../utils/ErrorHandling';
+import { formatFirebaseError } from '../../utils/errorHandling';
 
 interface AssignContractorToTicketProps {
   ticketId: string;
@@ -27,7 +27,7 @@ const AssignContractorToTicket: React.FC<AssignContractorToTicketProps> = ({ tic
           setIssueType(ticketDoc.data().issueType);
         }
       } catch (error) {
-        setError(getFirebaseErrorMessage(error));
+        setError(formatFirebaseError(error));
       }
     };
     
@@ -79,7 +79,7 @@ const AssignContractorToTicket: React.FC<AssignContractorToTicketProps> = ({ tic
           setContractors(contractorProfiles);
         }
       } catch (error) {
-        setError(getFirebaseErrorMessage(error));
+        setError(formatFirebaseError(error));
       } finally {
         setLoading(false);
       }
@@ -127,7 +127,7 @@ const AssignContractorToTicket: React.FC<AssignContractorToTicketProps> = ({ tic
       
       if (onAssigned) onAssigned();
     } catch (error) {
-      setError(getFirebaseErrorMessage(error));
+      setError(formatFirebaseError(error));
     } finally {
       setLoading(false);
     }

@@ -48,11 +48,11 @@ const HeaderNav = () => {
     }
   };
 
-  const handleLogout = async () => {
+  const handleLogout = async () => {  
     setIsProfileOpen(false);
     try {
       await logout();
-      navigate('/login');
+      navigate('/propagentic/new');
     } catch (error) {
       console.error("Logout failed:", error);
     }

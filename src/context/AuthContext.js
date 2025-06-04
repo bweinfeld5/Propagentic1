@@ -107,7 +107,9 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('user');
       setUserProfile(null);
       setCurrentUser(null);
-      return await signOut(auth);
+      await signOut(auth);
+      // After logout, redirect to the beautiful landing page instead of login
+      window.location.href = '/propagentic/new';
     } catch (error) {
       console.error('Logout error:', error);
       setAuthError(getAuthErrorMessage(error.code));

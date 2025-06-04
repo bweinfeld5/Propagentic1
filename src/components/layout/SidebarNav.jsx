@@ -28,7 +28,7 @@ const SidebarNav = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login');
+      navigate('/propagentic/new');
     } catch (error) {
       console.error('Logout failed:', error);
     }

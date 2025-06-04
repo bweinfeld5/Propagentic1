@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getStripeAccountStatus = exports.createStripeAccountLink = exports.ping = void 0;
+exports.ping = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 // Initialize Firebase Admin SDK
@@ -44,11 +44,6 @@ console.log("🔥 Loading essential functions...");
 // Basic Ping Function
 exports.ping = functions.https.onCall(async () => {
     console.log("Ping function invoked.");
-    return { message: "pong" };
+    return { message: "pong", timestamp: Date.now() };
 });
-// Essential Stripe Functions Only
-var simple_1 = require("./stripe/simple");
-Object.defineProperty(exports, "createStripeAccountLink", { enumerable: true, get: function () { return simple_1.createStripeAccountLink; } });
-Object.defineProperty(exports, "getStripeAccountStatus", { enumerable: true, get: function () { return simple_1.getStripeAccountStatus; } });
-console.log("✅ Essential functions loaded (ping + Stripe).");
-//# sourceMappingURL=index.js.map
+console.log("✅ Essential functions loaded (ping only).");

@@ -28,7 +28,7 @@ const BankAccountVerification: React.FC<BankAccountVerificationProps> = ({ onCom
     try {
       const result = await callFunction('getStripeBankAccountStatus', {
         userId: currentUser?.uid
-      }) as {
+      }) as unknown as {
         bankAccount: {
           last4: string;
           bankName: string;

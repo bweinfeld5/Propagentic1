@@ -11,13 +11,7 @@ console.log("🔥 Loading essential functions...");
 // Basic Ping Function
 export const ping = functions.https.onCall(async () => {
   console.log("Ping function invoked.");
-  return { message: "pong" };
+  return { message: "pong", timestamp: Date.now() };
 });
 
-// Essential Stripe Functions Only
-export {
-    createStripeAccountLink,
-    getStripeAccountStatus
-} from './stripe/simple';
-
-console.log("✅ Essential functions loaded (ping + Stripe).");
+console.log("✅ Essential functions loaded (ping only).");

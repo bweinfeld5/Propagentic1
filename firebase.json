@@ -30,6 +30,15 @@
     ],
     "headers": [
       {
+        "source": "/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate, max-age=0"
+          }
+        ]
+      },
+      {
         "source": "/new",
         "headers": [
           {
@@ -128,5 +137,8 @@
         "firebase-debug.*.log"
       ]
     }
-  ]
+  ],
+  "extensions": {
+    "firestore-send-email": "firebase/firestore-send-email@0.2.3"
+  }
 }

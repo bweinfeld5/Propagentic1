@@ -62,7 +62,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ userRole, className = '' }) => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/');
+      navigate('/propagentic/new');
     } catch (error) {
       console.error('Logout failed:', error);
     }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import HeroSection from './sections/HeroSection';
+import HeroSection from './HeroSection';
 import WorkflowDemo from './WorkflowDemo';
 import Logo from '../../assets/images/logo.svg';
 import FeaturesGrid from './FeaturesGrid';
@@ -9,13 +9,10 @@ import Testimonials from './Testimonials';
 import PricingSection from './PricingSection';
 import AboutFounder from '../about/AboutFounder';
 import AIExplainerSection from './AIExplainerSection';
-import StickyHeader from './newComponents/StickyHeader';
 
 const LandingPage = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-propagentic-neutral-dark">
-      <StickyHeader />
-      
       {/* 1. Hero section with navigation and role selector */}
       <HeroSection />
       
@@ -43,13 +40,13 @@ const LandingPage = () => {
       <div className="stripe-transition stripe-transition-orange section-morph"></div>
       
       {/* 3. Features section */}
-      <section className="py-16 md:py-24 bg-shift-blue diagonal-divider">
+      <section className="py-16 md:py-24 bg-gray-50 dark:bg-gray-800">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Powerful Features For Everyone
             </h2>
-            <p className="text-xl text-white/90 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Our platform offers dedicated tools for landlords, tenants, and contractors to streamline property maintenance.
             </p>
           </div>
@@ -71,13 +68,13 @@ const LandingPage = () => {
       <div className="stripe-transition stripe-transition-blue section-morph"></div>
       
       {/* 5. Comparison matrix section */}
-      <section className="py-16 md:py-24 bg-shift-green">
+      <section className="py-16 md:py-24 bg-slate-100 dark:bg-slate-800">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">
               How We Compare to Legacy Tools
             </h2>
-            <p className="text-xl text-white/90 max-w-3xl mx-auto">
+            <p className="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto">
               See how Propagentic stacks up against traditional property management solutions like AppFolio and Buildium.
             </p>
           </div>
@@ -91,13 +88,13 @@ const LandingPage = () => {
       <div className="diagonal-divider bg-white"></div>
       
       {/* 6. Testimonials section */}
-      <section className="py-16 md:py-24 bg-white dark:bg-propagentic-neutral-dark section-morph">
+      <section className="py-16 md:py-24 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-propagentic-slate-dark dark:text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               What Our Customers Say
             </h2>
-            <p className="text-xl text-propagentic-slate dark:text-propagentic-neutral-light max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Don't just take our word for it. Here's what property managers, landlords, and contractors have to say.
             </p>
           </div>

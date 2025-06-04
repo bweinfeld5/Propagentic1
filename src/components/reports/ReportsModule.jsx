@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   ChartBarIcon,
   DocumentChartBarIcon,
@@ -19,20 +19,67 @@ import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, X
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import Papa from 'papaparse';
+import { useAuth } from '../../context/AuthContext';
+import { useDemoMode } from '../../context/DemoModeContext';
+import dataService from '../../services/dataService';
 
 /**
  * Advanced Reporting & Analytics Module
- * Phase 1.2 Implementation
+ * Phase 1.2 Implementation with Live Firestore Data
  */
 const ReportsModule = () => {
+  const { currentUser, userProfile } = useAuth();
+  const { isDemoMode } = useDemoMode();
   const [selectedReport, setSelectedReport] = useState('overview');
   const [dateRange, setDateRange] = useState('last30days');
   const [selectedProperty, setSelectedProperty] = useState('all');
   const [isExporting, setIsExporting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [reportData, setReportData] = useState(null);
+  const [properties, setProperties] = useState([]);
   const reportRef = useRef(null);
 
+  // Load data when component mounts or filters change
+  useEffect(() => {
+    loadReportData();
+  }, [currentUser, userProfile, dateRange, selectedProperty, isDemoMode]);
+
+  const loadReportData = async () => {
+    if (!currentUser || !userProfile) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Configure dataService
+      dataService.configure({ 
+        isDemoMode, 
+        currentUser,
+        userType: userProfile.userType || 'landlord'
+      });
+
+      // Load properties for filter dropdown
+      const propertiesData = await dataService.getPropertiesForCurrentLandlord();
+      setProperties(propertiesData);
+
+      // Load analytics data
+      const analyticsData = await dataService.getAnalyticsData({
+        dateRange,
+        propertyId: selectedProperty
+      });
+
+      setReportData(analyticsData);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error loading report data:', error);
+      setError(error.message);
+      setIsLoading(false);
+    }
+  };
+
   // Mock data for reports
-  const reportData = {
+  const mockReportData = {
     propertyPerformance: [
       { property: 'Sunset Apartments', revenue: 36000, expenses: 12000, occupancy: 92, units: 24 },
       { property: 'Downtown Lofts', revenue: 26400, expenses: 8000, occupancy: 100, units: 12 },
@@ -141,13 +188,15 @@ const ReportsModule = () => {
   };
 
   const exportToCSV = () => {
+    if (!reportData) return;
+    
     let csvData = [];
     let filename = '';
     
     switch (selectedReport) {
       case 'overview':
       case 'financial':
-        csvData = reportData.propertyPerformance.map(item => ({
+        csvData = (reportData.propertyPerformance || []).map(item => ({
           Property: item.property,
           Revenue: item.revenue,
           Expenses: item.expenses,
@@ -158,7 +207,7 @@ const ReportsModule = () => {
         filename = 'property-performance';
         break;
       case 'maintenance':
-        csvData = reportData.maintenanceCosts.map(item => ({
+        csvData = (reportData.maintenanceCosts || []).map(item => ({
           Category: item.category,
           'Total Cost': item.cost,
           'Request Count': item.requests,
@@ -167,7 +216,7 @@ const ReportsModule = () => {
         filename = 'maintenance-costs';
         break;
       case 'occupancy':
-        csvData = reportData.occupancyTrends.map(item => ({
+        csvData = (reportData.occupancyTrends || []).map(item => ({
           Month: item.month,
           'Occupied Units': item.occupied,
           'Vacant Units': item.vacant,
@@ -176,7 +225,7 @@ const ReportsModule = () => {
         filename = 'occupancy-trends';
         break;
       case 'tenant':
-        csvData = reportData.tenantAnalytics.map(item => ({
+        csvData = (reportData.tenantAnalytics || []).map(item => ({
           'Tenant Segment': item.segment,
           Count: item.count,
           Percentage: `${item.percentage}%`
@@ -184,7 +233,7 @@ const ReportsModule = () => {
         filename = 'tenant-analytics';
         break;
       default:
-        csvData = reportData.propertyPerformance;
+        csvData = reportData.propertyPerformance || [];
         filename = 'report-data';
     }
     
@@ -205,10 +254,23 @@ const ReportsModule = () => {
 
   // Calculate summary metrics
   const summaryMetrics = useMemo(() => {
+    if (!reportData?.propertyPerformance) {
+      return {
+        totalRevenue: 0,
+        totalExpenses: 0,
+        netIncome: 0,
+        totalUnits: 0,
+        avgOccupancy: 0,
+        profitMargin: 0
+      };
+    }
+
     const totalRevenue = reportData.propertyPerformance.reduce((sum, p) => sum + p.revenue, 0);
     const totalExpenses = reportData.propertyPerformance.reduce((sum, p) => sum + p.expenses, 0);
     const totalUnits = reportData.propertyPerformance.reduce((sum, p) => sum + p.units, 0);
-    const avgOccupancy = reportData.propertyPerformance.reduce((sum, p) => sum + p.occupancy, 0) / reportData.propertyPerformance.length;
+    const avgOccupancy = reportData.propertyPerformance.length > 0 
+      ? reportData.propertyPerformance.reduce((sum, p) => sum + p.occupancy, 0) / reportData.propertyPerformance.length
+      : 0;
     
     return {
       totalRevenue,
@@ -216,7 +278,7 @@ const ReportsModule = () => {
       netIncome: totalRevenue - totalExpenses,
       totalUnits,
       avgOccupancy: Math.round(avgOccupancy),
-      profitMargin: ((totalRevenue - totalExpenses) / totalRevenue * 100).toFixed(1)
+      profitMargin: totalRevenue > 0 ? ((totalRevenue - totalExpenses) / totalRevenue * 100).toFixed(1) : 0
     };
   }, [reportData]);
 
@@ -279,7 +341,7 @@ const ReportsModule = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Revenue Trend</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={reportData.monthlyRevenue}>
+              <AreaChart data={reportData?.monthlyRevenue || []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis dataKey="month" stroke="#6b7280" />
                 <YAxis stroke="#6b7280" />
@@ -301,7 +363,7 @@ const ReportsModule = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Property Performance</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={reportData.propertyPerformance}>
+              <BarChart data={reportData?.propertyPerformance || []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis dataKey="property" stroke="#6b7280" fontSize={12} />
                 <YAxis stroke="#6b7280" />
@@ -330,7 +392,7 @@ const ReportsModule = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue vs Expenses</h3>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={reportData.monthlyRevenue}>
+                <LineChart data={reportData?.monthlyRevenue || []}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                   <XAxis dataKey="month" stroke="#6b7280" />
                   <YAxis stroke="#6b7280" />
@@ -372,10 +434,10 @@ const ReportsModule = () => {
           
           <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performing Properties</h3>
-            <div className="space-y-3">
-              {reportData.propertyPerformance
-                .sort((a, b) => (b.revenue - b.expenses) - (a.revenue - a.expenses))
-                .slice(0, 3)
+                          <div className="space-y-3">
+               {(reportData?.propertyPerformance || [])
+                 .sort((a, b) => (b.revenue - b.expenses) - (a.revenue - a.expenses))
+                 .slice(0, 3)
                 .map((property, index) => (
                   <div key={property.property} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div>
@@ -404,7 +466,7 @@ const ReportsModule = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Maintenance Costs by Category</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={reportData.maintenanceCosts}>
+              <BarChart data={reportData?.maintenanceCosts || []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis dataKey="category" stroke="#6b7280" />
                 <YAxis stroke="#6b7280" />
@@ -419,7 +481,7 @@ const ReportsModule = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Request Volume vs Average Cost</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={reportData.maintenanceCosts}>
+              <BarChart data={reportData?.maintenanceCosts || []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis dataKey="category" stroke="#6b7280" />
                 <YAxis stroke="#6b7280" />
@@ -446,7 +508,7 @@ const ReportsModule = () => {
               </tr>
             </thead>
             <tbody>
-              {reportData.maintenanceCosts.map((item, index) => (
+              {(reportData?.maintenanceCosts || []).map((item, index) => (
                 <tr key={index} className="border-b border-gray-100">
                   <td className="py-3 px-4 text-gray-900">{item.category}</td>
                   <td className="py-3 px-4 text-right text-gray-900">${item.cost.toLocaleString()}</td>
@@ -469,7 +531,7 @@ const ReportsModule = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Occupancy Trends</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={reportData.occupancyTrends}>
+              <AreaChart data={reportData?.occupancyTrends || []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis dataKey="month" stroke="#6b7280" />
                 <YAxis stroke="#6b7280" />
@@ -484,7 +546,7 @@ const ReportsModule = () => {
         <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Occupancy by Property</h3>
           <div className="space-y-4">
-            {reportData.propertyPerformance.map((property, index) => (
+            {(reportData?.propertyPerformance || []).map((property, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
                   <div className="font-medium text-gray-900">{property.property}</div>
@@ -513,7 +575,7 @@ const ReportsModule = () => {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={reportData.tenantAnalytics}
+                  data={reportData?.tenantAnalytics || []}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -521,7 +583,7 @@ const ReportsModule = () => {
                   paddingAngle={5}
                   dataKey="count"
                 >
-                  {reportData.tenantAnalytics.map((entry, index) => (
+                  {(reportData?.tenantAnalytics || []).map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={['#f97316', '#3b82f6', '#10b981'][index]} />
                   ))}
                 </Pie>
@@ -570,6 +632,39 @@ const ReportsModule = () => {
     }
   };
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-t-2 border-b-2 border-orange-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading report data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <ChartBarIcon className="w-6 h-6 text-red-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to Load Reports</h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={loadReportData}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
@@ -583,13 +678,14 @@ const ReportsModule = () => {
             <button
               onClick={exportToCSV}
               className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+              disabled={!reportData}
             >
               <DocumentTextIcon className="w-4 h-4" />
               Export CSV
             </button>
             <button
               onClick={exportToPDF}
-              disabled={isExporting}
+              disabled={isExporting || !reportData}
               className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2 disabled:opacity-50"
             >
               <PrinterIcon className="w-4 h-4" />
@@ -630,9 +726,9 @@ const ReportsModule = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   >
                     <option value="all">All Properties</option>
-                    {reportData.propertyPerformance.map((property) => (
-                      <option key={property.property} value={property.property}>
-                        {property.property}
+                    {properties.map((property) => (
+                      <option key={property.id} value={property.id}>
+                        {property.name || property.address}
                       </option>
                     ))}
                   </select>

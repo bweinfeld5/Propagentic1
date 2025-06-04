@@ -128,6 +128,65 @@ service cloud.firestore {
              request.resource.data.documentType in ['license', 'certification', 'insurance', 'other'];
     }
 
+    // Pre-launch validation functions
+    function isValidWaitlistData() {
+      return 'email' in request.resource.data && 
+             'role' in request.resource.data &&
+             isValidEmail(request.resource.data.email) &&
+             request.resource.data.role in ['landlord', 'tenant', 'contractor', 'supporter'] &&
+             'timestamp' in request.resource.data &&
+             'source' in request.resource.data &&
+             request.resource.data.source is string &&
+             // Optional fields validation (more permissive for pre-launch)
+             (!('name' in request.resource.data) || request.resource.data.name is string) &&
+             (!('userId' in request.resource.data) || request.resource.data.userId is string || request.resource.data.userId == null) &&
+             (!('subscribed_to_newsletter' in request.resource.data) || request.resource.data.subscribed_to_newsletter is bool) &&
+             (!('marketing_consent' in request.resource.data) || request.resource.data.marketing_consent is bool) &&
+             (!('early_access' in request.resource.data) || request.resource.data.early_access is bool) &&
+             (!('ip_address' in request.resource.data) || request.resource.data.ip_address is string) &&
+             (!('user_agent' in request.resource.data) || request.resource.data.user_agent is string) &&
+             (!('createdAt' in request.resource.data) || true) && // Allow any createdAt field
+             (!('test' in request.resource.data) || request.resource.data.test is bool);
+    }
+
+    function isValidNewsletterData() {
+      return 'email' in request.resource.data && 
+             'role' in request.resource.data &&
+             isValidEmail(request.resource.data.email) &&
+             request.resource.data.role in ['landlord', 'tenant', 'contractor', 'supporter'] &&
+             'source' in request.resource.data &&
+             'status' in request.resource.data &&
+             request.resource.data.status == 'active' &&
+             // Allow optional fields
+             (!('name' in request.resource.data) || request.resource.data.name is string) &&
+             (!('subscribedAt' in request.resource.data) || true) &&
+             (!('preferences' in request.resource.data) || request.resource.data.preferences is map);
+    }
+
+    function isValidPreLaunchEmailData() {
+      return 'to' in request.resource.data && 
+             'message' in request.resource.data &&
+             isValidEmail(request.resource.data.to) &&
+             request.resource.data.message is map &&
+             'subject' in request.resource.data.message &&
+             request.resource.data.message.subject is string &&
+             // Allow any pre-launch related emails (more permissive for testing)
+             (
+               // Standard email fields are present in message object
+               ('html' in request.resource.data.message && request.resource.data.message.html is string) ||
+               ('text' in request.resource.data.message && request.resource.data.message.text is string)
+             ) &&
+             // Check if it's from pre-launch source (VERY relaxed validation for testing)
+             (
+               ('source' in request.resource.data && request.resource.data.source is string) ||
+               ('userRole' in request.resource.data && 
+                request.resource.data.userRole in ['landlord', 'tenant', 'contractor']) ||
+               ('test' in request.resource.data && request.resource.data.test == true) ||
+               // Allow any email during development
+               true
+             );
+    }
+
     // MATCHES BEGIN HERE
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
@@ -337,10 +396,46 @@ service cloud.firestore {
 
     // Add rules for mail collection to enable email sending
     match /mail/{document} {
-      // Allow authenticated users to create mail documents
-      allow create: if request.auth != null;
+      // Allow authenticated users and anonymous users (for pre-launch) to create mail documents
+      allow create: if true; // Very permissive for pre-launch phase
       // Only allow system/admin to read mail documents
       allow read, update, delete: if false;
+    }
+
+    // Pre-launch waitlist collection
+    match /waitlist/{document} {
+      // Allow anyone to join the waitlist (anonymous users for pre-launch)
+      allow create: if true; // Temporarily very permissive for pre-launch
+      // Allow anyone to read waitlist entries (needed for duplicate check)
+      allow read: if true; // Temporarily permissive for pre-launch
+      // No updates or deletes allowed
+      allow update, delete: if false;
+    }
+
+    // Newsletter subscribers collection
+    match /newsletter_subscribers/{document} {
+      // Allow anyone to subscribe (anonymous users for pre-launch)
+      allow create: if true; // Temporarily very permissive for pre-launch
+      // Only admins can read/manage subscribers
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Early access collection for managing pre-launch access
+    match /early_access/{document} {
+      // Anyone can check early access (for login flow)
+      allow read: if true;
+      // Only admins can manage early access
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Analytics events collection
+    match /analytics_events/{document} {
+      // Allow anyone to create analytics events (for pre-launch tracking)
+      allow create: if true;
+      // Only admins can read analytics
+      allow read: if isAdmin();
+      // No updates or deletes allowed
+      allow update, delete: if false;
     }
 
     // Contractor documents collection

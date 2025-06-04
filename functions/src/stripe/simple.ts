@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 
 // Initialize Stripe with the correct API version
 const stripe = new Stripe(functions.config().stripe.secret_key, {
-  apiVersion: '2025-04-30.basil', // Updated to the supported version from error
+  apiVersion: '2025-05-28.basil', // Updated to the latest supported version
 });
 
 // Simple createStripeAccountLink function

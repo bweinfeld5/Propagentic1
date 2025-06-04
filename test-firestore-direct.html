@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firestore Rules Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .log { background: #f8f9fa; padding: 10px; border: 1px solid #dee2e6; border-radius: 5px; margin: 10px 0; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>🔥 Firestore Rules Direct Test</h1>
+    <p>This test directly verifies if anonymous users can write to waitlist and mail collections.</p>
+    
+    <div id="status" class="status info">
+        📡 Initializing Firebase...
+    </div>
+    
+    <div>
+        <button onclick="testWaitlistWrite()">Test Waitlist Write</button>
+        <button onclick="testEmailWrite()">Test Email Write</button>
+        <button onclick="testNewsletterWrite()">Test Newsletter Write</button>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+    
+    <div id="log" class="log"></div>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        
+        // Your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDcsJWLoVoC_kPORoVJA_-mG3LIWfbU-rw",
+            authDomain: "propagentic.firebaseapp.com",
+            databaseURL: "https://propagentic-default-rtdb.firebaseio.com",
+            projectId: "propagentic",
+            storageBucket: "propagentic.firebasestorage.app",
+            messagingSenderId: "121286300748",
+            appId: "1:121286300748:web:0c69ea6ff643c8f75110e9",
+            measurementId: "G-7DTWZQH28H"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        // Make Firebase objects globally available
+        window.db = db;
+        window.auth = auth;
+        window.addDoc = addDoc;
+        window.collection = collection;
+        window.serverTimestamp = serverTimestamp;
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logDiv = document.getElementById('log');
+            const color = type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : '#6c757d';
+            logDiv.innerHTML += `<div style="color: ${color};">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function setStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+        }
+        
+        // Test functions
+        window.testWaitlistWrite = async function() {
+            log('🧪 Testing waitlist write permissions...', 'info');
+            try {
+                const testData = {
+                    email: `test-${Date.now()}@example.com`,
+                    role: 'landlord',
+                    timestamp: new Date().toISOString(),
+                    source: 'direct_test',
+                    test: true,
+                    createdAt: serverTimestamp()
+                };
+                
+                log(`📝 Attempting to write to waitlist collection...`, 'info');
+                const docRef = await addDoc(collection(db, 'waitlist'), testData);
+                log(`✅ SUCCESS: Waitlist write successful! Document ID: ${docRef.id}`, 'success');
+                setStatus('✅ Waitlist write test PASSED', 'success');
+                return true;
+            } catch (error) {
+                log(`❌ ERROR: Waitlist write failed: ${error.code} - ${error.message}`, 'error');
+                setStatus(`❌ Waitlist write test FAILED: ${error.code}`, 'error');
+                return false;
+            }
+        };
+        
+        window.testEmailWrite = async function() {
+            log('📧 Testing email write permissions...', 'info');
+            try {
+                const testData = {
+                    to: `test-${Date.now()}@example.com`,
+                    subject: 'Test Email from Direct Test',
+                    text: 'This is a test email',
+                    html: '<p>This is a test email</p>',
+                    template: 'test',
+                    test: true,
+                    createdAt: serverTimestamp()
+                };
+                
+                log(`📬 Attempting to write to mail collection...`, 'info');
+                const docRef = await addDoc(collection(db, 'mail'), testData);
+                log(`✅ SUCCESS: Email write successful! Document ID: ${docRef.id}`, 'success');
+                setStatus('✅ Email write test PASSED', 'success');
+                return true;
+            } catch (error) {
+                log(`❌ ERROR: Email write failed: ${error.code} - ${error.message}`, 'error');
+                setStatus(`❌ Email write test FAILED: ${error.code}`, 'error');
+                return false;
+            }
+        };
+        
+        window.testNewsletterWrite = async function() {
+            log('📰 Testing newsletter write permissions...', 'info');
+            try {
+                const testData = {
+                    email: `test-${Date.now()}@example.com`,
+                    role: 'tenant',
+                    source: 'direct_test',
+                    test: true,
+                    subscribedAt: serverTimestamp(),
+                    status: 'active'
+                };
+                
+                log(`📝 Attempting to write to newsletter_subscribers collection...`, 'info');
+                const docRef = await addDoc(collection(db, 'newsletter_subscribers'), testData);
+                log(`✅ SUCCESS: Newsletter write successful! Document ID: ${docRef.id}`, 'success');
+                setStatus('✅ Newsletter write test PASSED', 'success');
+                return true;
+            } catch (error) {
+                log(`❌ ERROR: Newsletter write failed: ${error.code} - ${error.message}`, 'error');
+                setStatus(`❌ Newsletter write test FAILED: ${error.code}`, 'error');
+                return false;
+            }
+        };
+        
+        window.runAllTests = async function() {
+            log('🚀 Running all Firestore permission tests...', 'info');
+            setStatus('🔄 Running tests...', 'info');
+            
+            const results = [];
+            results.push(await testWaitlistWrite());
+            results.push(await testEmailWrite());
+            results.push(await testNewsletterWrite());
+            
+            const passed = results.filter(r => r).length;
+            const total = results.length;
+            
+            if (passed === total) {
+                log(`🎉 ALL TESTS PASSED! (${passed}/${total})`, 'success');
+                setStatus(`🎉 All tests PASSED! (${passed}/${total})`, 'success');
+            } else {
+                log(`⚠️ Some tests failed: ${passed}/${total} passed`, 'error');
+                setStatus(`⚠️ Tests failed: ${passed}/${total} passed`, 'error');
+            }
+        };
+        
+        window.clearLog = function() {
+            document.getElementById('log').innerHTML = '';
+        };
+        
+        // Check auth state
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                log(`👤 User authenticated: ${user.email}`, 'info');
+                setStatus(`👤 Authenticated as: ${user.email}`, 'info');
+            } else {
+                log(`👤 No user authenticated (anonymous)`, 'info');
+                setStatus('👤 Anonymous user (not signed in)', 'info');
+            }
+        });
+        
+        log('🔥 Firebase initialized successfully', 'success');
+        setStatus('✅ Firebase initialized - Ready to test', 'success');
+    </script>
+</body>
+</html> 

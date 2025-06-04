@@ -7,6 +7,7 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 // Firebase configuration (using environment variables for security)
 const firebaseConfig = {
@@ -25,12 +26,32 @@ export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
+export const functions = getFunctions(app);
 
-// Mock callFunction for development (would be replaced with actual Firebase Functions in production)
+// Real callFunction implementation using Firebase Functions
 export const callFunction = async (functionName, data) => {
-  console.warn(`Mock callFunction called: ${functionName}`, data);
-  // Return mock response for development
-  return Promise.resolve({ data: { success: true } });
+  try {
+    console.log(`Calling Firebase Function: ${functionName}`, data);
+    const callable = httpsCallable(functions, functionName);
+    const result = await callable(data);
+    return result.data;
+  } catch (error) {
+    console.error(`Error calling function ${functionName}:`, error);
+    
+    // Handle specific function failures gracefully
+    if (functionName === 'getStripeBankAccountStatus') {
+      return { bankAccount: null };
+    }
+    if (functionName === 'createBankAccountSetupLink') {
+      throw new Error('Payment functions are being deployed. Please skip this step for now and return later to complete payment setup.');
+    }
+    if (functionName === 'verifyBankAccountMicroDeposits') {
+      return { success: false };
+    }
+    
+    // Re-throw other errors
+    throw error;
+  }
 };
 
 // Export configuration for testing

@@ -47,52 +47,84 @@ const CompetitorMatrix = () => {
   ];
 
   const CheckIcon = () => (
-    <svg className="h-6 w-6 text-propagentic-teal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-    </svg>
+    <div className="flex items-center justify-center">
+      <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+        <svg className="h-5 w-5 text-green-600 dark:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+        </svg>
+      </div>
+    </div>
   );
 
   const XIcon = () => (
-    <svg className="h-6 w-6 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-    </svg>
-  );
-
-  const PartialIcon = () => (
-    <svg className="h-6 w-6 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-    </svg>
+    <div className="flex items-center justify-center">
+      <div className="h-8 w-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+        <svg className="h-5 w-5 text-red-500 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+        </svg>
+      </div>
+    </div>
   );
 
   return (
-    <div className="bg-white dark:bg-propagentic-slate rounded-xl shadow-xl overflow-hidden">
-      <table className="w-full">
-        <thead>
-          <tr className="bg-propagentic-neutral-light dark:bg-propagentic-slate-dark">
-            <th className="py-4 px-6 text-left text-propagentic-slate-dark dark:text-white font-bold">Features</th>
-            <th className="py-4 px-6 text-center text-propagentic-teal font-bold">Propagentic</th>
-            <th className="py-4 px-6 text-center text-propagentic-slate-dark dark:text-white font-bold">AppFolio</th>
-            <th className="py-4 px-6 text-center text-propagentic-slate-dark dark:text-white font-bold">Buildium</th>
-          </tr>
-        </thead>
-        <tbody>
-          {compareFeatures.map((item, index) => (
-            <tr key={index} className={index % 2 === 0 ? 'bg-white dark:bg-propagentic-slate' : 'bg-propagentic-neutral-light dark:bg-propagentic-slate-dark bg-opacity-50 dark:bg-opacity-50'}>
-              <td className="py-4 px-6">
-                <div className="text-propagentic-slate-dark dark:text-white font-medium">{item.feature}</div>
-                <div className="text-sm text-propagentic-slate dark:text-propagentic-neutral-light mt-1">{item.description}</div>
-              </td>
-              <td className="py-4 px-6 text-center">{item.propagentic ? <CheckIcon /> : <XIcon />}</td>
-              <td className="py-4 px-6 text-center">{item.appfolio ? <CheckIcon /> : <XIcon />}</td>
-              <td className="py-4 px-6 text-center">{item.buildium ? <CheckIcon /> : <XIcon />}</td>
+    <div className="bg-white dark:bg-gray-700 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-600">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-slate-100 dark:bg-gray-800">
+              <th className="py-4 px-6 text-left text-gray-900 dark:text-white font-bold text-lg">Features</th>
+              <th className="py-4 px-6 text-center">
+                <div className="inline-flex flex-col items-center">
+                  <span className="text-orange-500 font-bold text-lg">Propagentic</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">AI-powered</span>
+                </div>
+              </th>
+              <th className="py-4 px-6 text-center">
+                <div className="inline-flex flex-col items-center">
+                  <span className="text-gray-900 dark:text-white font-bold text-lg">AppFolio</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">Traditional</span>
+                </div>
+              </th>
+              <th className="py-4 px-6 text-center">
+                <div className="inline-flex flex-col items-center">
+                  <span className="text-gray-900 dark:text-white font-bold text-lg">Buildium</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">Traditional</span>
+                </div>
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="py-6 px-6 bg-propagentic-neutral-light dark:bg-propagentic-slate-dark text-center">
+          </thead>
+          <tbody>
+            {compareFeatures.map((item, index) => (
+              <tr 
+                key={index} 
+                className={index % 2 === 0 ? 'bg-white dark:bg-gray-700' : 'bg-slate-50 dark:bg-gray-800/50'}
+              >
+                <td className="py-5 px-6 border-b border-gray-100 dark:border-gray-600">
+                  <div className="text-gray-900 dark:text-white font-medium text-base">{item.feature}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-300 mt-1">{item.description}</div>
+                </td>
+                <td className="py-5 px-6 text-center border-b border-gray-100 dark:border-gray-600">
+                  {item.propagentic ? <CheckIcon /> : <XIcon />}
+                </td>
+                <td className="py-5 px-6 text-center border-b border-gray-100 dark:border-gray-600">
+                  {item.appfolio ? <CheckIcon /> : <XIcon />}
+                </td>
+                <td className="py-5 px-6 text-center border-b border-gray-100 dark:border-gray-600">
+                  {item.buildium ? <CheckIcon /> : <XIcon />}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      
+      <div className="py-8 px-6 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-gray-800 dark:to-gray-700 text-center border-t border-gray-100 dark:border-gray-600">
+        <p className="text-gray-600 dark:text-gray-300 mb-4">
+          Experience the PropAgentic advantage with our AI-powered platform
+        </p>
         <a 
           href="/signup"
-          className="inline-block bg-propagentic-teal text-white px-8 py-3 rounded-lg font-medium hover:bg-propagentic-teal-dark transform hover:-translate-y-0.5 transition duration-150 text-center"
+          className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-medium transform hover:-translate-y-0.5 transition-all duration-200 text-center shadow-md hover:shadow-lg"
         >
           Get Started Free
         </a>

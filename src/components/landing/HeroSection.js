@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { UnifiedHeader } from '../layout/headers';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import TrustedByCarousel from './TrustedByCarousel';
 
 // Simple dashboard demo loader
 const EnhancedDashboardDemo = lazy(() => import('./EnhancedDashboardDemo'));
@@ -327,14 +328,7 @@ const HeroSection = () => {
         <p className="text-center text-white/80 text-sm sm:text-base mb-6 sm:mb-8 font-medium">
           Trusted by forward-thinking property managers
         </p>
-        <div className="flex flex-wrap justify-center gap-6 sm:gap-8 lg:gap-12 items-center">
-          {[1, 2, 3, 4].map((index) => (
-            <div 
-              key={index} 
-              className="w-28 sm:w-36 h-8 sm:h-10 bg-white/30 rounded-lg shadow-sm hover:bg-white/40 transition-colors duration-200"
-            ></div>
-          ))}
-        </div>
+        <TrustedByCarousel />
       </section>
     </div>
   );

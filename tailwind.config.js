@@ -152,13 +152,18 @@ module.exports = {
         scaleIn: {
           '0%': { transform: 'scale(0.95)', opacity: '0' },
           '100%': { transform: 'scale(1)', opacity: '1' }
+        },
+        carouselSlide: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' }
         }
       },
       animation: {
         draw: 'draw 0.7s ease forwards',
         'canvas-fade-in': 'fadeIn 0.2s ease-in-out',
         'canvas-slide-in': 'slideIn 0.3s ease-in-out',
-        'canvas-scale-in': 'scaleIn 0.2s ease-in-out'
+        'canvas-scale-in': 'scaleIn 0.2s ease-in-out',
+        'carousel': 'carouselSlide 25s linear infinite'
       },
       screens: {
         'sm': '576px',
@@ -228,6 +233,12 @@ module.exports = {
         },
         '.canvas-text-balance': {
           'text-wrap': 'balance'
+        },
+        '.animation-play-state-paused': {
+          'animation-play-state': 'paused'
+        },
+        '.animation-play-state-running': {
+          'animation-play-state': 'running'
         }
       };
       

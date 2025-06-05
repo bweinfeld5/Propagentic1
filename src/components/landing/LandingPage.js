@@ -36,10 +36,16 @@ const LandingPage = () => {
         </div>
       </section>
       
+      {/* Stripe transition to AI-Powered Workflow */}
+      <div className="stripe-transition stripe-transition-orange section-morph"></div>
+      
+      {/* 3. AI-Powered Workflow section - moved here as requested */}
+      <AIExplainerSection />
+      
       {/* Stripe transition to features */}
       <div className="stripe-transition stripe-transition-orange section-morph"></div>
       
-      {/* 3. Features section */}
+      {/* 4. Features section */}
       <section className="py-16 md:py-24 bg-gray-50 dark:bg-gray-800">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
@@ -56,16 +62,8 @@ const LandingPage = () => {
         </div>
       </section>
       
-      {/* Wave transition to AI explainer */}
+      {/* Wave transition to next section */}
       <div className="wave-transition"></div>
-      
-      {/* 4. How Propagentic Works - 4-part workflow */}
-      <div className="bg-white dark:bg-propagentic-neutral-dark section-morph">
-        <AIExplainerSection />
-      </div>
-      
-      {/* Stripe transition to comparison */}
-      <div className="stripe-transition stripe-transition-blue section-morph"></div>
       
       {/* 5. Comparison matrix section */}
       <section className="py-16 md:py-24 bg-slate-100 dark:bg-slate-800">

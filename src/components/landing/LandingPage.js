@@ -9,7 +9,6 @@ import Testimonials from './Testimonials';
 import PricingSection from './PricingSection';
 import AboutFounder from '../about/AboutFounder';
 import AIExplainerSection from './AIExplainerSection';
-import TrustedByCarousel from './TrustedByCarousel';
 
 const LandingPage = () => {
   return (
@@ -34,18 +33,6 @@ const LandingPage = () => {
           <div className="mt-8">
             <WorkflowDemo />
           </div>
-        </div>
-      </section>
-      
-      {/* Trusted By Section */}
-      <section className="py-6 bg-gray-900">
-        <div className="container mx-auto">
-          <div className="text-center mb-4">
-            <p className="text-lg text-white font-medium">
-              Trusted by forward-thinking property managers
-            </p>
-          </div>
-          <TrustedByCarousel />
         </div>
       </section>
       

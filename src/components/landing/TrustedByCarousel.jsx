@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeMotion } from '../shared/SafeMotion';
+import { motion } from 'framer-motion';
 import ErrorBoundary from '../shared/ErrorBoundary';
 
 /**
@@ -32,76 +32,70 @@ const TrustedByCarousel = ({
   return (
     <ErrorBoundary fallback="Couldn't load testimonials">
       {/* Container with shimmer effect background */}
-      <div className="relative overflow-hidden py-8 w-full">
-        {/* Carousel Component */}
-        <div className="relative w-full overflow-hidden">
-          {/* Animation container */}
-          <SafeMotion.ul
-            className="flex space-x-4 motion-safe:animate-carousel motion-safe:hover:animation-play-state-paused"
-            role="list"
-            style={{
-              animationDuration: '25s',
-              animationTimingFunction: 'linear',
-              animationIterationCount: 'infinite'
-            }}
-            initial={{ x: '100%' }} 
-            animate={{ x: '-100%' }}
-            transition={{ 
-              repeat: Infinity,
-              duration: 25,
-              ease: "linear"
-            }}
-          >
-            {duplicatedChips.map((chip, index) => (
-              <SafeMotion.li
-                key={`${chip}-${index}`}
-                className="flex-shrink-0"
-                role="listitem"
-                aria-label={chip}
-              >
-                <div className="flex items-center bg-white bg-opacity-8 border border-white border-opacity-20 rounded-md px-4 py-2 min-w-max">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white bg-opacity-15 flex items-center justify-center mr-3 text-white">
-                    {getInitials(chip)}
-                  </div>
-                  <div>
-                    <p className="text-white whitespace-nowrap">
-                      <span className="text-opacity-80">Trusted by</span>{' '}
-                      <span className="text-[#0B5CFF] font-semibold">{chip}</span>
-                    </p>
-                  </div>
-                </div>
-              </SafeMotion.li>
-            ))}
-          </SafeMotion.ul>
-          
-          {/* Fallback for browsers that don't support motion */}
-          <div className="motion-reduce:block hidden">
-            <ul
-              className="flex flex-wrap justify-center gap-4"
+      <div className="relative overflow-hidden w-full">
+        {/* Carousel Component - Motion Enabled Browsers */}
+        <div className="motion-safe:block hidden">
+          <div className="relative w-full overflow-hidden">
+            <motion.ul
+              className="flex gap-3 md:gap-4"
+              initial={{ x: '100%' }} 
+              animate={{ x: '-100%' }}
+              transition={{ 
+                repeat: Infinity,
+                duration: 25,
+                ease: "linear"
+              }}
+              style={{
+                willChange: 'transform'
+              }}
+              whileHover={{ animationPlayState: 'paused' }}
               role="list"
             >
-              {chips.map((chip, index) => (
-                <li
+              {duplicatedChips.map((chip, index) => (
+                <motion.li
                   key={`${chip}-${index}`}
                   className="flex-shrink-0"
                   role="listitem"
                   aria-label={chip}
                 >
-                  <div className="flex items-center bg-white bg-opacity-8 border border-white border-opacity-20 rounded-md px-4 py-2">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white bg-opacity-15 flex items-center justify-center mr-3 text-white">
+                  <div className="flex items-center bg-white/8 hover:bg-white/12 backdrop-blur-sm border border-white/20 rounded-md px-4 py-1.5 min-w-max transition-all duration-300">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/15 flex items-center justify-center mr-2 text-white text-xs">
                       {getInitials(chip)}
                     </div>
-                    <div>
-                      <p className="text-white">
-                        <span className="text-opacity-80">Trusted by</span>{' '}
-                        <span className="text-[#0B5CFF] font-semibold">{chip}</span>
-                      </p>
-                    </div>
+                    <span className="text-white whitespace-nowrap text-sm">
+                      <span className="text-[#0B5CFF] font-medium">{chip}</span>
+                    </span>
                   </div>
-                </li>
+                </motion.li>
               ))}
-            </ul>
+            </motion.ul>
           </div>
+        </div>
+        
+        {/* Fallback for browsers with reduced motion preference */}
+        <div className="motion-reduce:block hidden">
+          <ul
+            className="flex flex-wrap justify-center gap-3 md:gap-4"
+            role="list"
+          >
+            {chips.map((chip, index) => (
+              <li
+                key={`${chip}-${index}`}
+                className="flex-shrink-0"
+                role="listitem"
+                aria-label={chip}
+              >
+                <div className="flex items-center bg-white/8 border border-white/20 rounded-md px-4 py-1.5">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/15 flex items-center justify-center mr-2 text-white text-xs">
+                    {getInitials(chip)}
+                  </div>
+                  <span className="text-white whitespace-nowrap text-sm">
+                    <span className="text-[#0B5CFF] font-medium">{chip}</span>
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </ErrorBoundary>

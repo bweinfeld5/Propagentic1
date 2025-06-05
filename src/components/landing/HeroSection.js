@@ -52,9 +52,9 @@ const HeroSection = () => {
       ctaText: "Start managing smarter"
     },
     Tenant: {
-      headline: "Repairs in one tap",
-      highlightWord: "",
-      endingWords: "",
+      headline: "Repairs in",
+      highlightWord: "one",
+      endingWords: "tap",
       tagline: "Rental experience made simple.",
       description: "Snap a photo → track status → get it fixed, hassle-free.",
       ctaText: "Make renting easier"

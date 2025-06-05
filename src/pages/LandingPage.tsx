@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import toastService from '../services/toastService';
 import waitlistService from '../services/waitlistService';
 import analyticsService from '../services/analyticsService';
-import errorHandling from '../utils/errorHandling';
+import errorHandling from '../utils/ErrorHandling';
 import validation from '../utils/validation';
 
 // PropAgentic Logo SVG Component

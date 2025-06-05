@@ -6,7 +6,7 @@ import { db } from '../firebase/config';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import waitlistService from '../services/waitlistService';
 import analyticsService from '../services/analyticsService';
-import errorHandling from '../utils/errorHandling';
+import errorHandling from '../utils/ErrorHandling';
 
 // Orange PropAgentic Logo SVG Component
 const PropAgenticLogo = ({ className = "h-16 w-auto" }) => (

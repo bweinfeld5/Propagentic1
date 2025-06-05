@@ -3,7 +3,8 @@ import { collection, query, where, getDocs, getDoc, doc, updateDoc, addDoc, serv
 import { db, auth } from '../../firebase/config';
 import { useNavigate } from 'react-router-dom';
 import { Contractor } from '../../utils/DataModel';
-import { formatFirebaseError } from '../../utils/errorHandling';
+import { formatFirebaseError } from '../../utils/ErrorHandling';
+import { useAuth } from '../../context/AuthContext';
 
 interface AssignContractorToTicketProps {
   ticketId: string;

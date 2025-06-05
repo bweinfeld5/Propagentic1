@@ -107,7 +107,7 @@ const EnhancedHeroSection = () => {
                 className="text-4xl md:text-6xl font-bold text-white mb-6"
                 variants={itemVariants}
               >
-                Property Management <span className="text-primary-light">Reimagined</span> with AI
+                Property Management <span className="text-orange-500">Reimagined</span> with AI
               </SafeMotion.h1>
               
               <div className="min-h-[100px] md:min-h-[120px] mb-12 flex items-center justify-center">

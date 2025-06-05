@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { doc, setDoc, serverTimestamp, getDoc, addDoc, collection } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from '../../firebase/config';
-import { formatFirebaseError } from '../../utils/errorHandling';
+import { formatFirebaseError } from '../../utils/ErrorHandling';
 import { toast } from 'react-hot-toast';
 
 // Category options for maintenance requests

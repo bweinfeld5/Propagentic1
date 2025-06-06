@@ -32,7 +32,7 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var _a, _b, _c, _d, _e, _f;
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendInviteEmail = void 0;
 const functions = __importStar(require("firebase-functions"));
@@ -53,25 +53,68 @@ const nodemailer = __importStar(require("nodemailer"));
 if (!admin.apps.length) {
     admin.initializeApp();
 }
-// Example using a generic SMTP provider (replace with your provider's details)
-const mailTransport = nodemailer.createTransport({
-    host: ((_a = functions.config().smtp) === null || _a === void 0 ? void 0 : _a.host) || 'YOUR_SMTP_HOST',
-    port: parseInt(((_b = functions.config().smtp) === null || _b === void 0 ? void 0 : _b.port) || '587', 10), // common ports: 587 (TLS), 465 (SSL)
-    secure: (((_c = functions.config().smtp) === null || _c === void 0 ? void 0 : _c.secure) === 'true') || false, // true for 465, false for other ports
-    auth: {
-        user: ((_d = functions.config().smtp) === null || _d === void 0 ? void 0 : _d.user) || 'YOUR_SMTP_USER',
-        pass: ((_e = functions.config().smtp) === null || _e === void 0 ? void 0 : _e.pass) || 'YOUR_SMTP_PASSWORD',
-    },
-});
+// Retrieve SMTP config from Firebase Functions Config
+const getMailTransport = () => {
+    var _a, _b, _c, _d, _e;
+    // Remove unused variable
+    let configSource = 'firebase';
+    try {
+        // Check if we have SMTP config in Firebase
+        const host = (_a = functions.config().smtp) === null || _a === void 0 ? void 0 : _a.host;
+        const port = (_b = functions.config().smtp) === null || _b === void 0 ? void 0 : _b.port;
+        const user = (_c = functions.config().smtp) === null || _c === void 0 ? void 0 : _c.user;
+        const pass = (_d = functions.config().smtp) === null || _d === void 0 ? void 0 : _d.pass;
+        const secure = ((_e = functions.config().smtp) === null || _e === void 0 ? void 0 : _e.secure) === 'true';
+        // Log the config (without password) for debugging
+        console.log(`Email config from ${configSource}:`, {
+            host,
+            port,
+            user: user ? '✓ Present' : '✗ Missing',
+            secure
+        });
+        if (!host || !port || !user || !pass) {
+            throw new Error('Incomplete SMTP configuration');
+        }
+        return nodemailer.createTransport({
+            host,
+            port: parseInt(port, 10),
+            secure,
+            auth: {
+                user,
+                pass
+            }
+        });
+    }
+    catch (error) {
+        console.warn('SMTP config error:', error);
+        console.warn('Using backup SMTP configuration. !!! FOR DEVELOPMENT ONLY !!!');
+        // Fallback to environment variables if config fails (for development only)
+        return nodemailer.createTransport({
+            host: process.env.SMTP_HOST || 'smtp.mailtrap.io', // Use MailTrap for development
+            port: parseInt(process.env.SMTP_PORT || '2525', 10),
+            secure: process.env.SMTP_SECURE === 'true',
+            auth: {
+                user: process.env.SMTP_USER || 'YOUR_SMTP_USER',
+                pass: process.env.SMTP_PASS || 'YOUR_SMTP_PASSWORD'
+            }
+        });
+    }
+};
 const APP_NAME = 'PropAgentic';
-const YOUR_APP_DOMAIN = ((_f = functions.config().app) === null || _f === void 0 ? void 0 : _f.domain) || 'https://your-propagentic-app.com'; // Configure your app domain
+const APP_DOMAIN = ((_a = functions.config().app) === null || _a === void 0 ? void 0 : _a.domain) || 'https://your-propagentic-app.com';
+// Fix the document function usage and add type annotations for parameters
 exports.sendInviteEmail = functions.firestore
-    .document('invites/{inviteId}')
-    .onCreate(async (snap, context) => {
+    .onDocumentCreated('invites/{inviteId}', async (event) => {
     var _a;
+    const snap = event.data;
+    const context = event.params;
+    if (!snap) {
+        console.log('No data associated with the event');
+        return;
+    }
     const inviteData = snap.data();
     const inviteId = snap.id;
-    console.log(`Processing new invite: ${inviteId}`, { config: functions.config().smtp });
+    console.log(`Processing new invite: ${inviteId}`);
     if (!inviteData) {
         console.error('No data associated with the event');
         return;
@@ -89,29 +132,116 @@ exports.sendInviteEmail = functions.firestore
         });
         return;
     }
-    // Generate an invite code or link. Using inviteId as the code here.
-    // You might want to generate a more complex, short-lived code in a real app.
-    const inviteLink = `${YOUR_APP_DOMAIN}/accept-invite?code=${inviteId}`;
-    const mailOptions = {
-        from: `"${APP_NAME}" <${((_a = functions.config().email) === null || _a === void 0 ? void 0 : _a.from) || 'noreply@your-propagentic-app.com'}>`, // Configure your "from" email
-        to: tenantEmail,
-        subject: `You're Invited to Join ${propertyName} on ${APP_NAME}!`,
-        html: `
-        <p>Hello,</p>
-        <p>${landlordName} has invited you to join ${propertyName} on ${APP_NAME}.</p>
-        <p>Please click the link below to accept your invitation and set up your account:</p>
-        <p><a href="${inviteLink}">${inviteLink}</a></p>
-        <p>If you were not expecting this invitation, you can safely ignore this email.</p>
-        <p>Thanks,</p>
-        <p>The ${APP_NAME} Team</p>
-      `,
-    };
-    console.log(`Attempting to send email to ${tenantEmail}`, mailOptions);
     try {
         // Mark as processing
         await admin.firestore().collection('invites').doc(inviteId).update({
             emailSentStatus: 'processing',
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        // Generate a unique 8-character invite code and store it
+        const db = admin.firestore();
+        // Generate a random 8-character code (same format as invite codes)
+        const generateRandomCode = (length = 8) => {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removing confusable chars
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        };
+        // Create an invite code that will work with the existing system
+        let code = generateRandomCode();
+        let isUnique = false;
+        // Ensure the code is unique
+        while (!isUnique) {
+            // Check if the code already exists
+            const codeQuery = await db.collection('inviteCodes')
+                .where('code', '==', code)
+                .limit(1)
+                .get();
+            isUnique = codeQuery.empty;
+            if (!isUnique) {
+                code = generateRandomCode();
+            }
+        }
+        console.log(`Generated unique invite code: ${code} for email: ${tenantEmail}`);
+        // Store the invite code in Firestore with the same format as manual codes
+        const now = admin.firestore.Timestamp.now();
+        const expiresAt = new admin.firestore.Timestamp(now.seconds + (7 * 24 * 60 * 60), // Default to 7 days
+        now.nanoseconds);
+        // Create an invite code linked to this email invitation
+        const inviteCodeData = {
+            code: code,
+            landlordId: inviteData.landlordId,
+            propertyId: inviteData.propertyId,
+            email: tenantEmail, // Restrict to this email
+            status: 'active',
+            createdAt: now,
+            expiresAt,
+            propertyName: propertyName,
+            inviteId: inviteId, // Link back to the invite document
+            source: 'email_invite'
+        };
+        // Add the code to the inviteCodes collection
+        const inviteCodeRef = await db.collection('inviteCodes').add(inviteCodeData);
+        console.log(`Created invite code document: ${inviteCodeRef.id}`);
+        // Update the invite with the code reference
+        await db.collection('invites').doc(inviteId).update({
+            inviteCodeId: inviteCodeRef.id,
+            inviteCode: code
+        });
+        // Generate an invite link with the code
+        const inviteLink = `${APP_DOMAIN}/accept-invite?code=${code}`;
+        // Initialize mail transport
+        const mailTransport = getMailTransport();
+        const mailOptions = {
+            from: `"${APP_NAME}" <${((_a = functions.config().email) === null || _a === void 0 ? void 0 : _a.from) || 'noreply@propagentic.com'}>`,
+            to: tenantEmail,
+            subject: `You're Invited to Join ${propertyName} on ${APP_NAME}!`,
+            html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h1 style="color: #FF6600;">PropAgentic</h1>
+              <p style="font-size: 18px; color: #333;">Property Management Made Simple</p>
+            </div>
+            
+            <div style="padding: 20px; background-color: #f9f9f9; border-radius: 5px; margin-bottom: 20px;">
+              <h2 style="color: #333; margin-top: 0;">You've Been Invited!</h2>
+              <p style="font-size: 16px; line-height: 1.5; color: #555;">
+                ${landlordName} has invited you to join ${propertyName} on PropAgentic.
+              </p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <p style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">Your Invitation Code:</p>
+              <div style="background-color: #f0f0f0; padding: 12px; border-radius: 4px; letter-spacing: 2px; font-family: monospace; font-size: 24px; font-weight: bold; color: #333;">
+                ${code}
+              </div>
+              <p style="font-size: 14px; color: #777; margin-top: 10px;">
+                This code will expire in 7 days
+              </p>
+            </div>
+            
+            <div style="margin: 25px 0; text-align: center;">
+              <a href="${inviteLink}" style="display: inline-block; background-color: #FF6600; color: white; text-decoration: none; padding: 12px 30px; border-radius: 5px; font-weight: bold; font-size: 16px;">
+                Accept Invitation
+              </a>
+            </div>
+            
+            <p style="font-size: 14px; line-height: 1.5; color: #777;">
+              If the button above doesn't work, you can also enter your code manually after logging in to PropAgentic.
+            </p>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #999; font-size: 12px;">
+              <p>If you were not expecting this invitation, you can safely ignore this email.</p>
+              <p>&copy; ${new Date().getFullYear()} PropAgentic. All rights reserved.</p>
+            </div>
+          </div>
+        `,
+        };
+        console.log(`Attempting to send email to ${tenantEmail}`, {
+            subject: mailOptions.subject,
+            inviteLink
         });
         // Send the email
         const info = await mailTransport.sendMail(mailOptions);
@@ -120,7 +250,8 @@ exports.sendInviteEmail = functions.firestore
         await admin.firestore().collection('invites').doc(inviteId).update({
             emailSentStatus: 'sent',
             emailSentAt: admin.firestore.FieldValue.serverTimestamp(),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            inviteCode: code // Add the invite code for reference
         });
     }
     catch (error) {

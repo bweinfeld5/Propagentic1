@@ -21,7 +21,7 @@ if (!admin.apps.length) {
 
 // Retrieve SMTP config from Firebase Functions Config
 const getMailTransport = () => {
-  let config: any;
+  // Remove unused variable
   let configSource = 'firebase';
 
   try {
@@ -73,9 +73,16 @@ const getMailTransport = () => {
 const APP_NAME = 'PropAgentic';
 const APP_DOMAIN = functions.config().app?.domain || 'https://your-propagentic-app.com';
 
+// Fix the document function usage and add type annotations for parameters
 export const sendInviteEmail = functions.firestore
-  .document('invites/{inviteId}')
-  .onCreate(async (snap, context) => {
+  .onDocumentCreated('invites/{inviteId}', async (event) => {
+    const snap = event.data;
+    
+    if (!snap) {
+      console.log('No data associated with the event');
+      return;
+    }
+
     const inviteData = snap.data();
     const inviteId = snap.id;
 

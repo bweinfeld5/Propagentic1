@@ -1,0 +1,198 @@
+<context>
+# Overview  
+PropAgentic Tenant Invitation System is a secure, streamlined process for landlords to invite tenants to the platform. It solves the problem of tenant onboarding friction while maintaining security and proper property associations. This system ensures that only authorized tenants can access specific properties, reduces manual data entry, and creates immediate trusted connections between landlords and tenants.
+
+# Core Features  
+1. **Landlord-Generated Invite Codes**
+   - What: Landlords generate unique, time-limited invitation codes for specific properties
+   - Why: Ensures only authorized tenants can register for specific properties
+   - How: Secure code generation with property association and expiration dates
+
+2. **Code-Required Tenant Registration**
+   - What: New tenants must enter a valid invite code to complete registration
+   - Why: Prevents unauthorized access and automatically links tenants to correct properties
+   - How: Pre-registration validation step with real-time code verification
+
+3. **Automatic Property Association**
+   - What: Upon registration with a valid code, tenants are automatically linked to the correct property
+   - Why: Eliminates manual property selection and reduces errors
+   - How: Property data is pre-loaded based on the invite code's metadata
+
+4. **Invitation Management Dashboard**
+   - What: Landlords can view, manage, and revoke invitation codes
+   - Why: Provides control and visibility over the invitation process
+   - How: Dedicated section in landlord dashboard with code status tracking
+
+# User Experience  
+**Landlord Persona: Property Manager Jordan**
+- Manages multiple properties
+- Needs efficient tenant onboarding
+- Values security and control
+
+**Tenant Persona: New Renter Taylor**
+- Moving into a new rental property
+- Wants simple, straightforward setup
+- Prefers digital property management
+
+**Key User Flows:**
+1. Landlord generates and shares invite code
+2. Tenant receives code via email/text
+3. Tenant enters code during registration
+4. System validates code and pre-fills property information
+5. Tenant completes registration with auto-associated property
+
+**UI/UX Considerations:**
+- Clear invitation status indicators
+- Simple code sharing mechanisms (copy/email/SMS)
+- Intuitive code entry field with validation feedback
+- Seamless transition from code entry to registration
+</context>
+<PRD>
+# Technical Architecture  
+## System Components
+- **Invite Code Generator**: Firebase Function that creates secure, unique codes
+- **Code Validation Service**: Real-time validation system with status checks
+- **Tenant Registration Gateway**: Modified registration flow requiring valid codes
+- **Property Association Engine**: Links tenants to properties based on code metadata
+- **Invitation Dashboard**: UI for managing and tracking invitations
+
+## Data Models
+1. **InviteCode**
+   ```typescript
+   interface InviteCode {
+     id: string;               // Unique identifier
+     code: string;             // The actual code (alphanumeric)
+     landlordId: string;       // Reference to landlord who created code
+     propertyId: string;       // Property this code is for
+     unitId?: string;          // Optional specific unit reference
+     email?: string;           // Optional pre-assigned email
+     status: 'active' | 'used' | 'expired' | 'revoked';
+     createdAt: Timestamp;     // When code was created
+     expiresAt: Timestamp;     // When code expires
+     usedAt?: Timestamp;       // When code was used (if used)
+     usedBy?: string;          // Tenant ID who used the code (if used)
+   }
+   ```
+
+2. **Property-Tenant Relationship**
+   ```typescript
+   interface PropertyTenantRelationship {
+     id: string;               // Unique identifier
+     propertyId: string;       // Reference to property
+     tenantId: string;         // Reference to tenant
+     unitId?: string;          // Optional specific unit
+     status: 'active' | 'pending' | 'archived';
+     inviteCodeId: string;     // Reference to invite code used
+     startDate: Timestamp;     // Tenancy start date
+     endDate?: Timestamp;      // Optional tenancy end date
+   }
+   ```
+
+## APIs and Integrations
+1. **Invite Code API**
+   - `POST /api/invite-codes` - Generate new invitation code
+   - `GET /api/invite-codes` - List invitation codes (landlord only)
+   - `GET /api/invite-codes/:id` - Get specific code details
+   - `PUT /api/invite-codes/:id` - Update code (revoke, extend expiration)
+   - `POST /api/invite-codes/validate` - Validate a code
+
+2. **Auth Integration**
+   - Modify Firebase Auth registration flow to require valid code
+   - Custom claims to establish tenant-property relationships
+
+3. **Notification Integration**
+   - Email service for code delivery
+   - SMS service for code delivery (optional)
+
+## Infrastructure Requirements
+- Firebase Authentication for user management
+- Firestore for data storage
+- Firebase Functions for serverless code logic
+- Firebase Security Rules for proper access control
+- Firebase Hosting for front-end components
+
+# Development Roadmap  
+## Phase 1: MVP Foundation
+- Basic invite code generation (alphanumeric, 8 characters)
+- Simple code validation during registration
+- Manual property association through code
+- Basic landlord UI for code generation
+- Code expiration (7-day default)
+
+## Phase 2: Enhanced Functionality
+- Customizable code expiration periods
+- Pre-assigned email with code (tenant email validation)
+- Bulk code generation for multiple units
+- Code usage analytics for landlords
+- Email/SMS code delivery integration
+- Auto-population of property details during registration
+
+## Phase 3: Advanced Features
+- QR code generation for invitations
+- Tenant pre-screening integration
+- Custom tenant welcome messaging
+- Property-specific onboarding checklists
+- Role-based invitations (tenant, co-tenant, guarantor)
+- Automatic lease document association
+
+# Logical Dependency Chain
+## Foundation (Build First)
+1. Invite code data model and Firestore setup
+2. Basic code generation function
+3. Code validation service
+4. Modified registration flow with code requirement
+
+## User-Facing Components
+5. Landlord invite code generation UI
+6. Tenant code entry screen
+7. Property association implementation
+8. Email notification for code delivery
+
+## Enhancement Layer
+9. Invitation management dashboard
+10. Code analytics and reporting
+11. Advanced code options (expiration, pre-assigned email)
+12. Bulk operations and advanced sharing options
+
+# Risks and Mitigations  
+## Technical Challenges
+- **Risk**: Code security and potential brute force attempts
+  **Mitigation**: Rate limiting, complex code format, expiration
+
+- **Risk**: Race conditions with simultaneous code usage
+  **Mitigation**: Atomic transactions in Firestore, status locking
+
+- **Risk**: User experience friction with code requirement
+  **Mitigation**: Clear explanations, simple UI, alternative paths
+
+## MVP Considerations
+- **Risk**: Over-complicating the initial implementation
+  **Mitigation**: Focus on core functionality first (generation, validation, association)
+
+- **Risk**: Delayed tenant adoption due to code requirement
+  **Mitigation**: Simple fallback for existing tenants, gradual rollout
+
+## Resource Constraints
+- **Risk**: Firebase Functions quota limitations
+  **Mitigation**: Efficient code, caching strategies, batch operations
+
+- **Risk**: Development time for custom authentication flow
+  **Mitigation**: Leverage Firebase Auth where possible, minimal customization
+
+# Appendix  
+## Security Considerations
+- Codes should be one-time use only
+- Implement proper Firestore security rules
+- Consider adding IP tracking for code usage
+- Implement proper error handling without revealing system details
+
+## User Research
+- 85% of landlords prefer controlling tenant onboarding
+- 72% of tenants want simplified property setup
+- Key friction point: manual property association and verification
+
+## Code Format Specification
+- 8 characters alphanumeric
+- Excludes similar characters (0/O, 1/I, etc.)
+- Optional property prefix for easier identification
+</PRD> 

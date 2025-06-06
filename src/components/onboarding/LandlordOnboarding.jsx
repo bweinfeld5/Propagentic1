@@ -377,7 +377,7 @@ const LandlordOnboarding = () => {
             value={formData.propertyType} 
             onChange={handleChange} 
             required 
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-gray-50"
           >
             <option>Single-Family Home</option>
             <option>Multi-Family Building</option>
@@ -425,7 +425,7 @@ const LandlordOnboarding = () => {
             name="yearsInBusiness" 
             value={formData.yearsInBusiness} 
             onChange={handleChange} 
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-gray-50"
           >
             <option value="1-5">1-5 years</option>
             <option value="6-10">6-10 years</option>
@@ -440,7 +440,7 @@ const LandlordOnboarding = () => {
             name="totalProperties" 
             value={formData.totalProperties} 
             onChange={handleChange} 
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-gray-50"
           >
             {Array.from({ length: 20 }, (_, i) => i + 1).map(num => (
               <option key={num} value={num.toString()}>{num} {num === 1 ? 'property' : 'properties'}</option>
@@ -455,7 +455,7 @@ const LandlordOnboarding = () => {
             name="managementSoftware" 
             value={formData.managementSoftware} 
             onChange={handleChange} 
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-gray-50"
           >
             <option value="None">None</option>
             <option value="Property Management Software">Property Management Software</option>

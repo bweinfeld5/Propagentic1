@@ -4,6 +4,7 @@ import { UnifiedHeader } from '../layout/headers';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import TrustedByCarousel from './TrustedByCarousel';
+import { HeartIcon } from '@heroicons/react/24/outline';
 
 // Simple dashboard demo loader
 const EnhancedDashboardDemo = lazy(() => import('./EnhancedDashboardDemo'));
@@ -61,9 +62,9 @@ const HeroSection = () => {
       ctaText: "Make renting easier"
     },
     Contractor: {
-      headline: "Skip bidding—jobs already approved",
-      highlightWord: "",
-      endingWords: "",
+      headline: "Skip bidding—jobs",
+      highlightWord: "already",
+      endingWords: "approved",
       tagline: "More jobs, better matches.",
       description: "Pre-priced work orders land directly in your queue.",
       ctaText: "Join our network"
@@ -324,11 +325,16 @@ const HeroSection = () => {
       </main>
       
       {/* Simple trust section */}
-      <section className="container mx-auto px-4 sm:px-6 py-8 sm:py-10 relative z-10">
-        <p className="text-center text-white/80 text-sm sm:text-base mb-6 sm:mb-8 font-medium">
-          Trusted by forward-thinking property managers
-        </p>
-        <TrustedByCarousel />
+      <section className="container mx-auto px-4 sm:px-6 py-6 relative z-10 max-w-full">
+        <div className="text-center mb-6">
+          <p className="text-white/80 text-sm sm:text-base mb-2 font-medium inline-flex items-center justify-center">
+            Trusted by everyday investors and contractors alike
+            <HeartIcon className="w-4 h-4 text-red-400 ml-2" aria-hidden="true" />
+          </p>
+        </div>
+        <div className="max-w-full overflow-hidden">
+          <TrustedByCarousel />
+        </div>
       </section>
     </div>
   );

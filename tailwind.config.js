@@ -156,6 +156,28 @@ module.exports = {
         carouselSlide: {
           '0%': { transform: 'translateX(0)' },
           '100%': { transform: 'translateX(-50%)' }
+        },
+        pulse: {
+          '0%, 100%': { 
+            opacity: 1,
+            transform: 'scale(1)'
+          },
+          '50%': { 
+            opacity: 0.85,
+            transform: 'scale(1.05)'
+          }
+        },
+        softGlow: {
+          '0%, 100%': {
+            boxShadow: '0 0 0 0 rgba(59, 130, 246, 0)'
+          },
+          '50%': {
+            boxShadow: '0 0 8px 3px rgba(59, 130, 246, 0.3)'
+          }
+        },
+        floatVertical: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-5px)' }
         }
       },
       animation: {
@@ -163,7 +185,10 @@ module.exports = {
         'canvas-fade-in': 'fadeIn 0.2s ease-in-out',
         'canvas-slide-in': 'slideIn 0.3s ease-in-out',
         'canvas-scale-in': 'scaleIn 0.2s ease-in-out',
-        'carousel': 'carouselSlide 25s linear infinite'
+        'carousel': 'carouselSlide 25s linear infinite',
+        'pulse-slow': 'pulse 3s ease-in-out infinite',
+        'soft-glow': 'softGlow 2s ease-in-out infinite',
+        'float': 'floatVertical 3s ease-in-out infinite'
       },
       screens: {
         'sm': '576px',

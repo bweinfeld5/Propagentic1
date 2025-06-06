@@ -58,6 +58,20 @@
     margin: 0;
   }
 
+  /* Set light gray background for all form inputs */
+  input:not([type="radio"]):not([type="checkbox"]):not([type="color"]),
+  select,
+  textarea {
+    @apply bg-gray-50 border-gray-300;
+  }
+  
+  /* Dark mode version */
+  .dark input:not([type="radio"]):not([type="checkbox"]):not([type="color"]),
+  .dark select,
+  .dark textarea {
+    @apply bg-gray-800 border-gray-700;
+  }
+
   /* Ensure headings inherit base text color */
   h1, h2, h3, h4, h5, h6 {
     color: inherit;

@@ -42,9 +42,10 @@ service cloud.firestore {
     }
 
     function isPropertyTenant(propertyId) {
-      let propDoc = get(/databases/$(database)/documents/properties/$(propertyId));
-      return ('tenants' in propDoc.data && propDoc.data.tenants is list && request.auth.uid in propDoc.data.tenants) || 
-             ('tenantId' in propDoc.data && propDoc.data.tenantId == request.auth.uid);
+      // Check property's tenant list directly for simpler validation
+      let property = get(/databases/$(database)/documents/properties/$(propertyId)).data;
+      return property.tenants != null && 
+             request.auth.uid in property.tenants;
     }
 
     function isValidString(field, max) {
@@ -189,11 +190,10 @@ service cloud.firestore {
 
     // MATCHES BEGIN HERE
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      allow read: if request.auth != null && 
-        (resource.data.role == 'contractor' || 
-         isAdmin() ||
-         isPropertyParticipant(userId));
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
     }
 
     match /landlordProfiles/{landlordId} {
@@ -223,11 +223,19 @@ service cloud.firestore {
     }
 
     match /properties/{propertyId} {
-      allow read, write: if request.auth != null && 
-        (request.auth.uid == resource.data.landlordId || isAdmin());
+      allow read: if request.auth != null && 
+        (isPropertyOwner(propertyId) || 
+         isPropertyManager(propertyId) || 
+         isPropertyTenant(propertyId) || 
+         isAdmin());
       allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.landlordId;
-      allow update, delete: if (resource.data.landlordId == request.auth.uid) || isDevMode();
+        (request.resource.data.ownerId == request.auth.uid || isAdmin());
+      allow update: if request.auth != null && 
+        (isPropertyOwner(propertyId) || 
+         isPropertyManager(propertyId) || 
+         isAdmin());
+      allow delete: if request.auth != null && 
+        (isPropertyOwner(propertyId) || isAdmin());
 
       match /tenants/{tenantId} {
         allow read: if isPropertyOwner(propertyId) || isOwner(tenantId) || isAdmin() || isDevMode();
@@ -306,35 +314,44 @@ service cloud.firestore {
 
     // Invite Code Rules - Add after the other collection rules
     match /inviteCodes/{codeId} {
-      // Allow reading invite codes if:
-      // 1. The user is authenticated
-      // 2. They're either the landlord who created the code OR they're validating a code they possess
-      allow get: if request.auth != null && 
-        (resource.data.landlordId == request.auth.uid || 
-         resource.data.code == request.query.code);
+      allow read: if request.auth != null && (
+        // Landlord who created the code
+        resource.data.landlordId == request.auth.uid ||
+        // Tenant who used the code
+        resource.data.usedBy == request.auth.uid ||
+        // Admin
+        isAdmin() ||
+        // Allow reading if code is being validated by email
+        (resource.data.email == request.auth.token.email && resource.data.status == 'active')
+      );
       
-      // Allow creating invite codes if:
-      // 1. The user is authenticated
-      // 2. The user is the landlord specified in the code
-      // 3. Required fields are present
       allow create: if request.auth != null && 
-        request.resource.data.landlordId == request.auth.uid &&
-        request.resource.data.code is string && 
-        request.resource.data.propertyId is string;
+        // Only landlords, property managers, or admins can create codes
+        (request.resource.data.landlordId == request.auth.uid || 
+         isPropertyManager(request.resource.data.propertyId) || 
+         isAdmin());
       
-      // Allow listing a landlord's invite codes if:
-      // 1. The user is authenticated
-      // 2. They're querying for their own landlordId
-      allow list: if request.auth != null &&
-        request.query.limit <= 20 &&
-        request.query == {"landlordId": request.auth.uid};
+      allow update: if request.auth != null && (
+        // Landlord who created the code
+        resource.data.landlordId == request.auth.uid ||
+        // Admin
+        isAdmin() ||
+        // Property manager for this property
+        isPropertyManager(resource.data.propertyId) ||
+        // A tenant redeeming a code can only update status to 'used' and set usedBy to their ID
+        (
+          // Only allow status update to 'used'
+          request.resource.data.status == 'used' &&
+          resource.data.status == 'active' &&
+          // Only the authenticated user can redeem it
+          request.resource.data.usedBy == request.auth.uid &&
+          // Email restriction check
+          (resource.data.email == null || resource.data.email == request.auth.token.email)
+        )
+      );
       
-      // Only allow updating invite codes for marking them as used
-      // with an atomicity check to prevent race conditions
-      allow update: if request.auth != null &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(["used", "usedBy", "usedAt"]) &&
-        request.resource.data.usedBy == request.auth.uid &&
-        !resource.data.used; // Cannot update an already used code
+      allow delete: if request.auth != null && 
+        (resource.data.landlordId == request.auth.uid || isAdmin());
     }
 
     match /invites/{inviteId} {
@@ -680,6 +697,66 @@ service cloud.firestore {
              (currentStatus == 'escalated' && newStatus in ['resolved', 'closed']) ||
              (currentStatus == 'resolved' && newStatus == 'closed') ||
              (currentStatus == 'closed' && newStatus == 'closed');
+    }
+
+    // Helper function to check if user is a property manager
+    function isPropertyManager(propertyId) {
+      let property = get(/databases/$(database)/documents/properties/$(propertyId)).data;
+      return property.managers != null && request.auth.uid in property.managers;
+    }
+
+    // Property-Tenant Relationships
+    match /propertyTenantRelationships/{relationshipId} {
+      allow read: if request.auth != null && (
+        // Tenant in the relationship
+        resource.data.tenantId == request.auth.uid ||
+        // Landlord/owner of the property
+        isPropertyOwner(resource.data.propertyId) ||
+        // Property manager
+        isPropertyManager(resource.data.propertyId) ||
+        // Admin
+        isAdmin()
+      );
+      
+      allow create: if request.auth != null && (
+        // Tenant creating their own relationship via invite code
+        (request.resource.data.tenantId == request.auth.uid && 
+         validateInviteCode(request.resource.data.inviteCodeId)) ||
+        // Landlord/owner of the property
+        isPropertyOwner(request.resource.data.propertyId) ||
+        // Property manager
+        isPropertyManager(request.resource.data.propertyId) ||
+        // Admin
+        isAdmin()
+      );
+      
+      allow update: if request.auth != null && (
+        // Tenant can update their own status (e.g., to move out)
+        (resource.data.tenantId == request.auth.uid && 
+         onlyUpdatingStatus()) ||
+        // Landlord/owner of the property
+        isPropertyOwner(resource.data.propertyId) ||
+        // Property manager
+        isPropertyManager(resource.data.propertyId) ||
+        // Admin
+        isAdmin()
+      );
+      
+      allow delete: if request.auth != null && 
+        (isPropertyOwner(resource.data.propertyId) || isAdmin());
+    }
+    
+    // Helper functions
+    function validateInviteCode(inviteCodeId) {
+      let inviteCode = get(/databases/$(database)/documents/inviteCodes/$(inviteCodeId)).data;
+      return inviteCode.status == 'active' && 
+             (inviteCode.email == null || inviteCode.email == request.auth.token.email) &&
+             inviteCode.expiresAt > request.time;
+    }
+    
+    function onlyUpdatingStatus() {
+      // Check if only the status field is being updated
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
     }
 
     // Default fallback

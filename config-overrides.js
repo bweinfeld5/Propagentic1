@@ -26,35 +26,16 @@ module.exports = override(
     if (config.module && config.module.rules) {
       config.module.rules.forEach(rule => {
         if (rule.oneOf) {
-          rule.oneOf.forEach(oneOfRule => {
-            if (oneOfRule.use && Array.isArray(oneOfRule.use)) {
-              oneOfRule.use.forEach(loader => {
-                if (loader.loader && loader.loader.includes('babel-loader')) {
-                  if (loader.options && loader.options.presets) {
-                    loader.options.presets = loader.options.presets.map(preset => {
-                      if (Array.isArray(preset) && preset[0] && preset[0].includes('react-app')) {
-                        return [preset[0], { ...preset[1], runtime: 'classic', refresh: false }];
-                      }
-                      return preset;
-                    });
-                  }
-                  if (loader.options && loader.options.plugins) {
-                    loader.options.plugins = loader.options.plugins.filter(
-                      plugin => {
-                        if (typeof plugin === 'string') {
-                          return !plugin.includes('react-refresh');
-                        }
-                        if (Array.isArray(plugin) && plugin[0]) {
-                          return !plugin[0].includes('react-refresh');
-                        }
-                        return true;
-                      }
-                    );
-                  }
-                  // Explicitly set refresh to false
-                  if (loader.options) {
-                    loader.options.refresh = false;
-                  }
+          rule.oneOf.forEach(oneOf => {
+            if (oneOf.use && Array.isArray(oneOf.use)) {
+              oneOf.use.forEach(use => {
+                if (use.loader && use.loader.includes('babel-loader') && use.options && use.options.presets) {
+                  use.options.presets = use.options.presets.map(preset => {
+                    if (Array.isArray(preset) && preset[0] && preset[0].includes('babel-preset-react-app')) {
+                      return [preset[0], { ...preset[1], runtime: 'classic', refresh: false }];
+                    }
+                    return preset;
+                  });
                 }
               });
             }
@@ -63,57 +44,50 @@ module.exports = override(
       });
     }
 
-    // 4. Set environment variables to disable Fast Refresh
-    process.env.FAST_REFRESH = 'false';
-    process.env.REACT_REFRESH = 'false';
-    
-    // --- Webpack 5 Polyfills --- 
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      "path": require.resolve("path-browserify"),
-      "os": require.resolve("os-browserify/browser"),
-      "crypto": require.resolve("crypto-browserify"),
-      "stream": require.resolve("stream-browserify"),
-      "vm": require.resolve("vm-browserify"),
-      "constants": require.resolve("constants-browserify"),
-      "fs": false,
-      "child_process": false,
-      "module": false,
-      "net": false,
-      "tls": false,
-      "zlib": false,
-      "http": false,
-      "https": false,
-      "url": false
-    };
+    // 4. Remove react-refresh/babel from plugins
+    if (config.module && config.module.rules) {
+      config.module.rules.forEach(rule => {
+        if (rule.oneOf) {
+          rule.oneOf.forEach(oneOf => {
+            if (oneOf.use && Array.isArray(oneOf.use)) {
+              oneOf.use.forEach(use => {
+                if (
+                  use.loader &&
+                  use.loader.includes('babel-loader') &&
+                  use.options &&
+                  use.options.plugins
+                ) {
+                  use.options.plugins = use.options.plugins.filter(
+                    plugin => !plugin.includes('react-refresh/babel')
+                  );
+                }
+              });
+            }
+          });
+        }
+      });
+    }
 
-    // Add polyfills
-    config.plugins.push(
-      new webpack.ProvidePlugin({
-        process: require.resolve('process/browser'),
-        Buffer: ['buffer', 'Buffer'],
-      })
-    );
-
-    // Define environment to disable Fast Refresh
-    // Find and modify existing DefinePlugin instead of adding a new one
-    const definePlugin = config.plugins.find(
-      plugin => plugin.constructor.name === 'DefinePlugin'
-    );
-    
-    if (definePlugin) {
-      // Modify the existing DefinePlugin
-      definePlugin.definitions['process.env.FAST_REFRESH'] = JSON.stringify('false');
-      definePlugin.definitions['process.env.REACT_REFRESH'] = JSON.stringify('false');
-    } else {
-      // Only add if it doesn't exist
+    // 5. Set environment variables
     config.plugins.push(
       new webpack.DefinePlugin({
-          'process.env.FAST_REFRESH': JSON.stringify('false'),
-          'process.env.REACT_REFRESH': JSON.stringify('false')
+        'process.env.FAST_REFRESH': JSON.stringify('false'),
+        'process.env.REACT_REFRESH': JSON.stringify('false'),
       })
     );
-    }
+
+    // --- Core module fallbacks and polyfills ---
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      "crypto": require.resolve("crypto-browserify"),
+      "stream": require.resolve("stream-browserify"),
+      "assert": require.resolve("assert"),
+      "http": require.resolve("stream-http"),
+      "https": require.resolve("https-browserify"),
+      "os": require.resolve("os-browserify"),
+      "url": require.resolve("url"),
+      "path": require.resolve("path-browserify"),
+    };
 
     // --- Suppress source map warnings from intro.js ---
     config.module.rules.push({
@@ -131,7 +105,7 @@ module.exports = override(
       /Failed to parse source map from.*intro\.js/,
     ];
 
-    console.log("Applied core module fallbacks and polyfills.");
+    console.log("Applied core module fallbacks and polyfills. Fast Refresh is now disabled.");
     return config;
   }
 );

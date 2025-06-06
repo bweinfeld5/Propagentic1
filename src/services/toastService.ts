@@ -54,10 +54,23 @@ export const showErrorToast = (title: string, description?: string) => {
   });
 };
 
+/**
+ * Show an info toast
+ */
+export const showInfoToast = (title: string, description?: string) => {
+  showToast({
+    title,
+    description,
+    variant: 'default',
+    duration: 4000,
+  });
+};
+
 const toastService = {
   showToast,
   showSuccessToast,
   showErrorToast,
+  showInfoToast,
 };
 
 export default toastService; 

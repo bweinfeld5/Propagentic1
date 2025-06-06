@@ -217,7 +217,7 @@ const LoginPage = () => {
                   value={email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 ${
-                    validationErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    validationErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-gray-50'
                   }`}
                   placeholder="your@email.com"
                   disabled={loading}
@@ -250,7 +250,7 @@ const LoginPage = () => {
                     value={password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
                     className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 ${
-                      validationErrors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      validationErrors.password ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-gray-50'
                     }`}
                     placeholder="Enter your password"
                     disabled={loading}

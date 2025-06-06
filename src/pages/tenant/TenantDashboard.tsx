@@ -9,6 +9,7 @@ import InvitationBanner from '../../components/InvitationBanner';
 import PropertyList from '../../components/PropertyList';
 import { Skeleton } from '../../components/ui/Skeleton';
 import Button from '../../components/ui/Button';
+import TenantInviteModal from '../../components/tenant/TenantInviteModal';
 import inviteService from '../../services/firestore/inviteService';
 import dataService from '../../services/dataService';
 
@@ -91,10 +92,39 @@ const TenantDashboard: React.FC = () => {
     navigate('/maintenance/new', { state: { propertyId } });
   };
   
-  // Handle opening invite modal (for future implementation)
+  // Handle opening invite modal
   const openInviteModal = () => {
     setShowInviteModal(true);
-    toast('Invite code feature coming soon!');
+  };
+  
+  // Handle closing invite modal
+  const closeInviteModal = () => {
+    setShowInviteModal(false);
+  };
+  
+  // Handle successful invite code redemption
+  const handleInviteSuccess = (propertyInfo: {
+    propertyId: string;
+    propertyName: string;
+    unitId?: string | null;
+  }) => {
+    // Refresh the tenant data after adding a property
+    const fetchUpdatedProperties = async () => {
+      setIsLoading(true);
+      try {
+        const property = await dataService.getPropertyById(propertyInfo.propertyId);
+        if (property) {
+          setTenantProperties(prev => [...prev, property]);
+        }
+      } catch (error) {
+        console.error('Error fetching updated property:', error);
+        toast.error('Property added, but could not load details. Please refresh.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchUpdatedProperties();
   };
   
   return (
@@ -174,6 +204,13 @@ const TenantDashboard: React.FC = () => {
           </>
         )}
       </main>
+      
+      {/* Tenant Invite Modal */}
+      <TenantInviteModal 
+        isOpen={showInviteModal}
+        onClose={closeInviteModal}
+        onSuccess={handleInviteSuccess}
+      />
     </div>
   );
 };

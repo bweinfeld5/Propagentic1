@@ -113,12 +113,12 @@ const AccessibleInput = forwardRef(({
   // Input state classes
   const getInputStateClasses = () => {
     if (disabled) {
-      return 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed';
+      return 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed';
     }
     
     if (error) {
       return `
-        border-red-300 text-red-900 placeholder-red-300
+        bg-gray-50 border-red-300 text-red-900 placeholder-red-300
         focus:ring-red-500 focus:border-red-500
         ${darkModeClasses.border.default}
       `;
@@ -126,13 +126,13 @@ const AccessibleInput = forwardRef(({
     
     if (success) {
       return `
-        border-green-300 text-green-900 placeholder-green-300
+        bg-gray-50 border-green-300 text-green-900 placeholder-green-300
         focus:ring-green-500 focus:border-green-500
       `;
     }
     
     return `
-      border-gray-300 text-gray-900 placeholder-gray-400
+      bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400
       focus:ring-primary-500 focus:border-primary-500
       ${darkModeClasses.border.default} ${darkModeClasses.text.primary}
     `;

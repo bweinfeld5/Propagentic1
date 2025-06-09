@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import { LockClosedIcon } from '@heroicons/react/24/outline';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext.jsx';
 import toastService from '../services/toastService';
 import waitlistService from '../services/waitlistService';
 import analyticsService from '../services/analyticsService';

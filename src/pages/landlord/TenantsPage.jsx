@@ -115,7 +115,8 @@ const TenantsPage = () => {
 
      // Optional: Get property name and landlord name for better invite data
      const selectedProperty = properties.find(p => p.id === propertyId);
-     const propertyName = selectedProperty?.name || 'Unknown Property';
+     // More robust property name detection
+     const propertyName = selectedProperty?.nickname || selectedProperty?.name || selectedProperty?.streetAddress || 'Unknown Property';
      const landlordName = currentUser?.displayName || 'Your Landlord';
 
      const inviteData = {
@@ -124,6 +125,9 @@ const TenantsPage = () => {
         landlordId,
         propertyName,
         landlordName,
+        status: 'pending', // Add default status
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
         // unitNumber: selectedProperty?.unitNumber || undefined, // Add if available and needed by schema/modal
      };
 

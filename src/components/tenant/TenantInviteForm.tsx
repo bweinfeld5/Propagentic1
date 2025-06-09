@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
 import inviteCodeService from '../../services/inviteCodeService';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
@@ -172,8 +172,8 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
           
           <div className="text-xs space-y-1">
             <p className="text-gray-500 dark:text-gray-400">
-              Your invite code should have been provided by your landlord or property manager.
-            </p>
+            Your invite code should have been provided by your landlord or property manager.
+          </p>
             <p className="text-gray-500 dark:text-gray-400">
               If you received an invitation by email, the 8-character code is displayed in the email.
             </p>

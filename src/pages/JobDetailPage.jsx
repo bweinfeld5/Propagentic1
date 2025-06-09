@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext.jsx';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import JobDetailView from '../components/contractor/JobDetailView';

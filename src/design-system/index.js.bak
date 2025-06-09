@@ -12,12 +12,15 @@ export * from './responsive.jsx';
 
 // Export dark mode utilities
 export * from './dark-mode.jsx';
+export { default as darkMode } from './dark-mode.jsx';
 
 // Export accessibility utilities
 export * from './accessibility.jsx';
+export { default as accessibility } from './accessibility.jsx';
 
 // Export loading state utilities
 export * from './loading-states.jsx';
+export { default as loadingStates } from './loading-states.jsx';
 
 // Design system version
 export const DESIGN_SYSTEM_VERSION = '1.0.0';
@@ -244,6 +247,9 @@ export { default as PropertyDashboard } from '../components/landlord/PropertyDas
 // Default export for convenience
 export default {
   tokens,
+  darkMode,
+  accessibility,
+  loadingStates,
   designSystemConfig,
   cx,
   createComponentClasses,

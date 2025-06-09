@@ -1,9 +1,9 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { NotificationProvider } from './context/NotificationContext';
-import { ConnectionProvider } from './context/ConnectionContext';
-import { DemoModeProvider, useDemoMode } from './context/DemoModeContext';
+import { ConnectionProvider } from './context/ConnectionContext.jsx';
+import { DemoModeProvider, useDemoMode } from './context/DemoModeContext.jsx';
 import { ThemeProvider } from './design-system/dark-mode';
 import DataServiceProvider from './providers/DataServiceProvider';
 import LogoLoadingAnimation from './components/shared/LogoLoadingAnimation';
@@ -12,34 +12,35 @@ import DashboardSidebar from './components/layout/SidebarNav';
 import LocalStorageDebug from './components/shared/LocalStorageDebug';
 import UniversalLoadingSpinner from './components/shared/UniversalLoadingSpinner';
 import PreLaunchGuard from './components/guards/PreLaunchGuard';
+import { Toaster } from 'react-hot-toast';
 
 // Lazy load page components
-const LandingPage = lazy(() => import('./components/landing/LandingPage.js'));
+const LandingPage = lazy(() => import('./components/landing/LandingPage.jsx'));
 const CanvasLandingPage = lazy(() => import('./pages/CanvasLandingPage.tsx'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const RegisterPage = lazy(() => import('./pages/RegisterPage'));
-const TenantDashboard = lazy(() => import('./pages/tenant/TenantDashboard'));
-const LandlordDashboard = lazy(() => import('./pages/landlord/LandlordDashboard'));
-const LandlordDashboardDemo = lazy(() => import('./pages/LandlordDashboardDemoPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage.jsx'));
+const TenantDashboard = lazy(() => import('./pages/tenant/TenantDashboard.tsx'));
+const LandlordDashboard = lazy(() => import('./pages/landlord/LandlordDashboard.tsx'));
+const LandlordDashboardDemo = lazy(() => import('./pages/LandlordDashboardDemoPage.jsx'));
 const ContractorDashboard = lazy(() => import('./components/contractor/EnhancedContractorDashboard'));
-const ContractorDashboardDemo = lazy(() => import('./pages/ContractorDashboardDemo'));
-const OriginalContractorDashboard = lazy(() => import('./components/contractor/ContractorDashboard'));
-const PricingPage = lazy(() => import('./pages/PricingPage'));
-const OnboardingSurvey = lazy(() => import('./components/onboarding/OnboardingSurvey'));
-const LandlordOnboarding = lazy(() => import('./components/onboarding/LandlordOnboarding'));
-const ContractorOnboardingPage = lazy(() => import('./pages/ContractorOnboardingPage'));
+const ContractorDashboardDemo = lazy(() => import('./pages/ContractorDashboardDemo.jsx'));
+const OriginalContractorDashboard = lazy(() => import('./components/contractor/ContractorDashboard.jsx'));
+const PricingPage = lazy(() => import('./pages/PricingPage.jsx'));
+const OnboardingSurvey = lazy(() => import('./components/onboarding/OnboardingSurvey.jsx'));
+const LandlordOnboarding = lazy(() => import('./components/onboarding/LandlordOnboarding.jsx'));
+const ContractorOnboardingPage = lazy(() => import('./pages/ContractorOnboardingPage.jsx'));
 const SVGTest = lazy(() => import('./components/branding/SVGTest'));
 const BlueprintTest = lazy(() => import('./components/testing/BlueprintTest'));
-const AuthPage = lazy(() => import('./pages/AuthPage'));
-const DemoPage = lazy(() => import('./pages/DemoPage'));
-const AboutPage = lazy(() => import('./pages/AboutPage'));
-const AIExamples = lazy(() => import('./pages/AIExamples'));
-const AITutorial = lazy(() => import('./pages/AITutorial'));
-const ComponentsShowcasePage = lazy(() => import('./pages/ComponentsShowcasePage'));
-const TestUIComponents = lazy(() => import('./pages/TestUIComponents'));
-const SimpleUIShowcase = lazy(() => import('./pages/SimpleUIShowcase'));
-const MaintenanceSurvey = lazy(() => import('./components/maintenance/MaintenanceSurvey'));
-const PublicPropertyDashboardDemo = lazy(() => import('./pages/PublicPropertyDashboardDemo'));
+const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
+const DemoPage = lazy(() => import('./pages/DemoPage.jsx'));
+const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
+const AIExamples = lazy(() => import('./pages/AIExamples.jsx'));
+const AITutorial = lazy(() => import('./pages/AITutorial.jsx'));
+const ComponentsShowcasePage = lazy(() => import('./pages/ComponentsShowcasePage.jsx'));
+const TestUIComponents = lazy(() => import('./pages/TestUIComponents.jsx'));
+const SimpleUIShowcase = lazy(() => import('./pages/SimpleUIShowcase.jsx'));
+const MaintenanceSurvey = lazy(() => import('./components/maintenance/MaintenanceSurvey.tsx'));
+const PublicPropertyDashboardDemo = lazy(() => import('./pages/PublicPropertyDashboardDemo.jsx'));
 
 // Route Guards
 const PrivateRoute = ({ children }) => {
@@ -55,7 +56,6 @@ const PrivateRoute = ({ children }) => {
 };
 
 // Role-specific redirect component
-import { useNavigate } from 'react-router-dom';
 const RoleBasedRedirect = () => {
   const { currentUser, userProfile, loading: authLoading } = useAuth();
   const navigate = useNavigate();

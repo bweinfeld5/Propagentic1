@@ -2,7 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 // Import HeroSection from root folder explicitly - this one uses UnifiedHeader
-import HeroSection from './HeroSection.js';
+import HeroSection from './HeroSection.jsx';
 
 // Import new sections for enhanced landing page
 import StatsSection from './sections/StatsSection';

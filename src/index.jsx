@@ -1,9 +1,13 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import App from './App.jsx';
+import { AuthProvider } from './context/AuthContext.jsx';
+import { ConnectionProvider } from './context/ConnectionContext.jsx';
+import { DemoModeProvider } from './context/DemoModeContext.jsx';
+import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 import './styles/theme.css';
-import App from './App';
-import { ModelContextProvider } from './contexts/ModelContext';
+import { ModelContextProvider } from './contexts/ModelContext.tsx';
 
 console.log('Starting React application...');
 console.log('React version:', React.version);
@@ -54,14 +58,14 @@ suppressResizeObserverLoopError();
 // Render the React application with proper error handling
 try {
   console.log('Attempting to render React app using createRoot...');
-  const rootElement = document.getElementById('root');
+  const container = document.getElementById('root');
   
-  if (!rootElement) {
+  if (!container) {
     throw new Error('Could not find root element to mount React app');
   }
   
   // Create a root.
-  const root = createRoot(rootElement);
+  const root = createRoot(container);
   
   // Initialize ModelContextProvider with configuration from env variables
   const modelContextConfig = {

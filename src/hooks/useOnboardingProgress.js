@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { doc, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext.jsx';
 import { debounce } from 'lodash';
 
 /**

@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect, useState, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext.jsx';
 import Dashboard from '../components/dashboard/Dashboard';
 import PropertyDashboard from '../components/landlord/PropertyDashboard';
 import LoadingFallback from '../components/ui/LoadingFallback';

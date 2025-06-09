@@ -14,6 +14,16 @@ import * as nodemailer from 'nodemailer';
 //   },
 // });
 
+// Helper to generate a random code
+const generateInviteCode = (length = 8) => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
+
 // Initialize admin if not already done
 if (!admin.apps.length) {
   admin.initializeApp();
@@ -48,7 +58,7 @@ const getMailTransport = () => {
       host,
       port: parseInt(port, 10),
       secure,
-      auth: {
+  auth: {
         user,
         pass
       }
@@ -66,196 +76,119 @@ const getMailTransport = () => {
         user: process.env.SMTP_USER || 'YOUR_SMTP_USER',
         pass: process.env.SMTP_PASS || 'YOUR_SMTP_PASSWORD'
       }
-    });
+});
   }
 };
 
 const APP_NAME = 'PropAgentic';
-const APP_DOMAIN = functions.config().app?.domain || 'https://your-propagentic-app.com';
+const APP_DOMAIN = functions.config().app?.domain || 'http://localhost:3000';
 
-// Fix the document function usage and add type annotations for parameters
+// This function will now generate a code and update the document
 export const sendInviteEmail = functions.firestore
   .onDocumentCreated('invites/{inviteId}', async (event) => {
     const snap = event.data;
-    
     if (!snap) {
       console.log('No data associated with the event');
       return;
     }
 
     const inviteData = snap.data();
-    const inviteId = snap.id;
+    const { inviteId } = event.params;
 
-    console.log(`Processing new invite: ${inviteId}`);
-
-    if (!inviteData) {
-      console.error('No data associated with the event');
+    if (!inviteData || !inviteData.tenantEmail) {
+      console.error('Invalid invite data or missing email:', inviteData);
       return;
     }
 
-    const tenantEmail = inviteData.tenantEmail;
-    const propertyName = inviteData.propertyName || 'their new property';
-    const landlordName = inviteData.landlordName || 'The Property Manager';
+    // 1. Generate a unique invite code
+    const inviteCode = generateInviteCode();
 
-    if (!tenantEmail) {
-      console.error('Tenant email is missing from invite data:', inviteId);
-      // Update the invite status to reflect the error
-      await admin.firestore().collection('invites').doc(inviteId).update({ 
-        emailSentStatus: 'failed', 
-        emailError: 'Missing tenant email',
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-      return;
-    }
-
+    // 2. Update the document with the code and other details
     try {
-      // Mark as processing
-      await admin.firestore().collection('invites').doc(inviteId).update({ 
-        emailSentStatus: 'processing',
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      await snap.ref.update({
+        code: inviteCode,
+        status: 'sent', // Update status to 'sent'
+        emailSentAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
+      console.log(`Invite ${inviteId} updated with code ${inviteCode}.`);
+    } catch (error) {
+      console.error(`Error updating invite ${inviteId} with code:`, error);
+      return; // Stop if we can't save the code
+    }
 
-      // Generate a unique 8-character invite code and store it
-      const db = admin.firestore();
-      
-      // Generate a random 8-character code (same format as invite codes)
-      const generateRandomCode = (length = 8): string => {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removing confusable chars
-        let result = '';
-        for (let i = 0; i < length; i++) {
-          result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return result;
-      };
-      
-      // Create an invite code that will work with the existing system
-      let code = generateRandomCode();
-      let isUnique = false;
-      
-      // Ensure the code is unique
-      while (!isUnique) {
-        // Check if the code already exists
-        const codeQuery = await db.collection('inviteCodes')
-          .where('code', '==', code)
-          .limit(1)
-          .get();
-        
-        isUnique = codeQuery.empty;
-        if (!isUnique) {
-          code = generateRandomCode();
-        }
+    // 3. Send the invitation email
+    const mailTransport = nodemailer.createTransport({
+      host: functions.config().smtp?.host || 'smtp.gmail.com',
+      port: parseInt(functions.config().smtp?.port || '465', 10),
+      secure: true,
+      auth: {
+        user: functions.config().smtp?.user || 'user@example.com',
+        pass: functions.config().smtp?.pass || 'password',
       }
-      
-      console.log(`Generated unique invite code: ${code} for email: ${tenantEmail}`);
-      
-      // Store the invite code in Firestore with the same format as manual codes
-      const now = admin.firestore.Timestamp.now();
-      const expiresAt = new admin.firestore.Timestamp(
-        now.seconds + (7 * 24 * 60 * 60), // Default to 7 days
-        now.nanoseconds
-      );
-      
-      // Create an invite code linked to this email invitation
-      const inviteCodeData = {
-        code: code,
-        landlordId: inviteData.landlordId,
-        propertyId: inviteData.propertyId,
-        email: tenantEmail,  // Restrict to this email
-        status: 'active',
-        createdAt: now,
-        expiresAt,
-        propertyName: propertyName,
-        inviteId: inviteId,  // Link back to the invite document
-        source: 'email_invite'
-      };
-      
-      // Add the code to the inviteCodes collection
-      const inviteCodeRef = await db.collection('inviteCodes').add(inviteCodeData);
-      console.log(`Created invite code document: ${inviteCodeRef.id}`);
-      
-      // Update the invite with the code reference
-      await db.collection('invites').doc(inviteId).update({
-        inviteCodeId: inviteCodeRef.id,
-        inviteCode: code
-      });
+    });
 
-      // Generate an invite link with the code
-      const inviteLink = `${APP_DOMAIN}/accept-invite?code=${code}`;
+    const inviteLink = `${APP_DOMAIN}/invite?code=${inviteCode}`;
+    const landlordName = inviteData.landlordName || 'A property manager';
+    const propertyName = inviteData.propertyName || 'a property';
+    const tenantEmail = inviteData.tenantEmail;
 
-      // Initialize mail transport
-      const mailTransport = getMailTransport();
-      
-      const mailOptions = {
-        from: `"${APP_NAME}" <${functions.config().email?.from || 'noreply@propagentic.com'}>`,
-        to: tenantEmail,
-        subject: `You're Invited to Join ${propertyName} on ${APP_NAME}!`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-            <div style="text-align: center; margin-bottom: 20px;">
-              <h1 style="color: #FF6600;">PropAgentic</h1>
-              <p style="font-size: 18px; color: #333;">Property Management Made Simple</p>
-            </div>
+    const mailOptions = {
+      from: `${APP_NAME} <${functions.config().smtp?.from || 'no-reply@propagenticai.com'}>`,
+      to: tenantEmail,
+      subject: `You're Invited to Join ${propertyName} on PropAgentic`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #4F46E5; margin: 0; padding: 0;">PropAgentic</h1>
+            <p style="color: #64748b; font-size: 16px; margin-top: 5px;">Property Management, Simplified</p>
+          </div>
+          
+          <div style="background-color: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <h2 style="color: #333; font-size: 20px; margin-top: 0;">You've Been Invited!</h2>
             
-            <div style="padding: 20px; background-color: #f9f9f9; border-radius: 5px; margin-bottom: 20px;">
-              <h2 style="color: #333; margin-top: 0;">You've Been Invited!</h2>
-              <p style="font-size: 16px; line-height: 1.5; color: #555;">
-                ${landlordName} has invited you to join ${propertyName} on PropAgentic.
-              </p>
+            <p style="font-size: 16px; line-height: 1.5; color: #555;">
+              ${landlordName} has invited you to join 
+              <strong>${propertyName}</strong> on PropAgentic.
+            </p>
+            
+            <div style="background-color: #EEF2FF; border-left: 4px solid #4F46E5; padding: 15px; margin: 20px 0; border-radius: 4px;">
+              <p style="margin: 0; font-weight: bold; color: #333;">Your Invitation Code:</p>
+              <p style="font-size: 24px; letter-spacing: 2px; color: #4F46E5; margin: 10px 0; font-weight: bold; font-family: monospace;">${inviteCode}</p>
+              <p style="margin: 5px 0 0; font-size: 14px; color: #64748b;">This code is valid for 7 days</p>
             </div>
             
             <div style="text-align: center; margin: 30px 0;">
-              <p style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">Your Invitation Code:</p>
-              <div style="background-color: #f0f0f0; padding: 12px; border-radius: 4px; letter-spacing: 2px; font-family: monospace; font-size: 24px; font-weight: bold; color: #333;">
-                ${code}
-              </div>
-              <p style="font-size: 14px; color: #777; margin-top: 10px;">
-                This code will expire in 7 days
-              </p>
-            </div>
-            
-            <div style="margin: 25px 0; text-align: center;">
-              <a href="${inviteLink}" style="display: inline-block; background-color: #FF6600; color: white; text-decoration: none; padding: 12px 30px; border-radius: 5px; font-weight: bold; font-size: 16px;">
-                Accept Invitation
+              <a href="${inviteLink}" 
+                 style="background-color: #4F46E5; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-weight: bold; display: inline-block;">
+                 Accept Invitation
               </a>
             </div>
             
-            <p style="font-size: 14px; line-height: 1.5; color: #777;">
-              If the button above doesn't work, you can also enter your code manually after logging in to PropAgentic.
+            <p style="font-size: 14px; color: #64748b; line-height: 1.5;">
+              If the button doesn't work, you can also manually enter your invitation code after signing up at 
+              <a href="${APP_DOMAIN}" style="color: #4F46E5; text-decoration: none;">${APP_DOMAIN}</a>
             </p>
-            
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #999; font-size: 12px;">
-              <p>If you were not expecting this invitation, you can safely ignore this email.</p>
-              <p>&copy; ${new Date().getFullYear()} PropAgentic. All rights reserved.</p>
-            </div>
           </div>
-        `,
-      };
+          
+          <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #64748b; font-size: 12px;">
+            <p>This is an automated message from PropAgentic. Please do not reply to this email.</p>
+            <p>&copy; ${new Date().getFullYear()} PropAgentic. All rights reserved.</p>
+          </div>
+        </div>
+      `,
+    };
 
-      console.log(`Attempting to send email to ${tenantEmail}`, {
-        subject: mailOptions.subject,
-        inviteLink
-      });
-      
-      // Send the email
+    try {
       const info = await mailTransport.sendMail(mailOptions);
       console.log('Invitation email sent to:', tenantEmail, 'for invite ID:', inviteId, 'Response:', info.response);
-      
-      // Update the invite document with success status
-      await admin.firestore().collection('invites').doc(inviteId).update({ 
-        emailSentStatus: 'sent', 
-        emailSentAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        inviteCode: code  // Add the invite code for reference
-      });
-
     } catch (error) {
-      console.error('There was an error sending the email for invite ID:', inviteId, error);
-      
-      // Update the invite document with failure status
-      await admin.firestore().collection('invites').doc(inviteId).update({ 
-        emailSentStatus: 'failed', 
-        emailError: (error as Error).message,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      console.error('Error sending email:', error);
+      // Optionally update the document to reflect the email failure
+      await snap.ref.update({
+        status: 'failed',
+        error: 'Failed to send email.',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
     }
   }); 

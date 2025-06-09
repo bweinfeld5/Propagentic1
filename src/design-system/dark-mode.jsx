@@ -248,52 +248,44 @@ export const ThemeToggle = ({ className = '', showLabel = false }) => {
 /**
  * Dark mode media utilities
  */
-export const darkModeMedia = {
-  // CSS media query for dark mode
-  query: '(prefers-color-scheme: dark)',
-  
-  // Check if user prefers dark mode
-  prefersDark: () => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia(darkModeMedia.query).matches;
-  },
-  
-  // Watch for system theme changes
-  watchSystemTheme: (callback) => {
-    if (typeof window === 'undefined') return () => {};
-    
-    const mediaQuery = window.matchMedia(darkModeMedia.query);
+export const useDarkModeMediaQuery = (callback) => {
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = (e) => callback(e.matches ? 'dark' : 'light');
     
     mediaQuery.addEventListener('change', handler);
+    
+    // Initial call
+    handler(mediaQuery);
+    
     return () => mediaQuery.removeEventListener('change', handler);
-  },
+  }, [callback]);
 };
 
 /**
- * Dark mode style utilities
+ * Utility to apply dark mode classes conditionally
  */
-export const darkModeStyles = {
-  // Generate style object with dark mode support
-  adaptStyles: (lightStyles, darkStyles) => {
-    const isDark = document.documentElement.classList.contains('dark');
-    return isDark ? { ...lightStyles, ...darkStyles } : lightStyles;
-  },
-  
-  // Conditional styles based on theme
-  conditionalStyle: (lightValue, darkValue) => {
-    const isDark = document.documentElement.classList.contains('dark');
-    return isDark ? darkValue : lightValue;
-  },
+export const withDarkMode = (Component) => {
+  return (props) => {
+    const { actualTheme } = useTheme();
+    return <Component {...props} theme={actualTheme} />;
+  };
 };
 
-// Export all dark mode utilities
-export default {
-  ThemeProvider,
-  useTheme,
-  darkModeClasses,
-  darkModeColors,
-  ThemeToggle,
-  darkModeMedia,
-  darkModeStyles,
+/**
+ * Fallback for SSR
+ */
+export const useSafeTheme = () => {
+  if (typeof window === 'undefined') {
+    return {
+      theme: 'light',
+      toggleTheme: () => {},
+      setTheme: () => {},
+      systemTheme: 'light',
+      actualTheme: 'light',
+    };
+  }
+  
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  return useTheme();
 }; 

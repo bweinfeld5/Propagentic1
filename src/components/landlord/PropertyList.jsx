@@ -252,238 +252,212 @@ const PropertyList = ({
 
           {/* Property Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between mb-2">
-              <div className="min-w-0 flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
-                  {property.name}
-                </h3>
-                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  <MapPinIcon className="h-4 w-4 mr-1 flex-shrink-0" />
-                  <span className="truncate">{formatPropertyAddress(property)}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 ml-4">
-                <StatusPill color={getPropertyStatusColor(property.status)} size="sm">
-                  {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
-                </StatusPill>
-                <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                  {formatPropertyRent(property)}
-                </span>
-              </div>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
+                {property.name}
+              </h3>
+              <StatusPill 
+                color={getPropertyStatusColor(property.status)}
+                size="xs"
+                className="ml-2"
+              >
+                {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
+              </StatusPill>
             </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                <HomeIcon className="h-4 w-4 mr-1 flex-shrink-0" />
-                <span>
-                  {getPropertyTypeLabel(property.type)} • 
-                  {property.bedrooms} bed • 
-                  {property.bathrooms} bath
-                  {property.squareFootage && ` • ${property.squareFootage} sq ft`}
-                </span>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => onViewProperty(property.id)}
-                >
-                  <EyeIcon className="h-4 w-4 mr-1" />
-                  View
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => onEditProperty(property.id)}
-                >
-                  <PencilIcon className="h-4 w-4 mr-1" />
-                  Edit
-                </Button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => handleDelete(property)}
-                >
-                  <TrashIcon className="h-4 w-4" />
-                </Button>
-              </div>
+            
+            <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
+              <MapPinIcon className="h-3 w-3 mr-1 flex-shrink-0" />
+              <span className="truncate">{formatPropertyAddress(property)}</span>
             </div>
+            
+            <div className="flex items-center justify-between mt-2">
+              <div className="text-xs text-gray-600 dark:text-gray-400">
+                <span className="inline-flex items-center">
+                  <HomeIcon className="h-3 w-3 mr-1" />
+                  {getPropertyTypeLabel(property.type)}
+                </span>
+                <span className="mx-2">•</span>
+                <span>{property.bedrooms} bed</span>
+                <span className="mx-1">•</span>
+                <span>{property.bathrooms} bath</span>
+                {property.squareFootage && (
+                  <>
+                    <span className="mx-1">•</span>
+                    <span>{property.squareFootage} sq ft</span>
+                  </>
+                )}
+              </div>
+              <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                {formatPropertyRent(property)}
+              </span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2 items-center">
+            <Button
+              variant="secondary"
+              size="xs"
+              onClick={() => onViewProperty(property.id)}
+            >
+              <EyeIcon className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="secondary"
+              size="xs"
+              onClick={() => onEditProperty(property.id)}
+            >
+              <PencilIcon className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="danger"
+              size="xs"
+              onClick={() => handleDelete(property)}
+            >
+              <TrashIcon className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
     </Card>
   );
 
-  if (loading) {
-    return (
-      <Container maxWidth="full" padding={true}>
-        <div className="animate-pulse space-y-4">
-          <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-80 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-            ))}
-          </div>
-        </div>
-      </Container>
-    );
-  }
-
   return (
-    <FadeIn>
-      <Container maxWidth="full" padding={true}>
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-              Properties
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Manage your property portfolio
-            </p>
+    <div className="space-y-6">
+      {/* Header with Search and Filters */}
+      <div className="flex flex-col lg:flex-row gap-4">
+        {/* Search Bar */}
+        <div className="relative flex-1">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+          </div>
+          <Input
+            className="pl-10"
+            placeholder="Search by name, address, or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        {/* Filter Controls */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <Select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            options={statusOptions}
+            className="w-36"
+          />
+          
+          <Select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            options={typeOptions}
+            className="w-40"
+          />
+          
+          {/* View Mode Toggle */}
+          <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-1 flex ml-2">
+            <button
+              className={`p-1.5 rounded ${
+                viewMode === VIEW_MODES.GRID
+                  ? 'bg-white dark:bg-gray-800 text-blue-600 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+              onClick={() => setViewMode(VIEW_MODES.GRID)}
+              aria-label="Grid view"
+            >
+              <Squares2X2Icon className="h-5 w-5" />
+            </button>
+            
+            <button
+              className={`p-1.5 rounded ${
+                viewMode === VIEW_MODES.LIST
+                  ? 'bg-white dark:bg-gray-800 text-blue-600 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+              onClick={() => setViewMode(VIEW_MODES.LIST)}
+              aria-label="List view"
+            >
+              <ListBulletIcon className="h-5 w-5" />
+            </button>
           </div>
           
-          <Button
-            variant="primary"
-            onClick={onAddProperty}
-            className="sm:w-auto"
-          >
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Add Property
-          </Button>
+          {/* Add Property Button */}
+          {onAddProperty && (
+            <Button
+              variant="primary"
+              onClick={onAddProperty}
+              className="ml-2"
+            >
+              <PlusIcon className="h-5 w-5 mr-1" />
+              Add Property
+            </Button>
+          )}
         </div>
-
-        {/* Filters and Controls */}
-        <SlideUp delay={0.1}>
-          <Card className="mb-6">
-            <div className="p-6">
-              <div className="flex flex-col lg:flex-row gap-4">
-                {/* Search */}
-                <div className="flex-1">
-                  <Input
-                    type="search"
-                    placeholder="Search properties..."
-                    value={searchTerm}
-                    onChange={setSearchTerm}
-                    icon={MagnifyingGlassIcon}
-                  />
-                </div>
-
-                {/* Filters */}
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Select
-                    value={statusFilter}
-                    onChange={setStatusFilter}
-                    options={statusOptions}
-                    className="sm:w-40"
-                  />
-                  
-                  <Select
-                    value={typeFilter}
-                    onChange={setTypeFilter}
-                    options={typeOptions}
-                    className="sm:w-40"
-                  />
-
-                  {hasActiveFilters && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={clearFilters}
-                    >
-                      Clear Filters
-                    </Button>
-                  )}
-                </div>
-
-                {/* View Toggle */}
-                <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg p-1">
-                  <button
-                    onClick={() => setViewMode(VIEW_MODES.GRID)}
-                    className={`p-2 rounded-md transition-colors ${
-                      viewMode === VIEW_MODES.GRID
-                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400'
-                        : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                    }`}
-                  >
-                    <Squares2X2Icon className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode(VIEW_MODES.LIST)}
-                    className={`p-2 rounded-md transition-colors ${
-                      viewMode === VIEW_MODES.LIST
-                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400'
-                        : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                    }`}
-                  >
-                    <ListBulletIcon className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </SlideUp>
-
-        {/* Results Summary */}
-        {(hasActiveFilters || filteredProperties.length > 0) && (
-          <SlideUp delay={0.2}>
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {filteredProperties.length === properties.length ? (
-                  `${properties.length} ${properties.length === 1 ? 'property' : 'properties'}`
-                ) : (
-                  `${filteredProperties.length} of ${properties.length} ${properties.length === 1 ? 'property' : 'properties'}`
-                )}
-              </p>
-              
-              {onRefresh && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={onRefresh}
-                >
-                  Refresh
-                </Button>
+      </div>
+      
+      {/* Active Filters Indicator */}
+      {hasActiveFilters && (
+        <div className="flex items-center">
+          <div className="flex items-center text-sm">
+            <FunnelIcon className="h-4 w-4 text-blue-600 mr-2" />
+            <span className="text-gray-700 dark:text-gray-300">
+              Filtered by: 
+              {statusFilter && (
+                <span className="ml-1 font-medium">
+                  {statusOptions.find(o => o.value === statusFilter)?.label}
+                </span>
               )}
-            </div>
-          </SlideUp>
-        )}
-
-        {/* Properties Grid/List */}
-        {filteredProperties.length === 0 ? (
-          <SlideUp delay={0.3}>
-            <EmptyState
-              type={hasActiveFilters ? "no-results" : "properties"}
-              title={hasActiveFilters ? "No properties found" : "No properties yet"}
-              description={
-                hasActiveFilters 
-                  ? "Try adjusting your search or filter criteria"
-                  : "Add your first property to get started with your portfolio"
-              }
-              primaryAction={
-                hasActiveFilters 
-                  ? { label: "Clear Filters", onClick: clearFilters }
-                  : { label: "Add Property", onClick: onAddProperty }
-              }
-              secondaryAction={
-                hasActiveFilters 
-                  ? { label: "Add Property", onClick: onAddProperty }
-                  : null
-              }
-            />
-          </SlideUp>
+              {typeFilter && (
+                <span className="ml-1 font-medium">
+                  {typeOptions.find(o => o.value === typeFilter)?.label}
+                </span>
+              )}
+              {searchTerm && (
+                <span className="ml-1 font-medium">
+                  Search "{searchTerm}"
+                </span>
+              )}
+            </span>
+          </div>
+          
+          <button
+            className="ml-2 text-sm text-blue-600 hover:text-blue-800 dark:hover:text-blue-400"
+            onClick={clearFilters}
+          >
+            Clear Filters
+          </button>
+        </div>
+      )}
+      
+      {/* Properties Grid/List */}
+      <FadeIn>
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading properties...</p>
+          </div>
+        ) : filteredProperties.length === 0 ? (
+          <EmptyState
+            icon={<HomeIcon className="h-12 w-12" />}
+            title="No properties found"
+            description={
+              hasActiveFilters
+                ? "No properties match your current filters. Try adjusting your search criteria."
+                : "You don't have any properties yet. Add your first property to get started."
+            }
+            actionLabel={hasActiveFilters ? "Clear Filters" : "Add Property"}
+            onAction={hasActiveFilters ? clearFilters : onAddProperty}
+          />
         ) : (
-          <StaggerContainer delay={0.3}>
+          <StaggerContainer>
             {viewMode === VIEW_MODES.GRID ? (
-              <ResponsiveGrid 
-                cols={{ xs: 1, sm: 2, lg: 3, xl: 4 }} 
-                gap={6}
-              >
+              <ResponsiveGrid columns={{ sm: 1, md: 2, lg: 3 }} spacing="md">
                 {filteredProperties.map((property) => (
                   <StaggerItem key={property.id}>
-                    <PropertyCard property={property} />
+                    <SlideUp>
+                      <PropertyCard property={property} />
+                    </SlideUp>
                   </StaggerItem>
                 ))}
               </ResponsiveGrid>
@@ -491,25 +465,27 @@ const PropertyList = ({
               <div className="space-y-4">
                 {filteredProperties.map((property) => (
                   <StaggerItem key={property.id}>
-                    <PropertyListRow property={property} />
+                    <SlideUp>
+                      <PropertyListRow property={property} />
+                    </SlideUp>
                   </StaggerItem>
                 ))}
               </div>
             )}
           </StaggerContainer>
         )}
-      </Container>
-    </FadeIn>
+      </FadeIn>
+    </div>
   );
 };
 
 PropertyList.propTypes = {
   properties: PropTypes.array,
   loading: PropTypes.bool,
-  onAddProperty: PropTypes.func.isRequired,
-  onViewProperty: PropTypes.func.isRequired,
-  onEditProperty: PropTypes.func.isRequired,
-  onDeleteProperty: PropTypes.func.isRequired,
+  onAddProperty: PropTypes.func,
+  onViewProperty: PropTypes.func,
+  onEditProperty: PropTypes.func,
+  onDeleteProperty: PropTypes.func,
   onRefresh: PropTypes.func
 };
 

@@ -250,6 +250,7 @@ const PropertyForm = ({
                     value={formData.type}
                     onChange={(value) => handleChange('type', value)}
                     options={propertyTypeOptions}
+                    error={errors.type}
                     required
                   />
 
@@ -258,54 +259,9 @@ const PropertyForm = ({
                     value={formData.status}
                     onChange={(value) => handleChange('status', value)}
                     options={propertyStatusOptions}
+                    error={errors.status}
                     required
                   />
-
-                  <Input
-                    label="Bedrooms"
-                    type="number"
-                    value={formData.bedrooms}
-                    onChange={(value) => handleChange('bedrooms', parseInt(value) || 0)}
-                    min="0"
-                    step="1"
-                  />
-
-                  <Input
-                    label="Bathrooms"
-                    type="number"
-                    value={formData.bathrooms}
-                    onChange={(value) => handleChange('bathrooms', parseFloat(value) || 0)}
-                    min="0"
-                    step="0.5"
-                  />
-
-                  <Input
-                    label="Square Footage"
-                    type="number"
-                    value={formData.squareFootage || ''}
-                    onChange={(value) => handleChange('squareFootage', parseInt(value) || null)}
-                    placeholder="Optional"
-                  />
-
-                  <Input
-                    label="Year Built"
-                    type="number"
-                    value={formData.yearBuilt || ''}
-                    onChange={(value) => handleChange('yearBuilt', parseInt(value) || null)}
-                    placeholder="Optional"
-                    min="1800"
-                    max={new Date().getFullYear()}
-                  />
-
-                  <div className="md:col-span-2">
-                    <TextArea
-                      label="Description"
-                      value={formData.description}
-                      onChange={(value) => handleChange('description', value)}
-                      placeholder="Describe the property features, neighborhood, etc."
-                      rows={4}
-                    />
-                  </div>
                 </div>
               </Card>
             </StaggerItem>
@@ -324,181 +280,136 @@ const PropertyForm = ({
                   <div className="md:col-span-2">
                     <Input
                       label="Street Address"
-                      value={formData.address.street}
+                      value={formData.address?.street}
                       onChange={(value) => handleChange('address.street', value)}
                       error={errors['address.street']}
-                      placeholder="123 Main Street"
+                      placeholder="123 Main St"
                       required
                     />
                   </div>
 
                   <Input
                     label="City"
-                    value={formData.address.city}
+                    value={formData.address?.city}
                     onChange={(value) => handleChange('address.city', value)}
                     error={errors['address.city']}
                     required
                   />
-
+                  
                   <Select
                     label="State"
-                    value={formData.address.state}
+                    value={formData.address?.state}
                     onChange={(value) => handleChange('address.state', value)}
                     options={stateOptions}
                     error={errors['address.state']}
                     required
                   />
-
+                  
                   <Input
                     label="ZIP Code"
-                    value={formData.address.zipCode}
-                    onChange={(value) => handleChange('address.zipCode', value)}
-                    error={errors['address.zipCode']}
-                    placeholder="12345"
+                    value={formData.address?.zip}
+                    onChange={(value) => handleChange('address.zip', value)}
+                    error={errors['address.zip']}
                     required
-                  />
-
-                  <Input
-                    label="Country"
-                    value={formData.address.country}
-                    onChange={(value) => handleChange('address.country', value)}
-                    disabled
                   />
                 </div>
               </Card>
             </StaggerItem>
 
-            {/* Financial Information */}
+            {/* Financials */}
             <StaggerItem>
               <Card>
                 <div className="flex items-center mb-6">
                   <CurrencyDollarIcon className="h-6 w-6 text-blue-600 dark:text-blue-400 mr-2" />
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    Financial Information
+                    Financials
                   </h2>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input
-                    label="Monthly Rent"
+                    label="Rent Amount"
                     type="number"
-                    value={formData.monthlyRent}
-                    onChange={(value) => handleChange('monthlyRent', parseFloat(value) || 0)}
-                    error={errors.monthlyRent}
-                    min="0"
-                    step="0.01"
+                    value={formData.rentAmount}
+                    onChange={(value) => handleChange('rentAmount', parseFloat(value))}
+                    error={errors.rentAmount}
+                    placeholder="1500"
+                    required
                     prefix="$"
                   />
 
                   <Input
-                    label="Security Deposit"
+                    label="Deposit"
                     type="number"
-                    value={formData.securityDeposit}
-                    onChange={(value) => handleChange('securityDeposit', parseFloat(value) || 0)}
-                    min="0"
-                    step="0.01"
+                    value={formData.deposit}
+                    onChange={(value) => handleChange('deposit', parseFloat(value))}
+                    error={errors.deposit}
                     prefix="$"
-                  />
-
-                  <Input
-                    label="Property Value"
-                    type="number"
-                    value={formData.propertyValue}
-                    onChange={(value) => handleChange('propertyValue', parseFloat(value) || 0)}
-                    min="0"
-                    step="0.01"
-                    prefix="$"
-                    placeholder="Estimated market value"
-                  />
-
-                  <Input
-                    label="Monthly Expenses"
-                    type="number"
-                    value={formData.monthlyExpenses}
-                    onChange={(value) => handleChange('monthlyExpenses', parseFloat(value) || 0)}
-                    min="0"
-                    step="0.01"
-                    prefix="$"
-                    placeholder="Insurance, taxes, etc."
                   />
                 </div>
               </Card>
             </StaggerItem>
-
-            {/* Amenities */}
+            
+            {/* Details */}
             <StaggerItem>
               <Card>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
-                  Amenities
+                  Details
                 </h2>
 
-                <CheckboxGroup
-                  options={AMENITIES_OPTIONS.map(amenity => ({
-                    value: amenity,
-                    label: amenity
-                  }))}
-                  value={formData.amenities}
-                  onChange={(value) => handleChange('amenities', value)}
-                  className="grid grid-cols-2 md:grid-cols-3 gap-4"
-                />
-              </Card>
-            </StaggerItem>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <Input
+                    label="Bedrooms"
+                    type="number"
+                    value={formData.bedrooms}
+                    onChange={(value) => handleChange('bedrooms', parseInt(value, 10))}
+                    error={errors.bedrooms}
+                    min="0"
+                  />
+                  
+                  <Input
+                    label="Bathrooms"
+                    type="number"
+                    value={formData.bathrooms}
+                    onChange={(value) => handleChange('bathrooms', parseInt(value, 10))}
+                    error={errors.bathrooms}
+                    min="0"
+                  />
 
-            {/* Pet Policy */}
-            <StaggerItem>
-              <Card>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
-                  Pet Policy
-                </h2>
+                  <Input
+                    label="Square Footage"
+                    type="number"
+                    value={formData.sqft}
+                    onChange={(value) => handleChange('sqft', parseInt(value, 10))}
+                    error={errors.sqft}
+                    min="0"
+                    suffix="sqft"
+                  />
+                </div>
 
-                <div className="space-y-4">
+                <div className="mt-6">
+                  <TextArea
+                    label="Description"
+                    value={formData.description}
+                    onChange={(value) => handleChange('description', value)}
+                    error={errors.description}
+                    rows="4"
+                    placeholder="Describe the property..."
+                  />
+                </div>
+
+                <div className="mt-6">
                   <CheckboxGroup
-                    options={[{
-                      value: 'pets_allowed',
-                      label: 'Pets Allowed'
-                    }]}
-                    value={formData.petPolicy.allowed ? ['pets_allowed'] : []}
-                    onChange={(value) => handleChange('petPolicy', {
-                      ...formData.petPolicy,
-                      allowed: value.includes('pets_allowed')
-                    })}
+                    label="Amenities"
+                    options={AMENITIES_OPTIONS}
+                    selected={formData.amenities || []}
+                    onChange={(selected) => handleChange('amenities', selected)}
+                    error={errors.amenities}
                   />
-
-                  {formData.petPolicy.allowed && (
-                    <SlideUp>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
-                        <Input
-                          label="Pet Deposit"
-                          type="number"
-                          value={formData.petPolicy.deposit}
-                          onChange={(value) => handleChange('petPolicy', {
-                            ...formData.petPolicy,
-                            deposit: parseFloat(value) || 0
-                          })}
-                          min="0"
-                          step="0.01"
-                          prefix="$"
-                        />
-
-                        <div className="md:col-span-2">
-                          <TextArea
-                            label="Pet Restrictions"
-                            value={formData.petPolicy.restrictions}
-                            onChange={(value) => handleChange('petPolicy', {
-                              ...formData.petPolicy,
-                              restrictions: value
-                            })}
-                            placeholder="e.g., No aggressive breeds, weight limit 50lbs"
-                            rows={3}
-                          />
-                        </div>
-                      </div>
-                    </SlideUp>
-                  )}
                 </div>
               </Card>
             </StaggerItem>
-
+            
             {/* Photos */}
             <StaggerItem>
               <Card>
@@ -508,103 +419,60 @@ const PropertyForm = ({
                     Photos
                   </h2>
                 </div>
+                
+                <FileUpload
+                  onUpload={handlePhotoUpload}
+                  isUploading={uploadingPhotos}
+                  label="Upload property photos"
+                  helpText="PNG, JPG, GIF up to 10MB"
+                />
 
-                {/* Photo Grid */}
                 {formData.photos && formData.photos.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    {formData.photos.map((photo, index) => (
+                  <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {formData.photos.map((photoUrl, index) => (
                       <div key={index} className="relative group">
-                        <img
-                          src={photo}
+                        <img 
+                          src={photoUrl} 
                           alt={`Property photo ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                          className="w-full h-32 object-cover rounded-lg"
                         />
-                        <button
-                          type="button"
-                          onClick={() => handleRemovePhoto(photo)}
-                          className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <XMarkIcon className="h-4 w-4" />
-                        </button>
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => handleRemovePhoto(photoUrl)}
+                            className="p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
-
-                <FileUpload
-                  accept="image/*"
-                  multiple
-                  onUpload={handlePhotoUpload}
-                  loading={uploadingPhotos}
-                  disabled={!formData.id && mode === 'edit'}
-                  maxSize={5 * 1024 * 1024} // 5MB
-                >
-                  <div className="text-center py-8">
-                    <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
-                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                      {uploadingPhotos ? 'Uploading...' : 'Click to upload photos or drag and drop'}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      PNG, JPG, GIF up to 5MB each
-                    </p>
-                  </div>
-                </FileUpload>
-
-                {!formData.id && mode === 'edit' && (
-                  <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
-                    Save the property first to upload photos
-                  </p>
-                )}
               </Card>
             </StaggerItem>
 
-            {/* Additional Notes */}
-            <StaggerItem>
-              <Card>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
-                  Additional Notes
-                </h2>
-
-                <TextArea
-                  label="Notes"
-                  value={formData.notes}
-                  onChange={(value) => handleChange('notes', value)}
-                  placeholder="Any additional information about the property..."
-                  rows={4}
-                />
-              </Card>
-            </StaggerItem>
           </StaggerContainer>
 
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <Button
-              type="submit"
-              variant="primary"
-              loading={isSubmitting || isLoading}
-              disabled={uploadingPhotos}
-              className="sm:order-2"
-            >
-              {mode === 'create' ? 'Create Property' : 'Save Changes'}
-            </Button>
-            
+          {/* Form Actions */}
+          <div className="flex justify-end space-x-4 pt-8 border-t border-gray-200 dark:border-gray-700">
             <Button
               type="button"
               variant="secondary"
               onClick={onCancel}
-              disabled={isSubmitting || isLoading || uploadingPhotos}
-              className="sm:order-1"
+              disabled={isSubmitting || isLoading}
             >
               Cancel
             </Button>
-
-            {uploadingPhotos && (
-              <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 sm:order-3">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                Uploading photos...
-              </div>
-            )}
+            <Button
+              type="submit"
+              variant="primary"
+              isLoading={isSubmitting || isLoading}
+            >
+              {mode === 'create' ? 'Create Property' : 'Save Changes'}
+            </Button>
           </div>
+          
         </form>
       </Container>
     </FadeIn>
@@ -619,4 +487,55 @@ PropertyForm.propTypes = {
   mode: PropTypes.oneOf(['create', 'edit'])
 };
 
-export default PropertyForm; 
+// Default export
+export default PropertyForm;
+
+// Prop types for individual components if they were separate files
+Input.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onChange: PropTypes.func.isRequired,
+  error: PropTypes.string,
+  placeholder: PropTypes.string,
+  required: PropTypes.bool,
+  type: PropTypes.string,
+  prefix: PropTypes.string,
+  suffix: PropTypes.string,
+  min: PropTypes.string
+};
+
+Select.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string,
+  onChange: PropTypes.func.isRequired,
+  options: PropTypes.arrayOf(PropTypes.shape({
+    value: PropTypes.string.isRequired,
+    label: PropTypes.string.isRequired
+  })).isRequired,
+  error: PropTypes.string,
+  required: PropTypes.bool
+};
+
+TextArea.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string,
+  onChange: PropTypes.func.isRequired,
+  error: PropTypes.string,
+  rows: PropTypes.string,
+  placeholder: PropTypes.string
+};
+
+CheckboxGroup.propTypes = {
+  label: PropTypes.string.isRequired,
+  options: PropTypes.arrayOf(PropTypes.string).isRequired,
+  selected: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onChange: PropTypes.func.isRequired,
+  error: PropTypes.string
+};
+
+FileUpload.propTypes = {
+  onUpload: PropTypes.func.isRequired,
+  isUploading: PropTypes.bool,
+  label: PropTypes.string,
+  helpText: PropTypes.string
+}; 

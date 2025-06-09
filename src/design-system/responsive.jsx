@@ -248,113 +248,105 @@ export const ResponsiveStack = ({
   const breakpoint = useBreakpoint();
   const currentDirection = responsiveValue(direction, breakpoint.current);
   
-  const baseClasses = currentDirection === 'horizontal' 
-    ? `flex flex-row items-${align} space-x-${gap}`
-    : `flex flex-col space-y-${gap}`;
+  const directionClasses = {
+    vertical: 'flex-col',
+    horizontal: 'flex-row',
+  };
+
+  const alignClasses = {
+    start: 'items-start',
+    center: 'items-center',
+    end: 'items-end',
+    stretch: 'items-stretch',
+    baseline: 'items-baseline',
+  };
+
+  const gapClass = `gap-${gap}`;
 
   return (
-    <div className={`${baseClasses} ${className}`}>
+    <div 
+      className={`flex ${directionClasses[currentDirection]} ${alignClasses[align]} ${gapClass} ${className}`}
+    >
       {children}
     </div>
   );
 };
 
-// Phase 3.4: Enhanced responsive utilities for mobile-first design
-
 /**
- * Advanced responsive layout hook
- * Provides layout patterns, touch optimization, and progressive disclosure
+ * Hook to manage responsive layout state
  */
 export const useResponsiveLayout = () => {
-  const breakpoint = useBreakpoint();
+  const [layout, setLayout] = useState({
+    sidebarOpen: false,
+    panelOpen: false,
+  });
   
-  return {
-    // Layout patterns
-    getDashboardLayout: (userRole) => {
-      const layouts = {
-        landlord: {
-          mobile: 'grid-cols-1 gap-4',
-          tablet: 'md:grid-cols-2 gap-6', 
-          desktop: 'lg:grid-cols-12 gap-8'
-        },
-        tenant: {
-          mobile: 'grid-cols-1 gap-4',
-          tablet: 'md:grid-cols-1 gap-6',
-          desktop: 'lg:grid-cols-8 gap-6'
-        },
-        contractor: {
-          mobile: 'grid-cols-1 gap-4',
-          tablet: 'md:grid-cols-2 gap-6',
-          desktop: 'lg:grid-cols-10 gap-8'
-        }
-      };
-      
-      const layout = layouts[userRole] || layouts.tenant;
-      
-      if (breakpoint.isMobile) return layout.mobile;
-      if (breakpoint.isTablet) return layout.tablet;
-      return layout.desktop;
-    },
-    
-    getContentLayout: (pageType) => {
-      const layouts = {
-        default: {
-          mobile: 'grid-cols-1 gap-4',
-          tablet: 'md:grid-cols-1 gap-6',
-          desktop: 'lg:grid-cols-[1fr_280px] gap-8'
-        },
-        wide: {
-          mobile: 'grid-cols-1 gap-4',
-          tablet: 'md:grid-cols-1 gap-6',
-          desktop: 'lg:grid-cols-1 gap-8'
-        }
-      };
-      
-      const layout = layouts[pageType] || layouts.default;
-      
-      if (breakpoint.isMobile) return layout.mobile;
-      if (breakpoint.isTablet) return layout.tablet;
-      return layout.desktop;
-    },
-    
-    // Progressive disclosure
-    getVisibleItems: (items, priority) => {
-      const disclosure = {
-        mobile: { high: 2, medium: 1, low: 0 },
-        tablet: { high: 4, medium: 2, low: 1 },
-        desktop: { high: -1, medium: -1, low: -1 } // -1 means show all
-      };
-      
-      const currentDevice = breakpoint.isMobile ? 'mobile' : 
-                           breakpoint.isTablet ? 'tablet' : 'desktop';
-      const maxItems = disclosure[currentDevice][priority];
-      
-      return maxItems === -1 ? items : items.slice(0, maxItems);
-    },
-    
-    // Touch optimization
-    getTouchTargetSize: () => breakpoint.isMobile ? '48px' : '44px',
-    getInteractionDelay: () => breakpoint.isMobile ? 150 : 0,
-    shouldUseHaptics: () => breakpoint.isMobile,
-    
-    // Current responsive state
-    breakpoint
+  const toggleSidebar = () => {
+    setLayout(prev => ({ ...prev, sidebarOpen: !prev.sidebarOpen }));
   };
+
+  const togglePanel = () => {
+    setLayout(prev => ({ ...prev, panelOpen: !prev.panelOpen }));
+  };
+  
+  return { layout, toggleSidebar, togglePanel };
 };
 
-// Export responsive utilities
-export default {
-  useBreakpoint,
-  useMediaQuery,
-  responsiveClasses,
-  responsiveValue,
-  Container,
-  ResponsiveGrid,
-  ShowOn,
-  HideOn,
-  responsiveText,
-  responsiveSpacing,
-  ResponsiveStack,
-  // Phase 3.4 additions
-  useResponsiveLayout
+/**
+ * Full-screen responsive layout container
+ */
+export const ResponsiveLayout = ({
+  sidebar,
+  mainContent,
+  panel,
+  header,
+  footer,
+}) => {
+  const { layout, toggleSidebar, togglePanel } = useResponsiveLayout();
+  const breakpoint = useBreakpoint();
+  
+  // Show sidebar permanently on larger screens
+  const isSidebarPersistent = breakpoint.isDesktop;
+
+  return (
+    <div className="flex h-screen bg-gray-100">
+      {/* Sidebar */}
+      {(isSidebarPersistent || layout.sidebarOpen) && (
+        <aside 
+          className={`
+            ${isSidebarPersistent ? 'w-64' : 'fixed inset-y-0 left-0 w-64 z-30'}
+            bg-white border-r border-gray-200 shadow-lg
+          `}
+        >
+          {sidebar}
+        </aside>
+      )}
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {header && (
+          <header className="bg-white border-b border-gray-200">
+            {header({ toggleSidebar })}
+          </header>
+        )}
+        
+        <main className="flex-1 overflow-y-auto">
+          {mainContent}
+        </main>
+        
+        {footer && (
+          <footer className="bg-white border-t border-gray-200">
+            {footer}
+          </footer>
+        )}
+      </div>
+
+      {/* Right panel */}
+      {panel && layout.panelOpen && (
+        <aside className="fixed inset-y-0 right-0 w-80 bg-white border-l border-gray-200 shadow-lg z-30">
+          {panel({ togglePanel })}
+        </aside>
+      )}
+    </div>
+  );
 }; 

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext.jsx';
 import MaintenanceTickets from '../components/dashboard/MaintenanceTickets';
+import { db } from '../firebase/config';
 
 const MyMaintenanceRequestsPage = () => {
   const { currentUser } = useAuth();

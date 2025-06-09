@@ -5,10 +5,10 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
-import PropertyList from '../components/landlord/PropertyList';
-import PropertyForm from '../components/landlord/PropertyForm';
-import PropertyDetails from '../components/landlord/PropertyDetails';
+import { useAuth } from '../context/AuthContext.jsx';
+import PropertyList from '../components/landlord/PropertyList.jsx';
+import PropertyForm from '../components/landlord/PropertyForm.jsx';
+import PropertyDetails from '../components/landlord/PropertyDetails.jsx';
 import propertyService from '../services/propertyService';
 import { LoadingState, Spinner } from '../design-system/loading-states';
 import toast from 'react-hot-toast';

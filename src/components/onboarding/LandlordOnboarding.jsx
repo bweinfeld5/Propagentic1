@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { doc, updateDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, addDoc, collection, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import HomeNavLink from '../layout/HomeNavLink';
 
@@ -174,7 +174,7 @@ const LandlordOnboarding = () => {
         userType: 'landlord', // Ensure userType is set to landlord
         onboardingComplete: true, // Mark onboarding as complete
         updatedAt: serverTimestamp(),
-        properties: [propertyRef.id], // Add reference to the created property
+        properties: arrayUnion(propertyRef.id), // Use arrayUnion to safely add the property
       };
       
       console.log('Updating user document with data:', userData);

@@ -14,11 +14,13 @@ import {
   DownloadIcon,
   PencilSquareIcon,
   InformationCircleIcon,
-  ScaleIcon
+  ScaleIcon,
+  ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
 import legalManager from '../../services/legal/legalManager';
 import Button from '../ui/Button';
+import { Tab } from '@headlessui/react';
 
 const LegalDashboard = () => {
   const { currentUser, userProfile } = useAuth();

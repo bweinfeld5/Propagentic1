@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext.jsx';
 import { db } from '../firebase/config';
 import { collection, query, where, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
 import RequestForm from '../components/tenant/RequestForm';

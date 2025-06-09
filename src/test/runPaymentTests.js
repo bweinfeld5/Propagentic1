@@ -1,7 +1,7 @@
 // Phase 1.4 Payment System Test Runner
 // Executes comprehensive tests for escrow, disputes, and payment flows
 
-import PaymentSystemTester from './paymentSystemTests.js';
+import PaymentSystemTester from './paymentSystemTests.jsx';
 
 // Configure test environment
 process.env.NODE_ENV = 'test';

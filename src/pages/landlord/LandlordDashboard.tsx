@@ -18,7 +18,7 @@ import {
   ChatBubbleLeftRightIcon,
   CloudArrowUpIcon
 } from '@heroicons/react/24/outline';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { useDemoMode } from '../../context/DemoModeContext';
 import dataService from '../../services/dataService';
 import BulkPropertyImport from '../../components/landlord/BulkPropertyImport';
@@ -32,33 +32,108 @@ import GlobalSearch from '../../components/search/GlobalSearch';
 import BulkOperations from '../../components/bulk/BulkOperations';
 import ReportsModule from '../../components/reports/ReportsModule';
 
-const LandlordDashboard = () => {
+// Define interfaces for type safety
+interface Property {
+  id: string;
+  name?: string;
+  nickname?: string;
+  title?: string;
+  address?: string | {
+    street?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+  };
+  street?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  zip?: string;
+  propertyType?: string;
+  status?: string;
+  monthlyRent?: number;
+  rentAmount?: number;
+  monthlyRevenue?: number;
+  isOccupied?: boolean;
+  occupiedUnits?: number;
+  units?: number;
+  updatedAt?: Date;
+  lastUpdated?: Date;
+  type?: string;
+  [key: string]: any; // For additional flexible properties
+}
+
+interface Tenant {
+  id: string;
+  name?: string;
+  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  phoneNumber?: string;
+  status?: string;
+  propertyId?: string;
+  propertyName?: string;
+  leaseStart?: string;
+  leaseEnd?: string;
+  [key: string]: any; // For additional flexible properties
+}
+
+interface Ticket {
+  id: string;
+  title?: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  category?: string;
+  propertyId?: string;
+  propertyName?: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  submittedBy?: string;
+  assignedTo?: string;
+  [key: string]: any; // For additional flexible properties
+}
+
+interface NavigationItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<any>;
+  view: string;
+}
+
+interface UserProfile {
+  userType?: string;
+  role?: string;
+  firstName?: string;
+  lastName?: string;
+  [key: string]: any;
+}
+
+const LandlordDashboard: React.FC = () => {
   const { currentUser, userProfile } = useAuth();
-  const { isDemoMode } = useDemoMode();
-  const [showImport, setShowImport] = useState(false);
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [importProgress, setImportProgress] = useState(null);
-  const [properties, setProperties] = useState([]);
-  const [tickets, setTickets] = useState([]);
-  const [tenants, setTenants] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { isDemo: isDemoMode } = useDemoMode();
+  const [showImport, setShowImport] = useState<boolean>(false);
+  const [showImportModal, setShowImportModal] = useState<boolean>(false);
+  const [importProgress, setImportProgress] = useState<number | null>(null);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [propertiesLoaded, setPropertiesLoaded] = useState<boolean>(false);
   
   // Phase 1.2 State
-  const [currentView, setCurrentView] = useState('dashboard'); // dashboard, reports, analytics
-  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
-  const [selectedItems, setSelectedItems] = useState([]);
-  const [dashboardMode, setDashboardMode] = useState('default'); // default, custom
+  const [currentView, setCurrentView] = useState<string>('dashboard');
+  const [showGlobalSearch, setShowGlobalSearch] = useState<boolean>(false);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [dashboardMode, setDashboardMode] = useState<'default' | 'custom'>('default');
 
   // Add state for modals
-  const [showInviteTenantModal, setShowInviteTenantModal] = useState(false);
-  const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
+  const [showInviteTenantModal, setShowInviteTenantModal] = useState<boolean>(false);
+  const [showAddPropertyModal, setShowAddPropertyModal] = useState<boolean>(false);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [currentUser, userProfile, isDemoMode]);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (): Promise<void> => {
     if (!currentUser || !userProfile) return;
     
     setIsLoading(true);
@@ -74,9 +149,8 @@ const LandlordDashboard = () => {
 
       // Subscribe to properties with real-time updates
       const unsubscribeProperties = dataService.subscribeToProperties(
-        (propertiesData) => {
+        (propertiesData: Property[]) => {
           console.log('Properties data received:', propertiesData.length);
-          setProperties(propertiesData);
           
           // Calculate additional fields for dashboard
           const enhancedProperties = propertiesData.map(property => ({
@@ -89,7 +163,7 @@ const LandlordDashboard = () => {
           setProperties(enhancedProperties);
           setIsLoading(false);
         },
-        (error) => {
+        (error: Error) => {
           console.error('Error loading properties:', error);
           setError(error.message);
           setIsLoading(false);
@@ -102,7 +176,7 @@ const LandlordDashboard = () => {
 
       // Load tenants data for all properties
       if (properties.length > 0) {
-        const allTenants = [];
+        const allTenants: Tenant[] = [];
         for (const property of properties) {
           if (property.id) {
             const propertyTenants = await dataService.getTenantsForProperty(property.id);
@@ -111,23 +185,20 @@ const LandlordDashboard = () => {
         }
         setTenants(allTenants);
       }
-
-      // Cleanup function
-      return () => {
-        if (typeof unsubscribeProperties === 'function') {
-          unsubscribeProperties();
-        }
-      };
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading dashboard data:', error);
       setError(error.message);
       setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    loadDashboardData();
+  }, [currentUser, userProfile, isDemoMode]);
+
   // Handle bulk operations
-  const handleBulkAction = (action, items, values) => {
+  const handleBulkAction = (action: string, items: any[], values?: any): void => {
     console.log('Bulk action:', action, 'Items:', items, 'Values:', values);
     
     switch (action) {
@@ -159,8 +230,8 @@ const LandlordDashboard = () => {
             if (items.find(item => item.id === prop.id)) {
               return {
                 ...prop,
-                ...(values.status && { status: values.status }),
-                ...(values.manager && { manager: values.manager })
+                ...(values?.status && { status: values.status }),
+                ...(values?.manager && { manager: values.manager })
               };
             }
             return prop;
@@ -183,7 +254,7 @@ const LandlordDashboard = () => {
   };
 
   // Navigation items with Phase 1.2 additions
-  const navigationItems = [
+  const navigationItems: NavigationItem[] = [
     {
       id: 'dashboard',
       label: 'Dashboard',
@@ -236,7 +307,7 @@ const LandlordDashboard = () => {
 
   // Handle keyboard shortcuts
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent): void => {
       // Ctrl/Cmd + K for global search
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
@@ -252,43 +323,8 @@ const LandlordDashboard = () => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [showGlobalSearch]);
 
-  const renderSidebar = () => (
-    <div className="w-64 bg-white border-r border-gray-200 h-full">
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-            <BuildingOfficeIcon className="w-6 h-6 text-orange-600" />
-          </div>
-          <div>
-            <h2 className="font-semibold text-gray-900">PropAgentic</h2>
-            <p className="text-sm text-gray-600">Landlord Portal</p>
-          </div>
-        </div>
-      </div>
-      
-      <nav className="p-4">
-        <div className="space-y-2">
-          {navigationItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setCurrentView(item.view)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                currentView === item.view
-                  ? 'bg-orange-50 text-orange-700 border-r-2 border-orange-500'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </nav>
-    </div>
-  );
-
   // Context-aware action bar for different views
-  const renderActionBar = () => {
+  const renderActionBar = (): JSX.Element => {
     if (currentView === 'dashboard' && dashboardMode === 'default') {
       return (
         <div className="bg-white border-b border-gray-200 px-6 py-3">
@@ -389,7 +425,7 @@ const LandlordDashboard = () => {
             <h1 className="text-xl font-semibold text-gray-900">Tenant Management</h1>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setShowGlobalSearch(true)}
+                onClick={() => setShowInviteTenantModal(true)}
                 className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
                 title="Search (Ctrl+K)"
               >
@@ -429,7 +465,7 @@ const LandlordDashboard = () => {
     );
   };
 
-  const renderMainContent = () => {
+  const renderMainContent = (): JSX.Element | null => {
     switch (currentView) {
       case 'dashboard':
         if (dashboardMode === 'custom') {
@@ -447,53 +483,24 @@ const LandlordDashboard = () => {
       case 'documents':
         return renderDocumentsView();
       case 'communications':
+        if (!currentUser) return null;
         return <CommunicationCenter userRole="landlord" currentUser={currentUser} />;
       case 'import':
-        return <BulkPropertyImport />;
+        return (
+          <BulkPropertyImport
+            onClose={() => setCurrentView('dashboard')}
+            onImportComplete={(newProperties: Property[]) => {
+              setProperties((prev) => [...prev, ...newProperties]);
+              setCurrentView('properties');
+            }}
+          />
+        );
       default:
         return renderDefaultDashboard();
     }
   };
 
-  // Helper function to safely render address
-  const formatAddress = (property) => {
-    if (!property) return 'Address not available';
-    
-    // If address is a string, return it directly
-    if (typeof property.address === 'string') {
-      return property.address;
-    }
-    
-    // If address is an object, construct the address string
-    if (typeof property.address === 'object' && property.address) {
-      const { street, city, state, zip } = property.address;
-      const parts = [street, city, state, zip].filter(Boolean);
-      return parts.join(', ') || 'Address not complete';
-    }
-    
-    // Fallback to individual fields if they exist
-    const parts = [
-      property.street,
-      property.city, 
-      property.state,
-      property.zipCode || property.zip
-    ].filter(Boolean);
-    
-    return parts.length > 0 ? parts.join(', ') : 'Address not available';
-  };
-
-  // Helper function to safely get property name
-  const getPropertyName = (property) => {
-    return property.name || property.propertyName || formatAddress(property) || 'Unnamed Property';
-  };
-
-  // Helper function to safely get numeric values
-  const safeNumber = (value, defaultValue = 0) => {
-    const num = Number(value);
-    return isNaN(num) ? defaultValue : num;
-  };
-
-  const renderDefaultDashboard = () => (
+  const renderDefaultDashboard = (): JSX.Element => (
     <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-full">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -568,13 +575,13 @@ const LandlordDashboard = () => {
               const occupancyRate = units > 0 ? Math.round((occupiedUnits / units) * 100) : 0;
               
               return (
-              <div key={property.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
+                <div key={property.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
                     <div className="font-medium text-gray-900">{getPropertyName(property)}</div>
                     <div className="text-sm text-gray-600">{formatAddress(property)}</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold text-orange-600">
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold text-orange-600">
                       {occupancyRate}%
                     </div>
                     <div className="text-xs text-gray-500">occupied</div>
@@ -641,7 +648,7 @@ const LandlordDashboard = () => {
     </div>
   );
 
-  const renderPropertiesView = () => (
+  const renderPropertiesView = (): JSX.Element => (
     <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-full">
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
         <div className="p-6 border-b border-gray-200">
@@ -690,68 +697,67 @@ const LandlordDashboard = () => {
               </div>
             </div>
           ) : (
-          <div className="space-y-4">
+            <div className="space-y-4">
               {properties.map((property) => {
                 const units = safeNumber(property.units, 1);
                 const occupiedUnits = safeNumber(property.occupiedUnits, 0);
                 const monthlyRevenue = safeNumber(property.monthlyRevenue || property.monthlyRent, 0);
                 
                 return (
-              <div
-                key={property.id}
-                className={`p-4 border rounded-lg transition-colors cursor-pointer ${
-                  selectedItems.includes(property.id)
-                    ? 'border-orange-200 bg-orange-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-                onClick={() => {
-                  if (selectedItems.includes(property.id)) {
-                    setSelectedItems(prev => prev.filter(id => id !== property.id));
-                  } else {
-                    setSelectedItems(prev => [...prev, property.id]);
-                  }
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="checkbox"
-                      checked={selectedItems.includes(property.id)}
-                      onChange={() => {}}
-                      className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                    />
-                    <div>
+                  <div
+                    key={property.id}
+                    className={`p-4 border rounded-lg transition-colors cursor-pointer ${
+                      selectedItems.includes(property.id)
+                        ? 'border-orange-200 bg-orange-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => {
+                      if (selectedItems.includes(property.id)) {
+                        setSelectedItems(prev => prev.filter(id => id !== property.id));
+                      } else {
+                        setSelectedItems(prev => [...prev, property.id]);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.includes(property.id)}
+                          onChange={() => {}}
+                          className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                        />
+                        <div>
                           <h4 className="font-semibold text-gray-900">{getPropertyName(property)}</h4>
                           <p className="text-sm text-gray-600">{formatAddress(property)}</p>
                           {property.propertyType && (
                             <p className="text-xs text-gray-500 mt-1">{property.propertyType}</p>
                           )}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-gray-900">
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-gray-900">
                           {occupiedUnits}/{units} units
-                    </div>
-                    <div className="text-sm text-gray-600">
+                        </div>
+                        <div className="text-sm text-gray-600">
                           ${monthlyRevenue.toLocaleString()}/month
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
                           {units > 0 ? Math.round((occupiedUnits / units) * 100) : 0}% occupied
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
                 );
               })}
-          </div>
+            </div>
           )}
         </div>
       </div>
     </div>
   );
 
-  // Placeholder views for other sections
-  const renderTenantsView = () => (
+  const renderTenantsView = (): JSX.Element => (
     <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-full">
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
         <div className="p-6 border-b border-gray-200">
@@ -829,7 +835,7 @@ const LandlordDashboard = () => {
     </div>
   );
 
-  const renderMaintenanceView = () => (
+  const renderMaintenanceView = (): JSX.Element => (
     <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-full">
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
         <div className="p-6 border-b border-gray-200">
@@ -874,7 +880,7 @@ const LandlordDashboard = () => {
                           {ticket.propertyName || 'Property'} • {ticket.category || 'General'}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : ''}
+                          {ticket.createdAt ? new Date(ticket.createdAt.toString()).toLocaleDateString() : ''}
                         </p>
                       </div>
                     </div>
@@ -902,7 +908,7 @@ const LandlordDashboard = () => {
     </div>
   );
 
-  const renderDocumentsView = () => (
+  const renderDocumentsView = (): JSX.Element => (
     <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-full">
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
         <DocumentTextIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -911,6 +917,44 @@ const LandlordDashboard = () => {
       </div>
     </div>
   );
+
+  // Helper function to safely render address
+  const formatAddress = (property: Property): string => {
+    if (!property) return 'Address not available';
+    
+    // If address is a string, return it directly
+    if (typeof property.address === 'string') {
+      return property.address;
+    }
+    
+    // If address is an object, construct the address string
+    if (typeof property.address === 'object' && property.address) {
+      const { street, city, state, zip } = property.address;
+      const parts = [street, city, state, zip].filter(Boolean);
+      return parts.join(', ') || 'Address not complete';
+    }
+    
+    // Fallback to individual fields if they exist
+    const parts = [
+      property.street,
+      property.city, 
+      property.state,
+      property.zipCode || property.zip
+    ].filter(Boolean);
+    
+    return parts.length > 0 ? parts.join(', ') : 'Address not available';
+  };
+
+  // Helper function to safely get property name
+  const getPropertyName = (property: Property): string => {
+    return property.name || property.propertyName || formatAddress(property) || 'Unnamed Property';
+  };
+
+  // Helper function to safely get numeric values
+  const safeNumber = (value: any, defaultValue = 0): number => {
+    const num = Number(value);
+    return isNaN(num) ? defaultValue : num;
+  };
 
   if (isLoading) {
     return (
@@ -923,7 +967,38 @@ const LandlordDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      {renderSidebar()}
+      <div className="w-64 bg-white border-r border-gray-200 h-full">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+              <BuildingOfficeIcon className="w-6 h-6 text-orange-600" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-gray-900">PropAgentic</h2>
+              <p className="text-sm text-gray-600">Landlord Portal</p>
+            </div>
+          </div>
+        </div>
+        
+        <nav className="p-4">
+          <div className="space-y-2">
+            {navigationItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setCurrentView(item.view)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                  currentView === item.view
+                    ? 'bg-orange-50 text-orange-700 border-r-2 border-orange-500'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </nav>
+      </div>
       
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -944,8 +1019,8 @@ const LandlordDashboard = () => {
 
       {/* Bulk Operations */}
       <BulkOperations
-        items={properties.map(p => ({ ...p, type: 'property' }))}
-        selectedIds={selectedItems}
+        items={properties.map(p => ({ ...p, type: 'property' })) as any}
+        selectedIds={selectedItems as any}
         onSelectionChange={setSelectedItems}
         onBulkAction={handleBulkAction}
         itemType="properties"
@@ -955,7 +1030,7 @@ const LandlordDashboard = () => {
       {showImportModal && (
         <BulkPropertyImport
           onClose={() => setShowImportModal(false)}
-          onImportComplete={(newProperties) => {
+          onImportComplete={(newProperties: Property[]) => {
             setProperties(prev => [...prev, ...newProperties]);
             setShowImportModal(false);
           }}
@@ -967,7 +1042,7 @@ const LandlordDashboard = () => {
         <InviteTenantModal
           isOpen={showInviteTenantModal}
           onClose={() => setShowInviteTenantModal(false)}
-          properties={properties}
+          properties={properties as any}
           onInviteSuccess={() => {
             setShowInviteTenantModal(false);
             // Refresh tenants data
@@ -981,7 +1056,7 @@ const LandlordDashboard = () => {
         <AddPropertyModal
           isOpen={showAddPropertyModal}
           onClose={() => setShowAddPropertyModal(false)}
-          onPropertyAdded={(newProperty) => {
+          onPropertyAdded={(newProperty: Property) => {
             setProperties(prev => [...prev, newProperty]);
             setShowAddPropertyModal(false);
           }}
@@ -991,4 +1066,4 @@ const LandlordDashboard = () => {
   );
 };
 
-export default LandlordDashboard; 
+export default LandlordDashboard;

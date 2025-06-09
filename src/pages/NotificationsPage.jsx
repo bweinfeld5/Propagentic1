@@ -1,9 +1,10 @@
-import React from 'react';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext.jsx';
 import NotificationList from '../components/notifications/NotificationList';
 import { BellAlertIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../context/NotificationContext';
+import NotificationPreferences from '../components/notifications/NotificationPreferences';
 
 const NotificationsPage = () => {
   const { currentUser, userProfile } = useAuth();

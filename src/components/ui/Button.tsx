@@ -75,9 +75,9 @@ const Button: React.FC<ButtonProps> = ({
         </>
       ) : (
         <>
-          {icon && iconPosition === 'left' && <span className="mr-2">{icon}</span>}
-          {children}
-          {icon && iconPosition === 'right' && <span className="ml-2">{icon}</span>}
+      {icon && iconPosition === 'left' && <span className="mr-2">{icon}</span>}
+      {children}
+      {icon && iconPosition === 'right' && <span className="ml-2">{icon}</span>}
         </>
       )}
     </button>

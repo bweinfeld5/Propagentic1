@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Bell, Menu, Home, User } from 'lucide-react';
 import { PropAgenticMark } from '../../components/brand/PropAgenticMark';
 import EmptyStateCard from '../../components/EmptyStateCard';
 import InvitationBanner from '../../components/InvitationBanner';
-import PropertyList from '../../components/PropertyList';
+import PropertyList from '../../components/PropertyList.tsx';
 import { Skeleton } from '../../components/ui/Skeleton';
 import Button from '../../components/ui/Button';
 import TenantInviteModal from '../../components/tenant/TenantInviteModal';

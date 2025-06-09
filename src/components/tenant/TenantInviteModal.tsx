@@ -1,11 +1,12 @@
 import { useState, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
 import TenantInviteForm from './TenantInviteForm';
 import Button from '../ui/Button';
 import toast from 'react-hot-toast';
 import inviteCodeService from '../../services/inviteCodeService';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { inviteTenant } from '../../services/inviteService';
 
 interface TenantInviteModalProps {
   isOpen: boolean;

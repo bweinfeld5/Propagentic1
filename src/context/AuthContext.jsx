@@ -248,14 +248,11 @@ export function AuthProvider({ children }) {
       
       // Update localStorage safely
       const currentStoredData = safeGetUserData();
-      if (currentStoredData) {
-        safeStoreUserData({
-          ...currentStoredData,
-          ...data
-        });
+      if (currentStoredData?.uid === userId) {
+        safeStoreUserData({ ...currentStoredData, ...data });
       }
       
-      return true;
+      console.log('User profile updated successfully in Firestore and localStorage');
     } catch (error) {
       console.error("Error updating user profile:", error);
       setProfileError(getAuthErrorMessage(error.code));
@@ -263,73 +260,60 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Recover from profile corruption
+  // Recover profile from localStorage
   const recoverProfile = async () => {
-    if (!currentUser) return false;
-    
     try {
-      clearErrors();
-      setLoading(true);
-      
-      // Try to fetch and repair profile again
-      const profile = await fetchUserProfile(currentUser.uid);
-      
-      if (profile) {
-        const validation = validateUserRole(profile);
-        if (validation.isValid) {
-          setIsProfileCorrupted(false);
-          return true;
+      const storedUser = safeGetUserData();
+      if (storedUser) {
+        console.log('Recovering user from localStorage:', storedUser);
+        const freshProfile = await fetchUserProfile(storedUser.uid);
+        if (freshProfile) {
+          console.log('Successfully refreshed profile from localStorage data');
+        } else {
+          console.warn('Failed to refresh profile from localStorage data');
         }
+      } else {
+        console.log('No user data in localStorage to recover');
       }
-      
-      return false;
     } catch (error) {
-      console.error('Profile recovery failed:', error);
-      setProfileError('Unable to recover profile');
-      return false;
-    } finally {
-      setLoading(false);
+      console.error('Error during profile recovery:', error);
     }
   };
 
-  // Set up an auth state observer with enhanced error handling
+  // Monitor auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      try {
+      clearErrors();
+      
+      if (user) {
+        console.log('Auth state changed: user is logged in', user.uid);
         setCurrentUser(user);
-        
-        if (user) {
-          console.log('Auth state changed - user logged in:', user.uid);
-          
-          // Get additional user data from Firestore
-          const profile = await fetchUserProfile(user.uid);
-          
-          if (profile) {
-            console.log('User profile loaded:', profile);
-          } else {
-            console.warn('No profile found for authenticated user');
-          }
-        } else {
-          console.log('Auth state changed - user logged out');
-          setUserProfile(null);
-          setIsProfileCorrupted(false);
-          clearErrors();
-          localStorage.removeItem('user');
-        }
-      } catch (error) {
-        console.error('Auth state change error:', error);
-        setAuthError('Authentication error occurred');
-      } finally {
-        setLoading(false);
+        await fetchUserProfile(user.uid);
+      } else {
+        console.log('Auth state changed: user is logged out');
+        setCurrentUser(null);
+        setUserProfile(null);
+        localStorage.removeItem('user');
       }
+      
+      setLoading(false);
     });
+    
+    // Attempt to recover profile on initial load
+    recoverProfile();
 
     return unsubscribe;
   }, []);
 
-  // Context value
+  // Set the last valid route for a user
+  const updateLastValidRoute = (route) => {
+    if (route) {
+      setLastValidRoute(route);
+    }
+  };
+  
+  // Value provided to the context
   const value = {
-    // State
     currentUser,
     userProfile,
     loading,
@@ -337,29 +321,18 @@ export function AuthProvider({ children }) {
     profileError,
     isProfileCorrupted,
     lastValidRoute,
-    
-    // Auth methods
     register,
     login,
     logout,
     resetPassword,
-    
-    // Profile methods
     fetchUserProfile,
-    updateUserProfile,
-    completeOnboarding,
-    recoverProfile,
-    
-    // Helper methods
     isLandlord,
     isTenant,
     isContractor,
     isPremiumContractor,
-    hasRole: (role) => userProfile?.role === role || userProfile?.userType === role,
-    
-    // Error handling
-    clearErrors,
-    setLastValidRoute
+    completeOnboarding,
+    updateUserProfile,
+    updateLastValidRoute
   };
 
   return (

@@ -15,13 +15,15 @@ import {
   ShareIcon
 } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, AreaChart, Area, BarChart, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import Papa from 'papaparse';
-import { useAuth } from '../../context/AuthContext';
-import { useDemoMode } from '../../context/DemoModeContext';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { useDemoMode } from '../../context/DemoModeContext.jsx';
 import dataService from '../../services/dataService';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement } from 'chart.js';
+import { Bar as BarJS, Pie as PieChartJS } from 'react-chartjs-2';
 
 /**
  * Advanced Reporting & Analytics Module
@@ -374,8 +376,8 @@ const ReportsModule = () => {
                     borderRadius: '8px' 
                   }}
                 />
-                <Bar dataKey="revenue" fill="#f97316" />
-                <Bar dataKey="expenses" fill="#dc2626" />
+                <BarJS dataKey="revenue" fill="#f97316" />
+                <BarJS dataKey="expenses" fill="#dc2626" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -471,7 +473,7 @@ const ReportsModule = () => {
                 <XAxis dataKey="category" stroke="#6b7280" />
                 <YAxis stroke="#6b7280" />
                 <Tooltip />
-                <Bar dataKey="cost" fill="#f97316" />
+                <BarJS dataKey="cost" fill="#f97316" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -486,8 +488,8 @@ const ReportsModule = () => {
                 <XAxis dataKey="category" stroke="#6b7280" />
                 <YAxis stroke="#6b7280" />
                 <Tooltip />
-                <Bar dataKey="requests" fill="#3b82f6" />
-                <Bar dataKey="avgCost" fill="#10b981" />
+                <BarJS dataKey="requests" fill="#3b82f6" />
+                <BarJS dataKey="avgCost" fill="#10b981" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -573,23 +575,16 @@ const ReportsModule = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Tenant Segments</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={reportData?.tenantAnalytics || []}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="count"
-                >
-                  {(reportData?.tenantAnalytics || []).map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={['#f97316', '#3b82f6', '#10b981'][index]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
+              <PieChartJS
+                data={reportData?.tenantAnalytics || []}
+                options={{
+                  plugins: {
+                    legend: {
+                      position: 'top',
+                    },
+                  },
+                }}
+              />
             </ResponsiveContainer>
           </div>
         </div>

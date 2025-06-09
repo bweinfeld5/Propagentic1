@@ -248,29 +248,31 @@ export const useScreenReader = () => {
 
     setAnnouncements(prev => [...prev, announcement]);
 
-    // Remove announcement after it's been read
+    // Cleanup old announcements
     setTimeout(() => {
       setAnnouncements(prev => prev.filter(a => a.id !== id));
-    }, 3000);
+    }, 5000);
   }, []);
 
-  const clearAnnouncements = useCallback(() => {
-    setAnnouncements([]);
-  }, []);
-
-  return {
-    announce,
-    clearAnnouncements,
-    announcements
-  };
+  return { announce, announcements };
 };
 
 /**
- * Screen reader only text component
+ * Visually hidden component for screen reader users
  */
 export const ScreenReaderOnly = ({ children, as: Component = 'span', ...props }) => (
-  <Component
-    className="sr-only"
+  <Component 
+    style={{
+      position: 'absolute',
+      width: '1px',
+      height: '1px',
+      padding: '0',
+      margin: '-1px',
+      overflow: 'hidden',
+      clip: 'rect(0, 0, 0, 0)',
+      whiteSpace: 'nowrap',
+      border: '0',
+    }}
     {...props}
   >
     {children}
@@ -278,105 +280,93 @@ export const ScreenReaderOnly = ({ children, as: Component = 'span', ...props })
 );
 
 /**
- * Live region component for screen reader announcements
+ * ARIA live region for dynamic content announcements
  */
 export const LiveRegion = ({ children, priority = 'polite', atomic = false, relevant = 'additions text' }) => (
   <div
     aria-live={priority}
     aria-atomic={atomic}
     aria-relevant={relevant}
-    className="sr-only"
+    style={{
+      position: 'absolute',
+      width: '1px',
+      height: '1px',
+      padding: '0',
+      margin: '-1px',
+      overflow: 'hidden',
+      clip: 'rect(0, 0, 0, 0)',
+      whiteSpace: 'nowrap',
+      border: '0',
+    }}
   >
     {children}
   </div>
 );
 
+
 // ==============================================
-// ARIA UTILITIES
+// ARIA ATTRIBUTES
 // ==============================================
 
 /**
- * Enhanced ARIA attributes generator
+ * Utility to generate common ARIA attributes
  */
 export const getAriaAttributes = (options = {}) => {
   const {
     label,
-    labelledBy,
-    describedBy,
+    labelledby,
+    describedby,
+    role,
+    hidden,
     expanded,
-    selected,
+    haspopup,
+    invalid,
+    required,
     checked,
     pressed,
-    current,
-    disabled,
-    required,
-    invalid,
-    hasPopup,
+    selected,
+    level,
+    valuemin,
+    valuemax,
+    valuenow,
+    valuetext,
     controls,
     owns,
-    hidden,
-    live,
-    atomic,
-    relevant,
-    level,
-    setSize,
-    posInSet,
-    role,
-    valueMin,
-    valueMax,
-    valueNow,
-    valueText
+    activedescendant
   } = options;
 
   const attributes = {};
 
-  // Basic labeling
   if (label) attributes['aria-label'] = label;
-  if (labelledBy) attributes['aria-labelledby'] = labelledBy;
-  if (describedBy) attributes['aria-describedby'] = describedBy;
-
-  // States
-  if (typeof expanded === 'boolean') attributes['aria-expanded'] = expanded.toString();
-  if (typeof selected === 'boolean') attributes['aria-selected'] = selected.toString();
-  if (typeof checked === 'boolean') attributes['aria-checked'] = checked.toString();
-  if (typeof pressed === 'boolean') attributes['aria-pressed'] = pressed.toString();
-  if (current) attributes['aria-current'] = current;
-  if (typeof disabled === 'boolean') attributes['aria-disabled'] = disabled.toString();
-  if (typeof required === 'boolean') attributes['aria-required'] = required.toString();
-  if (typeof invalid === 'boolean') attributes['aria-invalid'] = invalid.toString();
-  if (typeof hidden === 'boolean') attributes['aria-hidden'] = hidden.toString();
-
-  // Relationships
-  if (hasPopup) attributes['aria-haspopup'] = hasPopup;
+  if (labelledby) attributes['aria-labelledby'] = labelledby;
+  if (describedby) attributes['aria-describedby'] = describedby;
+  if (role) attributes.role = role;
+  if (hidden !== undefined) attributes['aria-hidden'] = hidden;
+  if (expanded !== undefined) attributes['aria-expanded'] = expanded;
+  if (haspopup !== undefined) attributes['aria-haspopup'] = haspopup;
+  if (invalid !== undefined) attributes['aria-invalid'] = invalid;
+  if (required !== undefined) attributes['aria-required'] = required;
+  if (checked !== undefined) attributes['aria-checked'] = checked;
+  if (pressed !== undefined) attributes['aria-pressed'] = pressed;
+  if (selected !== undefined) attributes['aria-selected'] = selected;
+  if (level) attributes['aria-level'] = level;
+  if (valuemin) attributes['aria-valuemin'] = valuemin;
+  if (valuemax) attributes['aria-valuemax'] = valuemax;
+  if (valuenow) attributes['aria-valuenow'] = valuenow;
+  if (valuetext) attributes['aria-valuetext'] = valuetext;
   if (controls) attributes['aria-controls'] = controls;
   if (owns) attributes['aria-owns'] = owns;
-
-  // Live regions
-  if (live) attributes['aria-live'] = live;
-  if (typeof atomic === 'boolean') attributes['aria-atomic'] = atomic.toString();
-  if (relevant) attributes['aria-relevant'] = relevant;
-
-  // Structural
-  if (role) attributes.role = role;
-  if (typeof level === 'number') attributes['aria-level'] = level.toString();
-  if (typeof setSize === 'number') attributes['aria-setsize'] = setSize.toString();
-  if (typeof posInSet === 'number') attributes['aria-posinset'] = posInSet.toString();
-
-  // Values
-  if (typeof valueMin === 'number') attributes['aria-valuemin'] = valueMin.toString();
-  if (typeof valueMax === 'number') attributes['aria-valuemax'] = valueMax.toString();
-  if (typeof valueNow === 'number') attributes['aria-valuenow'] = valueNow.toString();
-  if (valueText) attributes['aria-valuetext'] = valueText;
+  if (activedescendant) attributes['aria-activedescendant'] = activedescendant;
 
   return attributes;
 };
 
 // ==============================================
-// FOCUS MANAGEMENT COMPONENTS
+// VISUAL ACCESSIBILITY
 // ==============================================
 
 /**
- * Focus ring component with customizable styling
+ * Focus ring component for consistent focus indicators
  */
 export const FocusRing = ({ 
   children, 
@@ -385,40 +375,29 @@ export const FocusRing = ({
   className = '',
   ...props 
 }) => {
-  const focusRingClasses = {
-    default: `focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2`,
-    strong: `focus:outline-none focus:ring-4 focus:ring-primary-500 focus:ring-offset-2`,
-    subtle: `focus:outline-none focus:ring-1 focus:ring-primary-300 focus:ring-offset-1`,
-    inset: `focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500`,
-    dark: `focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900`,
-    light: `focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 focus:ring-offset-white`,
+  const ringClasses = {
+    default: `focus:ring-2 focus:ring-offset-2 ${accessibility.focusRing.color.default} ${accessibility.focusRing.width}`,
+    error: `focus:ring-2 focus:ring-offset-2 ${accessibility.focusRing.color.error} ${accessibility.focusRing.width}`,
+    success: `focus:ring-2 focus:ring-offset-2 ${accessibility.focusRing.color.success} ${accessibility.focusRing.width}`,
   };
 
-  const appliedClass = visible ? focusRingClasses[variant] || focusRingClasses.default : '';
-
-  return (
-    <div className={`${appliedClass} ${className}`} {...props}>
-      {children}
-    </div>
-  );
+  return React.cloneElement(children, {
+    className: `${children.props.className || ''} ${visible ? ringClasses[variant] : 'focus:outline-none'} ${className}`,
+    ...props
+  });
 };
 
 /**
- * Skip link component for keyboard navigation
+ * Skip navigation link for keyboard users
  */
 export const SkipLink = ({ href = '#main', children = 'Skip to main content', className = '' }) => (
   <a
     href={href}
     className={`
-      sr-only focus:not-sr-only 
-      fixed top-0 left-0 z-50 
-      bg-white text-black 
-      px-4 py-2 
-      border border-gray-300 
-      rounded-br-md 
-      font-medium
-      transition-all duration-200
-      focus:outline-none focus:ring-2 focus:ring-primary-500
+      absolute -top-40 left-0
+      z-50 p-3 bg-white text-blue-600
+      transition-transform transform
+      focus:top-0
       ${className}
     `}
   >
@@ -426,59 +405,28 @@ export const SkipLink = ({ href = '#main', children = 'Skip to main content', cl
   </a>
 );
 
-// ==============================================
-// HIGH CONTRAST MODE
-// ==============================================
-
 /**
- * High contrast mode hook and component
+ * Hook to detect high contrast mode
  */
 export const useHighContrastMode = () => {
   const [isHighContrast, setIsHighContrast] = useState(false);
 
   useEffect(() => {
-    // Check for system preference
-    const mediaQuery = window.matchMedia('(prefers-contrast: high)');
+    // Check for Windows High Contrast mode
+    const mediaQuery = window.matchMedia('(forced-colors: active)');
     setIsHighContrast(mediaQuery.matches);
-
-    // Listen for changes
+    
     const handleChange = (e) => setIsHighContrast(e.matches);
     mediaQuery.addEventListener('change', handleChange);
-
-    // Check local storage preference
-    const stored = localStorage.getItem('high-contrast-mode');
-    if (stored !== null) {
-      setIsHighContrast(stored === 'true');
-    }
-
+    
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
-
-  const toggleHighContrast = useCallback(() => {
-    const newValue = !isHighContrast;
-    setIsHighContrast(newValue);
-    localStorage.setItem('high-contrast-mode', newValue.toString());
-    
-    // Apply to document
-    if (newValue) {
-      document.documentElement.classList.add('high-contrast');
-    } else {
-      document.documentElement.classList.remove('high-contrast');
-    }
-  }, [isHighContrast]);
-
-  return {
-    isHighContrast,
-    toggleHighContrast
-  };
+  
+  return isHighContrast;
 };
 
-// ==============================================
-// REDUCED MOTION SUPPORT
-// ==============================================
-
 /**
- * Reduced motion preference hook
+ * Hook to detect reduced motion preference
  */
 export const useReducedMotion = () => {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -486,147 +434,119 @@ export const useReducedMotion = () => {
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
-
+    
     const handleChange = (e) => setPrefersReducedMotion(e.matches);
     mediaQuery.addEventListener('change', handleChange);
-
+    
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   return prefersReducedMotion;
 };
 
+
 // ==============================================
-// ACCESSIBILITY CONTEXT
+// ACCESSIBILITY PROVIDER & CONTEXT
 // ==============================================
 
-/**
- * Accessibility context provider
- */
-export const AccessibilityContext = React.createContext({
-  announcements: [],
-  announce: () => {},
-  clearAnnouncements: () => {},
+const AccessibilityContext = React.createContext({
   isHighContrast: false,
-  toggleHighContrast: () => {},
   prefersReducedMotion: false,
-  focusVisible: true
+  announce: () => {},
 });
 
+/**
+ * Provider for accessibility context
+ */
 export const AccessibilityProvider = ({ children }) => {
-  const { announcements, announce, clearAnnouncements } = useScreenReader();
-  const { isHighContrast, toggleHighContrast } = useHighContrastMode();
+  const isHighContrast = useHighContrastMode();
   const prefersReducedMotion = useReducedMotion();
-  const [focusVisible, setFocusVisible] = useState(true);
+  const { announce, announcements } = useScreenReader();
 
   const value = {
-    announcements,
-    announce,
-    clearAnnouncements,
     isHighContrast,
-    toggleHighContrast,
     prefersReducedMotion,
-    focusVisible,
-    setFocusVisible
+    announce,
   };
 
   return (
     <AccessibilityContext.Provider value={value}>
       {children}
-      {/* Render announcements */}
-      {announcements.map(announcement => (
-        <LiveRegion key={announcement.id} priority={announcement.priority}>
-          {announcement.message}
-        </LiveRegion>
-      ))}
+      
+      {/* Live regions for screen reader announcements */}
+      <LiveRegion priority="polite">
+        {announcements
+          .filter(a => a.priority === 'polite')
+          .map(a => <div key={a.id}>{a.message}</div>)
+        }
+      </LiveRegion>
+      
+      <LiveRegion priority="assertive">
+        {announcements
+          .filter(a => a.priority === 'assertive')
+          .map(a => <div key={a.id}>{a.message}</div>)
+        }
+      </LiveRegion>
     </AccessibilityContext.Provider>
   );
 };
 
+/**
+ * Hook to consume accessibility context
+ */
 export const useAccessibility = () => {
   const context = React.useContext(AccessibilityContext);
   if (!context) {
-    throw new Error('useAccessibility must be used within AccessibilityProvider');
+    throw new Error('useAccessibility must be used within an AccessibilityProvider');
   }
   return context;
 };
 
+
 // ==============================================
-// ACCESSIBILITY TESTING UTILITIES
+// SEMANTIC HTML & LANDMARKS
 // ==============================================
 
 /**
- * Accessibility testing utilities for development
+ * Semantic main landmark component
  */
-export const a11yTestUtils = {
-  // Check for missing alt text
-  checkMissingAltText: () => {
-    const images = document.querySelectorAll('img:not([alt])');
-    if (images.length > 0) {
-      console.warn('Images missing alt text:', images);
-    }
-    return images;
-  },
+export const Main = (props) => (
+  <main id="main" tabIndex="-1" {...props} />
+);
 
-  // Check for missing form labels
-  checkMissingFormLabels: () => {
-    const inputs = document.querySelectorAll('input:not([aria-label]):not([aria-labelledby])');
-    const unlabeled = Array.from(inputs).filter(input => {
-      const id = input.getAttribute('id');
-      return !id || !document.querySelector(`label[for="${id}"]`);
-    });
-    
-    if (unlabeled.length > 0) {
-      console.warn('Form inputs missing labels:', unlabeled);
-    }
-    return unlabeled;
-  },
+/**
+ * Semantic section component
+ */
+export const Section = ({ labelledby, children, ...props }) => (
+  <section aria-labelledby={labelledby} {...props}>
+    {children}
+  </section>
+);
 
-  // Check for proper heading hierarchy
-  checkHeadingHierarchy: () => {
-    const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-    const issues = [];
-    let previousLevel = 0;
+/**
+ * Semantic nav landmark component
+ */
+export const Nav = ({ label, children, ...props }) => (
+  <nav aria-label={label} {...props}>
+    {children}
+  </nav>
+);
 
-    headings.forEach((heading, index) => {
-      const level = parseInt(heading.tagName.charAt(1));
-      
-      if (index === 0 && level !== 1) {
-        issues.push({ element: heading, issue: 'First heading should be h1' });
-      }
-      
-      if (level > previousLevel + 1) {
-        issues.push({ element: heading, issue: `Heading level jumps from ${previousLevel} to ${level}` });
-      }
-      
-      previousLevel = level;
-    });
+/**
+ * Semantic header landmark component
+ */
+export const Header = (props) => (
+  <header {...props} />
+);
 
-    if (issues.length > 0) {
-      console.warn('Heading hierarchy issues:', issues);
-    }
-    return issues;
-  },
+/**
+ * Semantic footer landmark component
+ */
+export const Footer = (props) => (
+  <footer {...props} />
+);
 
-  // Check color contrast
-  checkColorContrast: () => {
-    // This would require a more complex implementation
-    // For now, just remind to use external tools
-    console.info('Use tools like axe-core or Lighthouse for color contrast checking');
-  },
-
-  // Run all checks
-  runAllChecks: () => {
-    console.group('Accessibility Audit');
-    a11yTestUtils.checkMissingAltText();
-    a11yTestUtils.checkMissingFormLabels();
-    a11yTestUtils.checkHeadingHierarchy();
-    a11yTestUtils.checkColorContrast();
-    console.groupEnd();
-  }
-};
-
-// Export all utilities
+// Default export of all utilities
 export default {
   useKeyboardNavigation,
   useFocusManagement,
@@ -634,12 +554,15 @@ export default {
   useHighContrastMode,
   useReducedMotion,
   useAccessibility,
+  AccessibilityProvider,
   ScreenReaderOnly,
   LiveRegion,
+  getAriaAttributes,
   FocusRing,
   SkipLink,
-  getAriaAttributes,
-  AccessibilityProvider,
-  AccessibilityContext,
-  a11yTestUtils
+  Main,
+  Section,
+  Nav,
+  Header,
+  Footer,
 }; 

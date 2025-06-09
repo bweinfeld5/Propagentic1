@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Tab } from '@headlessui/react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext.jsx';
 import SignupForm from '../components/auth/SignupForm';
 import HomeNavLink from '../components/layout/HomeNavLink';
 import Button from '../components/ui/Button';

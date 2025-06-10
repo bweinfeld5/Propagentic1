@@ -1,0 +1,264 @@
+# PropAgentic Data Persistence & Account Security Fix PRD
+
+## Problem Statement
+
+**Critical Issue**: Landlord property data does not persist after logout/login cycle, and user names are not displaying securely in the dashboard header. This breaks the core user experience and indicates potential security vulnerabilities in data association and authentication flows.
+
+**Impact**: 
+- Data loss erodes user trust and platform reliability
+- Potential security vulnerabilities with user data isolation
+- Poor user experience with missing personalization
+- Possible cross-user data access issues
+
+## Current State Analysis
+
+**Symptoms Observed:**
+1. Landlord creates account and successfully logs in
+2. Landlord adds property through AddPropertyModal
+3. Property appears in dashboard during session
+4. Landlord logs out
+5. Upon re-login, property data is missing
+6. User name not displaying in dashboard header
+
+**Technical Stack:**
+- Frontend: React 18 + TypeScript + Firebase SDK
+- Backend: Firebase Auth + Firestore + Security Rules
+- State Management: React Context API (AuthContext)
+- Data Layer: dataService.js with real-time subscriptions
+
+## Root Cause Investigation Areas
+
+### 1. Authentication & User Profile System
+**Potential Issues:**
+- User document not created in Firestore during registration
+- Missing or incorrect userType/role assignment ('landlord')
+- Incomplete user profile data structure
+- Authentication state not persisting across sessions
+- Profile loading race conditions
+
+**Technical Components:**
+- Firebase Auth registration flow
+- AuthContext user profile management
+- User document creation in Firestore
+- Session persistence and recovery
+
+### 2. Property Data Creation Flow
+**Potential Issues:**
+- landlordId not properly assigned to property documents
+- Firestore write operations failing silently
+- Security rules blocking property creation
+- Data service errors not surfaced to UI
+- Transaction rollbacks or partial writes
+
+**Technical Components:**
+- AddPropertyModal form handling
+- dataService.createProperty method
+- Firestore security rules validation
+- Error handling and user feedback
+
+### 3. Property Data Retrieval System
+**Potential Issues:**
+- Query filters not matching user association
+- Real-time listeners not configured correctly
+- Race conditions in data loading
+- Cache invalidation problems
+- Subscription cleanup issues
+
+**Technical Components:**
+- loadDashboardData function
+- subscribeToProperties implementation
+- Query filters and user association
+- Real-time listener lifecycle management
+
+### 4. Security Rules & Data Isolation
+**Potential Issues:**
+- Properties collection rules too restrictive
+- isPropertyOwner function logic errors
+- Cross-user data access vulnerabilities
+- Rule evaluation performance issues
+- Missing validation functions
+
+**Technical Components:**
+- Firestore security rules (firestore.rules)
+- Property access validation functions
+- User role verification
+- Data isolation enforcement
+
+### 5. Frontend State Management
+**Potential Issues:**
+- AuthContext not properly loading user profile
+- currentUser state not persisting
+- Property state management in LandlordDashboard
+- Loading states and error handling gaps
+- Context provider ordering issues
+
+**Technical Components:**
+- AuthContext implementation
+- User profile loading and caching
+- Dashboard state management
+- Error boundary handling
+
+## Success Criteria
+
+### Primary Goals
+1. **Data Persistence**: Properties must persist after logout/login cycle
+2. **Security**: Users can only access their own data with zero cross-contamination
+3. **User Experience**: Display name shows correctly in dashboard header
+4. **Reliability**: Robust error handling prevents silent failures
+
+### Technical Requirements
+1. **Authentication Flow**: Complete user document creation on registration
+2. **Data Association**: Proper landlordId assignment to all property documents
+3. **Query Filters**: Correct user-scoped data retrieval
+4. **Security Rules**: Validated and tested Firestore rules
+5. **Error Handling**: Comprehensive error reporting and user feedback
+
+### Testing Requirements
+1. **End-to-End Testing**: Complete user journey from registration to property management
+2. **Security Testing**: Verify data isolation between users
+3. **Edge Case Testing**: Handle network failures, partial writes, and race conditions
+4. **Performance Testing**: Ensure queries and rules perform efficiently
+
+## Implementation Strategy
+
+### Phase 1: Diagnostic Investigation
+1. **Trace Registration Flow**: Verify user document creation and profile setup
+2. **Monitor Property Creation**: Track data flow from UI to Firestore
+3. **Analyze Query Execution**: Examine property retrieval and filtering
+4. **Validate Security Rules**: Test rule enforcement and performance
+5. **Audit State Management**: Review context providers and state flow
+
+### Phase 2: Issue Resolution
+1. **Fix Authentication Issues**: Ensure complete user profile creation
+2. **Resolve Data Association**: Guarantee proper landlordId assignment
+3. **Optimize Queries**: Improve data retrieval and filtering
+4. **Strengthen Security**: Validate and fix security rules
+5. **Enhance Error Handling**: Add comprehensive error reporting
+
+### Phase 3: Testing & Validation
+1. **Manual Testing**: Execute complete test protocol
+2. **Automated Testing**: Add unit and integration tests
+3. **Security Validation**: Verify data isolation and access controls
+4. **Performance Optimization**: Ensure efficient data operations
+
+## Technical Architecture
+
+### Data Models
+```typescript
+interface User {
+  uid: string;
+  email: string;
+  userType: 'landlord' | 'tenant' | 'admin';
+  firstName?: string;
+  lastName?: string;
+  displayName?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+interface Property {
+  id: string;
+  landlordId: string; // Must match user.uid
+  name: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
+  propertyType: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+```
+
+### Security Rules Requirements
+```javascript
+// Properties collection rules
+match /properties/{propertyId} {
+  allow read, write: if isSignedIn() && 
+    (isLandlord() && resource.data.landlordId == request.auth.uid);
+  allow create: if isSignedIn() && isLandlord() && 
+    request.resource.data.landlordId == request.auth.uid;
+}
+```
+
+## Testing Protocol
+
+### Test Cases
+1. **Fresh Account Creation**: New user registration and immediate property addition
+2. **Multi-Property Management**: Multiple properties per user
+3. **Cross-User Isolation**: Verify users cannot access others' data
+4. **Session Persistence**: Logout/login cycles with data verification
+5. **Error Scenarios**: Network failures, invalid data, security violations
+
+### Validation Steps
+1. Create test account with unique email
+2. Verify user document in Firestore console
+3. Add property and monitor network requests
+4. Confirm property document creation with correct landlordId
+5. Clear browser data and log out completely
+6. Log back in and verify property persistence
+7. Check user name display in dashboard header
+8. Test with multiple users to verify data isolation
+
+## Risk Assessment
+
+### High-Risk Areas
+1. **Data Loss**: Critical user data not persisting
+2. **Security Vulnerabilities**: Potential cross-user data access
+3. **User Trust**: Platform reliability concerns
+4. **Scalability**: Query performance with growing data
+
+### Mitigation Strategies
+1. **Comprehensive Testing**: Thorough validation before deployment
+2. **Error Monitoring**: Real-time error tracking and alerting
+3. **Rollback Plan**: Ability to revert changes if issues arise
+4. **User Communication**: Clear messaging about any service interruptions
+
+## Success Metrics
+
+### Functional Metrics
+- 100% property data persistence after logout/login
+- 0% cross-user data access incidents
+- 100% user name display accuracy
+- <2 second dashboard load time
+
+### Quality Metrics
+- 0 silent data write failures
+- 100% error scenarios handled gracefully
+- <1% user support tickets related to data issues
+- 99.9% uptime for data operations
+
+## Dependencies
+
+### Technical Dependencies
+- Firebase SDK compatibility
+- Firestore security rules deployment
+- React Context API stability
+- Browser session storage reliability
+
+### Resource Dependencies
+- Development time for investigation and fixes
+- Testing environment with realistic data
+- Staging deployment for validation
+- Production deployment coordination
+
+## Timeline
+
+### Week 1: Investigation & Analysis
+- Complete diagnostic investigation
+- Identify root causes
+- Document findings and solutions
+
+### Week 2: Implementation & Testing
+- Implement fixes across all identified areas
+- Execute comprehensive testing protocol
+- Validate security and performance
+
+### Week 3: Deployment & Monitoring
+- Deploy to staging environment
+- Conduct final validation
+- Deploy to production with monitoring
+
+This PRD provides a comprehensive framework for investigating and resolving the data persistence and security issues in the PropAgentic landlord dashboard system. 

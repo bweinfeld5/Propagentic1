@@ -1,0 +1,152 @@
+# PropAgentic – Firestore Security Rules **Product Requirements Document (PRD)**
+
+---
+
+## 1. Overview
+
+PropAgentic **Firestore Security Rules** protect every document in our multi‑tenant database. The rules implement a strict role‑based access‑control (RBAC) layer for Landlords, Tenants, Contractors, Property Managers, and Admins. They prevent data‑leakage, enforce document ownership, and ensure all writes follow approved state‑machines (e.g. ticket status, escrow lifecycle).  
+
+This PRD clarifies why each guard exists and how the rules will evolve from MVP hardening to full enterprise‑grade compliance.
+
+---
+
+## 2. Core Features
+
+### 2.1 Role‑Based Access Control (RBAC)
+- **What**: Central helpers (`isLandlord`, `isTenant`, etc.) gate every read/write.
+- **Why**: Guarantees that each user sees only the data relevant to their role.
+- **How**: User's `userType` in `/users/{uid}` drives branching logic.
+
+### 2.2 Scoped Collection Queries
+- **What**: List operations require owner‑specific filters and sensible `limit` caps.
+- **Why**: Blocks wide scans that could enumerate sensitive data.
+- **How**: Security Rules verify that the query includes `landlordId == uid` (properties) or refuse.
+
+### 2.3 Document‑Shape Validation
+- **What**: Creation helpers (`isValidCreateTicketData`, etc.) strip system fields and check enums.
+- **Why**: Protects integrity, prevents clients from injecting `status`, timestamps, or role bumps.
+- **How**: Rules reject writes where forbidden keys appear or enums are out of range.
+
+### 2.4 State‑Machine Enforcement
+- **What**: Functions like `isValidEscrowStatusChange` constrain status transitions.
+- **Why**: Ensures tickets, escrows, and disputes follow immutable audit trails.
+- **How**: Update rules compare *current → proposed* status and allow only legal moves.
+
+---
+
+## 3. User Experience
+
+### 3.1 Personas
+
+**Persona A: Ben (Founder / Admin)**
+- Needs global visibility and hot‑fix ability without redeploying code.
+- Relies on well‑commented rules for quick audits.
+
+**Persona B: Jordan (Landlord)**
+- Wants assurance that contractors or other landlords can't peek at his data.
+- Expects ticket data to remain private to his portfolio.
+
+### 3.2 Key Flows
+
+1. Landlord Jordan queries `/properties` → Rules inject `landlordId == uid` guard → receives only his docs.
+2. Tenant Taylor creates `/tickets/{id}` → Validation removes `status` field → ticket saved with default `new`.
+3. Contractor Casey tries to read unrelated ticket → Rule denies (no `contractorId` match).
+4. Admin Ben updates rules via Firebase console → changes propagate instantly with zero downtime.
+
+### 3.3 UI / DX Considerations
+
+- Clear error codes (`permission‑denied`) mapped to friendly UI copy.
+- Emulator test harness ensures CI fails on rules regression.
+
+---
+
+## 4. Technical Architecture
+
+### 4.1 System Components
+- **Firestore Security Rules (rules_version = '2')** — declarative policy layer.  
+- **Role Helper Library** — reusable functions (`isAdmin`, `isPropertyOwner`, etc.).  
+- **Validation Helpers** — per‑collection data‑shape checks.  
+- **Emulator Test Suite** (Jest + `@firebase/rules-unit-testing`).
+
+### 4.2 Data Models (security‑relevant)
+
+1. **User**
+
+```typescript
+interface UserDoc {
+  uid: string;
+  userType: 'landlord' | 'tenant' | 'contractor' | 'admin' | 'manager';
+  /* profile fields */
+}
+```
+
+2. **Ticket** (excerpt)
+
+```typescript
+status: 'new' | 'pending_classification' | 'classified' | 'assigned' | 'in_progress' |
+        'pending_review' | 'completed' | 'rejected' | 'cancelled' | 'on_hold' | 'escalated';
+```
+
+3. **EscrowAccount**, **Dispute**, **InviteCode**, etc. follow analogous enum constraints.
+
+### 4.3 APIs & Integrations
+
+- **Firebase Auth** — supplies `request.auth.uid` + custom claims.
+- **CI Pipeline** — GitHub Action runs rules test suite on every PR.
+- **Admin SDK** — privileged server code (e.g. batch imports) bypasses client rules.
+
+### 4.4 Infrastructure Requirements
+
+- Firestore (production & emulator).
+- Firebase Functions (optional admin tasks).
+- GitHub / GitLab CI for automated rules tests.
+
+---
+
+## 5. Development Roadmap
+
+### 5.1 Phase 0 – Patch Critical Gaps (done)
+- Remove `isDevMode` catch‑all.
+- Block user role tampering (`userType`).
+- Close ticket read leak.
+
+### 5.2 Phase 1 – Harden & Document
+- Write exhaustive jest tests (happy‑ & sad‑paths).
+- Inline comments for every helper.
+- PRD review & sign‑off.
+
+### 5.3 Phase 2 – Compliance & Observability
+- Add Firestore Rules coverage metrics in CI.
+- Export audit logs to BigQuery for SOC 2 evidence.
+- Build rule‑change deploy checklist.
+
+---
+
+## 6. Logical Dependency Chain
+
+1. **Role helpers** must exist before per‑collection matches.
+2. **Validation helpers** referenced inside write rules.
+3. **Tests** compile & run after every rule change.
+
+---
+
+## 7. Risks & Mitigations
+
+| Risk                                      | Impact | Mitigation                                 |
+| ----------------------------------------- | ------ | ------------------------------------------ |
+| Privilege escalation via user doc updates | High   | Field‑level guard blocks `userType` edits. |
+| Collection scan DoS                       | Medium | Enforce `limit` ≤ 100, required filters.   |
+| Rule regression in future PRs             | High   | CI fails if new tests break.               |
+| Complex rules become unmaintainable       | Medium | Document helpers, consolidate role checks. |
+
+---
+
+## 8. Appendix
+
+- **Rule Coverage Goal**: ≥ 90% of helper paths executed in test suite.
+- **Code Style**: Kebab‑case match paths, camelCase helper names.
+- **Reference Docs**: Firebase Rules V2 spec, HIPAA‑aligned patterns.
+
+---
+
+*Version 1.0 – June 2024* 

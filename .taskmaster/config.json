@@ -2,19 +2,19 @@
   "models": {
     "main": {
       "provider": "anthropic",
-      "modelId": "claude-3-7-sonnet-20250219",
+      "modelId": "claude-sonnet-4-20250514",
       "maxTokens": 120000,
       "temperature": 0.2
     },
     "research": {
-      "provider": "openrouter",
-      "modelId": "openai/gpt-4o-mini",
+      "provider": "openai",
+      "modelId": "gpt-4o-search-preview",
       "maxTokens": 8700,
       "temperature": 0.1
     },
     "fallback": {
-      "provider": "anthropic",
-      "modelId": "claude-3-5-sonnet-20240620",
+      "provider": "google",
+      "modelId": "gemini-2.0-flash",
       "maxTokens": 8192,
       "temperature": 0.1
     }

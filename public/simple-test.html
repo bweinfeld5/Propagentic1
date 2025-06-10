@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>White Screen Debug</title>
+    <style>
+        body { font-family: monospace; padding: 20px; line-height: 1.6; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre { background: #f8f9fa; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 PropAgentic White Screen Diagnostic</h1>
+    
+    <div class="status success">
+        ✅ Static HTML is working - development server is functional
+    </div>
+    
+    <h2>📝 To Fix Your White Screen:</h2>
+    
+    <div class="status info">
+        <strong>Step 1:</strong> Open Browser Developer Tools (F12 or right-click → Inspect)
+    </div>
+    
+    <div class="status info">
+        <strong>Step 2:</strong> Go to Console tab and look for red error messages
+    </div>
+    
+    <div class="status info">
+        <strong>Step 3:</strong> Common issues to look for:
+        <ul>
+            <li>JavaScript syntax errors (duplicate declarations, missing imports)</li>
+            <li>Failed component imports (missing files)</li>
+            <li>Firebase configuration errors</li>
+            <li>API key or environment variable issues</li>
+        </ul>
+    </div>
+    
+    <h2>🚀 Quick Actions:</h2>
+    <ul>
+        <li><a href="/">Go to Main App</a></li>
+        <li><a href="/test.html">Server Test Page</a></li>
+        <li><a href="/debug.html">JavaScript Debug Console</a></li>
+    </ul>
+    
+    <h2>💡 Development Tips:</h2>
+    <pre>
+# Kill all React processes
+pkill -f "react-app-rewired"
+lsof -ti:3000,3001,3002,3003 | xargs kill -9
+
+# Start clean development server
+npm run start:fix
+
+# Check for compilation errors
+npm run build
+    </pre>
+</body>
+</html> 

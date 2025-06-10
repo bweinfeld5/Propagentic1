@@ -83,6 +83,9 @@ node_modules 2/
 *.swo
 .DS_Store
 
+# Cursor IDE configuration (contains API keys)
+.cursor/mcp.json
+
 # Service Account Keys
 *-firebase-adminsdk*.json
 service-account*.json

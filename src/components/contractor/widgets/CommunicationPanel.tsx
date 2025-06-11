@@ -7,161 +7,22 @@ import {
   VideoCameraIcon,
   EllipsisHorizontalIcon
 } from '@heroicons/react/24/outline';
-
-interface Message {
-  id: string;
-  sender: {
-    id: string;
-    name: string;
-    avatar?: string;
-    role: 'landlord' | 'tenant' | 'contractor' | 'system';
-  };
-  content: string;
-  timestamp: Date;
-  isRead: boolean;
-}
+import { useAuth } from '../../../context/AuthContext';
+import { useMessages } from '../../../hooks/useMessages';
 
 const CommunicationPanel: React.FC = () => {
-  const [activeChat, setActiveChat] = useState<string | null>('chat1');
+  const { currentUser } = useAuth();
+  const {
+    conversations,
+    activeConversation,
+    messages,
+    loading,
+    error,
+    setActiveConversation,
+    sendMessage
+  } = useMessages();
+  
   const [messageInput, setMessageInput] = useState('');
-  
-  // Mock conversations data
-  const conversations = [
-    {
-      id: 'chat1',
-      contact: {
-        id: 'user1',
-        name: 'Sarah Johnson',
-        role: 'landlord',
-        avatar: undefined
-      },
-      lastMessage: 'Can you provide an update on the kitchen repair?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-      unread: 2
-    },
-    {
-      id: 'chat2',
-      contact: {
-        id: 'user2',
-        name: 'Michael Chen',
-        role: 'tenant',
-        avatar: undefined
-      },
-      lastMessage: 'What time will you arrive tomorrow?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
-      unread: 0
-    },
-    {
-      id: 'chat3',
-      contact: {
-        id: 'user3',
-        name: 'PropAgentic Support',
-        role: 'system',
-        avatar: undefined
-      },
-      lastMessage: 'Your document verification is complete.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-      unread: 0
-    }
-  ];
-  
-  // Mock messages for active chat
-  const messages: Record<string, Message[]> = {
-    chat1: [
-      {
-        id: 'msg1',
-        sender: {
-          id: 'user1',
-          name: 'Sarah Johnson',
-          role: 'landlord'
-        },
-        content: 'Hi there! I wanted to check on the status of the kitchen repair at 123 Main St.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-        isRead: true
-      },
-      {
-        id: 'msg2',
-        sender: {
-          id: 'currentUser',
-          name: 'You',
-          role: 'contractor'
-        },
-        content: 'Hello Sarah! I\'ve ordered the parts and they should arrive tomorrow. I\'ll be able to complete the repair on Thursday.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1.5), // 1.5 hours ago
-        isRead: true
-      },
-      {
-        id: 'msg3',
-        sender: {
-          id: 'user1',
-          name: 'Sarah Johnson',
-          role: 'landlord'
-        },
-        content: 'That sounds great. The tenant will be home after 3pm on Thursday.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 45), // 45 minutes ago
-        isRead: true
-      },
-      {
-        id: 'msg4',
-        sender: {
-          id: 'user1',
-          name: 'Sarah Johnson',
-          role: 'landlord'
-        },
-        content: 'Can you provide an update on the kitchen repair?',
-        timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-        isRead: false
-      }
-    ],
-    chat2: [
-      {
-        id: 'msg1',
-        sender: {
-          id: 'user2',
-          name: 'Michael Chen',
-          role: 'tenant'
-        },
-        content: 'Hello, I was told you\'ll be fixing our bathroom sink tomorrow.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4), // 4 hours ago
-        isRead: true
-      },
-      {
-        id: 'msg2',
-        sender: {
-          id: 'currentUser',
-          name: 'You',
-          role: 'contractor'
-        },
-        content: 'Hi Michael, that\'s correct. I have you scheduled for tomorrow.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3.5), // 3.5 hours ago
-        isRead: true
-      },
-      {
-        id: 'msg3',
-        sender: {
-          id: 'user2',
-          name: 'Michael Chen',
-          role: 'tenant'
-        },
-        content: 'What time will you arrive tomorrow?',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
-        isRead: true
-      }
-    ],
-    chat3: [
-      {
-        id: 'msg1',
-        sender: {
-          id: 'user3',
-          name: 'PropAgentic Support',
-          role: 'system'
-        },
-        content: 'Your document verification is complete. You are now eligible to receive job assignments.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-        isRead: true
-      }
-    ]
-  };
   
   // Format timestamp
   const formatTimestamp = (date: Date) => {
@@ -183,14 +44,15 @@ const CommunicationPanel: React.FC = () => {
   };
   
   // Handle send message
-  const handleSendMessage = () => {
-    if (!messageInput.trim() || !activeChat) return;
+  const handleSendMessage = async () => {
+    if (!messageInput.trim() || !activeConversation) return;
     
-    // In a real app, this would send the message to the backend
-    console.log(`Sending message to ${activeChat}: ${messageInput}`);
-    
-    // Clear input
-    setMessageInput('');
+    try {
+      await sendMessage(messageInput.trim());
+      setMessageInput('');
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    }
   };
   
   // Get role color
@@ -222,57 +84,84 @@ const CommunicationPanel: React.FC = () => {
         {/* Conversations List */}
         <div className="md:col-span-1 border-r border-gray-200 pr-4">
           <div className="space-y-2 h-full overflow-y-auto">
-            {conversations.map((conversation) => (
-              <button
-                key={conversation.id}
-                onClick={() => setActiveChat(conversation.id)}
-                className={`w-full text-left p-3 rounded-lg transition-colors duration-200 ${
-                  activeChat === conversation.id
-                    ? 'bg-orange-100'
-                    : 'hover:bg-gray-100'
-                }`}
-              >
-                <div className="flex items-center">
-                  <div className="relative flex-shrink-0">
-                    {conversation.contact.avatar ? (
-                      <img
-                        src={conversation.contact.avatar}
-                        alt={conversation.contact.name}
-                        className="w-10 h-10 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                        <UserCircleIcon className="w-6 h-6 text-gray-600" />
-                      </div>
-                    )}
-                    {conversation.unread > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                        {conversation.unread}
-                      </span>
-                    )}
-                  </div>
-                  <div className="ml-3 flex-1 overflow-hidden">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-medium text-gray-900 truncate">
-                        {conversation.contact.name}
-                      </h3>
-                      <span className="text-xs text-gray-500">
-                        {formatTimestamp(conversation.timestamp)}
-                      </span>
+            {loading && (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+                <p className="text-sm text-gray-500 mt-2">Loading conversations...</p>
+              </div>
+            )}
+            {error && (
+              <div className="text-center py-4">
+                <p className="text-sm text-red-500">{error}</p>
+              </div>
+            )}
+            {!loading && !error && conversations.length === 0 && (
+              <div className="text-center py-8">
+                <ChatBubbleLeftRightIcon className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-500">No conversations yet</p>
+                <p className="text-xs text-gray-400 mt-1">Start a conversation with a landlord</p>
+              </div>
+            )}
+            {conversations.map((conversation) => {
+              // Get the other participant (not the current user)
+              const otherParticipant = conversation.participants.find(p => p.id !== currentUser?.uid);
+              const unreadCount = currentUser ? conversation.unreadCounts[currentUser.uid] || 0 : 0;
+              
+              return (
+                <button
+                  key={conversation.id}
+                  onClick={() => setActiveConversation(conversation)}
+                  className={`w-full text-left p-3 rounded-lg transition-colors duration-200 ${
+                    activeConversation?.id === conversation.id
+                      ? 'bg-orange-100'
+                      : 'hover:bg-gray-100'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <div className="relative flex-shrink-0">
+                      {otherParticipant?.avatar ? (
+                        <img
+                          src={otherParticipant.avatar}
+                          alt={otherParticipant.name}
+                          className="w-10 h-10 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+                          <UserCircleIcon className="w-6 h-6 text-gray-600" />
+                        </div>
+                      )}
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                          {unreadCount}
+                        </span>
+                      )}
                     </div>
-                    <p className="text-xs text-gray-500 truncate">
-                      {conversation.lastMessage}
-                    </p>
+                    <div className="ml-3 flex-1 overflow-hidden">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-medium text-gray-900 truncate">
+                          {otherParticipant?.name || 'Unknown User'}
+                        </h3>
+                        <span className="text-xs text-gray-500">
+                          {conversation.lastMessage?.timestamp ? 
+                            formatTimestamp(conversation.lastMessage.timestamp) : 
+                            formatTimestamp(conversation.updatedAt)
+                          }
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 truncate">
+                        {conversation.lastMessage?.text || 'No messages yet'}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </div>
         
         {/* Chat Area */}
         <div className="md:col-span-2 flex flex-col h-full">
-          {activeChat ? (
+          {activeConversation ? (
             <>
               {/* Chat Header */}
               <div className="flex items-center justify-between pb-3 border-b border-gray-200">
@@ -281,16 +170,28 @@ const CommunicationPanel: React.FC = () => {
                     <UserCircleIcon className="w-5 h-5 text-gray-600" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900">
-                      {conversations.find(c => c.id === activeChat)?.contact.name}
-                    </h3>
-                    <div className="flex items-center">
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                        getRoleColor(conversations.find(c => c.id === activeChat)?.contact.role || '')
-                      }`}>
-                        {conversations.find(c => c.id === activeChat)?.contact.role}
-                      </span>
-                    </div>
+                    {(() => {
+                      const otherParticipant = activeConversation.participants.find(p => p.id !== currentUser?.uid);
+                      return (
+                        <>
+                          <h3 className="text-sm font-medium text-gray-900">
+                            {otherParticipant?.name || 'Unknown User'}
+                          </h3>
+                          <div className="flex items-center">
+                            <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                              getRoleColor(otherParticipant?.role || '')
+                            }`}>
+                              {otherParticipant?.role}
+                            </span>
+                            {otherParticipant?.company && (
+                              <span className="text-xs text-gray-500 ml-2">
+                                {otherParticipant.company}
+                              </span>
+                            )}
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
                 <div className="flex space-x-2">
@@ -308,19 +209,19 @@ const CommunicationPanel: React.FC = () => {
               
               {/* Messages */}
               <div className="flex-1 overflow-y-auto py-3 space-y-3">
-                {messages[activeChat]?.map((message) => (
+                {messages.map((message) => (
                   <div
                     key={message.id}
-                    className={`flex ${message.sender.id === 'currentUser' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${message.senderId === currentUser?.uid ? 'justify-end' : 'justify-start'}`}
                   >
                     <div className={`max-w-[80%] rounded-lg p-3 ${
-                      message.sender.id === 'currentUser'
+                      message.senderId === currentUser?.uid
                         ? 'bg-orange-500 text-white'
                         : 'bg-gray-100 text-gray-800'
                     }`}>
-                      <p className="text-sm">{message.content}</p>
+                      <p className="text-sm">{message.text}</p>
                       <span className={`text-xs mt-1 block text-right ${
-                        message.sender.id === 'currentUser' ? 'text-orange-100' : 'text-gray-500'
+                        message.senderId === currentUser?.uid ? 'text-orange-100' : 'text-gray-500'
                       }`}>
                         {formatTimestamp(message.timestamp)}
                       </span>

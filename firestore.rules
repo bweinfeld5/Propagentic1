@@ -159,5 +159,56 @@ service cloud.firestore {
     match /mail/{mailId} {
       allow create: if isSignedIn(); // Allow any signed-in user to create an email document
     }
+
+    // Conversations Collection - for real-time messaging
+    match /conversations/{conversationId} {
+      function isParticipant() {
+        return isSignedIn() && request.auth.uid in resource.data.participants[].id;
+      }
+
+      function isValidParticipant() {
+        return isSignedIn() && 
+               request.auth.uid in request.resource.data.participants[].id;
+      }
+
+      // Read conversations if user is a participant
+      allow read: if isParticipant();
+      
+      // Create conversations if user is one of the participants
+      allow create: if isValidParticipant();
+      
+      // Update conversations if user is a participant (for marking as read, etc.)
+      allow update: if isParticipant();
+      
+      // Delete conversations if user is a participant
+      allow delete: if isParticipant();
+    }
+
+    // Messages Collection - for individual messages
+    match /messages/{messageId} {
+      function isMessageParticipant() {
+        let conversation = get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data;
+        return isSignedIn() && request.auth.uid in conversation.participants[].id;
+      }
+
+      function canCreateMessage() {
+        let conversation = get(/databases/$(database)/documents/conversations/$(request.resource.data.conversationId)).data;
+        return isSignedIn() && 
+               request.auth.uid in conversation.participants[].id &&
+               request.resource.data.senderId == request.auth.uid;
+      }
+
+      // Read messages if user is participant of the conversation
+      allow read: if isMessageParticipant();
+      
+      // Create messages if user is participant and sender matches auth
+      allow create: if canCreateMessage();
+      
+      // Update messages if user is participant (for marking as read, editing)
+      allow update: if isMessageParticipant();
+      
+      // Delete messages if user is the sender
+      allow delete: if isSignedIn() && resource.data.senderId == request.auth.uid;
+    }
   }
 }

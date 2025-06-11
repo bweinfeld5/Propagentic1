@@ -8,7 +8,7 @@ const EnhancedMaintenancePage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  const propertyId = location.state?.propertyId;
+  const propertyId = (location.state as { propertyId?: string } | null)?.propertyId;
   
   const handleSuccess = () => {
     navigate('/tenant/dashboard', {

@@ -74,7 +74,7 @@ const EnhancedMaintenanceForm: React.FC<EnhancedMaintenanceFormProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // Get property ID from props or route state
-  const propertyId = propPropertyId || location.state?.propertyId;
+  const propertyId = propPropertyId || (location.state as { propertyId?: string } | null)?.propertyId;
 
   // Fetch properties on mount
   useEffect(() => {

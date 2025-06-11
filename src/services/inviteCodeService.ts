@@ -185,14 +185,15 @@ export const validateInviteCode = async (code: string): Promise<ValidationResult
     };
   } catch (error) {
     console.error('💥 Error in validateInviteCode:', error);
+    const err = error as { message?: string; code?: string; stack?: string };
     console.error('💥 Error details:', {
-      message: error.message,
-      code: error.code,
-      stack: error.stack
+      message: err.message,
+      code: err.code,
+      stack: err.stack
     });
     
     // If there's a Firestore permission error, still allow test codes
-    if (error.code === 'permission-denied') {
+    if (err.code === 'permission-denied') {
       console.log('🔒 Firestore permission denied - this is expected in some environments');
       return { 
         isValid: false, 
@@ -202,7 +203,7 @@ export const validateInviteCode = async (code: string): Promise<ValidationResult
     
     return { 
       isValid: false, 
-      message: 'An error occurred while validating the invite code. ' + (error.message || '') 
+      message: 'An error occurred while validating the invite code. ' + (err.message || '') 
     };
   }
 };

@@ -25,6 +25,7 @@ const LandlordDashboardDemo = lazy(() => import('./pages/LandlordDashboardDemoPa
 const ContractorDashboard = lazy(() => import('./components/contractor/EnhancedContractorDashboard'));
 const ContractorDashboardDemo = lazy(() => import('./pages/ContractorDashboardDemo.jsx'));
 const OriginalContractorDashboard = lazy(() => import('./components/contractor/ContractorDashboard.jsx'));
+const ContractorMessagesPage = lazy(() => import('./pages/contractor/ContractorMessagesPage.tsx'));
 const PricingPage = lazy(() => import('./pages/PricingPage.jsx'));
 const OnboardingSurvey = lazy(() => import('./components/onboarding/OnboardingSurvey.jsx'));
 const LandlordOnboarding = lazy(() => import('./components/onboarding/LandlordOnboarding.jsx'));
@@ -196,6 +197,7 @@ function App() {
                                 <Route path="/tenant/dashboard" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />
                                 <Route path="/landlord/dashboard" element={<PrivateRoute><LandlordDashboard /></PrivateRoute>} />
                                 <Route path="/contractor/dashboard" element={<PrivateRoute><ContractorDashboard /></PrivateRoute>} />
+                                <Route path="/contractor/messages" element={<PrivateRoute><ContractorMessagesPage /></PrivateRoute>} />
                                 <Route path="/contractor/dashboard/enhanced" element={<ContractorDashboardDemo />} />
                                 <Route path="/contractor/dashboard/original" element={<PrivateRoute><OriginalContractorDashboard /></PrivateRoute>} />
                                 <Route path="/maintenance/new" element={<PrivateRoute><MaintenanceSurvey /></PrivateRoute>} />

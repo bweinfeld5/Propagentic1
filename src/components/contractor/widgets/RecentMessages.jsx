@@ -1,76 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
-import { db } from '../../../firebase/config';
+import { useMessages } from '../../../hooks/useMessages';
 import {
   ChatBubbleLeftRightIcon,
   UserIcon,
   BuildingOfficeIcon,
   ExclamationCircleIcon,
-  PhoneIcon
+  PhoneIcon,
+  WrenchScrewdriverIcon
 } from '@heroicons/react/24/outline';
 
 const RecentMessages = () => {
   const { currentUser } = useAuth();
-  const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { conversations, loading, error } = useMessages();
   const [filter, setFilter] = useState('all'); // 'all', 'unread', 'urgent'
 
-  useEffect(() => {
-    if (currentUser) {
-      fetchRecentMessages();
-    }
-  }, [currentUser]);
-
-  const fetchRecentMessages = async () => {
-    try {
-      setLoading(true);
+  // Transform conversations into message format for display
+  const getMessageData = () => {
+    if (!conversations || conversations.length === 0) return [];
+    
+    return conversations.map(conversation => {
+      const otherParticipant = conversation.participants.find(p => p.id !== currentUser?.uid);
+      const unreadCount = currentUser ? conversation.unreadCounts[currentUser.uid] || 0 : 0;
       
-      // In a real implementation, you would fetch messages from Firebase
-      // For now, using mock data
-      const mockMessages = [
-        {
-          id: '1',
-          from: 'Sarah Johnson',
-          fromType: 'landlord',
-          property: '456 Oak Ave',
-          message: 'Hi! The HVAC repair is scheduled for tomorrow at 2 PM. Please confirm.',
-          timestamp: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-          isRead: false,
-          isUrgent: false,
-          avatar: null
-        },
-        {
-          id: '2',
-          from: 'Mike Davis',
-          fromType: 'tenant',
-          property: '789 Pine St',
-          message: 'Thank you for fixing the electrical outlet so quickly!',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-          isRead: true,
-          isUrgent: false,
-          avatar: null
-        },
-        {
-          id: '3',
-          from: 'John Smith',
-          fromType: 'landlord',
-          property: '123 Main St',
-          message: 'URGENT: Water leak in apartment 4B. Can you come ASAP?',
-          timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-          isRead: false,
-          isUrgent: true,
-          avatar: null
-        }
-      ];
-
-      setMessages(mockMessages);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    } finally {
-      setLoading(false);
-    }
+      return {
+        id: conversation.id,
+        from: otherParticipant?.name || 'Unknown User',
+        fromType: otherParticipant?.role || 'unknown',
+        property: conversation.metadata?.propertyName || 'No property specified',
+        message: conversation.lastMessage?.text || 'No messages yet',
+        timestamp: conversation.lastMessage?.timestamp || conversation.updatedAt,
+        isRead: unreadCount === 0,
+        isUrgent: conversation.metadata?.priority === 'urgent' || false,
+        avatar: null,
+        company: otherParticipant?.company || null,
+        conversationId: conversation.id
+      };
+    }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   };
+
+  const messages = getMessageData();
 
   const getFilteredMessages = () => {
     switch (filter) {
@@ -100,7 +69,16 @@ const RecentMessages = () => {
   };
 
   const getContactIcon = (fromType) => {
-    return fromType === 'landlord' ? BuildingOfficeIcon : UserIcon;
+    switch (fromType) {
+      case 'landlord':
+        return BuildingOfficeIcon;
+      case 'contractor':
+        return WrenchScrewdriverIcon;
+      case 'tenant':
+        return UserIcon;
+      default:
+        return UserIcon;
+    }
   };
 
   const truncateMessage = (message, maxLength = 60) => {
@@ -124,6 +102,24 @@ const RecentMessages = () => {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 rounded-2xl border border-orange-200 p-6">
+        <div className="flex items-center space-x-3 mb-4">
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md">
+            <ChatBubbleLeftRightIcon className="w-5 h-5 text-orange-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800">Messages</h3>
+        </div>
+        <div className="text-center py-8">
+          <ExclamationCircleIcon className="w-12 h-12 mx-auto text-red-400 mb-4" />
+          <p className="text-red-600 font-medium mb-2">Unable to load messages</p>
+          <p className="text-sm text-gray-600">{error}</p>
         </div>
       </div>
     );
@@ -191,6 +187,9 @@ const RecentMessages = () => {
             <ChatBubbleLeftRightIcon className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
             <p className="text-gray-500 dark:text-gray-400">
               No {filter !== 'all' ? filter : ''} messages
+            </p>
+            <p className="text-xs text-gray-400 mt-2">
+              Start a conversation with a landlord to see messages here
             </p>
           </div>
         ) : (
@@ -278,11 +277,24 @@ const RecentMessages = () => {
       {/* Show More */}
       {filteredMessages.length > 4 && (
         <div className="mt-4 text-center">
-          <button className="text-orange-600 hover:text-orange-800 text-sm font-medium">
+          <button 
+            onClick={() => window.location.href = '/contractor/messages'}
+            className="text-orange-600 hover:text-orange-800 text-sm font-medium"
+          >
             View All Messages ({filteredMessages.length})
           </button>
         </div>
       )}
+
+      {/* Footer */}
+      <div className="mt-6 pt-4 border-t border-orange-200">
+        <button 
+          onClick={() => window.location.href = '/contractor/messages'}
+          className="w-full text-sm text-orange-600 hover:text-orange-700 font-medium py-2 border border-orange-200 rounded-lg hover:bg-orange-50 transition-colors duration-200"
+        >
+          Open Full Messaging Interface
+        </button>
+      </div>
     </div>
   );
 };

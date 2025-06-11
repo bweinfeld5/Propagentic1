@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createNotificationOnInvite = exports.sendInviteEmail = exports.redeemInviteCode = exports.validateInviteCode = exports.generateInviteCode = exports.ping = void 0;
+exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.redeemInviteCode = exports.validateInviteCode = exports.generateInviteCode = exports.ping = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 // Initialize Firebase Admin SDK
@@ -58,5 +58,11 @@ Object.defineProperty(exports, "sendInviteEmail", { enumerable: true, get: funct
 // Import and export notification trigger functions  
 const inviteTriggers_1 = require("./inviteTriggers");
 Object.defineProperty(exports, "createNotificationOnInvite", { enumerable: true, get: function () { return inviteTriggers_1.createNotificationOnInvite; } });
-console.log("✅ Essential functions loaded (ping, invite code, email invites, notifications).");
+// Import and export user relationship functions (property invites)
+const userRelationships_1 = require("./userRelationships");
+Object.defineProperty(exports, "sendPropertyInvite", { enumerable: true, get: function () { return userRelationships_1.sendPropertyInvite; } });
+Object.defineProperty(exports, "acceptPropertyInvite", { enumerable: true, get: function () { return userRelationships_1.acceptPropertyInvite; } });
+Object.defineProperty(exports, "rejectPropertyInvite", { enumerable: true, get: function () { return userRelationships_1.rejectPropertyInvite; } });
+Object.defineProperty(exports, "addContractorToRolodex", { enumerable: true, get: function () { return userRelationships_1.addContractorToRolodex; } });
+console.log("✅ Essential functions loaded (ping, invite code, email invites, notifications, property invites).");
 //# sourceMappingURL=index.js.map

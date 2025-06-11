@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Bell, Menu, Home, User } from 'lucide-react';
 import { PropAgenticMark } from '../../components/brand/PropAgenticMark';
@@ -17,6 +17,7 @@ const TenantDashboard: React.FC = () => {
   console.log('RENDERING TenantDashboard.TSX'); // DEBUG LINE
   const { currentUser, userProfile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
@@ -26,6 +27,15 @@ const TenantDashboard: React.FC = () => {
   const [tenantProperties, setTenantProperties] = useState<any[]>([]);
   const [showInviteModal, setShowInviteModal] = useState(false);
   
+  // Handle success message from maintenance form
+  useEffect(() => {
+    if (location.state?.showSuccessMessage) {
+      toast.success(location.state.message || 'Maintenance request submitted successfully!');
+      // Clear the state to prevent showing the message again
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, navigate]);
+
   // Fetch tenant data (invites and properties)
   useEffect(() => {
     const fetchTenantData = async () => {
@@ -89,7 +99,7 @@ const TenantDashboard: React.FC = () => {
   
   // Handle maintenance request
   const handleRequestMaintenance = (propertyId: string) => {
-    navigate('/maintenance/new', { state: { propertyId } });
+    navigate('/maintenance/enhanced', { state: { propertyId } });
   };
   
   // Handle opening invite modal

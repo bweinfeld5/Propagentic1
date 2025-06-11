@@ -321,7 +321,7 @@ const LandingPage: React.FC = () => {
         {[...Array(12)].map((_, i) => (
           <FloatingParticle 
             key={i}
-            delay={i * 0.8}
+                                delay={(i || 0) * 0.8}
             duration={8 + i * 0.5}
             x={Math.random() * 100}
             y={Math.random() * 100}
@@ -368,7 +368,7 @@ const LandingPage: React.FC = () => {
       {[...Array(15)].map((_, i) => (
         <FloatingParticle 
           key={i}
-          delay={i * 0.6}
+                              delay={(i || 0) * 0.6}
           duration={10 + i * 0.3}
           x={Math.random() * 100}
           y={Math.random() * 100}

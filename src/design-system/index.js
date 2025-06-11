@@ -57,6 +57,9 @@ export const designSystemConfig = {
   },
 };
 
+// Import tokens
+import tokens from './tokens';
+
 // Quick access to commonly used items
 export { colors, typography, spacing, shadows, borderRadius } from './tokens';
 export { useBreakpoint, useMediaQuery, Container, ResponsiveGrid } from './responsive.jsx';

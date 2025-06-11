@@ -34,7 +34,7 @@ const GlassyHeader = () => {
   // Authentication and user state
   const { currentUser, userProfile, logout, isLandlord, isTenant, isContractor } = useAuth();
   const { isDemoMode, toggleDemoMode } = useDemoMode();
-  const { getOfflineStatus } = useConnection ? useConnection() : { getOfflineStatus: () => 'online' };
+  const { getOfflineStatus } = useConnection();
   
   // UI state
   const [isScrolled, setIsScrolled] = useState(true);

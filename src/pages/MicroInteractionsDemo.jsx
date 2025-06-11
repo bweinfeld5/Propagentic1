@@ -314,7 +314,7 @@ const MicroInteractionsDemoContent = () => {
             {demoItems.length > 0 ? (
               <div className="space-y-3">
                 {demoItems.map((item, index) => (
-                  <ScaleIn key={item.id} delay={index * 0.1}>
+                  <ScaleIn key={item.id} delay={(index || 0) * 0.1}>
                     <div className={`flex items-center justify-between p-4 rounded-lg border ${darkModeClasses.border.default} ${darkModeClasses.bg.secondary}`}>
                       <div className="flex items-center gap-3">
                         {item.type === 'property' && <HomeIcon className="h-5 w-5 text-primary-500" />}

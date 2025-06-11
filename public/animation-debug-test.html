@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PropAgentic Animation Debug Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    
+    .test-section {
+      margin: 30px 0;
+      padding: 20px;
+      border: 2px solid #e1e5e9;
+      border-radius: 8px;
+      background: #f8f9fa;
+    }
+    
+    .error {
+      background: #fee;
+      border-color: #fcc;
+      color: #c33;
+    }
+    
+    .success {
+      background: #efe;
+      border-color: #cfc;
+      color: #3c3;
+    }
+    
+    .warning {
+      background: #ffeaa7;
+      border-color: #fdcb6e;
+      color: #e17055;
+    }
+    
+    .test-box {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+      margin: 10px;
+      border-radius: 8px;
+      display: inline-block;
+      position: relative;
+    }
+    
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 5px;
+      font-size: 14px;
+      transition: background 0.3s ease;
+    }
+    
+    button:hover {
+      background: #5a67d8;
+    }
+    
+    button.danger {
+      background: #e74c3c;
+    }
+    
+    button.danger:hover {
+      background: #c0392b;
+    }
+    
+    .console-output {
+      background: #2d3748;
+      color: #e2e8f0;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 13px;
+      margin: 15px 0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .status {
+      padding: 10px;
+      border-radius: 6px;
+      margin: 10px 0;
+      font-weight: 500;
+    }
+    
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .metric {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .metric-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #667eea;
+    }
+    
+    .metric-label {
+      color: #64748b;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎬 PropAgentic Animation Debug Test</h1>
+    <p>This page tests and demonstrates the WAAPI (Web Animations API) errors and their fixes.</p>
+    
+    <!-- Status Display -->
+    <div id="status" class="status">
+      ✅ Page loaded successfully. React app should be running on port 3001.
+    </div>
+    
+    <!-- Metrics Dashboard -->
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-value" id="errorCount">0</div>
+        <div class="metric-label">Animation Errors</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" id="successCount">0</div>
+        <div class="metric-label">Successful Animations</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" id="testCount">0</div>
+        <div class="metric-label">Tests Run</div>
+      </div>
+    </div>
+    
+    <!-- Test Scenarios -->
+    <div class="test-section">
+      <h3>🚨 Test 1: Invalid Delay Values</h3>
+      <p>These animations demonstrate the WAAPI errors that were causing your React app to break:</p>
+      
+      <div class="test-box" id="box1"></div>
+      <div class="test-box" id="box2"></div>
+      <div class="test-box" id="box3"></div>
+      
+      <div>
+        <button class="danger" onclick="testInvalidDelays()">🔥 Test Invalid Delays</button>
+        <button onclick="testValidDelays()">✅ Test Valid Delays</button>
+      </div>
+    </div>
+    
+    <!-- Solution Summary -->
+    <div class="test-section success">
+      <h3>✅ Fixes Applied to Your React App</h3>
+      <ul>
+        <li><strong>SafeMotion Component</strong>: Added <code>safeDelay()</code> validation function</li>
+        <li><strong>Array Mapping</strong>: Fixed <code>delay={(index || 0) * 0.1}</code> pattern</li>
+        <li><strong>Global Error Handler</strong>: Added WAAPI error detection utility</li>
+        <li><strong>Development Warnings</strong>: Enhanced debugging with <code>animationDebug.js</code></li>
+      </ul>
+    </div>
+    
+    <!-- Instructions -->
+    <div class="test-section warning">
+      <h3>🔄 Test Your React App Now</h3>
+      <ol>
+        <li><strong>React App</strong>: <a href="http://localhost:3001" target="_blank">http://localhost:3001</a></li>
+        <li><strong>Check Console</strong>: Open browser dev tools (F12) for animation debug messages</li>
+        <li><strong>Test Pages</strong>: Navigate to ComponentsShowcase, MicroInteractionsDemo</li>
+        <li><strong>Verify</strong>: No more "non-finite delay" errors should appear</li>
+      </ol>
+    </div>
+    
+    <div class="test-section">
+      <h3>📊 Real-time Console Monitoring</h3>
+      <div class="console-output" id="consoleOutput">
+        <div>Ready for testing...</div>
+      </div>
+      <button onclick="clearConsole()">Clear Console</button>
+    </div>
+  </div>
+
+  <script>
+    let errorCount = 0;
+    let successCount = 0;
+    let testCount = 0;
+    
+    function updateMetrics() {
+      document.getElementById('errorCount').textContent = errorCount;
+      document.getElementById('successCount').textContent = successCount;
+      document.getElementById('testCount').textContent = testCount;
+    }
+    
+    function logToConsole(message, type = 'info') {
+      const console = document.getElementById('consoleOutput');
+      const timestamp = new Date().toLocaleTimeString();
+      const typeIcon = type === 'error' ? '❌' : type === 'warn' ? '⚠️' : 'ℹ️';
+      
+      const div = document.createElement('div');
+      div.innerHTML = `<span style="color: #64748b;">[${timestamp}]</span> ${typeIcon} ${message}`;
+      console.appendChild(div);
+      console.scrollTop = console.scrollHeight;
+    }
+    
+    function testInvalidDelays() {
+      testCount++;
+      logToConsole('Testing invalid delay values (reproducing the error)...', 'warn');
+      
+      const testValues = [NaN, undefined, null, Infinity, "not a number"];
+      
+      testValues.forEach((value, index) => {
+        try {
+          const box = document.getElementById(`box${(index % 3) + 1}`);
+          box.animate([
+            { transform: 'translateX(0px)' },
+            { transform: 'translateX(100px)' }
+          ], {
+            duration: 500,
+            delay: value // This causes the error
+          });
+          logToConsole(`❌ Should have failed with delay: ${value}`, 'error');
+        } catch (error) {
+          logToConsole(`✅ Caught expected error: ${error.message}`, 'error');
+          errorCount++;
+        }
+      });
+      updateMetrics();
+    }
+    
+    function testValidDelays() {
+      testCount++;
+      logToConsole('Testing valid delay values (fixed version)...', 'info');
+      
+      [0, 0.1, 0.2].forEach((delay, index) => {
+        try {
+          const box = document.getElementById(`box${index + 1}`);
+          const animation = box.animate([
+            { transform: 'translateX(0px)' },
+            { transform: 'translateX(100px)' }
+          ], {
+            duration: 800,
+            delay: delay * 1000,
+            fill: 'forwards'
+          });
+          
+          animation.addEventListener('finish', () => {
+            successCount++;
+            updateMetrics();
+            logToConsole(`✅ Animation completed (delay: ${delay}s)`, 'info');
+          });
+        } catch (error) {
+          logToConsole(`❌ Error: ${error.message}`, 'error');
+          errorCount++;
+        }
+      });
+      updateMetrics();
+    }
+    
+    function clearConsole() {
+      document.getElementById('consoleOutput').innerHTML = '<div>Console cleared...</div>';
+    }
+    
+    // Monitor for animation errors
+    window.addEventListener('error', (event) => {
+      if (event.message.includes('animate') || event.message.includes('non-finite')) {
+        logToConsole(`Global Error: ${event.message}`, 'error');
+        errorCount++;
+        updateMetrics();
+      }
+    });
+    
+    // Initialize
+    logToConsole('Animation Debug Test ready', 'info');
+    setTimeout(() => testValidDelays(), 1000);
+  </script>
+</body>
+</html> 

@@ -106,6 +106,19 @@ service cloud.firestore {
       allow create: if isSignedIn();
     }
 
+    // Tenant Profiles Collection
+    match /tenantProfiles/{tenantId} {
+      // Tenants can read/update their own profile, landlords can read their tenants' profiles, admins can access all
+      allow read: if isOwner(tenantId) || 
+                     (isLandlord() && resource.data.landlordId == request.auth.uid) ||
+                     isAdmin();
+      allow create: if isOwner(tenantId) && isTenant();
+      allow update: if isOwner(tenantId) || 
+                       (isLandlord() && resource.data.landlordId == request.auth.uid) ||
+                       isAdmin();
+      allow delete: if isOwner(tenantId) || isAdmin();
+    }
+
     // Properties Collection
     match /properties/{propertyId} {
       // Allow individual document reads for property owners, managers, tenants, and admins

@@ -66,9 +66,15 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
     setValidationMessage(null);
 
     try {
+      console.log('🔍 Starting invite code validation for:', inviteCode.trim());
+      console.log('🔍 Current user:', currentUser?.uid, currentUser?.email);
+      
       const validationResult = await inviteCodeService.validateInviteCode(inviteCode.trim());
       
+      console.log('🔍 Validation result:', validationResult);
+      
       if (validationResult.isValid) {
+        console.log('✅ Code is valid!');
         setValidationMessage({
           type: 'success',
           message: 'Valid invite code!'
@@ -77,6 +83,10 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
         // Check if code has email restriction
         if (validationResult.restrictedEmail && email && 
             validationResult.restrictedEmail.toLowerCase() !== email.toLowerCase()) {
+          console.log('❌ Email restriction failed:', {
+            restrictedEmail: validationResult.restrictedEmail,
+            userEmail: email
+          });
           setValidationMessage({
             type: 'error',
             message: `This invite code is restricted to ${validationResult.restrictedEmail}`
@@ -84,6 +94,7 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
           return;
         }
         
+        console.log('🚀 Notifying parent component with property info');
         // Notify parent component that we have a valid invite code
         onInviteValidated({
           propertyId: validationResult.propertyId!,
@@ -92,13 +103,19 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
           inviteCode: inviteCode.trim()
         });
       } else {
+        console.log('❌ Code validation failed:', validationResult.message);
         setValidationMessage({
           type: 'error',
           message: validationResult.message
         });
       }
     } catch (error: any) {
-      console.error('Error validating invite code:', error);
+      console.error('💥 Error validating invite code:', error);
+      console.error('💥 Error details:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
       setValidationMessage({
         type: 'error',
         message: error.message || 'Error validating invite code. Please try again.'

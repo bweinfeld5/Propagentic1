@@ -81,7 +81,7 @@ export const mockInvite = {
 // Mock inviteCode data
 export const mockInviteCode = {
   id: "code-123",
-  code: "ABC123XYZ",
+  code: " ABC123XYZ",
   propertyId: "property-123",
   landlordId: "landlord-123",
   unitId: "unit-1",

@@ -40,6 +40,7 @@ const ComponentsShowcasePage = lazy(() => import('./pages/ComponentsShowcasePage
 const TestUIComponents = lazy(() => import('./pages/TestUIComponents.jsx'));
 const SimpleUIShowcase = lazy(() => import('./pages/SimpleUIShowcase.jsx'));
 const MaintenanceSurvey = lazy(() => import('./components/maintenance/MaintenanceSurvey.tsx'));
+const EnhancedMaintenancePage = lazy(() => import('./pages/tenant/EnhancedMaintenancePage'));
 const PublicPropertyDashboardDemo = lazy(() => import('./pages/PublicPropertyDashboardDemo.jsx'));
 
 // Route Guards
@@ -198,6 +199,7 @@ function App() {
                                 <Route path="/contractor/dashboard/enhanced" element={<ContractorDashboardDemo />} />
                                 <Route path="/contractor/dashboard/original" element={<PrivateRoute><OriginalContractorDashboard /></PrivateRoute>} />
                                 <Route path="/maintenance/new" element={<PrivateRoute><MaintenanceSurvey /></PrivateRoute>} />
+                                <Route path="/maintenance/enhanced" element={<PrivateRoute><EnhancedMaintenancePage /></PrivateRoute>} />
                                 <Route path="/onboarding" element={<PrivateRoute><OnboardingSurvey /></PrivateRoute>} />
                                 <Route path="/landlord-onboarding" element={<PrivateRoute><LandlordOnboarding /></PrivateRoute>} />
                                 <Route path="/contractor-onboarding" element={<PrivateRoute><ContractorOnboardingPage /></PrivateRoute>} />

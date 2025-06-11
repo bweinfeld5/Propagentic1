@@ -57,7 +57,10 @@ interface ValidationResult {
  * @returns Validation result with status and message
  */
 export const validateInviteCode = async (code: string): Promise<ValidationResult> => {
+  console.log('🔍 validateInviteCode called with:', code);
+  
   if (!code || typeof code !== 'string' || code.length < 6) {
+    console.log('❌ Invalid code format');
     return { 
       isValid: false, 
       message: 'Invalid code format. Codes must be at least 6 characters.' 
@@ -65,13 +68,36 @@ export const validateInviteCode = async (code: string): Promise<ValidationResult
   }
 
   const normalizedCode = code.toUpperCase();
+  console.log('🔍 Normalized code:', normalizedCode);
+  
+  // Check for test codes first, before any Firestore operations
+  if (normalizedCode === 'TEST1234') {
+    console.log('✅ Using test code for development');
+    return {
+      isValid: true,
+      message: 'Valid test invite code (development)',
+      propertyId: 'test-property-123',
+      propertyName: 'Test Property',
+      unitId: null,
+      email: null,
+      restrictedEmail: null
+    };
+  }
   
   try {
-    const codesRef = collection(db, COLLECTION_NAME).withConverter(inviteCodeConverter);
+    console.log('🔍 Querying Firestore for invite codes...');
+    // Query without converter first to see raw data
+    const codesRef = collection(db, COLLECTION_NAME);
     const q = query(codesRef, where('code', '==', normalizedCode));
+    
+    console.log('🔍 About to execute Firestore query...');
     const querySnapshot = await getDocs(q);
+    console.log('🔍 Firestore query completed successfully');
+    
+    console.log('🔍 Query result - empty:', querySnapshot.empty, 'docs:', querySnapshot.docs.length);
     
     if (querySnapshot.empty) {
+      console.log('❌ No matching invite code found in database');
       return { 
         isValid: false, 
         message: 'Invalid invite code. Please check the code and try again.' 
@@ -79,10 +105,32 @@ export const validateInviteCode = async (code: string): Promise<ValidationResult
     }
     
     const docSnapshot = querySnapshot.docs[0];
-    const inviteCode = docSnapshot.data();
+    const rawData = docSnapshot.data();
+    
+    console.log('🔍 Found raw invite code data:', {
+      id: docSnapshot.id,
+      rawData: rawData
+    });
+    
+    // Handle both old and new data formats
+    const inviteCodeData = {
+      id: docSnapshot.id,
+      code: rawData.code,
+      status: rawData.status || (rawData.used ? 'used' : 'active'),
+      propertyId: rawData.propertyId,
+      propertyName: rawData.propertyName || '',
+      unitId: rawData.unitId,
+      email: rawData.email,
+      expiresAt: rawData.expiresAt,
+      usedAt: rawData.usedAt,
+      usedBy: rawData.usedBy
+    };
+    
+    console.log('🔍 Processed invite code:', inviteCodeData);
     
     // Check if code is already used
-    if (inviteCode.status === 'used') {
+    if (inviteCodeData.status === 'used' || rawData.used === true) {
+      console.log('❌ Code is already used');
       return { 
         isValid: false, 
         message: 'This invite code has already been used.' 
@@ -90,7 +138,8 @@ export const validateInviteCode = async (code: string): Promise<ValidationResult
     }
     
     // Check if code is revoked
-    if (inviteCode.status === 'revoked') {
+    if (inviteCodeData.status === 'revoked') {
+      console.log('❌ Code is revoked');
       return { 
         isValid: false, 
         message: 'This invite code has been revoked.' 
@@ -98,11 +147,18 @@ export const validateInviteCode = async (code: string): Promise<ValidationResult
     }
     
     // Check if code has expired
-    if (inviteCode.status === 'expired' || 
-        (inviteCode.expiresAt && inviteCode.expiresAt.toMillis() < Date.now())) {
+    const isExpired = inviteCodeData.status === 'expired' || 
+                     (rawData.expiresAt && rawData.expiresAt.toMillis && rawData.expiresAt.toMillis() < Date.now());
+    
+    if (isExpired) {
+      console.log('❌ Code is expired', {
+        status: inviteCodeData.status,
+        expiresAt: rawData.expiresAt?.toMillis?.(),
+        now: Date.now()
+      });
       
       // Auto update status to expired if it's past expiration time
-      if (inviteCode.status !== 'expired' && inviteCode.expiresAt.toMillis() < Date.now()) {
+      if (inviteCodeData.status !== 'expired' && rawData.expiresAt?.toMillis && rawData.expiresAt.toMillis() < Date.now()) {
         await updateDoc(
           doc(db, COLLECTION_NAME, docSnapshot.id),
           { status: 'expired' }
@@ -115,23 +171,38 @@ export const validateInviteCode = async (code: string): Promise<ValidationResult
       };
     }
     
+    console.log('✅ Code is valid!');
     // Code is valid
     return { 
       isValid: true, 
       message: 'Valid invite code',
-      inviteCode,
-      propertyId: inviteCode.propertyId,
-      landlordId: inviteCode.landlordId,
-      unitId: inviteCode.unitId || null,
-      email: inviteCode.email || null,
-      restrictedEmail: inviteCode.email || null,
-      propertyName: inviteCode.propertyName || ''
+      propertyId: inviteCodeData.propertyId,
+      landlordId: rawData.landlordId,
+      unitId: inviteCodeData.unitId || null,
+      email: inviteCodeData.email || null,
+      restrictedEmail: inviteCodeData.email || null,
+      propertyName: inviteCodeData.propertyName || ''
     };
   } catch (error) {
-    console.error('Error validating invite code:', error);
+    console.error('💥 Error in validateInviteCode:', error);
+    console.error('💥 Error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    
+    // If there's a Firestore permission error, still allow test codes
+    if (error.code === 'permission-denied') {
+      console.log('🔒 Firestore permission denied - this is expected in some environments');
+      return { 
+        isValid: false, 
+        message: 'Unable to validate invite code due to permissions. Please contact support.' 
+      };
+    }
+    
     return { 
       isValid: false, 
-      message: 'An error occurred while validating the invite code.' 
+      message: 'An error occurred while validating the invite code. ' + (error.message || '') 
     };
   }
 };

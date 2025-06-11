@@ -309,8 +309,8 @@ const EnhancedContractorDashboard = () => {
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white/95 backdrop-blur-sm rounded-xl border border-orange-200 p-6 shadow-lg">
+        {        /* Recent Activity */}
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 p-6 shadow-lg">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Recent Activity
           </h3>
@@ -329,7 +329,7 @@ const EnhancedContractorDashboard = () => {
               {tickets.slice(0, 5).map((ticket) => (
                 <div
                   key={ticket.id}
-                  className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200 hover:bg-orange-100 transition-colors duration-200"
+                  className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors duration-200"
                 >
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">
@@ -370,7 +370,7 @@ const EnhancedContractorDashboard = () => {
       </div>
 
       {tickets.length === 0 ? (
-        <div className="bg-white/95 backdrop-blur-sm rounded-xl border border-orange-200 p-12 text-center shadow-lg">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 p-12 text-center shadow-lg">
           <ClipboardDocumentListIcon className="w-16 h-16 mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             No Job Assignments
@@ -380,10 +380,10 @@ const EnhancedContractorDashboard = () => {
           </p>
         </div>
       ) : (
-        <div className="bg-white/95 backdrop-blur-sm rounded-xl border border-orange-200 overflow-hidden shadow-lg">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 overflow-hidden shadow-lg">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-orange-200">
-              <thead className="bg-orange-50">
+                          <table className="min-w-full divide-y divide-gray-200">
+                              <thead className="bg-gray-100">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Property
@@ -402,9 +402,9 @@ const EnhancedContractorDashboard = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-orange-200">
+              <tbody className="bg-white divide-y divide-gray-200">
                 {tickets.map((ticket) => (
-                  <tr key={ticket.id} className="hover:bg-orange-50">
+                  <tr key={ticket.id} className="hover:bg-orange-100">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
                         {ticket.propertyName || 'Unknown Property'}
@@ -572,58 +572,17 @@ const EnhancedContractorDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Orange gradient background matching onboarding pages */}
-      <div className="absolute inset-0 z-0">
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: `
-              radial-gradient(ellipse 800px 600px at 20% 80%, rgba(251, 146, 60, 0.4) 0%, transparent 50%),
-              radial-gradient(ellipse 600px 800px at 80% 20%, rgba(249, 115, 22, 0.4) 0%, transparent 50%),
-              radial-gradient(ellipse 400px 600px at 60% 60%, rgba(245, 101, 101, 0.3) 0%, transparent 50%),
-              radial-gradient(ellipse 500px 400px at 40% 40%, rgba(251, 191, 36, 0.3) 0%, transparent 50%),
-              radial-gradient(ellipse 700px 500px at 10% 10%, rgba(252, 211, 77, 0.3) 0%, transparent 50%),
-              linear-gradient(135deg, #f97316 0%, #ea580c 100%)
-            `
-          }}
-        />
-        {/* Flowing curves overlay */}
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
-          <path
-            d="M0,400 Q300,300 600,400 T1200,400 L1200,800 L0,800 Z"
-            fill="url(#gradient1)"
-            fillOpacity="0.1"
-          />
-          <path
-            d="M0,500 Q400,350 800,500 T1200,500 L1200,800 L0,800 Z"
-            fill="url(#gradient2)"
-            fillOpacity="0.15"
-          />
-          <defs>
-            <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#f97316" />
-              <stop offset="50%" stopColor="#fb923c" />
-              <stop offset="100%" stopColor="#fbbf24" />
-            </linearGradient>
-            <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ea580c" />
-              <stop offset="50%" stopColor="#f97316" />
-              <stop offset="100%" stopColor="#fbbf24" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100">
 
       {/* Header */}
-      <div className="relative z-10 bg-white/95 backdrop-blur-sm border-b border-orange-200 shadow-sm">
+      <div className="sticky top-0 z-50 bg-gradient-to-r from-white to-orange-50 border-b border-orange-100 shadow-sm backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 Contractor Dashboard
               </h1>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-orange-600">
                 Manage your jobs and verification status
               </p>
             </div>
@@ -631,11 +590,11 @@ const EnhancedContractorDashboard = () => {
               <Button
                 variant="ghost"
                 onClick={() => setActiveTab('notifications')}
-                className="relative"
+                className="relative hover:bg-orange-50 text-orange-700"
               >
                 <BellIcon className="w-5 h-5" />
                 {contractorStats.newJobs > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow-lg">
                     {contractorStats.newJobs}
                   </span>
                 )}
@@ -643,6 +602,7 @@ const EnhancedContractorDashboard = () => {
               <Button
                 variant="ghost"
                 onClick={() => setShowSettings(!showSettings)}
+                className="hover:bg-orange-50 text-orange-700"
               >
                 <Cog6ToothIcon className="w-5 h-5" />
               </Button>
@@ -664,16 +624,16 @@ const EnhancedContractorDashboard = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 transform hover:scale-105 ${
+                className={`flex items-center px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg hover:shadow-xl'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60 backdrop-blur-sm shadow-sm'
+                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg transform scale-105'
+                    : 'text-orange-700 hover:text-orange-800 hover:bg-gradient-to-r hover:from-orange-50 hover:to-white hover:shadow-md'
                 }`}
               >
                 <tab.icon className="w-5 h-5 mr-2" />
                 {tab.label}
                 {tab.id === 'notifications' && contractorStats.newJobs > 0 && (
-                  <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="ml-2 bg-gradient-to-r from-orange-400 to-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow-lg">
                     {contractorStats.newJobs}
                   </span>
                 )}

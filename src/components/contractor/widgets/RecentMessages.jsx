@@ -110,16 +110,16 @@ const RecentMessages = () => {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 rounded-2xl border border-orange-200 p-6">
         <div className="animate-pulse">
-          <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-6"></div>
+          <div className="h-5 bg-gray-300 rounded w-32 mb-6"></div>
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex space-x-3">
-                <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-300 rounded w-1/2"></div>
                 </div>
               </div>
             ))}
@@ -134,28 +134,28 @@ const RecentMessages = () => {
   const urgentCount = messages.filter(msg => msg.isUrgent).length;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow duration-200">
+    <div className="bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 rounded-2xl border border-orange-200 p-6 hover:shadow-lg transition-shadow duration-200">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-            <ChatBubbleLeftRightIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md">
+            <ChatBubbleLeftRightIcon className="w-5 h-5 text-orange-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-gray-800">
             Messages
           </h3>
         </div>
 
         {/* Unread Badge */}
         {unreadCount > 0 && (
-          <span className="bg-red-500 text-white text-xs font-medium px-2 py-1 rounded-full">
+          <span className="bg-orange-600 text-white text-xs font-medium px-2 py-1 rounded-full">
             {unreadCount}
           </span>
         )}
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex space-x-1 mb-6 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+      <div className="flex space-x-1 mb-6 bg-white rounded-lg p-1 shadow-sm">
         {[
           { key: 'all', label: 'All', count: messages.length },
           { key: 'unread', label: 'Unread', count: unreadCount },
@@ -209,13 +209,13 @@ const RecentMessages = () => {
                   {/* Avatar */}
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                     message.fromType === 'landlord' 
-                      ? 'bg-purple-100 dark:bg-purple-900/30' 
-                      : 'bg-emerald-100 dark:bg-emerald-900/30'
+                      ? 'bg-orange-100' 
+                      : 'bg-orange-100'
                   }`}>
                     <ContactIcon className={`w-5 h-5 ${
                       message.fromType === 'landlord' 
-                        ? 'text-purple-600 dark:text-purple-400' 
-                        : 'text-emerald-600 dark:text-emerald-400'
+                        ? 'text-orange-600' 
+                        : 'text-orange-600'
                     }`} />
                   </div>
 
@@ -235,8 +235,8 @@ const RecentMessages = () => {
                         )}
                         <span className={`text-xs px-2 py-0.5 rounded-full ${
                           message.fromType === 'landlord'
-                            ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
-                            : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                            ? 'bg-orange-100 text-orange-700'
+                            : 'bg-orange-100 text-orange-700'
                         }`}>
                           {message.fromType}
                         </span>
@@ -259,10 +259,10 @@ const RecentMessages = () => {
                         {message.property}
                       </span>
                       <div className="flex space-x-2">
-                        <button className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs font-medium">
+                        <button className="text-orange-600 hover:text-orange-800 text-xs font-medium">
                           Reply
                         </button>
-                        <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-xs font-medium">
+                        <button className="text-gray-500 hover:text-gray-700 text-xs font-medium">
                           Call
                         </button>
                       </div>
@@ -278,7 +278,7 @@ const RecentMessages = () => {
       {/* Show More */}
       {filteredMessages.length > 4 && (
         <div className="mt-4 text-center">
-          <button className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium">
+          <button className="text-orange-600 hover:text-orange-800 text-sm font-medium">
             View All Messages ({filteredMessages.length})
           </button>
         </div>

@@ -105,18 +105,18 @@ const UpcomingSchedule = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'confirmed': return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300';
-      case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
-      case 'cancelled': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+      case 'confirmed': return 'bg-orange-100 text-orange-800';
+      case 'pending': return 'bg-orange-100 text-orange-800';
+      case 'cancelled': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'high': return 'border-l-red-500';
-      case 'medium': return 'border-l-yellow-500';
-      case 'low': return 'border-l-emerald-500';
+      case 'high': return 'border-l-orange-600';
+      case 'medium': return 'border-l-orange-600';
+      case 'low': return 'border-l-orange-600';
       default: return 'border-l-gray-300';
     }
   };
@@ -140,12 +140,12 @@ const UpcomingSchedule = () => {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 rounded-2xl border border-orange-200 p-6">
         <div className="animate-pulse">
-          <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-6"></div>
+          <div className="h-5 bg-gray-300 rounded w-32 mb-6"></div>
           <div className="space-y-3">
             {[1, 2].map((i) => (
-              <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+              <div key={i} className="h-16 bg-gray-300 rounded-xl"></div>
             ))}
           </div>
         </div>
@@ -156,20 +156,20 @@ const UpcomingSchedule = () => {
   const displayAppointments = viewMode === 'day' ? getUpcomingToday() : getUpcomingWeek();
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow duration-200">
+    <div className="bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 rounded-2xl border border-orange-200 p-6 hover:shadow-lg transition-shadow duration-200">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-            <CalendarIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md">
+            <CalendarIcon className="w-5 h-5 text-orange-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-gray-800">
             Schedule
           </h3>
         </div>
 
         {/* View Toggle */}
-        <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+        <div className="flex bg-white rounded-lg p-1 shadow-sm">
           <button
             onClick={() => setViewMode('day')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${

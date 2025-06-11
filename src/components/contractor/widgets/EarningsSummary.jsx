@@ -128,18 +128,18 @@ const EarningsSummary = () => {
   };
 
   const getTrendColor = (trend) => {
-    if (trend > 0) return 'text-emerald-600 dark:text-emerald-400';
-    if (trend < 0) return 'text-red-600 dark:text-red-400';
-    return 'text-gray-500 dark:text-gray-400';
+    if (trend > 0) return 'text-orange-600';
+    if (trend < 0) return 'text-red-600';
+    return 'text-gray-500';
   };
 
   if (loading) {
     return (
-      <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-orange-200 p-6 shadow-lg">
+      <div className="bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 backdrop-blur-sm rounded-2xl border border-orange-200 p-6 shadow-lg">
         <div className="animate-pulse">
-          <div className="h-5 bg-orange-200 rounded w-32 mb-6"></div>
-          <div className="h-12 bg-orange-200 rounded w-24 mb-4"></div>
-          <div className="h-4 bg-orange-200 rounded w-20"></div>
+          <div className="h-5 bg-gray-300 rounded w-32 mb-6"></div>
+          <div className="h-12 bg-gray-300 rounded w-24 mb-4"></div>
+          <div className="h-4 bg-gray-300 rounded w-20"></div>
         </div>
       </div>
     );
@@ -150,20 +150,20 @@ const EarningsSummary = () => {
   const TrendIcon = getTrendIcon(currentTrend);
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-orange-200 p-6 hover:shadow-xl transition-all duration-200 shadow-lg">
+    <div className="bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 backdrop-blur-sm rounded-2xl border border-orange-200 p-6 hover:shadow-xl transition-all duration-200 shadow-lg">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-            <CurrencyDollarIcon className="w-5 h-5 text-green-600" />
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md">
+            <CurrencyDollarIcon className="w-5 h-5 text-orange-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-gray-800">
             Earnings
           </h3>
         </div>
         
         {/* Timeframe Toggle */}
-        <div className="flex bg-orange-100 rounded-lg p-1">
+        <div className="flex bg-white rounded-lg p-1 shadow-sm">
           <button
             onClick={() => setTimeframe('week')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
@@ -190,7 +190,7 @@ const EarningsSummary = () => {
       {/* Main Amount */}
       <div className="mb-6">
         <div className="flex items-end space-x-3">
-          <span className="text-3xl font-bold text-gray-900">
+          <span className="text-3xl font-bold text-gray-800">
             {formatCurrency(currentEarnings)}
           </span>
           {TrendIcon && currentTrend !== 0 && (
@@ -200,7 +200,7 @@ const EarningsSummary = () => {
             </div>
           )}
         </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-white/70 mt-1">
           This {timeframe}
         </p>
       </div>
@@ -227,11 +227,11 @@ const EarningsSummary = () => {
 
       {/* Actions */}
       <div className="flex space-x-3">
-        <button className="flex-1 flex items-center justify-center space-x-2 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors duration-200">
+        <button className="flex-1 flex items-center justify-center space-x-2 bg-gray-50 hover:bg-gray-100 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors duration-200">
           <EyeIcon className="w-4 h-4" />
           <span>Details</span>
         </button>
-        <button className="flex-1 flex items-center justify-center space-x-2 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors duration-200">
+        <button className="flex-1 flex items-center justify-center space-x-2 bg-gray-50 hover:bg-gray-100 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors duration-200">
           <DocumentArrowDownIcon className="w-4 h-4" />
           <span>Export</span>
         </button>

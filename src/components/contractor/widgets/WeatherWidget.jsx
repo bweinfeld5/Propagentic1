@@ -6,39 +6,52 @@ import {
   ExclamationTriangleIcon,
   MapPinIcon
 } from '@heroicons/react/24/outline';
+import weatherService from '../../../services/weatherService';
 
 const WeatherWidget = ({ location = 'San Francisco, CA' }) => {
-  const [weather, setWeather] = useState({
-    current: {
-      temperature: 72,
-      condition: 'sunny',
-      humidity: 45,
-      windSpeed: 8,
-      visibility: 10
-    },
-    forecast: [
-      { day: 'Today', high: 75, low: 62, condition: 'sunny', precipitation: 0 },
-      { day: 'Tomorrow', high: 73, low: 58, condition: 'cloudy', precipitation: 20 },
-      { day: 'Wed', high: 68, low: 55, condition: 'rainy', precipitation: 80 },
-      { day: 'Thu', high: 71, low: 59, condition: 'partly-cloudy', precipitation: 10 }
-    ],
-    alerts: [
-      {
-        type: 'warning',
-        message: 'High winds expected this afternoon (25-35 mph)',
-        severity: 'moderate'
-      }
-    ]
-  });
-  const [loading, setLoading] = useState(false);
+  const [weather, setWeather] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // In a real implementation, you would fetch weather data from an API
+  // Fetch weather data from real API
   useEffect(() => {
-    // Simulate API call
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+    const fetchWeatherData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const weatherData = await weatherService.getWeatherData(location);
+        setWeather(weatherData);
+      } catch (err) {
+        console.error('Error fetching weather:', err);
+        setError('Failed to load weather data');
+        // Use fallback mock data
+        setWeather({
+          current: {
+            temperature: 72,
+            condition: 'sunny',
+            humidity: 45,
+            windSpeed: 8,
+            visibility: 10,
+            description: 'Sunny'
+          },
+          forecast: [
+            { day: 'Today', high: 75, low: 62, condition: 'sunny', precipitation: 0 },
+            { day: 'Tomorrow', high: 73, low: 58, condition: 'cloudy', precipitation: 20 },
+            { day: 'Wed', high: 68, low: 55, condition: 'rainy', precipitation: 80 },
+            { day: 'Thu', high: 71, low: 59, condition: 'partly-cloudy', precipitation: 10 }
+          ],
+          alerts: [],
+          location: {
+            name: location.split(',')[0] || 'San Francisco',
+            region: location.split(',')[1]?.trim() || 'CA'
+          }
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWeatherData();
   }, [location]);
 
   const getWeatherIcon = (condition) => {
@@ -78,7 +91,7 @@ const WeatherWidget = ({ location = 'San Francisco, CA' }) => {
     }
   };
 
-  if (loading) {
+  if (loading || !weather) {
     return (
       <div className="bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 rounded-2xl border border-orange-200 p-6">
         <div className="animate-pulse">
@@ -113,9 +126,10 @@ const WeatherWidget = ({ location = 'San Francisco, CA' }) => {
             <h3 className="text-lg font-semibold text-gray-800">
               Weather
             </h3>
-            <div className="flex items-center space-x-1 text-sm text-gray-500 dark:text-gray-400">
+                          <div className="flex items-center space-x-1 text-sm text-gray-500 dark:text-gray-400">
               <MapPinIcon className="w-3 h-3" />
-              <span>{location}</span>
+              <span>{weather.location?.name}, {weather.location?.region}</span>
+              {error && <span className="text-red-500">(Offline)</span>}
             </div>
           </div>
         </div>

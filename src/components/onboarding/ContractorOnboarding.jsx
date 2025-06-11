@@ -135,6 +135,54 @@ const ContractorOnboarding = () => {
     }
   };
 
+  // Skip current step for development
+  const handleSkip = () => {
+    setError('');
+    // Mark current step as complete even if not validated
+    setStepCompletion(prev => ({
+      ...prev,
+      [currentStep]: true
+    }));
+    
+    // Set some default values for skipped steps to prevent issues
+    if (currentStep === 1) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: prev.firstName || 'Test',
+        lastName: prev.lastName || 'Contractor',
+        phoneNumber: prev.phoneNumber || '(555) 123-4567'
+      }));
+    } else if (currentStep === 2) {
+      setFormData(prev => ({
+        ...prev,
+        serviceTypes: prev.serviceTypes.length > 0 ? prev.serviceTypes : ['general'],
+        serviceArea: prev.serviceArea || 'Test Area'
+      }));
+    } else if (currentStep === 3) {
+      setFormData(prev => ({
+        ...prev,
+        w9FormUrl: prev.w9FormUrl || 'skipped-for-development'
+      }));
+    } else if (currentStep === 4) {
+      setFormData(prev => ({
+        ...prev,
+        stripeAccountSetup: true
+      }));
+    } else if (currentStep === 5) {
+      setFormData(prev => ({
+        ...prev,
+        bankAccountVerified: true
+      }));
+    } else if (currentStep === 6) {
+      setFormData(prev => ({
+        ...prev,
+        paymentMethodsSetup: true
+      }));
+    }
+    
+    setCurrentStep(prev => prev + 1);
+  };
+
   // Navigate to previous step
   const handleBack = () => {
     setError('');
@@ -819,27 +867,52 @@ const ContractorOnboarding = () => {
                 )}
                 
                 {currentStep < 6 ? (
-                  <button
-                    type="button"
-                    onClick={handleNext}
-                    disabled={loading}
-                    className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg font-medium hover:from-orange-700 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-75 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
-                  >
-                    {loading ? (
-                      <span className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Processing...
-                      </span>
-                    ) : (
-                      'Next'
-                    )}
-                  </button>
+                  <div className="flex space-x-3">
+                    <button
+                      type="button"
+                      onClick={handleSkip}
+                      disabled={loading}
+                      className="px-6 py-3 border border-gray-300 rounded-lg text-gray-600 font-medium hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-75 disabled:cursor-not-allowed transition-all duration-200"
+                    >
+                      Skip for now
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      disabled={loading}
+                      className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg font-medium hover:from-orange-700 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-75 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+                    >
+                      {loading ? (
+                        <span className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Processing...
+                        </span>
+                      ) : (
+                        'Next'
+                      )}
+                    </button>
+                  </div>
                 ) : currentStep === 6 && !stepCompletion[6] ? (
-                  <div className="text-sm text-gray-500 font-medium">
-                    Complete payment setup above to finish
+                  <div className="flex space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, paymentMethodsSetup: true }));
+                        setStepCompletion(prev => ({ ...prev, 6: true }));
+                        setTimeout(() => {
+                          handleSubmit({ preventDefault: () => {} });
+                        }, 500);
+                      }}
+                      className="px-6 py-3 border border-gray-300 rounded-lg text-gray-600 font-medium hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200"
+                    >
+                      Skip Payment Setup
+                    </button>
+                    <div className="text-sm text-gray-500 font-medium self-center">
+                      Complete payment setup above to finish
+                    </div>
                   </div>
                 ) : currentStep === 6 && stepCompletion[6] ? (
                   <button

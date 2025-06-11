@@ -30,4 +30,19 @@ export { sendInviteEmail };
 import { createNotificationOnInvite } from './inviteTriggers';
 export { createNotificationOnInvite };
 
-console.log("✅ Essential functions loaded (ping, invite code, email invites, notifications).");
+// Import and export user relationship functions (property invites)
+import { 
+  sendPropertyInvite, 
+  acceptPropertyInvite, 
+  rejectPropertyInvite,
+  addContractorToRolodex 
+} from './userRelationships';
+
+export { 
+  sendPropertyInvite, 
+  acceptPropertyInvite, 
+  rejectPropertyInvite,
+  addContractorToRolodex 
+};
+
+console.log("✅ Essential functions loaded (ping, invite code, email invites, notifications, property invites).");

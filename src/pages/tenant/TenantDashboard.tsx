@@ -29,8 +29,9 @@ const TenantDashboard: React.FC = () => {
   
   // Handle success message from maintenance form
   useEffect(() => {
-    if (location.state?.showSuccessMessage) {
-      toast.success(location.state.message || 'Maintenance request submitted successfully!');
+    const state = location.state as { showSuccessMessage?: boolean; message?: string } | null;
+    if (state?.showSuccessMessage) {
+      toast.success(state.message || 'Maintenance request submitted successfully!');
       // Clear the state to prevent showing the message again
       navigate(location.pathname, { replace: true });
     }

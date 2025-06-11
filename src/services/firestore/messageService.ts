@@ -23,7 +23,7 @@ export interface MessageParticipant {
   id: string;
   name: string;
   email: string;
-  role: 'landlord' | 'contractor' | 'tenant';
+  role: 'landlord' | 'contractor' | 'tenant' | 'system';
   avatar?: string;
   company?: string;
 }
@@ -41,7 +41,7 @@ export interface Message {
   conversationId: string;
   senderId: string;
   senderName: string;
-  senderRole: 'landlord' | 'contractor' | 'tenant';
+  senderRole: 'landlord' | 'contractor' | 'tenant' | 'system';
   text: string;
   type: 'text' | 'image' | 'file' | 'system';
   attachments?: MessageAttachment[];
@@ -244,7 +244,7 @@ class MessageService {
     conversationId: string,
     senderId: string,
     senderName: string,
-    senderRole: 'landlord' | 'contractor' | 'tenant',
+    senderRole: 'landlord' | 'contractor' | 'tenant' | 'system',
     text: string,
     type: Message['type'] = 'text',
     attachments?: MessageAttachment[]
@@ -276,7 +276,7 @@ class MessageService {
 
       // Update conversation
       const conversationRef = doc(this.conversationsRef, conversationId);
-      const conversationUpdate = {
+      const conversationUpdate: any = {
         lastMessage: {
           text: text || `Sent a ${type}`,
           timestamp: serverTimestamp(),

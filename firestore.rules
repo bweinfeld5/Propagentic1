@@ -116,9 +116,8 @@ service cloud.firestore {
 
     // Tickets Collection
     match /tickets/{ticketId} {
-      let ticket = get(/databases/$(database)/documents/tickets/$(ticketId)).data;
       // Submitted by user, or owner/manager of the property can read/update.
-      allow read, update: if isSignedIn() && (isOwner(ticket.submittedBy) || isPropertyOwner(ticket.propertyId) || isPropertyManager(ticket.propertyId) || isAdmin());
+      allow read, update: if isSignedIn() && (isOwner(resource.data.submittedBy) || isPropertyOwner(resource.data.propertyId) || isPropertyManager(resource.data.propertyId) || isAdmin());
       // Any signed-in user can create a ticket.
       allow create: if isSignedIn(); 
     }

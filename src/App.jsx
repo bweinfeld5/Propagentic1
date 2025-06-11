@@ -215,6 +215,32 @@ function App() {
                         />
                       </Routes>
                       </Suspense>
+                      {/* Toast Notifications */}
+                      <Toaster
+                        position="top-right"
+                        toastOptions={{
+                          duration: 4000,
+                          style: {
+                            background: '#363636',
+                            color: '#fff',
+                          },
+                          success: {
+                            duration: 3000,
+                            iconTheme: {
+                              primary: '#10B981',
+                              secondary: '#FFFFFF',
+                            },
+                          },
+                          error: {
+                            duration: 5000,
+                            iconTheme: {
+                              primary: '#EF4444',
+                              secondary: '#FFFFFF',
+                            },
+                          },
+                        }}
+                      />
+                      
                       <div id="app-loaded" style={{ position: 'fixed', bottom: 0, right: 0, padding: '5px', background: 'rgba(0,0,0,0.1)', fontSize: '10px', zIndex: 9999, pointerEvents: 'none' }}>
                         App Loaded
                       </div>

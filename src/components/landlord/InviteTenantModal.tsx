@@ -3,6 +3,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon, EnvelopeIcon, BuildingOfficeIcon, InformationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { CreateInviteSchema, CreateInviteData } from '../../schemas/CreateInviteSchema';
 import { api } from '../../services/api';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import toast from 'react-hot-toast';
 import Button from '../ui/Button';
 import { auth } from '../../firebase/config';
@@ -39,6 +40,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [inviteSuccess, setInviteSuccess] = useState<boolean>(false);
   const [inviteCode, setInviteCode] = useState<string>('');
+  const [inviteId, setInviteId] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -48,6 +50,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
       setErrors({});
       setInviteSuccess(false);
       setInviteCode('');
+      setInviteId('');
     }
   }, [isOpen, initialPropertyId, initialPropertyName]);
 
@@ -99,30 +102,60 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
     const propertyNameForInvite = property?.nickname || property?.name || property?.streetAddress || selectedPropertyName || 'Unknown Property';
     
     try {
-      const inviteData: CreateInviteData = {
-        tenantEmail: email,
+      // Use Firebase Cloud Function directly for better reliability
+      const functions = getFunctions();
+      const sendPropertyInvite = httpsCallable(functions, 'sendPropertyInvite');
+      
+      console.log(`Sending invitation to ${email} for property ${selectedPropertyId}`);
+      
+      const result = await sendPropertyInvite({
         propertyId: selectedPropertyId,
-        landlordId: currentUser.uid,
-        propertyName: propertyNameForInvite,
-        landlordName: currentUser.displayName || 'Property Manager',
-        status: 'pending',
-        createdAt: new Date(),
-      };
+        tenantEmail: email
+      });
       
-      const newInviteId = await api.create('invites', inviteData, CreateInviteSchema);
+      const data = result.data as any;
       
-      if (newInviteId) {
+      if (data.success) {
         setInviteSuccess(true);
-        toast.success('Invitation sent successfully!');
+        setInviteId(data.inviteId || '');
+        
+        // Enhanced success toast message
+        toast.success(
+          `🎉 Invitation sent to ${email}!\nThey'll receive an email with instructions to join ${propertyNameForInvite}.`,
+          {
+            duration: 5000,
+            style: {
+              background: '#10B981',
+              color: '#FFFFFF',
+              padding: '16px',
+              borderRadius: '8px',
+            },
+          }
+        );
+        
         if (onInviteSuccess) {
           onInviteSuccess();
         }
       } else {
-        throw new Error('Failed to create invitation record');
+        throw new Error(data.message || 'Failed to send invitation');
       }
     } catch (error: any) {
       console.error('Error sending invitation:', error);
-      toast.error(error.message || 'Failed to send invitation. Please try again.');
+      const errorMessage = error.message || 'Failed to send invitation. Please try again.';
+      
+      // Enhanced error toast message
+      toast.error(
+        `❌ Failed to send invitation: ${errorMessage}`,
+        {
+          duration: 6000,
+          style: {
+            background: '#EF4444',
+            color: '#FFFFFF',
+            padding: '16px',
+            borderRadius: '8px',
+          },
+        }
+      );
     } finally {
       setLoading(false);
     }
@@ -176,13 +209,38 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                           <CheckCircleIcon className="h-5 w-5 text-green-400" aria-hidden="true" />
                         </div>
                         <div className="ml-3">
-                          <h3 className="text-sm font-medium text-green-800 dark:text-green-200">Invitation Sent</h3>
+                          <h3 className="text-sm font-medium text-green-800 dark:text-green-200">Invitation Sent Successfully!</h3>
                           <div className="mt-2 text-sm text-green-700 dark:text-green-300">
-                            <p>An invitation has been sent to <span className="font-semibold">{email}</span>.</p>
+                            <p>An invitation has been sent to <span className="font-semibold">{email}</span> for <span className="font-semibold">{selectedPropertyName}</span>.</p>
+                            <p className="mt-1">They'll receive an email with instructions on how to join your property.</p>
                           </div>
                         </div>
                       </div>
                     </div>
+
+                    {/* Invitation Details */}
+                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-md p-4 mb-4">
+                      <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">Next Steps:</h4>
+                      <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                        <li>• The tenant will receive an email invitation</li>
+                        <li>• They'll create an account (if they don't have one)</li>
+                        <li>• They'll get access to submit maintenance requests</li>
+                        <li>• You'll be able to communicate directly through the platform</li>
+                      </ul>
+                    </div>
+
+                    {/* Show invite ID if available */}
+                    {inviteId && (
+                      <div className="mb-4">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Invitation ID:</p>
+                        <div className="bg-gray-100 dark:bg-gray-700 rounded-md px-3 py-2 font-mono text-sm text-center">
+                          {inviteId}
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
+                          Reference this ID if you need to track or manage this invitation.
+                        </p>
+                      </div>
+                    )}
 
                     {inviteCode && (
                       <div className="mb-4">
@@ -198,7 +256,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                       </div>
                     )}
 
-                    <div className="mt-4 flex justify-center gap-3">
+                    <div className="mt-6 flex justify-center gap-3">
                       <Button
                         type="button"
                         variant="primary"
@@ -213,6 +271,9 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                           setEmail('');
                           setInviteSuccess(false);
                           setInviteCode('');
+                          setInviteId('');
+                          setSelectedPropertyId(initialPropertyId || '');
+                          setSelectedPropertyName(initialPropertyName || '');
                         }}
                       >
                         Send Another Invitation

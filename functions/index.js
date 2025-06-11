@@ -1,6 +1,6 @@
 /**
  * Firebase Functions - Main Index
- * Automatically generated to reconcile missing functions
+ * This file exports the compiled TypeScript functions from the lib directory
  */
 
 // Load environment variables from .env file
@@ -14,52 +14,127 @@ if (!admin.apps.length) {
 
 console.log('Loading all functions...');
 
-// Export acceptPropertyInvite function
-const acceptPropertyInviteFunc = require('./functions/acceptPropertyInvite');
-Object.assign(exports, acceptPropertyInviteFunc);
+// Export functions from compiled TypeScript modules
 
-// Export addContractorToRolodex function
-const addContractorToRolodexFunc = require('./functions/addContractorToRolodex');
-Object.assign(exports, addContractorToRolodexFunc);
+// User Relationships functions (invite management) - CRITICAL FOR INVITE FLOW
+try {
+  const userRelationships = require('./lib/userRelationships');
+  exports.sendPropertyInvite = userRelationships.sendPropertyInvite;
+  exports.acceptPropertyInvite = userRelationships.acceptPropertyInvite;
+  exports.rejectPropertyInvite = userRelationships.rejectPropertyInvite;
+  exports.addContractorToRolodex = userRelationships.addContractorToRolodex;
+  console.log('✅ Loaded userRelationships functions (property invites)');
+} catch (error) {
+  console.error('❌ Failed to load userRelationships functions:', error.message);
+}
 
-// Export classifyMaintenanceRequest function
-const classifyMaintenanceRequestFunc = require('./functions/classifyMaintenanceRequest');
-Object.assign(exports, classifyMaintenanceRequestFunc);
+// Invite Code functions
+try {
+  const inviteCode = require('./lib/inviteCode');
+  exports.generateInviteCode = inviteCode.generateInviteCode;
+  exports.validateInviteCode = inviteCode.validateInviteCode;
+  exports.redeemInviteCode = inviteCode.redeemInviteCode;
+  console.log('✅ Loaded inviteCode functions');
+} catch (error) {
+  console.error('❌ Failed to load inviteCode functions:', error.message);
+}
 
-// Export cleanupOldNotifications function
-const cleanupOldNotificationsFunc = require('./functions/cleanupOldNotifications');
-Object.assign(exports, cleanupOldNotificationsFunc);
+// Email invite function
+try {
+  const invites = require('./lib/invites');
+  exports.sendInviteEmail = invites.sendInviteEmail;
+  console.log('✅ Loaded email invite function');
+} catch (error) {
+  console.error('❌ Failed to load invites functions:', error.message);
+}
 
-// Export matchContractorToTicket function
-const matchContractorToTicketFunc = require('./functions/matchContractorToTicket');
-Object.assign(exports, matchContractorToTicketFunc);
+// Notification trigger functions
+try {
+  const inviteTriggers = require('./lib/inviteTriggers');
+  exports.createNotificationOnInvite = inviteTriggers.createNotificationOnInvite;
+  console.log('✅ Loaded notification trigger functions');
+} catch (error) {
+  console.error('❌ Failed to load inviteTriggers functions:', error.message);
+}
 
-// Export notifyAssignedContractor function
-const notifyAssignedContractorFunc = require('./functions/notifyAssignedContractor');
-Object.assign(exports, notifyAssignedContractorFunc);
+// Basic ping function
+exports.ping = require('firebase-functions').https.onCall(async () => {
+  console.log("Ping function invoked.");
+  return { message: "pong", timestamp: Date.now() };
+});
 
-// Export notifyNewMaintenanceRequest function
-const notifyNewMaintenanceRequestFunc = require('./functions/notifyNewMaintenanceRequest');
-Object.assign(exports, notifyNewMaintenanceRequestFunc);
+// Legacy stub functions (keeping for backward compatibility if needed)
+// These should NOT override the actual implementations above
 
-// Export notifyTicketStatusChange function
-const notifyTicketStatusChangeFunc = require('./functions/notifyTicketStatusChange');
-Object.assign(exports, notifyTicketStatusChangeFunc);
+// Export sendTenantInvitation function (stub)
+try {
+  const sendTenantInvitationFunc = require('./functions/sendTenantInvitation');
+  if (!exports.sendTenantInvitation) {
+    exports.sendTenantInvitation = sendTenantInvitationFunc.sendTenantInvitation;
+  }
+} catch (error) {
+  console.warn('Could not load sendTenantInvitation stub:', error.message);
+}
 
-// Export ping function
-const pingFunc = require('./functions/ping');
-Object.assign(exports, pingFunc);
+// Export classifyMaintenanceRequest function (stub)
+try {
+  const classifyMaintenanceRequestFunc = require('./functions/classifyMaintenanceRequest');
+  if (!exports.classifyMaintenanceRequest) {
+    exports.classifyMaintenanceRequest = classifyMaintenanceRequestFunc.classifyMaintenanceRequest;
+  }
+} catch (error) {
+  console.warn('Could not load classifyMaintenanceRequest stub:', error.message);
+}
 
-// Export rejectPropertyInvite function
-const rejectPropertyInviteFunc = require('./functions/rejectPropertyInvite');
-Object.assign(exports, rejectPropertyInviteFunc);
+// Export cleanupOldNotifications function (stub)
+try {
+  const cleanupOldNotificationsFunc = require('./functions/cleanupOldNotifications');
+  if (!exports.cleanupOldNotifications) {
+    exports.cleanupOldNotifications = cleanupOldNotificationsFunc.cleanupOldNotifications;
+  }
+} catch (error) {
+  console.warn('Could not load cleanupOldNotifications stub:', error.message);
+}
 
-// Export sendPropertyInvite function
-const sendPropertyInviteFunc = require('./functions/sendPropertyInvite');
-Object.assign(exports, sendPropertyInviteFunc);
+// Export matchContractorToTicket function (stub)
+try {
+  const matchContractorToTicketFunc = require('./functions/matchContractorToTicket');
+  if (!exports.matchContractorToTicket) {
+    exports.matchContractorToTicket = matchContractorToTicketFunc.matchContractorToTicket;
+  }
+} catch (error) {
+  console.warn('Could not load matchContractorToTicket stub:', error.message);
+}
 
-// Export sendTenantInvitation function
-const sendTenantInvitationFunc = require('./functions/sendTenantInvitation');
-Object.assign(exports, sendTenantInvitationFunc);
+// Export notifyAssignedContractor function (stub)
+try {
+  const notifyAssignedContractorFunc = require('./functions/notifyAssignedContractor');
+  if (!exports.notifyAssignedContractor) {
+    exports.notifyAssignedContractor = notifyAssignedContractorFunc.notifyAssignedContractor;
+  }
+} catch (error) {
+  console.warn('Could not load notifyAssignedContractor stub:', error.message);
+}
+
+// Export notifyNewMaintenanceRequest function (stub)
+try {
+  const notifyNewMaintenanceRequestFunc = require('./functions/notifyNewMaintenanceRequest');
+  if (!exports.notifyNewMaintenanceRequest) {
+    exports.notifyNewMaintenanceRequest = notifyNewMaintenanceRequestFunc.notifyNewMaintenanceRequest;
+  }
+} catch (error) {
+  console.warn('Could not load notifyNewMaintenanceRequest stub:', error.message);
+}
+
+// Export notifyTicketStatusChange function (stub)
+try {
+  const notifyTicketStatusChangeFunc = require('./functions/notifyTicketStatusChange');
+  if (!exports.notifyTicketStatusChange) {
+    exports.notifyTicketStatusChange = notifyTicketStatusChangeFunc.notifyTicketStatusChange;
+  }
+} catch (error) {
+  console.warn('Could not load notifyTicketStatusChange stub:', error.message);
+}
 
 console.log('All functions loaded successfully.');
+console.log('Available functions:', Object.keys(exports).join(', '));

@@ -132,12 +132,13 @@ const ContractorDashboard = () => {
   }
 
   return (
-    <div className="space-y-6 p-1 md:p-4">
-      {/* Page Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-800">Contractor Dashboard</h1>
-        <p className="text-sm text-slate-500">Welcome back, {userProfile?.firstName || 'Contractor'}</p>
-      </div>
+    <div className="min-h-screen bg-white">
+      <div className="space-y-6 p-1 md:p-4">
+        {/* Page Title */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+          <h1 className="text-2xl font-semibold text-gray-900">Contractor Dashboard</h1>
+          <p className="text-sm text-gray-600">Welcome back, {userProfile?.firstName || 'Contractor'}</p>
+        </div>
       
       {/* 1. Overview Cards Panel */}
       <section aria-labelledby="overview-heading">
@@ -154,6 +155,7 @@ const ContractorDashboard = () => {
           onUpdateJobStatus={handleUpdateJobStatus} 
         />
       </section>
+      </div>
     </div>
   );
 };

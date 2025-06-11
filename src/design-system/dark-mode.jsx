@@ -273,10 +273,13 @@ export const withDarkMode = (Component) => {
 };
 
 /**
- * Fallback for SSR
+ * Fallback for SSR - Fixed to avoid conditional hook usage
  */
 export const useSafeTheme = () => {
-  if (typeof window === 'undefined') {
+  const isClient = typeof window !== 'undefined';
+  const themeContext = useTheme();
+  
+  if (!isClient) {
     return {
       theme: 'light',
       toggleTheme: () => {},
@@ -286,6 +289,5 @@ export const useSafeTheme = () => {
     };
   }
   
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  return useTheme();
+  return themeContext;
 }; 

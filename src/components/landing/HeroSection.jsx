@@ -195,7 +195,7 @@ const HeroSection = () => {
                 {currentContent.tagline}
               </h2>
               
-              <p className="text-base sm:text-lg text-white/85 mb-8 sm:mb-10 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+              <p className="text-sm sm:text-base font-semibold text-white mb-8 sm:mb-10 max-w-lg mx-auto lg:mx-0" style={{textShadow: '0 2px 4px rgba(0,0,0,0.5)'}}>
                 {currentContent.description}
               </p>
             </div>
@@ -299,24 +299,24 @@ const HeroSection = () => {
               </Suspense>
                 
               {/* Simple testimonial */}
-              <div className="absolute -top-2 sm:-top-4 -right-2 sm:-right-4 bg-white rounded-xl p-3 sm:p-4 shadow-xl w-44 sm:w-56 transform rotate-1 z-20 border border-gray-100">
-                <p className="text-sm font-semibold text-gray-800">
+              <div className="absolute -top-4 sm:-top-8 -right-4 sm:-right-8 bg-white rounded-2xl p-6 sm:p-8 shadow-2xl w-72 sm:w-80 lg:w-96 transform rotate-1 z-20 border border-gray-100">
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 leading-tight">
                   "Tickets closed 3x faster since switching!"
                 </p>
-                <div className="absolute -bottom-2 left-6 w-4 h-4 bg-white transform rotate-45 border-r border-b border-gray-100"></div>
+                <div className="absolute -bottom-3 left-8 w-6 h-6 bg-white transform rotate-45 border-r border-b border-gray-100"></div>
               </div>
             </div>
             
             {/* Simple testimonial quote */}
-            <div className="mt-8 sm:mt-10 bg-white/95 p-6 sm:p-8 rounded-xl shadow-lg border border-white/20 max-w-4xl mx-auto">
-              <blockquote className="italic text-gray-900 mb-4 text-base sm:text-lg">
+            <div className="mt-12 sm:mt-16 bg-white/95 p-8 sm:p-12 lg:p-16 rounded-2xl shadow-2xl border border-white/20 max-w-6xl mx-auto">
+              <blockquote className="italic text-gray-900 mb-6 sm:mb-8 text-xl sm:text-2xl lg:text-3xl leading-relaxed font-medium">
                 "We solved more issues in 2 weeks with Propagentic than all of last quarter."
               </blockquote>
               <div className="flex items-center">
-                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-orange-300 mr-4 flex-shrink-0"></div>
+                <div className="h-16 w-16 sm:h-20 sm:w-20 lg:h-24 lg:w-24 rounded-full bg-orange-300 mr-6 flex-shrink-0"></div>
                 <div>
-                  <p className="font-semibold text-gray-900 text-base sm:text-lg">Rachel T.</p>
-                  <p className="text-sm sm:text-base text-gray-700">Regional Property Manager</p>
+                  <p className="font-bold text-gray-900 text-xl sm:text-2xl lg:text-3xl">Rachel T.</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl text-gray-700">Regional Property Manager</p>
                 </div>
               </div>
             </div>

@@ -696,13 +696,13 @@ const LandlordOnboarding = () => {
                     >
                       Skip for now
                     </button>
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg font-medium hover:from-orange-700 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
-                    >
-                      Next
-                    </button>
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg font-medium hover:from-orange-700 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+                  >
+                    Next
+                  </button>
                   </div>
                 ) : (
                   <button

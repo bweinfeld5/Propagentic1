@@ -421,17 +421,17 @@ const OnboardingSurvey = () => {
                 >
                   Skip for now
                 </button>
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  disabled={!isStepValid()}
+              <button
+                type="button"
+                onClick={handleNext}
+                disabled={!isStepValid()}
                   className={`py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
-                    ${isStepValid() 
-                      ? 'bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500' 
-                      : 'bg-teal-300 cursor-not-allowed'}`}
-                >
-                  Next
-                </button>
+                  ${isStepValid() 
+                    ? 'bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500' 
+                    : 'bg-teal-300 cursor-not-allowed'}`}
+              >
+                Next
+              </button>
               </div>
             ) : (
               <button

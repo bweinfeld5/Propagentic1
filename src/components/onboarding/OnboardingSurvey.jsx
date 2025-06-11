@@ -68,6 +68,36 @@ const OnboardingSurvey = () => {
     setCurrentStep(prev => prev - 1);
   };
 
+  // Skip current step for development
+  const handleSkip = () => {
+    // Set some default values for skipped steps to prevent issues
+    if (currentStep === 1) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: prev.firstName || 'Test',
+        lastName: prev.lastName || 'Tenant'
+      }));
+    } else if (currentStep === 2) {
+      setFormData(prev => ({
+        ...prev,
+        phoneNumber: prev.phoneNumber || '(555) 123-4567',
+        preferredContactMethod: prev.preferredContactMethod || 'email'
+      }));
+    } else if (currentStep === 3) {
+      setFormData(prev => ({
+        ...prev,
+        address: prev.address || '123 Test Address, Test City, CA 12345'
+      }));
+    } else if (currentStep === 4) {
+      setFormData(prev => ({
+        ...prev,
+        propertyType: prev.propertyType || 'Apartment'
+      }));
+    }
+    
+    setCurrentStep(prev => prev + 1);
+  };
+
   // Submit form to Firestore
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -383,17 +413,26 @@ const OnboardingSurvey = () => {
             )}
             
             {currentStep < 5 ? (
-              <button
-                type="button"
-                onClick={handleNext}
-                disabled={!isStepValid()}
-                className={`ml-auto py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
-                  ${isStepValid() 
-                    ? 'bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500' 
-                    : 'bg-teal-300 cursor-not-allowed'}`}
-              >
-                Next
-              </button>
+              <div className="flex space-x-3 ml-auto">
+                <button
+                  type="button"
+                  onClick={handleSkip}
+                  className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                  Skip for now
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={!isStepValid()}
+                  className={`py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
+                    ${isStepValid() 
+                      ? 'bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500' 
+                      : 'bg-teal-300 cursor-not-allowed'}`}
+                >
+                  Next
+                </button>
+              </div>
             ) : (
               <button
                 type="submit"

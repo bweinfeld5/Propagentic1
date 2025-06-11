@@ -104,7 +104,8 @@ const PaymentMethodsManager: React.FC<PaymentMethodsManagerProps> = ({ onComplet
   };
 
   const handleRemovePaymentMethod = async (paymentMethodId: string) => {
-    if (!confirm('Are you sure you want to remove this payment method?')) {
+    // Use window.confirm instead of global confirm
+    if (!window.confirm('Are you sure you want to remove this payment method?')) {
       return;
     }
 

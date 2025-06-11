@@ -6,7 +6,7 @@ import { Bell, Menu, Home, User } from 'lucide-react';
 import { PropAgenticMark } from '../../components/brand/PropAgenticMark';
 import EmptyStateCard from '../../components/EmptyStateCard';
 import InvitationBanner from '../../components/InvitationBanner';
-import PropertyList from '../../components/PropertyList.tsx';
+import PropertyList from '../../components/PropertyList';
 import { Skeleton } from '../../components/ui/Skeleton';
 import Button from '../../components/ui/Button';
 import TenantInviteModal from '../../components/tenant/TenantInviteModal';

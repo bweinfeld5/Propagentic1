@@ -9,6 +9,13 @@
 import React from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useReducedMotion as useA11yReducedMotion } from '../../design-system/accessibility';
+import { safeDelay as utilSafeDelay } from '../../utils/animationDebug';
+
+// Utility function to ensure delay values are safe
+const safeDelay = (delay) => {
+  // Use the comprehensive validation from animationDebug utility
+  return utilSafeDelay(delay, 0, 'SafeMotion');
+};
 
 // Motion configuration that respects accessibility preferences
 const createMotionConfig = (prefersReducedMotion) => {
@@ -222,7 +229,7 @@ export const FadeIn = ({ children, className = '', delay = 0, ...props }) => (
         ...motionVariants.fadeIn.animate,
         transition: {
           ...motionVariants.fadeIn.animate.transition,
-          delay
+          delay: safeDelay(delay)
         }
       }
     }}
@@ -241,7 +248,7 @@ export const SlideUp = ({ children, className = '', delay = 0, ...props }) => (
         ...motionVariants.slideUp.animate,
         transition: {
           ...motionVariants.slideUp.animate.transition,
-          delay
+          delay: safeDelay(delay)
         }
       }
     }}
@@ -260,7 +267,7 @@ export const ScaleIn = ({ children, className = '', delay = 0, ...props }) => (
         ...motionVariants.scaleIn.animate,
         transition: {
           ...motionVariants.scaleIn.animate.transition,
-          delay
+          delay: safeDelay(delay)
         }
       }
     }}

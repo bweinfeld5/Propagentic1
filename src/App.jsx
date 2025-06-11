@@ -115,7 +115,7 @@ const ContentLayout = ({ children }) => {
 
 // Dashboard content layout with sidebar
 const DashboardContent = ({ children }) => {
-  const { isDemoMode } = useDemoMode ? useDemoMode() : { isDemoMode: false };
+  const { isDemoMode } = useDemoMode();
   
   return (
     <div className="flex min-h-[calc(100vh-var(--header-height))]">

@@ -156,13 +156,13 @@ const PerformanceMetrics = () => {
         {[1, 2, 3, 4, 5].map((star) => (
           <div key={star} className="relative">
             {rating >= star ? (
-              <StarIconSolid className="w-4 h-4 text-yellow-400" />
+              <StarIconSolid className="w-4 h-4 text-orange-600" />
             ) : (
               <StarIcon className="w-4 h-4 text-gray-300 dark:text-gray-600" />
             )}
           </div>
         ))}
-        <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">
+        <span className="ml-2 text-sm font-medium text-gray-800">
           {rating.toFixed(1)}
         </span>
       </div>
@@ -171,13 +171,13 @@ const PerformanceMetrics = () => {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 rounded-2xl border border-orange-200 p-6">
         <div className="animate-pulse">
-          <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-6"></div>
-          <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-4"></div>
+          <div className="h-5 bg-gray-300 rounded w-32 mb-6"></div>
+          <div className="h-12 bg-gray-300 rounded w-24 mb-4"></div>
           <div className="grid grid-cols-2 gap-4">
             {[1, 2].map((i) => (
-              <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+              <div key={i} className="h-16 bg-gray-300 rounded-xl"></div>
             ))}
           </div>
         </div>
@@ -186,15 +186,15 @@ const PerformanceMetrics = () => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow duration-200">
+    <div className="bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 rounded-2xl border border-orange-200 p-6 hover:shadow-lg transition-shadow duration-200">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-            <TrophyIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md">
+            <TrophyIcon className="w-5 h-5 text-orange-600" style={{ color: '#ea580c' }} />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-gray-800">
               Performance
             </h3>
             <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getRankColor(metrics.rank)}`}>
@@ -204,15 +204,15 @@ const PerformanceMetrics = () => {
         </div>
 
         {/* Timeframe Toggle */}
-        <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+        <div className="flex bg-white/20 rounded-lg p-1">
           {['week', 'month', 'quarter'].map((period) => (
             <button
               key={period}
               onClick={() => setTimeframe(period)}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 capitalize ${
                 timeframe === period
-                  ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-white/70 hover:text-white'
               }`}
             >
               {period}
@@ -224,14 +224,14 @@ const PerformanceMetrics = () => {
       {/* Main Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {/* Completion Rate */}
-        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+        <div className="bg-white/20 rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+            <span className="text-sm font-medium text-white/90">
               Completion Rate
             </span>
-            <CheckCircleIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <CheckCircleIcon className="w-4 h-4 text-orange-600" />
           </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <div className="text-2xl font-bold text-white mb-2">
             {metrics.completionRate}%
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
@@ -243,17 +243,17 @@ const PerformanceMetrics = () => {
         </div>
 
         {/* Average Rating */}
-        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+        <div className="bg-white/20 rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+            <span className="text-sm font-medium text-white/90">
               Rating
             </span>
-            <StarIcon className="w-4 h-4 text-yellow-500" />
+            <StarIcon className="w-4 h-4 text-orange-600" />
           </div>
           <div className="mb-2">
             {renderStars(metrics.averageRating)}
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="text-xs text-white/60">
             {metrics.totalReviews} reviews
           </div>
         </div>
@@ -263,31 +263,31 @@ const PerformanceMetrics = () => {
       <div className="grid grid-cols-3 gap-4">
         <div className="text-center">
           <div className="flex items-center justify-center space-x-1 mb-1">
-            <ClockIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span className="text-lg font-semibold text-gray-900 dark:text-white">
+            <ClockIcon className="w-4 h-4 text-orange-600" />
+            <span className="text-lg font-semibold text-white">
               {metrics.onTimeCompletion}%
             </span>
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="text-xs text-white/60">
             On-Time
           </div>
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center space-x-1 mb-1">
-            <FireIcon className="w-4 h-4 text-orange-500" />
-            <span className="text-lg font-semibold text-gray-900 dark:text-white">
+            <FireIcon className="w-4 h-4 text-orange-600" />
+            <span className="text-lg font-semibold text-white">
               {metrics.streak}
             </span>
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="text-xs text-white/60">
             Streak
           </div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+          <div className="text-lg font-semibold text-white mb-1">
             {metrics.responseTime}h
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="text-xs text-white/60">
             Response
           </div>
         </div>

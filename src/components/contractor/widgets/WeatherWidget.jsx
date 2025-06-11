@@ -44,7 +44,7 @@ const WeatherWidget = ({ location = 'San Francisco, CA' }) => {
   const getWeatherIcon = (condition) => {
     switch (condition) {
       case 'sunny':
-        return <SunIcon className="w-8 h-8 text-yellow-500" />;
+        return <SunIcon className="w-8 h-8 text-orange-600" />;
       case 'cloudy':
         return <CloudIcon className="w-8 h-8 text-gray-500" />;
       case 'partly-cloudy':
@@ -52,7 +52,7 @@ const WeatherWidget = ({ location = 'San Francisco, CA' }) => {
       case 'rainy':
         return <CloudArrowDownIcon className="w-8 h-8 text-blue-500" />;
       default:
-        return <SunIcon className="w-8 h-8 text-yellow-500" />;
+        return <SunIcon className="w-8 h-8 text-orange-600" />;
     }
   };
 
@@ -72,7 +72,7 @@ const WeatherWidget = ({ location = 'San Francisco, CA' }) => {
     } else if (windSpeed > 20) {
       return { text: 'Caution: High winds', color: 'text-orange-600 dark:text-orange-400' };
     } else if (precipitation > 30) {
-      return { text: 'Possible delays', color: 'text-yellow-600 dark:text-yellow-400' };
+      return { text: 'Possible delays', color: 'text-orange-600' };
     } else {
       return { text: 'Good working conditions', color: 'text-emerald-600 dark:text-emerald-400' };
     }
@@ -80,14 +80,14 @@ const WeatherWidget = ({ location = 'San Francisco, CA' }) => {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 rounded-2xl border border-orange-200 p-6">
         <div className="animate-pulse">
-          <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-6"></div>
+          <div className="h-5 bg-gray-300 rounded w-32 mb-6"></div>
           <div className="flex items-center space-x-4 mb-4">
-            <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+            <div className="w-16 h-16 bg-gray-300 rounded-full"></div>
             <div className="space-y-2">
-              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+              <div className="h-8 bg-gray-300 rounded w-20"></div>
+              <div className="h-4 bg-gray-300 rounded w-24"></div>
             </div>
           </div>
         </div>
@@ -102,15 +102,15 @@ const WeatherWidget = ({ location = 'San Francisco, CA' }) => {
   );
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow duration-200">
+    <div className="bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 rounded-2xl border border-orange-200 p-6 hover:shadow-lg transition-shadow duration-200">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md">
             {getWeatherIcon(weather.current.condition)}
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-gray-800">
               Weather
             </h3>
             <div className="flex items-center space-x-1 text-sm text-gray-500 dark:text-gray-400">

@@ -20,7 +20,7 @@ const QuickActionsPanel = ({ onActionClick }) => {
       title: 'View Jobs',
       description: 'Check new assignments',
       icon: ClipboardDocumentListIcon,
-      color: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800',
+      color: 'bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 border-2 border-orange-600 hover:bg-white text-black',
       action: () => onActionClick?.('jobs')
     },
     {
@@ -28,7 +28,7 @@ const QuickActionsPanel = ({ onActionClick }) => {
       title: 'Upload Documents',
       description: 'Add verification documents',
       icon: DocumentArrowUpIcon,
-      color: 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700',
+      color: 'bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 border-2 border-orange-600 hover:bg-white text-black',
       action: () => onActionClick?.('verification')
     },
     {
@@ -36,7 +36,7 @@ const QuickActionsPanel = ({ onActionClick }) => {
       title: 'Update Schedule',
       description: 'Set your availability',
       icon: CalendarIcon,
-      color: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800',
+      color: 'bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 border-2 border-orange-600 hover:bg-white text-black',
       action: () => onActionClick?.('availability')
     }
   ];
@@ -62,14 +62,14 @@ const QuickActionsPanel = ({ onActionClick }) => {
   ];
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-orange-200 p-6 hover:shadow-xl transition-all duration-200 shadow-lg">
+    <div className="bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 backdrop-blur-sm rounded-2xl border border-orange-200 p-6 hover:shadow-xl transition-all duration-200 shadow-lg">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md">
             <PlusIcon className="w-5 h-5 text-orange-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-gray-800">
             Quick Actions
           </h3>
         </div>
@@ -83,10 +83,10 @@ const QuickActionsPanel = ({ onActionClick }) => {
             <button
               key={action.id}
               onClick={action.action}
-              className={`w-full ${action.color} text-white p-4 rounded-xl transition-all duration-200 transform hover:scale-[1.02] group shadow-lg hover:shadow-xl`}
+              className={`w-full ${action.color} p-4 rounded-xl transition-all duration-200 transform hover:scale-[1.02] group shadow-lg hover:shadow-xl`}
             >
               <div className="flex items-center space-x-3">
-                <IconComponent className="w-5 h-5" />
+                <IconComponent className="w-5 h-5 text-orange-600" />
                 <div className="flex-1 text-left">
                   <div className="font-medium text-sm">
                     {action.title}
@@ -108,7 +108,7 @@ const QuickActionsPanel = ({ onActionClick }) => {
           <button
             key={action.id}
             onClick={action.action}
-            className="w-full flex items-center justify-between p-3 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors duration-200"
+            className="w-full flex items-center justify-between p-3 bg-white/50 hover:bg-white/70 rounded-xl transition-colors duration-200"
           >
             <span className="text-sm font-medium text-gray-700">
               {action.title}
@@ -126,13 +126,13 @@ const QuickActionsPanel = ({ onActionClick }) => {
       </div>
 
       {/* Status */}
-      <div className="mt-6 pt-4 border-t border-orange-200">
+              <div className="mt-6 pt-4 border-t border-gray-300">
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-gray-600">Available</span>
+            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+            <span className="text-gray-700">Available</span>
           </div>
-          <span className="text-gray-500">
+          <span className="text-gray-600">
             {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>

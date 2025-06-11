@@ -7,39 +7,174 @@ import {
   MapPinIcon
 } from '@heroicons/react/24/outline';
 
-const WeatherWidget = ({ location = 'San Francisco, CA' }) => {
-  const [weather, setWeather] = useState({
-    current: {
-      temperature: 72,
-      condition: 'sunny',
-      humidity: 45,
-      windSpeed: 8,
-      visibility: 10
-    },
-    forecast: [
-      { day: 'Today', high: 75, low: 62, condition: 'sunny', precipitation: 0 },
-      { day: 'Tomorrow', high: 73, low: 58, condition: 'cloudy', precipitation: 20 },
-      { day: 'Wed', high: 68, low: 55, condition: 'rainy', precipitation: 80 },
-      { day: 'Thu', high: 71, low: 59, condition: 'partly-cloudy', precipitation: 10 }
-    ],
-    alerts: [
-      {
-        type: 'warning',
-        message: 'High winds expected this afternoon (25-35 mph)',
-        severity: 'moderate'
-      }
-    ]
-  });
-  const [loading, setLoading] = useState(false);
+const WeatherWidget = ({ location = 'San Francisco, CA', coordinates = null }) => {
+  const [weather, setWeather] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // In a real implementation, you would fetch weather data from an API
+  // Fetch real weather data from OpenWeatherMap API
   useEffect(() => {
-    // Simulate API call
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-  }, [location]);
+    const fetchWeatherData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Try WeatherAPI.com first (if API key available), otherwise use Open-Meteo (free, no key needed)
+        const weatherApiKey = process.env.REACT_APP_WEATHER_API_KEY;
+        
+        if (weatherApiKey) {
+          // Use WeatherAPI.com (requires free API key)
+          let query;
+          if (coordinates && coordinates.lat && coordinates.lon) {
+            query = `${coordinates.lat},${coordinates.lon}`;
+          } else {
+            query = encodeURIComponent(location);
+          }
+
+          const weatherUrl = `https://api.weatherapi.com/v1/forecast.json?key=${weatherApiKey}&q=${query}&days=5&aqi=no&alerts=no`;
+          const response = await fetch(weatherUrl);
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch weather data');
+          }
+
+          const data = await response.json();
+
+          const transformedWeather = {
+            current: {
+              temperature: Math.round(data.current.temp_f),
+              condition: mapWeatherCondition(data.current.condition.text.toLowerCase()),
+              humidity: data.current.humidity,
+              windSpeed: Math.round(data.current.wind_mph),
+              visibility: Math.round(data.current.vis_miles)
+            },
+            forecast: processWeatherAPIForecast(data.forecast.forecastday),
+            alerts: []
+          };
+
+          setWeather(transformedWeather);
+        } else {
+          // Use Open-Meteo (completely free, no API key needed)
+          if (!coordinates || !coordinates.lat || !coordinates.lon) {
+            throw new Error('Coordinates required for Open-Meteo API');
+          }
+
+          const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coordinates.lat}&longitude=${coordinates.lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=5`;
+          
+          const response = await fetch(weatherUrl);
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch weather data');
+          }
+
+          const data = await response.json();
+
+          const transformedWeather = {
+            current: {
+              temperature: Math.round(data.current.temperature_2m),
+              condition: mapWeatherCodeToCondition(data.current.weather_code),
+              humidity: data.current.relative_humidity_2m,
+              windSpeed: Math.round(data.current.wind_speed_10m),
+              visibility: 10 // Open-Meteo doesn't provide visibility
+            },
+            forecast: processOpenMeteoForecast(data.daily),
+            alerts: []
+          };
+
+          setWeather(transformedWeather);
+        }
+      } catch (err) {
+        console.error('Weather fetch error:', err);
+        setError(err.message);
+        
+        // Fallback to mock data if API fails
+        setWeather({
+          current: {
+            temperature: 72,
+            condition: 'sunny',
+            humidity: 45,
+            windSpeed: 8,
+            visibility: 10
+          },
+          forecast: [
+            { day: 'Today', high: 75, low: 62, condition: 'sunny', precipitation: 0 },
+            { day: 'Tomorrow', high: 73, low: 58, condition: 'cloudy', precipitation: 20 },
+            { day: 'Wed', high: 68, low: 55, condition: 'rainy', precipitation: 80 },
+            { day: 'Thu', high: 71, low: 59, condition: 'partly-cloudy', precipitation: 10 }
+          ],
+          alerts: []
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWeatherData();
+  }, [location, coordinates]);
+
+  // Helper function to map weather conditions to our conditions
+  const mapWeatherCondition = (condition) => {
+    const lowerCondition = condition.toLowerCase();
+    
+    if (lowerCondition.includes('sunny') || lowerCondition.includes('clear')) {
+      return 'sunny';
+    } else if (lowerCondition.includes('rain') || lowerCondition.includes('drizzle') || lowerCondition.includes('shower')) {
+      return 'rainy';
+    } else if (lowerCondition.includes('cloud') || lowerCondition.includes('overcast')) {
+      return 'cloudy';
+    } else if (lowerCondition.includes('partly')) {
+      return 'partly-cloudy';
+    } else if (lowerCondition.includes('snow') || lowerCondition.includes('mist') || lowerCondition.includes('fog')) {
+      return 'cloudy';
+    }
+    
+    return 'sunny'; // default
+  };
+
+  // Helper function to process WeatherAPI forecast data
+  const processWeatherAPIForecast = (forecastDays) => {
+    return forecastDays.slice(0, 4).map((day, index) => {
+      const dayName = index === 0 ? 'Today' : 
+                    index === 1 ? 'Tomorrow' : 
+                    new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' });
+      
+      return {
+        day: dayName,
+        high: Math.round(day.day.maxtemp_f),
+        low: Math.round(day.day.mintemp_f),
+        condition: mapWeatherCondition(day.day.condition.text),
+        precipitation: day.day.chance_of_rain || 0
+      };
+    });
+  };
+
+  // Helper function to process Open-Meteo forecast data
+  const processOpenMeteoForecast = (daily) => {
+    return daily.time.slice(0, 4).map((date, index) => {
+      const dayName = index === 0 ? 'Today' : 
+                    index === 1 ? 'Tomorrow' : 
+                    new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
+      
+      return {
+        day: dayName,
+        high: Math.round(daily.temperature_2m_max[index]),
+        low: Math.round(daily.temperature_2m_min[index]),
+        condition: mapWeatherCodeToCondition(daily.weather_code[index]),
+        precipitation: daily.precipitation_probability_max[index] || 0
+      };
+    });
+  };
+
+  // Helper function to map Open-Meteo weather codes to conditions
+  const mapWeatherCodeToCondition = (code) => {
+    if (code === 0) return 'sunny'; // Clear sky
+    if (code >= 1 && code <= 3) return 'partly-cloudy'; // Mainly clear, partly cloudy, overcast
+    if (code >= 45 && code <= 48) return 'cloudy'; // Fog
+    if (code >= 51 && code <= 67) return 'rainy'; // Drizzle and rain
+    if (code >= 71 && code <= 77) return 'cloudy'; // Snow
+    if (code >= 80 && code <= 99) return 'rainy'; // Rain showers and thunderstorms
+    return 'sunny'; // default
+  };
 
   const getWeatherIcon = (condition) => {
     switch (condition) {
@@ -78,7 +213,7 @@ const WeatherWidget = ({ location = 'San Francisco, CA' }) => {
     }
   };
 
-  if (loading) {
+  if (loading || !weather) {
     return (
       <div className="bg-gradient-to-br from-gray-100 via-orange-50 to-gray-200 rounded-2xl border border-orange-200 p-6">
         <div className="animate-pulse">
@@ -90,6 +225,11 @@ const WeatherWidget = ({ location = 'San Francisco, CA' }) => {
               <div className="h-4 bg-gray-300 rounded w-24"></div>
             </div>
           </div>
+          {error && (
+            <div className="text-xs text-orange-600 mt-2">
+              {error === 'Weather API key not configured' ? 'Weather data unavailable' : 'Loading weather...'}
+            </div>
+          )}
         </div>
       </div>
     );

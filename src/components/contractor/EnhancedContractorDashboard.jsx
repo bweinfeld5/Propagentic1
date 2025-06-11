@@ -35,12 +35,75 @@ const EnhancedContractorDashboard = () => {
   const [error, setError] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState('pending');
+  const [userLocation, setUserLocation] = useState('San Francisco, CA'); // Default fallback
+  const [userCoordinates, setUserCoordinates] = useState(null);
+  const [locationLoading, setLocationLoading] = useState(true);
   const [contractorStats, setContractorStats] = useState({
     newJobs: 0,
     activeJobs: 0,
     completedThisMonth: 0,
     avgCompletionTime: null
   });
+
+  // Get user's location for weather
+  useEffect(() => {
+    const getUserLocation = async () => {
+      try {
+        if (!navigator.geolocation) {
+          console.log('Geolocation not supported');
+          setLocationLoading(false);
+          return;
+        }
+
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            reject,
+            {
+              timeout: 10000,
+              enableHighAccuracy: true,
+              maximumAge: 300000 // 5 minutes cache
+            }
+          );
+        });
+
+        const { latitude, longitude } = position.coords;
+        
+        // Store coordinates for weather API
+        setUserCoordinates({ lat: latitude, lon: longitude });
+        
+        // Try to get city name from coordinates using reverse geocoding
+        try {
+          const response = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+          );
+          
+          if (response.ok) {
+            const data = await response.json();
+            const city = data.city || data.locality || data.principalSubdivision;
+            const region = data.principalSubdivisionCode || data.countryCode;
+            
+            if (city && region) {
+              setUserLocation(`${city}, ${region}`);
+            } else {
+              // Fallback to coordinates if city name not available
+              setUserLocation(`${latitude.toFixed(2)}, ${longitude.toFixed(2)}`);
+            }
+          }
+        } catch (geocodeError) {
+          console.log('Geocoding failed, using coordinates:', geocodeError);
+          setUserLocation(`${latitude.toFixed(2)}, ${longitude.toFixed(2)}`);
+        }
+      } catch (error) {
+        console.log('Location access denied or failed:', error);
+        // Keep default location
+      } finally {
+        setLocationLoading(false);
+      }
+    };
+
+    getUserLocation();
+  }, []);
 
   // Load contractor data
   useEffect(() => {
@@ -267,7 +330,19 @@ const EnhancedContractorDashboard = () => {
 
           {/* Weather Widget */}
           <div className="lg:col-span-1">
-            <WeatherWidget location="San Francisco, CA" />
+            {locationLoading ? (
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-600"></div>
+                  <span className="text-sm text-gray-600">Getting your location...</span>
+                </div>
+              </div>
+            ) : (
+              <WeatherWidget 
+                location={userLocation} 
+                coordinates={userCoordinates}
+              />
+            )}
           </div>
 
           {/* Upcoming Schedule */}

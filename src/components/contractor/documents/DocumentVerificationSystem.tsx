@@ -128,47 +128,8 @@ const DocumentVerificationSystem: React.FC<VerificationSystemProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   
-  // Mock documents data
-  const [documents, setDocuments] = useState<Document[]>([
-    {
-      id: '1',
-      name: 'Contractor License',
-      type: 'license',
-      status: 'approved',
-      uploadDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), // 30 days ago
-      expiryDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 335), // 335 days from now
-      reviewDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 28), // 28 days ago
-      fileUrl: '#'
-    },
-    {
-      id: '2',
-      name: 'Liability Insurance',
-      type: 'insurance',
-      status: 'pending',
-      uploadDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-      expiryDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 180), // 180 days from now
-      fileUrl: '#'
-    },
-    {
-      id: '3',
-      name: 'Certification',
-      type: 'certification',
-      status: 'rejected',
-      uploadDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), // 5 days ago
-      reviewDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
-      reviewNotes: 'Document is illegible. Please resubmit a clearer copy.',
-      fileUrl: '#'
-    },
-    {
-      id: '4',
-      name: 'ID Verification',
-      type: 'identification',
-      status: 'approved',
-      uploadDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60), // 60 days ago
-      reviewDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 59), // 59 days ago
-      fileUrl: '#'
-    }
-  ]);
+  // Real documents data (initially empty)
+  const [documents, setDocuments] = useState<Document[]>([]);
   
   // Document type options
   const documentTypes = [
@@ -331,7 +292,7 @@ const DocumentVerificationSystem: React.FC<VerificationSystemProps> = ({
   };
   
   // Handle document upload
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!selectedFile || !uploadType) {
       setUploadError('Please select a document type and file');
       return;
@@ -340,26 +301,16 @@ const DocumentVerificationSystem: React.FC<VerificationSystemProps> = ({
     setIsUploading(true);
     setUploadError(null);
     
-    // Simulate upload delay
-    setTimeout(() => {
-      // In a real app, this would upload to Firebase Storage
-      const newDocument: Document = {
-        id: `doc-${Date.now()}`,
-        name: documentTypes.find(type => type.value === uploadType)?.label || 'Document',
-        type: uploadType as any,
-        status: 'pending',
-        uploadDate: new Date(),
-        expiryDate: expiryDate ? new Date(expiryDate) : undefined,
-        fileUrl: '#'
-      };
-      
-      setDocuments([...documents, newDocument]);
-      setSelectedFile(null);
-      setUploadType('');
-      setExpiryDate('');
+    try {
+      // This should integrate with the FileUpload component for real Firebase uploads
+      // For now, show error that upload isn't implemented
+      setUploadError('Document upload not yet implemented. Please use the FileUpload component.');
       setIsUploading(false);
-      setActiveTab('status');
-    }, 2000);
+    } catch (error) {
+      console.error('Upload error:', error);
+      setUploadError('Failed to upload document');
+      setIsUploading(false);
+    }
   };
   
   // Get status badge

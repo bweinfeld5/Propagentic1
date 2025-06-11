@@ -108,7 +108,10 @@ service cloud.firestore {
 
     // Properties Collection
     match /properties/{propertyId} {
-      allow read: if isSignedIn() && ((isLandlord() && resource.data.landlordId == request.auth.uid) || isPropertyManager(propertyId) || isPropertyTenant(propertyId) || isAdmin());
+      // Allow individual document reads for property owners, managers, tenants, and admins
+      allow get: if isSignedIn() && ((isLandlord() && resource.data.landlordId == request.auth.uid) || isPropertyManager(propertyId) || isPropertyTenant(propertyId) || isAdmin());
+      // Allow listing properties for landlords (they can query their own properties)
+      allow list: if isSignedIn() && (isLandlord() || isAdmin());
       allow create: if isSignedIn() && (isLandlord() || isAdmin());
       allow update: if isSignedIn() && (isPropertyOwner(propertyId) || isPropertyManager(propertyId) || isAdmin());
       allow delete: if isSignedIn() && (isPropertyOwner(propertyId) || isAdmin());

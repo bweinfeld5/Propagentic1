@@ -1,0 +1,58 @@
+/* Global Dark Mode Removal - Override all dark: prefixed classes */
+/* This file removes all dark mode styling from the application */
+
+/* Remove dark mode color scheme */
+:root {
+  color-scheme: light !important;
+}
+
+/* Override all dark mode classes */
+[class*="dark:"] {
+  /* Reset dark mode specific styles */
+}
+
+/* Force light mode backgrounds */
+.dark\:bg-gray-900,
+.dark\:bg-gray-800,
+.dark\:bg-gray-700,
+.dark\:bg-slate-900,
+.dark\:bg-slate-800,
+.dark\:bg-neutral-900,
+.dark\:bg-neutral-800,
+.dark\:bg-background-dark,
+.dark\:bg-background-darkSubtle,
+.dark\:from-neutral-800,
+.dark\:to-neutral-900 {
+  background-color: transparent !important;
+}
+
+/* Force light mode text colors */
+.dark\:text-white,
+.dark\:text-gray-100,
+.dark\:text-gray-200,
+.dark\:text-gray-300,
+.dark\:text-content-dark,
+.dark\:text-content-darkSecondary,
+.dark\:text-primary-light {
+  color: inherit !important;
+}
+
+/* Force light mode borders */
+.dark\:border-gray-700,
+.dark\:border-gray-600,
+.dark\:border-border-dark {
+  border-color: inherit !important;
+}
+
+/* Remove dark mode from html element */
+html.dark,
+html[data-theme="dark"] {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Ensure body stays light */
+body {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+} 

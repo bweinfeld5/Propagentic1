@@ -4,9 +4,9 @@ import { useAuth } from '../../context/AuthContext';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import HomeNavLink from '../layout/HomeNavLink';
-import TenantInviteForm from '../tenant/TenantInviteForm';
-import inviteCodeService from '../../services/inviteCodeService';
+import PropertySelector from '../tenant/PropertySelector';
 import toast from 'react-hot-toast';
+
 
 const OnboardingSurvey = () => {
   const { currentUser, userProfile, fetchUserProfile } = useAuth();
@@ -62,28 +62,25 @@ const OnboardingSurvey = () => {
     }));
   };
 
-  // Handle invite code validation success
-  const handleInviteValidated = async (propertyInfo) => {
-    console.log('🎉 Invite code validated in onboarding:', propertyInfo);
+  // Handle property selection
+  const handlePropertySelected = async (property) => {
+    console.log('🎉 Property selected in onboarding:', property);
     
     try {
-      // Redeem the invite code immediately after validation
-      const result = await inviteCodeService.redeemInviteCode(
-        propertyInfo.inviteCode,
-        currentUser.uid
-      );
+      // Store the selected property info
+      const propertyInfo = {
+        propertyId: property.id,
+        propertyName: property.name,
+        unitId: property.address?.unit || null
+      };
       
-      if (result.success) {
-        setValidatedProperty(propertyInfo);
-        toast.success(`Successfully joined ${propertyInfo.propertyName}!`);
-        // Automatically move to next step
-        setCurrentStep(2);
-      } else {
-        toast.error(result.message || 'Failed to join property');
-      }
+      setValidatedProperty(propertyInfo);
+      toast.success(`Successfully selected ${property.name}!`);
+      // Automatically move to next step
+      setCurrentStep(2);
     } catch (error) {
-      console.error('Error redeeming invite code during onboarding:', error);
-      toast.error(error.message || 'Error joining property');
+      console.error('Error selecting property during onboarding:', error);
+      toast.error('Error selecting property');
     }
   };
 
@@ -210,15 +207,15 @@ const OnboardingSurvey = () => {
     );
   };
 
-  // Step 1: Invite Code
+  // Step 1: Property Selection
   const renderStep1 = () => (
     <div>
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Join Your Property</h3>
+      <h3 className="text-lg font-medium text-gray-900 mb-4">Select Your Property</h3>
       <p className="text-sm text-gray-600 mb-6">
-        Enter the invite code provided by your landlord or property manager to get started.
+        Choose the property you'll be living in from the available options.
       </p>
       
-      {validatedProperty ? (
+      {validatedProperty && (
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -228,7 +225,7 @@ const OnboardingSurvey = () => {
             </div>
             <div className="ml-3">
               <h4 className="text-sm font-medium text-green-800">
-                Successfully joined property!
+                Property selected successfully!
               </h4>
               <p className="text-sm text-green-700 mt-1">
                 <span className="font-medium">Property:</span> {validatedProperty.propertyName}
@@ -240,11 +237,6 @@ const OnboardingSurvey = () => {
               )}
             </div>
           </div>
-        </div>
-      ) : (
-        // Render invite form outside the main form by setting a flag
-        <div className="invite-form-placeholder">
-          <p className="text-gray-500 text-sm">Loading invite form...</p>
         </div>
       )}
     </div>
@@ -434,7 +426,7 @@ const OnboardingSurvey = () => {
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
-        return validatedProperty !== null; // Must have valid invite code
+        return validatedProperty !== null; // Must have selected property
       case 2:
         return formData.firstName && formData.lastName;
       case 3:
@@ -465,12 +457,10 @@ const OnboardingSurvey = () => {
 
         <ProgressIndicator />
         
-        {/* Step 1: Render invite form outside main form to avoid nesting */}
+        {/* Step 1: Render property selector outside main form to avoid nesting */}
         {currentStep === 1 && !validatedProperty && (
-          <TenantInviteForm
-            onInviteValidated={handleInviteValidated}
-            email={currentUser?.email}
-            showSkip={false}
+          <PropertySelector
+            onPropertySelected={handlePropertySelected}
             className="space-y-4 mb-8"
           />
         )}

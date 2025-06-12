@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.redeemInviteCode = exports.validateInviteCode = exports.generateInviteCode = exports.ping = void 0;
+exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 // Initialize Firebase Admin SDK
@@ -46,23 +46,20 @@ exports.ping = functions.https.onCall(async () => {
     console.log("Ping function invoked.");
     return { message: "pong", timestamp: Date.now() };
 });
-// Import inviteCode functions
-const inviteCodeFunctions = __importStar(require("./inviteCode"));
-// Export invite code functions
-exports.generateInviteCode = inviteCodeFunctions.generateInviteCode;
-exports.validateInviteCode = inviteCodeFunctions.validateInviteCode;
-exports.redeemInviteCode = inviteCodeFunctions.redeemInviteCode;
-// Import and export email invite function
-const invites_1 = require("./invites");
-Object.defineProperty(exports, "sendInviteEmail", { enumerable: true, get: function () { return invites_1.sendInviteEmail; } });
-// Import and export notification trigger functions  
-const inviteTriggers_1 = require("./inviteTriggers");
-Object.defineProperty(exports, "createNotificationOnInvite", { enumerable: true, get: function () { return inviteTriggers_1.createNotificationOnInvite; } });
 // Import and export user relationship functions (property invites)
 const userRelationships_1 = require("./userRelationships");
 Object.defineProperty(exports, "sendPropertyInvite", { enumerable: true, get: function () { return userRelationships_1.sendPropertyInvite; } });
 Object.defineProperty(exports, "acceptPropertyInvite", { enumerable: true, get: function () { return userRelationships_1.acceptPropertyInvite; } });
 Object.defineProperty(exports, "rejectPropertyInvite", { enumerable: true, get: function () { return userRelationships_1.rejectPropertyInvite; } });
 Object.defineProperty(exports, "addContractorToRolodex", { enumerable: true, get: function () { return userRelationships_1.addContractorToRolodex; } });
-console.log("✅ Essential functions loaded (ping, invite code, email invites, notifications, property invites).");
+// Import and export AI classification function
+const classifyMaintenanceRequest_1 = require("./classifyMaintenanceRequest");
+Object.defineProperty(exports, "classifyMaintenanceRequest", { enumerable: true, get: function () { return classifyMaintenanceRequest_1.classifyMaintenanceRequest; } });
+// Import and export email invite function
+const invites_1 = require("./invites");
+Object.defineProperty(exports, "sendInviteEmail", { enumerable: true, get: function () { return invites_1.sendInviteEmail; } });
+// Import and export notification trigger functions  
+const inviteTriggers_1 = require("./inviteTriggers");
+Object.defineProperty(exports, "createNotificationOnInvite", { enumerable: true, get: function () { return inviteTriggers_1.createNotificationOnInvite; } });
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications).");
 //# sourceMappingURL=index.js.map

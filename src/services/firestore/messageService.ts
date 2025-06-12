@@ -276,7 +276,7 @@ class MessageService {
 
       // Update conversation
       const conversationRef = doc(this.conversationsRef, conversationId);
-      const conversationUpdate: any = {
+      const conversationUpdate: Record<string, any> = {
         lastMessage: {
           text: text || `Sent a ${type}`,
           timestamp: serverTimestamp(),
@@ -293,7 +293,7 @@ class MessageService {
         
         conversation.participants.forEach(participant => {
           if (participant.id !== senderId) {
-            conversationUpdate[`unreadCounts.${participant.id}`] = increment(1);
+            (conversationUpdate as any)[`unreadCounts.${participant.id}`] = increment(1);
           }
         });
       }
@@ -415,17 +415,17 @@ class MessageService {
         
         // Mark as read if not already read by this user
         if (!message.readBy || !message.readBy[userId]) {
-          batch.update(doc.ref, {
-            [`readBy.${userId}`]: serverTimestamp()
-          });
+          const updateData: Record<string, any> = {};
+          updateData[`readBy.${userId}`] = serverTimestamp();
+          batch.update(doc.ref, updateData);
         }
       });
 
       // Reset unread count for this user in conversation
       const conversationRef = doc(this.conversationsRef, conversationId);
-      batch.update(conversationRef, {
-        [`unreadCounts.${userId}`]: 0
-      });
+      const conversationUpdateData: Record<string, any> = {};
+      conversationUpdateData[`unreadCounts.${userId}`] = 0;
+      batch.update(conversationRef, conversationUpdateData);
 
       await batch.commit();
       console.log('Messages marked as read for user:', userId);

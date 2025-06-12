@@ -62,53 +62,7 @@ const generateInviteCode = (length = 8) => {
 if (!admin.apps.length) {
     admin.initializeApp();
 }
-// Retrieve SMTP config from Firebase Functions Config
-const getMailTransport = () => {
-    var _a, _b, _c, _d, _e;
-    // Remove unused variable
-    let configSource = 'firebase';
-    try {
-        // Check if we have SMTP config in Firebase
-        const host = (_a = functions.config().smtp) === null || _a === void 0 ? void 0 : _a.host;
-        const port = (_b = functions.config().smtp) === null || _b === void 0 ? void 0 : _b.port;
-        const user = (_c = functions.config().smtp) === null || _c === void 0 ? void 0 : _c.user;
-        const pass = (_d = functions.config().smtp) === null || _d === void 0 ? void 0 : _d.pass;
-        const secure = ((_e = functions.config().smtp) === null || _e === void 0 ? void 0 : _e.secure) === 'true';
-        // Log the config (without password) for debugging
-        console.log(`Email config from ${configSource}:`, {
-            host,
-            port,
-            user: user ? '✓ Present' : '✗ Missing',
-            secure
-        });
-        if (!host || !port || !user || !pass) {
-            throw new Error('Incomplete SMTP configuration');
-        }
-        return nodemailer.createTransport({
-            host,
-            port: parseInt(port, 10),
-            secure,
-            auth: {
-                user,
-                pass
-            }
-        });
-    }
-    catch (error) {
-        console.warn('SMTP config error:', error);
-        console.warn('Using backup SMTP configuration. !!! FOR DEVELOPMENT ONLY !!!');
-        // Fallback to environment variables if config fails (for development only)
-        return nodemailer.createTransport({
-            host: process.env.SMTP_HOST || 'smtp.mailtrap.io', // Use MailTrap for development
-            port: parseInt(process.env.SMTP_PORT || '2525', 10),
-            secure: process.env.SMTP_SECURE === 'true',
-            auth: {
-                user: process.env.SMTP_USER || 'YOUR_SMTP_USER',
-                pass: process.env.SMTP_PASS || 'YOUR_SMTP_PASSWORD'
-            }
-        });
-    }
-};
+// Unused SMTP config function removed to fix TypeScript compilation
 const APP_NAME = 'PropAgentic';
 const APP_DOMAIN = ((_a = functions.config().app) === null || _a === void 0 ? void 0 : _a.domain) || 'http://localhost:3000';
 // This function will now generate a code and update the document

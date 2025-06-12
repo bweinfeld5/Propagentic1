@@ -80,19 +80,7 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
           message: 'Valid invite code!'
         });
         
-        // Check if code has email restriction
-        if (validationResult.restrictedEmail && email && 
-            validationResult.restrictedEmail.toLowerCase() !== email.toLowerCase()) {
-          console.log('❌ Email restriction failed:', {
-            restrictedEmail: validationResult.restrictedEmail,
-            userEmail: email
-          });
-          setValidationMessage({
-            type: 'error',
-            message: `This invite code is restricted to ${validationResult.restrictedEmail}`
-          });
-          return;
-        }
+        // Note: Email restrictions are no longer enforced since demo properties are universal
         
         console.log('🚀 Notifying parent component with property info');
         // Notify parent component that we have a valid invite code

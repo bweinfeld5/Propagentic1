@@ -29,56 +29,7 @@ if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-// Retrieve SMTP config from Firebase Functions Config
-const getMailTransport = () => {
-  // Remove unused variable
-  let configSource = 'firebase';
-
-  try {
-    // Check if we have SMTP config in Firebase
-    const host = functions.config().smtp?.host;
-    const port = functions.config().smtp?.port;
-    const user = functions.config().smtp?.user;
-    const pass = functions.config().smtp?.pass;
-    const secure = functions.config().smtp?.secure === 'true';
-
-    // Log the config (without password) for debugging
-    console.log(`Email config from ${configSource}:`, { 
-      host, 
-      port, 
-      user: user ? '✓ Present' : '✗ Missing',
-      secure 
-    });
-
-    if (!host || !port || !user || !pass) {
-      throw new Error('Incomplete SMTP configuration');
-    }
-
-    return nodemailer.createTransport({
-      host,
-      port: parseInt(port, 10),
-      secure,
-  auth: {
-        user,
-        pass
-      }
-    });
-  } catch (error) {
-    console.warn('SMTP config error:', error);
-    console.warn('Using backup SMTP configuration. !!! FOR DEVELOPMENT ONLY !!!');
-
-    // Fallback to environment variables if config fails (for development only)
-    return nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.mailtrap.io', // Use MailTrap for development
-      port: parseInt(process.env.SMTP_PORT || '2525', 10),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER || 'YOUR_SMTP_USER',
-        pass: process.env.SMTP_PASS || 'YOUR_SMTP_PASSWORD'
-      }
-});
-  }
-};
+// Unused SMTP config function removed to fix TypeScript compilation
 
 const APP_NAME = 'PropAgentic';
 const APP_DOMAIN = functions.config().app?.domain || 'http://localhost:3000';

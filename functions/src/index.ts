@@ -14,22 +14,6 @@ export const ping = functions.https.onCall(async () => {
   return { message: "pong", timestamp: Date.now() };
 });
 
-// Import inviteCode functions
-import * as inviteCodeFunctions from './inviteCode';
-
-// Export invite code functions
-export const generateInviteCode = inviteCodeFunctions.generateInviteCode;
-export const validateInviteCode = inviteCodeFunctions.validateInviteCode;
-export const redeemInviteCode = inviteCodeFunctions.redeemInviteCode;
-
-// Import and export email invite function
-import { sendInviteEmail } from './invites';
-export { sendInviteEmail };
-
-// Import and export notification trigger functions  
-import { createNotificationOnInvite } from './inviteTriggers';
-export { createNotificationOnInvite };
-
 // Import and export user relationship functions (property invites)
 import { 
   sendPropertyInvite, 
@@ -45,4 +29,16 @@ export {
   addContractorToRolodex 
 };
 
-console.log("✅ Essential functions loaded (ping, invite code, email invites, notifications, property invites).");
+// Import and export AI classification function
+import { classifyMaintenanceRequest } from './classifyMaintenanceRequest';
+export { classifyMaintenanceRequest };
+
+// Import and export email invite function
+import { sendInviteEmail } from './invites';
+export { sendInviteEmail };
+
+// Import and export notification trigger functions  
+import { createNotificationOnInvite } from './inviteTriggers';
+export { createNotificationOnInvite };
+
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications).");

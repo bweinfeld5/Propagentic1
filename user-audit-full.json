@@ -1,0 +1,4273 @@
+{
+  "timestamp": "2025-06-11T22:42:03.912Z",
+  "authUsers": [
+    {
+      "uid": "0sPa9IA2dSfDQngcrE1PiuGpXhQ2",
+      "email": "ben@propagenticai.com",
+      "emailVerified": false,
+      "createdAt": "Fri, 06 Jun 2025 16:31:05 GMT",
+      "lastSignInTime": "Fri, 06 Jun 2025 16:31:05 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "1HbgXSXyTgcrM1NAgQ6DQsAXzEV2",
+      "email": "landlord1@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 02 Apr 2025 17:41:14 GMT",
+      "lastSignInTime": "Wed, 02 Apr 2025 17:41:14 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "2fJm7xtvENaPP2WxhgjiqYh4KG23",
+      "email": "tenaeeent2004@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 28 May 2025 19:26:05 GMT",
+      "lastSignInTime": "Wed, 28 May 2025 19:26:05 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "3WfdLIaiakMSdqvevJlPdLHRvWJ3",
+      "email": "bweinfeld15@gmail.com55",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 02:26:29 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 02:26:29 GMT",
+      "disabled": false,
+      "isTestAccount": true,
+      "recommendDelete": true
+    },
+    {
+      "uid": "3fHebmaMlYPGnxH992qNjDeMNhi1",
+      "email": "tenant9@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 07 Apr 2025 21:49:20 GMT",
+      "lastSignInTime": "Mon, 07 Apr 2025 21:49:20 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "4nTmziu1M8P6OaMXdLU1yUQvHN42",
+      "email": "bweinfeld5@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 02 Apr 2025 15:46:37 GMT",
+      "lastSignInTime": "Wed, 02 Apr 2025 18:33:32 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "4oMb6PBaG7TygNoUhtFsUWckKEm2",
+      "email": "danny2004@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Thu, 29 May 2025 16:56:10 GMT",
+      "lastSignInTime": "Thu, 29 May 2025 16:56:10 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "4zfrQRMYp8fmMU1a2qiJedhpaGe2",
+      "email": "land2005@gmail.com3",
+      "emailVerified": false,
+      "createdAt": "Wed, 28 May 2025 17:16:29 GMT",
+      "lastSignInTime": "Wed, 28 May 2025 17:16:29 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "5TUwbZu0mlXp1nFhokkgYFWYGVG2",
+      "email": "rcfvev@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 19 May 2025 20:59:15 GMT",
+      "lastSignInTime": "Tue, 20 May 2025 00:38:26 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "5oqbR7zgu9ZUiJ0CyYRKTkTEZAv1",
+      "email": "test-landlord-1749667432217@example.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 18:43:52 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 18:43:52 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "64SUgO3BqfZi4ql7PtASp0qjSWZ2",
+      "email": "tenant2004@gmail.comw",
+      "emailVerified": false,
+      "createdAt": "Fri, 06 Jun 2025 22:18:26 GMT",
+      "lastSignInTime": "Fri, 06 Jun 2025 22:18:26 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "6SV8eLWQEYfiIlH4nAfierLSWiN2",
+      "email": "bweinfeld19@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Sat, 07 Jun 2025 17:05:19 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 19:00:17 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "6h1b9Kfrn2bHkgz7bGxP4TDosvi1",
+      "email": "ll5@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 07 Apr 2025 21:59:16 GMT",
+      "lastSignInTime": "Mon, 07 Apr 2025 21:59:16 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "6xyUFpnb3KakyFISeQD71jYP8sr1",
+      "email": "bweinferd15@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 19 May 2025 18:18:24 GMT",
+      "lastSignInTime": "Mon, 19 May 2025 18:18:24 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "76MtNqc0yzbKgqufTWqNZsnDVzD2",
+      "email": "bweinfeld15@gmail.comee",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 22:14:49 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 22:14:49 GMT",
+      "disabled": false,
+      "isTestAccount": true,
+      "recommendDelete": true
+    },
+    {
+      "uid": "7RH7rcpjGcP3w71fCLzzRHDOXYW2",
+      "email": "jdizzy@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 19:13:33 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 19:22:42 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "7YG05A71FQQiw38qcVwDSzvIYE52",
+      "email": "landlordnew2004@gmail.com4r43",
+      "emailVerified": false,
+      "createdAt": "Fri, 06 Jun 2025 01:17:22 GMT",
+      "lastSignInTime": "Tue, 10 Jun 2025 15:29:51 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "7YNcMqFN3VO4HQNS1mVY7GqUr4k1",
+      "email": "weinba23@wfu.edu8",
+      "emailVerified": false,
+      "createdAt": "Tue, 27 May 2025 18:55:26 GMT",
+      "lastSignInTime": "Tue, 27 May 2025 18:55:26 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "8dwiFv0ydMZkpccZg0uPiTF4rFk1",
+      "email": "bweinfeld15@gmail.comeevw",
+      "emailVerified": false,
+      "createdAt": "Mon, 02 Jun 2025 20:18:23 GMT",
+      "lastSignInTime": "Mon, 02 Jun 2025 20:18:23 GMT",
+      "disabled": false,
+      "isTestAccount": true,
+      "recommendDelete": true
+    },
+    {
+      "uid": "8hjO2ZXXDEVdm5igHDRWmR24IrY2",
+      "email": "ll3@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 02 Apr 2025 19:06:54 GMT",
+      "lastSignInTime": "Thu, 03 Apr 2025 02:21:57 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "97znZqOPPNS8aKNeQJUiaOycbRm2",
+      "email": "weinba23@wfu.ed",
+      "emailVerified": false,
+      "createdAt": "Wed, 02 Apr 2025 18:35:48 GMT",
+      "lastSignInTime": "Wed, 02 Apr 2025 18:35:48 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "9mr5npnm90gkv6wssIUX1Ml2utU2",
+      "email": "whattheword@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 19:21:33 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 19:21:33 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "AYoclELt5ZPurI0XpioTPXfLAum2",
+      "email": "bweinfeld15@gmail.col",
+      "emailVerified": false,
+      "createdAt": "Wed, 02 Apr 2025 18:39:45 GMT",
+      "lastSignInTime": "Wed, 02 Apr 2025 18:39:45 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "BNsErUr2hxMf1PnDCEpgbKwytiW2",
+      "email": "410haulers@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Fri, 06 Jun 2025 20:24:18 GMT",
+      "lastSignInTime": "Fri, 06 Jun 2025 20:24:18 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "BZeEWU8QqeSzZCltxrfWOMccABH3",
+      "email": "rrrbweinfeld15@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Tue, 27 May 2025 19:23:11 GMT",
+      "lastSignInTime": "Tue, 27 May 2025 19:23:11 GMT",
+      "disabled": false,
+      "isTestAccount": true,
+      "recommendDelete": true
+    },
+    {
+      "uid": "C3J5HzZg8HczhZt8a8bCZvDRubY2",
+      "email": "landlordnew2004@gmail.com4r435",
+      "emailVerified": false,
+      "createdAt": "Fri, 06 Jun 2025 20:29:27 GMT",
+      "lastSignInTime": "Fri, 06 Jun 2025 20:29:27 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "CGdltQJwgdOSPqZ5EB1f8mmD9aW2",
+      "email": "sneill@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Thu, 03 Apr 2025 01:26:14 GMT",
+      "lastSignInTime": "Thu, 03 Apr 2025 01:26:14 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "CWJEGwKiOTRqETHsj10NevaBil72",
+      "email": "tenant2004@gmail.comee",
+      "emailVerified": false,
+      "createdAt": "Wed, 28 May 2025 17:44:43 GMT",
+      "lastSignInTime": "Wed, 28 May 2025 17:44:43 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "CxSB4fhsKFX1vO1aFWn1aqfJOAL2",
+      "email": "treyll@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 07 Apr 2025 21:11:18 GMT",
+      "lastSignInTime": "Mon, 07 Apr 2025 21:11:18 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "DGscI4ap38ZhSjXdnw75BZvX88a2",
+      "email": "test-landlord-1749608848516@example.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 02:27:29 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 02:27:29 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "FKVBjUZlsOg8JRqwzrhrZ65ckso2",
+      "email": "landlord6@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Thu, 03 Apr 2025 01:50:33 GMT",
+      "lastSignInTime": "Thu, 03 Apr 2025 01:50:33 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "G1tYqJTkPUf7QIF28YrqJFVjnvq1",
+      "email": "weinba23@wfu.edu",
+      "emailVerified": false,
+      "createdAt": "Tue, 27 May 2025 17:58:11 GMT",
+      "lastSignInTime": "Tue, 27 May 2025 17:58:11 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "G3qHO7BZGOYVCLy99w1peqmapIE3",
+      "email": "tenant2004@gmail.cometyye",
+      "emailVerified": false,
+      "createdAt": "Wed, 28 May 2025 19:45:26 GMT",
+      "lastSignInTime": "Wed, 28 May 2025 19:45:26 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "G4kNKo6GaDX1cp7m29sMnNJaFTy2",
+      "email": "tenant2004@gmail.coml",
+      "emailVerified": false,
+      "createdAt": "Fri, 06 Jun 2025 13:34:28 GMT",
+      "lastSignInTime": "Fri, 06 Jun 2025 13:34:28 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "H785WDuz2fYBrT2jjGvvU54tPDi2",
+      "email": "chase@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 02 Apr 2025 17:21:04 GMT",
+      "lastSignInTime": "Wed, 02 Apr 2025 17:21:04 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "I0zIzSJsbdTHjLIMCZhnC6VJ2Df2",
+      "email": "test-landlord-1749653817838@example.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 14:56:58 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 14:56:58 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "IrNEkbYEEXTBxo3QQDfKzcNWeer2",
+      "email": "landlordnew2004@gmail.comr4",
+      "emailVerified": false,
+      "createdAt": "Wed, 28 May 2025 16:44:18 GMT",
+      "lastSignInTime": "Wed, 28 May 2025 16:44:18 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "JQv8AlRbGbUWABoSsMukDT7G1xD3",
+      "email": "weinba23@wfu.eduew",
+      "emailVerified": false,
+      "createdAt": "Thu, 29 May 2025 18:43:10 GMT",
+      "lastSignInTime": "Thu, 29 May 2025 18:43:10 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "JwmowE6LYzMnSlh7oPdNzQJewOt2",
+      "email": "bweinfeld15@gmail.comuu",
+      "emailVerified": false,
+      "createdAt": "Wed, 28 May 2025 14:25:39 GMT",
+      "lastSignInTime": "Wed, 28 May 2025 14:25:39 GMT",
+      "disabled": false,
+      "isTestAccount": true,
+      "recommendDelete": true
+    },
+    {
+      "uid": "KHzOZYaatkS8I1OqzBEnnGK1dl72",
+      "email": "tenant2004@gmail.comeee",
+      "emailVerified": false,
+      "createdAt": "Wed, 28 May 2025 17:38:26 GMT",
+      "lastSignInTime": "Wed, 28 May 2025 17:38:26 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "KPYD3xjZ0Nf4kzcZETj9Ozp2LZu1",
+      "email": "landlordnew2004@gmail.coms",
+      "emailVerified": false,
+      "createdAt": "Wed, 28 May 2025 17:09:32 GMT",
+      "lastSignInTime": "Wed, 28 May 2025 17:09:32 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "KlRzmkLO1IhXREUT6YAFtFPJe6c2",
+      "email": "test_tenant@example.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 14 May 2025 13:36:31 GMT",
+      "lastSignInTime": "Wed, 14 May 2025 13:40:35 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "LVbjCRNovTe9PMlrOT1EqFhArz23",
+      "email": "tenant2005@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Tue, 27 May 2025 18:11:17 GMT",
+      "lastSignInTime": "Tue, 27 May 2025 18:11:17 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "MCIP4ZFgcSM9ZnswJhWKxt2u09f1",
+      "email": "bweinfeld15@gmail.con",
+      "emailVerified": false,
+      "createdAt": "Tue, 10 Jun 2025 22:07:15 GMT",
+      "lastSignInTime": "Tue, 10 Jun 2025 22:07:15 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "MQuRdFjiLgQ4ldpmb0mBTqD9Q0h1",
+      "email": "juliet@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Tue, 01 Apr 2025 18:01:31 GMT",
+      "lastSignInTime": "Sun, 06 Apr 2025 20:40:33 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "MUeFAbExdedAdP9QskUN10VB3zU2",
+      "email": "nickymerlo@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 16:48:07 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 19:35:44 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "MyytYhWklOhywQGiRpflmNzZolr2",
+      "email": "tenant@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Tue, 01 Apr 2025 15:18:47 GMT",
+      "lastSignInTime": "Wed, 02 Apr 2025 18:34:54 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "NXBUlqNA1DZxr7DnRqnVpZn8pIy2",
+      "email": "ben@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 02 Apr 2025 17:19:44 GMT",
+      "lastSignInTime": "Wed, 02 Apr 2025 17:19:44 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "Nv5cIphVhyYNuDk1B4KFlh1250J3",
+      "email": "land2009@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 19 May 2025 20:58:52 GMT",
+      "lastSignInTime": "Mon, 19 May 2025 20:58:52 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "P5OKdrJvRLSqiaBlKaNQIeI1eKH2",
+      "email": "jeffgouline69@hotmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 09 Jun 2025 15:38:50 GMT",
+      "lastSignInTime": "Tue, 10 Jun 2025 17:07:56 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "Q8bctNKwRAVWAS3Um3WHt2Q5pna2",
+      "email": "tenant2004@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 14 Apr 2025 14:13:46 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 14:57:06 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "QcM7slyLwQgKVFfZRuEJViabnn72",
+      "email": "tenant2004@gmail.com444",
+      "emailVerified": false,
+      "createdAt": "Mon, 02 Jun 2025 19:32:26 GMT",
+      "lastSignInTime": "Mon, 02 Jun 2025 19:32:26 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "RJ7yp8mMiQehJwJzWg46pdgNGui2",
+      "email": "weinba2@wfu.edu",
+      "emailVerified": false,
+      "createdAt": "Wed, 02 Apr 2025 17:10:32 GMT",
+      "lastSignInTime": "Wed, 02 Apr 2025 17:10:32 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "RkBbUKF289XN7bXBcnJdTmVgWbZ2",
+      "email": "bweinfeld1@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Sun, 13 Apr 2025 14:34:48 GMT",
+      "lastSignInTime": "Sun, 13 Apr 2025 14:34:48 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "Rkw3XJtd9dZm5aQfmN3uh1TElKS2",
+      "email": "landlordnew2004@gmail.comm",
+      "emailVerified": false,
+      "createdAt": "Tue, 27 May 2025 18:06:13 GMT",
+      "lastSignInTime": "Tue, 27 May 2025 18:06:13 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "S40hHDKo9lVC3MpijrTPgL9PEzg1",
+      "email": "ben@icloud.net",
+      "emailVerified": false,
+      "createdAt": "Thu, 03 Apr 2025 02:14:01 GMT",
+      "lastSignInTime": "Thu, 03 Apr 2025 02:14:01 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "S6RVbytTCDUfzEyUNWXYhqM3KVE2",
+      "email": "contractor2004@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 14 Apr 2025 14:17:21 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 21:43:32 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "SMtO2K0802exJbbK3K7gvYJb0kr1",
+      "email": "test-landlord-1749661605848@example.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 17:06:46 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 17:06:46 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "Tvm1Lk82qGWGGo2zNPW1BVqzYdQ2",
+      "email": "bweinfeld15@gmail.comrr3r",
+      "emailVerified": false,
+      "createdAt": "Thu, 29 May 2025 17:12:03 GMT",
+      "lastSignInTime": "Thu, 29 May 2025 17:12:03 GMT",
+      "disabled": false,
+      "isTestAccount": true,
+      "recommendDelete": true
+    },
+    {
+      "uid": "UB97oDvsS8fMdZPTqzSNEZ08qAt1",
+      "email": "plummer@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Sat, 24 May 2025 03:19:47 GMT",
+      "lastSignInTime": "Sat, 24 May 2025 03:19:47 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "UL6W5U4sAlgXqIp2iA5Vk8ymjJp1",
+      "email": "weinba23@wfu.edul",
+      "emailVerified": false,
+      "createdAt": "Thu, 03 Apr 2025 02:21:12 GMT",
+      "lastSignInTime": "Thu, 03 Apr 2025 02:21:12 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "ULjbYU4EnLZxxHdcuv1h9Nslapf2",
+      "email": "bweinfeld15@gmail.comeee",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 21:33:30 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 21:33:30 GMT",
+      "disabled": false,
+      "isTestAccount": true,
+      "recommendDelete": true
+    },
+    {
+      "uid": "UdFRZSgb1oRpGr2xFdririTEqXH2",
+      "email": "weinba21@wfu.edu",
+      "emailVerified": false,
+      "createdAt": "Thu, 10 Apr 2025 15:55:41 GMT",
+      "lastSignInTime": "Thu, 10 Apr 2025 15:55:41 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "Up09Yv0oCgPUhVOcEH4M1DT3QPl2",
+      "email": "landlord5@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 02 Apr 2025 21:18:29 GMT",
+      "lastSignInTime": "Wed, 02 Apr 2025 21:37:12 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "UyWPvU5ZVYOSpgUioEuarQidtRU2",
+      "email": "tenant@gmail.net",
+      "emailVerified": false,
+      "createdAt": "Mon, 07 Apr 2025 21:56:12 GMT",
+      "lastSignInTime": "Mon, 07 Apr 2025 21:56:12 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "V2SjRZBMeLVliTY3ytMn4LGNXRF3",
+      "email": "bweinfeld15@gmail.comrrr",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 21:39:18 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 21:39:18 GMT",
+      "disabled": false,
+      "isTestAccount": true,
+      "recommendDelete": true
+    },
+    {
+      "uid": "V575sJCH23a0MldFCi0RKyTUdL02",
+      "email": "bweinfeld15@gmail.com",
+      "emailVerified": true,
+      "createdAt": "Mon, 31 Mar 2025 02:11:44 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 22:25:48 GMT",
+      "disabled": false,
+      "isTestAccount": true,
+      "recommendDelete": true
+    },
+    {
+      "uid": "Wrvld7gtRcf4qTL7ReNHXX9kELx1",
+      "email": "bweinfeld225@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 18:32:06 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 18:32:06 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "Ww3DSVzUmSdXwQlexWcimhulDhH2",
+      "email": "weinba23@wfu.edu2",
+      "emailVerified": false,
+      "createdAt": "Sat, 07 Jun 2025 16:51:39 GMT",
+      "lastSignInTime": "Sat, 07 Jun 2025 16:51:39 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "XyTmtD3eqXdLQM4HerKj7Veszup2",
+      "email": "410hauler@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 14:23:26 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 14:23:26 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "Ybb0Mcn0ngPQP2ZB4uugqfPPVp33",
+      "email": "test-landlord-1749608962544@example.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 02:29:22 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 02:29:22 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "ZPLO5EoblheVfY71aAzgGSdVjNq2",
+      "email": "efwefqwef@e.com",
+      "emailVerified": false,
+      "createdAt": "Thu, 29 May 2025 17:46:36 GMT",
+      "lastSignInTime": "Thu, 29 May 2025 17:46:36 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "ZhkthTQjrqfdOo7D1Qs9QKYQTZt1",
+      "email": "bweinfeld15@gmail.comzxsac",
+      "emailVerified": false,
+      "createdAt": "Thu, 29 May 2025 17:41:37 GMT",
+      "lastSignInTime": "Thu, 29 May 2025 17:41:37 GMT",
+      "disabled": false,
+      "isTestAccount": true,
+      "recommendDelete": true
+    },
+    {
+      "uid": "aX5cXWXrbygyOFLA09NCG52ppm32",
+      "email": "tenant2004@gmail.comrrr",
+      "emailVerified": false,
+      "createdAt": "Wed, 28 May 2025 00:55:10 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 15:16:40 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "ahSu4zJcMTUI4irf7EFgXWCsdqk2",
+      "email": "landlordnew2004@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Tue, 20 May 2025 00:40:07 GMT",
+      "lastSignInTime": "Wed, 04 Jun 2025 18:39:15 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "bScCKUsabKMFpb784egIEnzxyN22",
+      "email": "tenant2@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 02 Apr 2025 16:45:35 GMT",
+      "lastSignInTime": "Wed, 02 Apr 2025 16:45:35 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "bfWZt5CrHGeYEGznrYevmnNRb863",
+      "email": "contactor2104@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 28 May 2025 00:34:20 GMT",
+      "lastSignInTime": "Wed, 28 May 2025 00:34:20 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "bqFc3RlZ8DV0GjnNjRDf72Imu2p2",
+      "email": "tenant20045@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 19 May 2025 14:08:15 GMT",
+      "lastSignInTime": "Mon, 19 May 2025 18:16:58 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "c8qxfbrop6UnJunC07w8ob2VTxO2",
+      "email": "test-landlord-1749608857160@example.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 02:27:37 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 02:27:37 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "cGLBAf19eXSEtkOuLOCryeYMRd92",
+      "email": "tenant2004@gmail.comeeqw",
+      "emailVerified": false,
+      "createdAt": "Wed, 28 May 2025 18:28:14 GMT",
+      "lastSignInTime": "Wed, 28 May 2025 18:28:14 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "czEtydswvUQfrj5LetjBYr3xx733",
+      "email": "bweinfeld15@gmail.com44",
+      "emailVerified": false,
+      "createdAt": "Fri, 06 Jun 2025 14:13:09 GMT",
+      "lastSignInTime": "Fri, 06 Jun 2025 14:13:09 GMT",
+      "disabled": false,
+      "isTestAccount": true,
+      "recommendDelete": true
+    },
+    {
+      "uid": "d1ZSAGDHZaX2UaJnf7Kc1TW07Vb2",
+      "email": "bweinfeld15@gmail.com34",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 02:28:18 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 02:28:18 GMT",
+      "disabled": false,
+      "isTestAccount": true,
+      "recommendDelete": true
+    },
+    {
+      "uid": "dLNAd5hy0ybdr390B97dpGBLwnY2",
+      "email": "tenant2008@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 30 Apr 2025 02:12:05 GMT",
+      "lastSignInTime": "Wed, 30 Apr 2025 02:12:05 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "dYMX6BOGbxcedROMMWzQDHNqW7u2",
+      "email": "landlordnew2004@gmail.con",
+      "emailVerified": false,
+      "createdAt": "Tue, 27 May 2025 17:47:45 GMT",
+      "lastSignInTime": "Tue, 27 May 2025 17:47:45 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "eGvvmp2qCETs4lteOLGVeFi8Yc42",
+      "email": "test-landlord-1749609044772@example.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 02:30:45 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 02:30:45 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "ePUO8DULplYeNvVqtai1GEisWZY2",
+      "email": "bweinfeld15@gmail.coo",
+      "emailVerified": false,
+      "createdAt": "Thu, 03 Apr 2025 01:51:03 GMT",
+      "lastSignInTime": "Thu, 03 Apr 2025 01:51:03 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "eacCCOhCeJUOIM8HO4ZRHkjKmyd2",
+      "email": "test-landlord-1749653810477@example.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 14:56:50 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 14:56:50 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "fMhn9qpwgzPktnMmcb0h6icxdLt2",
+      "email": "tenant5@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 02 Apr 2025 18:42:06 GMT",
+      "lastSignInTime": "Tue, 08 Apr 2025 00:41:46 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "fPIlxNwDq7aN7Aoe63DAwv2StFN2",
+      "email": "tenant2004@gmail.comi",
+      "emailVerified": false,
+      "createdAt": "Thu, 29 May 2025 19:18:58 GMT",
+      "lastSignInTime": "Thu, 29 May 2025 19:18:58 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "ffDlQgQw19PYVCdz2hsexvlt1w03",
+      "email": "ll1@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 02 Apr 2025 17:31:36 GMT",
+      "lastSignInTime": "Wed, 02 Apr 2025 17:31:36 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "g05qDLqvvyeBfVLCGwsK4TV8znM2",
+      "email": "mweinfeld@kittredgeproperties.con",
+      "emailVerified": false,
+      "createdAt": "Tue, 10 Jun 2025 17:45:51 GMT",
+      "lastSignInTime": "Tue, 10 Jun 2025 17:45:51 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "g4hR9NBVGWNxDGg8Z1yAaUMX3iF3",
+      "email": "ll9@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 07 Apr 2025 20:43:15 GMT",
+      "lastSignInTime": "Thu, 10 Apr 2025 16:43:34 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "gS5y26zBwOcpJTrFsgM0p12OiLw2",
+      "email": "contractor2@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Thu, 03 Apr 2025 13:00:38 GMT",
+      "lastSignInTime": "Thu, 03 Apr 2025 13:00:38 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "hqnGUl6LYvgJDcXPrqpNDpVJuiv1",
+      "email": "landlordnew2004@gmail.comi",
+      "emailVerified": false,
+      "createdAt": "Tue, 27 May 2025 18:53:48 GMT",
+      "lastSignInTime": "Tue, 27 May 2025 18:53:48 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "i6L79mPjfbUY6hykgA97Hx0KPO53",
+      "email": "contractor5@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Thu, 03 Apr 2025 13:05:55 GMT",
+      "lastSignInTime": "Sun, 06 Apr 2025 20:41:23 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "iRhVDQdKDMU10U2T7fbO9pIu3is2",
+      "email": "bweinfeld15@gmai.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 31 Mar 2025 19:17:59 GMT",
+      "lastSignInTime": "Wed, 16 Apr 2025 15:39:14 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "j01FuVGUbOR7bxat8Rakf8Rjs1r1",
+      "email": "tenant@gmail.comt",
+      "emailVerified": false,
+      "createdAt": "Tue, 27 May 2025 19:08:37 GMT",
+      "lastSignInTime": "Tue, 27 May 2025 19:08:37 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "j8jZSh0MXSSZ5OfzBlwDadRn4na2",
+      "email": "bweinfel5@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Tue, 08 Apr 2025 01:04:15 GMT",
+      "lastSignInTime": "Wed, 16 Apr 2025 11:28:05 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "jM3y1g8VN1b8dVgNCxiEUC95sax1",
+      "email": "trey@gmail.col",
+      "emailVerified": false,
+      "createdAt": "Thu, 03 Apr 2025 02:10:36 GMT",
+      "lastSignInTime": "Thu, 03 Apr 2025 02:10:36 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "jT3WLt7yELSzMnXSPsfWOEicJmy2",
+      "email": "yusuf@landlord.com",
+      "emailVerified": false,
+      "createdAt": "Thu, 29 May 2025 14:10:57 GMT",
+      "lastSignInTime": "Fri, 06 Jun 2025 20:18:19 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "jWepLQNlBhNPpPLDJTQVNXVVsR53",
+      "email": "jeffgouline69@hotmail.net",
+      "emailVerified": false,
+      "createdAt": "Mon, 09 Jun 2025 15:03:48 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 16:10:24 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "jp3iaPvdj9Nu94t0XeMs4qLBpcK2",
+      "email": "bweinfeld15@gmail.comrrr3egf",
+      "emailVerified": false,
+      "createdAt": "Wed, 28 May 2025 18:29:48 GMT",
+      "lastSignInTime": "Wed, 28 May 2025 18:29:48 GMT",
+      "disabled": false,
+      "isTestAccount": true,
+      "recommendDelete": true
+    },
+    {
+      "uid": "kEzJ8MAAA2T1znrI4ycHw2c9Ie53",
+      "email": "bweinfeld@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Thu, 10 Apr 2025 16:04:50 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 16:46:19 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "krzjGteYKcdTUegrOvEwPs5uj243",
+      "email": "landlordnew2004@gmail.comrr",
+      "emailVerified": false,
+      "createdAt": "Wed, 28 May 2025 17:29:13 GMT",
+      "lastSignInTime": "Wed, 28 May 2025 17:29:13 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "kyyMz8nPkKOAFBIkb3zKw2QeM433",
+      "email": "tenant2004@ghmail.com",
+      "emailVerified": false,
+      "createdAt": "Tue, 27 May 2025 18:23:00 GMT",
+      "lastSignInTime": "Tue, 27 May 2025 18:23:00 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "lZ3mIFSJ4hdRAp5kqJdFFGA0fA62",
+      "email": "land2025@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 19 May 2025 18:17:51 GMT",
+      "lastSignInTime": "Mon, 19 May 2025 18:17:51 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "lxgeCMQD0LbKpbM955JmMuQ7u9l2",
+      "email": "mike@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 31 Mar 2025 18:16:34 GMT",
+      "lastSignInTime": "Wed, 02 Apr 2025 17:39:55 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "lzkB0YnzfFbaeWN8kUB6z0GlTQE3",
+      "email": "bweinfeld15@gmail.comqwef",
+      "emailVerified": false,
+      "createdAt": "Mon, 02 Jun 2025 19:22:00 GMT",
+      "lastSignInTime": "Mon, 02 Jun 2025 19:22:00 GMT",
+      "disabled": false,
+      "isTestAccount": true,
+      "recommendDelete": true
+    },
+    {
+      "uid": "mgwSakj0TJQpfPsHK5TuTY91W9c2",
+      "email": "ll2@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 02 Apr 2025 19:01:12 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 02:19:24 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "murvj6tLFNMSBEjGKosM5KeTLr03",
+      "email": "weinba23@wfu.edu5",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 14:15:23 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 14:15:23 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "nZJObaqOtvZOkYN3lQBtr51VfUx1",
+      "email": "weinba23@wfu.edur",
+      "emailVerified": false,
+      "createdAt": "Tue, 27 May 2025 18:32:56 GMT",
+      "lastSignInTime": "Tue, 27 May 2025 18:32:56 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "nn6KOUdn3ibQY6C4ohgErdaewUX2",
+      "email": "tenant2004@gmail23.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 28 May 2025 19:59:34 GMT",
+      "lastSignInTime": "Wed, 28 May 2025 19:59:34 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "oWUYLPBTknUUZyOAbdwf3KPN6Ez1",
+      "email": "45bweinfeld15@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 02:30:25 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 02:30:25 GMT",
+      "disabled": false,
+      "isTestAccount": true,
+      "recommendDelete": true
+    },
+    {
+      "uid": "psc7w4vYATSDJMXEplBfpheRATk2",
+      "email": "test-landlord-1749608965221@example.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 02:29:25 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 02:29:25 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "ptu0GZ7xg4ZsXx6vVxAzl0we1y12",
+      "email": "contract1@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Thu, 03 Apr 2025 12:59:50 GMT",
+      "lastSignInTime": "Thu, 03 Apr 2025 12:59:50 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "rvIAJxI0W1er6Mt358ApdVViSMv1",
+      "email": "bweinfeld15@icloud.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 31 Mar 2025 15:12:40 GMT",
+      "lastSignInTime": "Mon, 31 Mar 2025 15:12:40 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "tSpZFdmtECSewUsj2ZQdHnaInRI3",
+      "email": "contractor2001@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 16 Apr 2025 02:19:11 GMT",
+      "lastSignInTime": "Wed, 16 Apr 2025 02:19:11 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "vKXAYSTkqFUXvinoyZHJvpnNo953",
+      "email": "test-landlord-1749609054310@example.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 02:30:54 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 02:30:54 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "vXC5N9xnUFNn9rfE40oiag681cb2",
+      "email": "landlord18@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Thu, 10 Apr 2025 16:36:58 GMT",
+      "lastSignInTime": "Mon, 02 Jun 2025 19:33:58 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "vq9CtS4Pa7azSV8CV9v4vEr4NYo2",
+      "email": "bweinfeld155@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Tue, 20 May 2025 00:54:05 GMT",
+      "lastSignInTime": "Tue, 20 May 2025 00:54:05 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "w8b0mcbCqIgo5A2bvsVqm6Yko5i2",
+      "email": "bweinfeld2004@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 14 Apr 2025 12:47:16 GMT",
+      "lastSignInTime": "Thu, 05 Jun 2025 16:36:29 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "wE7XEpxWG3VYxMSqZhBYwC80vaC2",
+      "email": "trey@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 31 Mar 2025 15:38:24 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 02:18:58 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "wW6l46oGFgMWv6nxMMLdQTnSsAF3",
+      "email": "mweinfeld@kittredgeproperties.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 01:55:07 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 01:55:07 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "wkAhto8kWUecjYRYJkJAKlCbJjG3",
+      "email": "bweinfeld15@gmail.comrr",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 03:07:46 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 03:07:46 GMT",
+      "disabled": false,
+      "isTestAccount": true,
+      "recommendDelete": true
+    },
+    {
+      "uid": "wqZTw4N4dmf8nvIEL6B6GsdJLSs1",
+      "email": "test-landlord-1749659355466@example.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 16:29:15 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 16:29:15 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "x9UD3IWU3zcui1esOq020MZf5f02",
+      "email": "ll18@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 07 Apr 2025 22:18:11 GMT",
+      "lastSignInTime": "Mon, 07 Apr 2025 22:18:11 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "xWKu0tNnZEMQT3K5wL3zV1AExCH2",
+      "email": "wankins@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 02 Apr 2025 18:31:02 GMT",
+      "lastSignInTime": "Wed, 02 Apr 2025 18:31:02 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "xY7wkEyZcfPjvlTsz2bNTmX9EMx1",
+      "email": "land2005@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 19 May 2025 14:11:33 GMT",
+      "lastSignInTime": "Tue, 20 May 2025 00:37:45 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "xfyxv2Bf2WYZcYm5NMmTNE2ZliA3",
+      "email": "tenant19@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Mon, 07 Apr 2025 22:16:33 GMT",
+      "lastSignInTime": "Mon, 07 Apr 2025 22:16:33 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "yRNmxnQTx5fY8r38NKJBAPcX6US2",
+      "email": "bweinfeld15@gmail.net",
+      "emailVerified": false,
+      "createdAt": "Sat, 24 May 2025 03:21:20 GMT",
+      "lastSignInTime": "Sat, 24 May 2025 03:21:20 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "zIbfwUoKGQfn7kPDPAgvfjXxGPm1",
+      "email": "test-landlord-1749659363489@example.com",
+      "emailVerified": false,
+      "createdAt": "Wed, 11 Jun 2025 16:29:23 GMT",
+      "lastSignInTime": "Wed, 11 Jun 2025 16:29:23 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    },
+    {
+      "uid": "zvcOeXz0Tee5ZmbwI00KBprBIk72",
+      "email": "bweinfeld11@gmail.com",
+      "emailVerified": false,
+      "createdAt": "Thu, 05 Jun 2025 18:30:17 GMT",
+      "lastSignInTime": "Thu, 05 Jun 2025 18:30:17 GMT",
+      "disabled": false,
+      "isTestAccount": false,
+      "recommendDelete": true
+    }
+  ],
+  "firestoreUsers": [
+    {
+      "uid": "0766382d-4b09-4748-bed0-2626dfd2cac5",
+      "email": "landlord@example.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "displayName": "Test Landlord",
+      "firstName": "Test",
+      "lastName": "Landlord",
+      "onboardingComplete": true,
+      "createdAt": {
+        "_seconds": 1747708885,
+        "_nanoseconds": 669000000
+      },
+      "hasAuthAccount": false,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "0sPa9IA2dSfDQngcrE1PiuGpXhQ2",
+      "email": "ben@propagenticai.com",
+      "userType": "tenant",
+      "role": "tenant",
+      "createdAt": "2025-06-06T16:31:05.714Z",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "address": "suuny hill",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "Ben Weinfeld",
+      "updatedAt": {
+        "_seconds": 1749227478,
+        "_nanoseconds": 719000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "1HbgXSXyTgcrM1NAgQ6DQsAXzEV2",
+      "email": "LandLord1@gmail.com",
+      "userType": "landlord",
+      "createdAt": {
+        "_seconds": 1743615675,
+        "_nanoseconds": 552000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "2fJm7xtvENaPP2WxhgjiqYh4KG23",
+      "email": "Tenaeeent2004@gmail.com",
+      "userType": "contractor",
+      "role": "contractor",
+      "isPremium": true,
+      "subscriptionTier": "premium",
+      "createdAt": {
+        "_seconds": 1748460365,
+        "_nanoseconds": 997000000
+      },
+      "lastName": "Weinfeld",
+      "website": "",
+      "w9FormUrl": "https://firebasestorage.googleapis.com/v0/b/propagentic.firebasestorage.app/o/contractors%2F2fJm7xtvENaPP2WxhgjiqYh4KG23%2Fw9%2Fw9-1748460381214-Screenshot%202025-05-28%20at%2011.09.26%E2%80%AFAM.png?alt=media&token=deca7d19-ae3d-406b-9153-0f6e6bbb60b8",
+      "serviceArea": "ergerg",
+      "companyName": "1 Kittredge Lane",
+      "bio": "",
+      "bankAccountVerified": true,
+      "stripeAccountSetup": true,
+      "yearsExperience": "0-2",
+      "paymentMethodsSetup": false,
+      "firstName": "Ben",
+      "insuranceInfo": "",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Ben Weinfeld",
+      "serviceTypes": [
+        "carpentry"
+      ],
+      "availabilityNotes": "",
+      "hourlyRate": null,
+      "updatedAt": {
+        "_seconds": 1748460395,
+        "_nanoseconds": 34000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "3WfdLIaiakMSdqvevJlPdLHRvWJ3",
+      "userType": "landlord",
+      "email": "bweinfeld15@gmail.com55",
+      "role": "landlord",
+      "createdAt": "2025-06-11T02:26:29.972Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "Benjamin",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "Propagentic LLC",
+      "name": "Benjamin Weinfeld",
+      "totalProperties": "7",
+      "properties": [
+        "y8P8ezZgFQN2udUoLGnx"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1749608838,
+        "_nanoseconds": 378000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "3fHebmaMlYPGnxH992qNjDeMNhi1",
+      "email": "Tenant9@gmail.com",
+      "userType": "tenant",
+      "role": "tenant",
+      "createdAt": {
+        "_seconds": 1744062561,
+        "_nanoseconds": 456000000
+      },
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "address": "24rf34f",
+      "phoneNumber": "(410) 350-4484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "Ben Weinfeld",
+      "updatedAt": {
+        "_seconds": 1744062572,
+        "_nanoseconds": 942000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "4nTmziu1M8P6OaMXdLU1yUQvHN42",
+      "email": "bweinfeld5@gmail.com",
+      "userType": "tenant",
+      "createdAt": {
+        "_seconds": 1743608798,
+        "_nanoseconds": 881000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "4oMb6PBaG7TygNoUhtFsUWckKEm2",
+      "email": "Danny2004@gmail.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": "2025-05-29T16:56:11.734Z",
+      "yearsInBusiness": "11-20",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "1 Kittredge Lane",
+      "name": "Ben Weinfeld",
+      "totalProperties": "4",
+      "properties": [
+        "vPPNtFl8d1jK9yDahajL"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1748537806,
+        "_nanoseconds": 843000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "4zfrQRMYp8fmMU1a2qiJedhpaGe2",
+      "email": "Land2005@gmail.com3",
+      "userType": "landlord",
+      "role": "landlord",
+      "onboardingComplete": false,
+      "createdAt": {
+        "_seconds": 1748452589,
+        "_nanoseconds": 895000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "5TUwbZu0mlXp1nFhokkgYFWYGVG2",
+      "email": "rcfvev@gmail.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": {
+        "_seconds": 1747688355,
+        "_nanoseconds": 730000000
+      },
+      "yearsInBusiness": "1-5",
+      "firstName": "fe334f",
+      "lastName": "3efc32qfc234",
+      "phoneNumber": "f32rfc324c3",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "cf3rcf34q24",
+      "name": "fe334f 3efc32qfc234",
+      "totalProperties": "1",
+      "properties": [
+        "YDEWodtbxT0P9w7b2CsG"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1747688370,
+        "_nanoseconds": 653000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "5oqbR7zgu9ZUiJ0CyYRKTkTEZAv1",
+      "userType": "landlord",
+      "lastName": "Landlord",
+      "email": "test-landlord-1749667432217@example.com",
+      "role": "landlord",
+      "onboardingComplete": true,
+      "firstName": "Test",
+      "createdAt": "2025-06-11T18:43:53.215Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "64SUgO3BqfZi4ql7PtASp0qjSWZ2",
+      "email": "Tenant2004@gmail.comw",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": "2025-06-06T22:18:27.414Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "1 Kittredge Lane",
+      "name": "Ben Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "WsFdACLzx8tlfDqj0aS9"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1749248322,
+        "_nanoseconds": 566000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "6SV8eLWQEYfiIlH4nAfierLSWiN2",
+      "email": "bweinfeld19@gmail.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": "2025-06-07T17:05:20.505Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "Benjamin",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "Kittredge Properties",
+      "name": "Benjamin Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "dQ9uzdTn3N15KbOEIctW"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1749315936,
+        "_nanoseconds": 942000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "6h1b9Kfrn2bHkgz7bGxP4TDosvi1",
+      "email": "LL5@gmail.com",
+      "userType": "tenant",
+      "role": "tenant",
+      "createdAt": {
+        "_seconds": 1744063157,
+        "_nanoseconds": 685000000
+      },
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "address": "3",
+      "phoneNumber": "3",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "Ben Weinfeld",
+      "updatedAt": {
+        "_seconds": 1744063165,
+        "_nanoseconds": 881000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "6xyUFpnb3KakyFISeQD71jYP8sr1",
+      "email": "bweinferd15@gmail.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": {
+        "_seconds": 1747678704,
+        "_nanoseconds": 941000000
+      },
+      "yearsInBusiness": "1-5",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "phoneNumber": "3",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "",
+      "name": "Ben Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "7s6nZbEeXWDeLaVFNbLw"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1747678731,
+        "_nanoseconds": 740000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "76MtNqc0yzbKgqufTWqNZsnDVzD2",
+      "email": "bweinfeld15@gmail.comee",
+      "userType": "tenant",
+      "role": "tenant",
+      "createdAt": "2025-06-11T22:14:50.063Z",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "address": "r",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "Ben Weinfeld",
+      "updatedAt": {
+        "_seconds": 1749680099,
+        "_nanoseconds": 528000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "7RH7rcpjGcP3w71fCLzzRHDOXYW2",
+      "userType": "landlord",
+      "role": "landlord",
+      "email": "jdizzy@gmail.com",
+      "createdAt": "2025-06-11T19:13:34.341Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "Test",
+      "lastName": "Landlord",
+      "phoneNumber": "(555) 123-4567",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "",
+      "name": "Test Landlord",
+      "totalProperties": "1",
+      "properties": [
+        "UB86Nnvz1W0p7uPF3gjO"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1749669437,
+        "_nanoseconds": 99000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "7YG05A71FQQiw38qcVwDSzvIYE52",
+      "email": "LandLordNew2004@gmail.com4r43",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": "2025-06-06T01:17:23.002Z",
+      "yearsInBusiness": "11-20",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "phone",
+      "onboardingComplete": true,
+      "businessName": "1 Kittredge Lane",
+      "name": "Ben Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "VWYB9uDyzk1f03ApB53U"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1749172674,
+        "_nanoseconds": 772000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "7YNcMqFN3VO4HQNS1mVY7GqUr4k1",
+      "email": "weinba23@wfu.edu8",
+      "userType": "contractor",
+      "role": "contractor",
+      "onboardingComplete": false,
+      "createdAt": {
+        "_seconds": 1748372127,
+        "_nanoseconds": 3000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "7ab1875a-292e-409c-835d-6c95eacc8f8e",
+      "email": "tenant@example.com",
+      "userType": "tenant",
+      "role": "tenant",
+      "displayName": "Test Tenant",
+      "firstName": "Test",
+      "lastName": "Tenant",
+      "onboardingComplete": true,
+      "createdAt": {
+        "_seconds": 1747708886,
+        "_nanoseconds": 592000000
+      },
+      "joinDate": {
+        "_seconds": 1747708886,
+        "_nanoseconds": 949000000
+      },
+      "landlordId": "0766382d-4b09-4748-bed0-2626dfd2cac5",
+      "propertyId": "1SuDP0uSYViNRgmWaUYg",
+      "hasAuthAccount": false,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "8dwiFv0ydMZkpccZg0uPiTF4rFk1",
+      "email": "bweinfeld15@gmail.comeevw",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": "2025-06-02T20:18:24.197Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "wfewef",
+      "lastName": "fwefwefefewffef",
+      "phoneNumber": "ewewffeefeewe",
+      "preferredContactMethod": "phone",
+      "onboardingComplete": true,
+      "businessName": "Propagentic LLC",
+      "name": "wfewef fwefwefefewffef",
+      "totalProperties": "1",
+      "properties": [
+        "cuZ3lwLiSgyc3GDd0JOk"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1748895532,
+        "_nanoseconds": 144000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "8hjO2ZXXDEVdm5igHDRWmR24IrY2",
+      "email": "LL3@gmail.com",
+      "userType": "landlord",
+      "createdAt": {
+        "_seconds": 1743620815,
+        "_nanoseconds": 308000000
+      },
+      "yearsInBusiness": "1-5",
+      "firstName": "Benjamin",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "phone",
+      "onboardingComplete": true,
+      "businessName": "Kittredge Properties",
+      "name": "Benjamin Weinfeld",
+      "totalProperties": "10",
+      "properties": [
+        "KzFpPzkQGXmbaM3V0Mgs"
+      ],
+      "managementSoftware": "Property Management Software",
+      "updatedAt": {
+        "_seconds": 1743620861,
+        "_nanoseconds": 195000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "97znZqOPPNS8aKNeQJUiaOycbRm2",
+      "email": "weinba23@wfu.ed",
+      "userType": "tenant",
+      "createdAt": {
+        "_seconds": 1743618949,
+        "_nanoseconds": 37000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "9mr5npnm90gkv6wssIUX1Ml2utU2",
+      "email": "whattheword@gmail.com",
+      "role": "tenant",
+      "userType": "tenant",
+      "createdAt": "2025-06-11T19:21:34.195Z",
+      "firstName": "Test",
+      "lastName": "Tenant",
+      "address": "123 Test Address, Test City, CA 12345",
+      "phoneNumber": "(555) 123-4567",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "Test Tenant",
+      "updatedAt": {
+        "_seconds": 1749669703,
+        "_nanoseconds": 110000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "AYoclELt5ZPurI0XpioTPXfLAum2",
+      "email": "bweinfeld15@gmail.col",
+      "userType": "tenant",
+      "createdAt": {
+        "_seconds": 1743619186,
+        "_nanoseconds": 374000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "BNsErUr2hxMf1PnDCEpgbKwytiW2",
+      "email": "410haulers@gmail.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "onboardingComplete": false,
+      "createdAt": "2025-06-06T20:24:18.936Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "BZeEWU8QqeSzZCltxrfWOMccABH3",
+      "email": "rrrbweinfeld15@gmail.com",
+      "userType": "contractor",
+      "role": "contractor",
+      "createdAt": {
+        "_seconds": 1748373792,
+        "_nanoseconds": 102000000
+      },
+      "lastName": "Weinfeld",
+      "website": "",
+      "w9FormUrl": "https://firebasestorage.googleapis.com/v0/b/propagentic.firebasestorage.app/o/contractors%2FBZeEWU8QqeSzZCltxrfWOMccABH3%2Fw9%2Fw9-1748373808617-Dynasty%20Equity%20LP-Benjamin%20Allyn%20Weinfeld-fw9-Funded.pdf?alt=media&token=6f169c13-c3a7-4332-9595-a62ed9eb704b",
+      "serviceArea": "Baltimore Area, 30 miles",
+      "companyName": "410 Haulers",
+      "bio": "",
+      "bankAccountVerified": true,
+      "stripeAccountSetup": true,
+      "yearsExperience": "0-2",
+      "paymentMethodsSetup": true,
+      "firstName": "Benjamin",
+      "insuranceInfo": "",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Benjamin Weinfeld",
+      "serviceTypes": [
+        "plumbing"
+      ],
+      "availabilityNotes": "",
+      "hourlyRate": null,
+      "updatedAt": {
+        "_seconds": 1748373854,
+        "_nanoseconds": 551000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "C3J5HzZg8HczhZt8a8bCZvDRubY2",
+      "email": "LandLordNew2004@gmail.com4r435",
+      "userType": "landlord",
+      "role": "landlord",
+      "onboardingComplete": false,
+      "createdAt": "2025-06-06T20:29:28.442Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "CGdltQJwgdOSPqZ5EB1f8mmD9aW2",
+      "email": "sneill@gmail.com",
+      "userType": "tenant",
+      "createdAt": {
+        "_seconds": 1743643575,
+        "_nanoseconds": 449000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "CWJEGwKiOTRqETHsj10NevaBil72",
+      "email": "Tenant2004@gmail.comee",
+      "userType": "contractor",
+      "role": "contractor",
+      "isPremium": true,
+      "subscriptionTier": "premium",
+      "createdAt": {
+        "_seconds": 1748454284,
+        "_nanoseconds": 598000000
+      },
+      "lastName": "Weinfeld",
+      "website": "",
+      "w9FormUrl": "https://firebasestorage.googleapis.com/v0/b/propagentic.firebasestorage.app/o/contractors%2FCWJEGwKiOTRqETHsj10NevaBil72%2Fw9%2Fw9-1748454305430-Screenshot%202025-05-28%20at%2010.54.28%E2%80%AFAM.png?alt=media&token=d18042ce-f9e3-460b-8037-016440dd4109",
+      "serviceArea": "ergerg",
+      "companyName": "1 Kittredge Lane",
+      "bio": "",
+      "bankAccountVerified": true,
+      "stripeAccountSetup": true,
+      "yearsExperience": "0-2",
+      "paymentMethodsSetup": false,
+      "firstName": "Ben",
+      "insuranceInfo": "",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Ben Weinfeld",
+      "serviceTypes": [
+        "plumbing"
+      ],
+      "availabilityNotes": "",
+      "hourlyRate": null,
+      "updatedAt": {
+        "_seconds": 1748454320,
+        "_nanoseconds": 550000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "CxSB4fhsKFX1vO1aFWn1aqfJOAL2",
+      "email": "TreyLL@gmail.com",
+      "userType": "landlord",
+      "onboardingComplete": false,
+      "createdAt": {
+        "_seconds": 1744060279,
+        "_nanoseconds": 25000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "DGscI4ap38ZhSjXdnw75BZvX88a2",
+      "userType": "landlord",
+      "onboardingComplete": true,
+      "firstName": "Test",
+      "lastName": "Landlord",
+      "role": "landlord",
+      "email": "test-landlord-1749608848516@example.com",
+      "createdAt": "2025-06-11T02:27:29.960Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "FKVBjUZlsOg8JRqwzrhrZ65ckso2",
+      "email": "LandLord6@gmail.com",
+      "userType": "tenant",
+      "createdAt": {
+        "_seconds": 1743645034,
+        "_nanoseconds": 535000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "G1tYqJTkPUf7QIF28YrqJFVjnvq1",
+      "email": "weinba23@wfu.edu",
+      "userType": "contractor",
+      "role": "contractor",
+      "onboardingComplete": false,
+      "createdAt": {
+        "_seconds": 1748368692,
+        "_nanoseconds": 307000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "G3qHO7BZGOYVCLy99w1peqmapIE3",
+      "email": "Tenant2004@gmail.cometyye",
+      "userType": "contractor",
+      "role": "contractor",
+      "isPremium": true,
+      "subscriptionTier": "premium",
+      "createdAt": {
+        "_seconds": 1748461527,
+        "_nanoseconds": 308000000
+      },
+      "lastName": "Weinfeld",
+      "website": "",
+      "w9FormUrl": "https://firebasestorage.googleapis.com/v0/b/propagentic.firebasestorage.app/o/contractors%2FG3qHO7BZGOYVCLy99w1peqmapIE3%2Fw9%2Fw9-1748461549863-Screenshot%202025-05-28%20at%2011.09.26%E2%80%AFAM.png?alt=media&token=cefbf948-bd8d-4c99-87ab-6312c7380a54",
+      "serviceArea": "ergerg",
+      "companyName": "1 Kittredge Lane",
+      "bio": "",
+      "bankAccountVerified": true,
+      "stripeAccountSetup": true,
+      "yearsExperience": "0-2",
+      "paymentMethodsSetup": false,
+      "firstName": "Ben",
+      "insuranceInfo": "",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Ben Weinfeld",
+      "serviceTypes": [
+        "hvac"
+      ],
+      "availabilityNotes": "",
+      "hourlyRate": null,
+      "updatedAt": {
+        "_seconds": 1748461563,
+        "_nanoseconds": 168000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "G4kNKo6GaDX1cp7m29sMnNJaFTy2",
+      "email": "Tenant2004@gmail.coml",
+      "userType": "tenant",
+      "role": "tenant",
+      "createdAt": "2025-06-06T13:34:28.859Z",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "address": "u",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "Ben Weinfeld",
+      "updatedAt": {
+        "_seconds": 1749216881,
+        "_nanoseconds": 7000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "H785WDuz2fYBrT2jjGvvU54tPDi2",
+      "email": "Chase@gmail.com",
+      "userType": "tenant",
+      "createdAt": {
+        "_seconds": 1743614465,
+        "_nanoseconds": 179000000
+      },
+      "onboardingComplete": true,
+      "lastName": "",
+      "address": "",
+      "phoneNumber": "",
+      "preferredContactMethod": "email",
+      "propertyType": "",
+      "firstName": "Matt",
+      "updatedAt": {
+        "_seconds": 1743614518,
+        "_nanoseconds": 233000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "I0zIzSJsbdTHjLIMCZhnC6VJ2Df2",
+      "lastName": "Landlord",
+      "userType": "landlord",
+      "firstName": "Second",
+      "role": "landlord",
+      "onboardingComplete": true,
+      "email": "test-landlord-1749653817838@example.com",
+      "createdAt": "2025-06-11T14:56:58.577Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "IrNEkbYEEXTBxo3QQDfKzcNWeer2",
+      "email": "LandLordNew2004@gmail.comr4",
+      "userType": "contractor",
+      "role": "contractor",
+      "createdAt": {
+        "_seconds": 1748450659,
+        "_nanoseconds": 527000000
+      },
+      "lastName": "Weinfeld",
+      "website": "",
+      "w9FormUrl": "https://firebasestorage.googleapis.com/v0/b/propagentic.firebasestorage.app/o/contractors%2FIrNEkbYEEXTBxo3QQDfKzcNWeer2%2Fw9%2Fw9-1748450674633-Screenshot%202025-05-28%20at%2010.54.28%E2%80%AFAM.png?alt=media&token=905d6f4e-4f18-46cd-bdbb-7e2f922bb178",
+      "serviceArea": "b",
+      "companyName": "gewg2",
+      "bio": "",
+      "bankAccountVerified": true,
+      "stripeAccountSetup": true,
+      "yearsExperience": "0-2",
+      "paymentMethodsSetup": true,
+      "firstName": "Ben",
+      "insuranceInfo": "",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Ben Weinfeld",
+      "serviceTypes": [
+        "flooring"
+      ],
+      "availabilityNotes": "",
+      "hourlyRate": null,
+      "updatedAt": {
+        "_seconds": 1748450721,
+        "_nanoseconds": 504000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "JQv8AlRbGbUWABoSsMukDT7G1xD3",
+      "email": "weinba23@wfu.eduew",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": "2025-05-29T18:43:11.183Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "wefwef",
+      "lastName": "ewfwqf",
+      "phoneNumber": "wqefwef",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "qwef",
+      "name": "wefwef ewfwqf",
+      "totalProperties": "1",
+      "properties": [
+        "DktZJz6CibeXAPl7RJXS"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1748544204,
+        "_nanoseconds": 944000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "JwmowE6LYzMnSlh7oPdNzQJewOt2",
+      "email": "bweinfeld15@gmail.comuu",
+      "userType": "contractor",
+      "role": "contractor",
+      "createdAt": {
+        "_seconds": 1748442340,
+        "_nanoseconds": 273000000
+      },
+      "lastName": "Weinfeld",
+      "website": "",
+      "w9FormUrl": "https://firebasestorage.googleapis.com/v0/b/propagentic.firebasestorage.app/o/contractors%2FJwmowE6LYzMnSlh7oPdNzQJewOt2%2Fw9%2Fw9-1748442355835-Screenshot%202025-05-27%20at%209.24.08%E2%80%AFAM.png?alt=media&token=d2cff54a-37f3-4d6b-b287-7ede13eecbc8",
+      "serviceArea": "Baltimore Area, 30 miles",
+      "companyName": "",
+      "bio": "",
+      "bankAccountVerified": true,
+      "stripeAccountSetup": true,
+      "yearsExperience": "0-2",
+      "paymentMethodsSetup": true,
+      "firstName": "Benjamin",
+      "insuranceInfo": "",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Benjamin Weinfeld",
+      "serviceTypes": [
+        "plumbing"
+      ],
+      "availabilityNotes": "",
+      "hourlyRate": null,
+      "updatedAt": {
+        "_seconds": 1748442373,
+        "_nanoseconds": 57000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "KHzOZYaatkS8I1OqzBEnnGK1dl72",
+      "email": "Tenant2004@gmail.comeee",
+      "userType": "contractor",
+      "role": "contractor",
+      "isPremium": true,
+      "subscriptionTier": "premium",
+      "createdAt": {
+        "_seconds": 1748453907,
+        "_nanoseconds": 137000000
+      },
+      "lastName": "Weinfeld",
+      "website": "",
+      "w9FormUrl": "https://firebasestorage.googleapis.com/v0/b/propagentic.firebasestorage.app/o/contractors%2FKHzOZYaatkS8I1OqzBEnnGK1dl72%2Fw9%2Fw9-1748453928047-Screenshot%202025-05-28%20at%2010.54.28%E2%80%AFAM.png?alt=media&token=a2e447f5-a5c4-431a-8d55-d755c741009b",
+      "serviceArea": "ergerg",
+      "companyName": "1 Kittredge Lane",
+      "bio": "",
+      "bankAccountVerified": true,
+      "stripeAccountSetup": true,
+      "yearsExperience": "0-2",
+      "paymentMethodsSetup": false,
+      "firstName": "Ben",
+      "insuranceInfo": "",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Ben Weinfeld",
+      "serviceTypes": [
+        "general"
+      ],
+      "availabilityNotes": "",
+      "hourlyRate": null,
+      "updatedAt": {
+        "_seconds": 1748453945,
+        "_nanoseconds": 407000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "KPYD3xjZ0Nf4kzcZETj9Ozp2LZu1",
+      "email": "LandLordNew2004@gmail.coms",
+      "userType": "contractor",
+      "role": "contractor",
+      "onboardingComplete": false,
+      "isPremium": true,
+      "subscriptionTier": "premium",
+      "createdAt": {
+        "_seconds": 1748452172,
+        "_nanoseconds": 926000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "KlRzmkLO1IhXREUT6YAFtFPJe6c2",
+      "email": "test_tenant@example.com",
+      "userType": "tenant",
+      "role": "tenant",
+      "onboardingComplete": true,
+      "createdAt": {
+        "_seconds": 1747229791,
+        "_nanoseconds": 509000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "LVbjCRNovTe9PMlrOT1EqFhArz23",
+      "email": "Tenant2005@gmail.com",
+      "userType": "contractor",
+      "role": "contractor",
+      "onboardingComplete": false,
+      "createdAt": {
+        "_seconds": 1748369478,
+        "_nanoseconds": 154000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "MCIP4ZFgcSM9ZnswJhWKxt2u09f1",
+      "userType": "landlord",
+      "role": "landlord",
+      "email": "bweinfeld15@gmail.con",
+      "createdAt": "2025-06-10T22:07:15.799Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "Benjamin",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "Propagentic LLC",
+      "name": "Benjamin Weinfeld",
+      "totalProperties": "9",
+      "properties": [
+        "vqdLlF9LDIMQeC010294"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1749593273,
+        "_nanoseconds": 442000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "MQuRdFjiLgQ4ldpmb0mBTqD9Q0h1",
+      "email": "Juliet@gmail.com",
+      "name": "Juliet Tracey",
+      "role": "tenant",
+      "createdAt": "2025-04-01T18:01:31.876Z",
+      "moveInDate": "2025-02-12",
+      "propertyAddress": "300 W Pennsylvania Ave, Towson, MD 21204",
+      "apartmentUnit": "Towson Overlook",
+      "onboardingComplete": true,
+      "fullName": "Juliet",
+      "maintenancePreference": "text",
+      "landlordName": "Michael Weinfeld",
+      "updatedAt": "2025-04-01T18:01:50.145Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "MUeFAbExdedAdP9QskUN10VB3zU2",
+      "userType": "contractor",
+      "role": "contractor",
+      "isPremium": true,
+      "subscriptionTier": "premium",
+      "email": "nickymerlo@gmail.com",
+      "createdAt": "2025-06-11T16:48:07.846Z",
+      "lastName": "Contractor",
+      "website": "",
+      "w9FormUrl": "skipped-for-development",
+      "serviceArea": "Test Area",
+      "companyName": "",
+      "bio": "",
+      "bankAccountVerified": true,
+      "stripeAccountSetup": true,
+      "yearsExperience": "0-2",
+      "paymentMethodsSetup": false,
+      "firstName": "Test",
+      "insuranceInfo": "",
+      "phoneNumber": "(555) 123-4567",
+      "preferredContactMethod": "email",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Test Contractor",
+      "serviceTypes": [
+        "general"
+      ],
+      "availabilityNotes": "",
+      "hourlyRate": null,
+      "updatedAt": {
+        "_seconds": 1749660953,
+        "_nanoseconds": 21000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "MyytYhWklOhywQGiRpflmNzZolr2",
+      "email": "Tenant@gmail.com",
+      "name": "Tenant #1",
+      "role": "tenant",
+      "createdAt": "2025-04-01T15:18:48.136Z",
+      "moveInDate": "2025-01-08",
+      "propertyAddress": "123 Lane",
+      "apartmentUnit": "123 Lane",
+      "onboardingComplete": true,
+      "fullName": "Tenant 1",
+      "maintenancePreference": "phone",
+      "landlordName": "Michael Weinfeld",
+      "updatedAt": "2025-04-01T15:19:19.144Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "NXBUlqNA1DZxr7DnRqnVpZn8pIy2",
+      "email": "Ben@gmail.com",
+      "userType": "tenant",
+      "createdAt": {
+        "_seconds": 1743614385,
+        "_nanoseconds": 137000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "Nv5cIphVhyYNuDk1B4KFlh1250J3",
+      "email": "Land2009@gmail.com",
+      "userType": "tenant",
+      "role": "tenant",
+      "onboardingComplete": false,
+      "createdAt": {
+        "_seconds": 1747688333,
+        "_nanoseconds": 640000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "P5OKdrJvRLSqiaBlKaNQIeI1eKH2",
+      "email": "JeffGouline69@hotmail.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": "2025-06-09T15:38:51.679Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "1 Kittredge Lane",
+      "name": "Ben Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "4X3ksTjcEnjhDy1J4Yuq"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1749483649,
+        "_nanoseconds": 419000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "Q8bctNKwRAVWAS3Um3WHt2Q5pna2",
+      "email": "Tenant2004@gmail.com",
+      "userType": "tenant",
+      "role": "tenant",
+      "createdAt": {
+        "_seconds": 1744640027,
+        "_nanoseconds": 601000000
+      },
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "address": "123 Whiskey Row",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Commercial Unit",
+      "name": "Ben Weinfeld",
+      "updatedAt": {
+        "_seconds": 1744640046,
+        "_nanoseconds": 485000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "QcM7slyLwQgKVFfZRuEJViabnn72",
+      "email": "Tenant2004@gmail.com444",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": "2025-06-02T19:32:27.509Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "text",
+      "onboardingComplete": true,
+      "businessName": "1 Kittredge Lane",
+      "name": "Ben Weinfeld",
+      "totalProperties": "3",
+      "properties": [
+        "c8LMbmGnnPz89oAMhF3L"
+      ],
+      "managementSoftware": "Property Management Software",
+      "updatedAt": {
+        "_seconds": 1748892766,
+        "_nanoseconds": 420000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "RJ7yp8mMiQehJwJzWg46pdgNGui2",
+      "email": "weinba2@wfu.edu",
+      "userType": "tenant",
+      "createdAt": {
+        "_seconds": 1743613833,
+        "_nanoseconds": 762000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "RkBbUKF289XN7bXBcnJdTmVgWbZ2",
+      "email": "bweinfeld1@gmail.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": {
+        "_seconds": 1744554888,
+        "_nanoseconds": 980000000
+      },
+      "yearsInBusiness": "1-5",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "rr",
+      "name": "Ben Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "Y3JxENU5OyxXXWCpza4G"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1744554904,
+        "_nanoseconds": 929000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "Rkw3XJtd9dZm5aQfmN3uh1TElKS2",
+      "email": "LandLordNew2004@gmail.comm",
+      "userType": "contractor",
+      "role": "contractor",
+      "onboardingComplete": false,
+      "createdAt": {
+        "_seconds": 1748369174,
+        "_nanoseconds": 409000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "S40hHDKo9lVC3MpijrTPgL9PEzg1",
+      "email": "Ben@icloud.net",
+      "userType": "contractor",
+      "createdAt": {
+        "_seconds": 1743646442,
+        "_nanoseconds": 399000000
+      },
+      "firstName": "r",
+      "lastName": "r",
+      "address": "r",
+      "phoneNumber": "r",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "r r",
+      "updatedAt": {
+        "_seconds": 1743646456,
+        "_nanoseconds": 198000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "S6RVbytTCDUfzEyUNWXYhqM3KVE2",
+      "email": "Contractor2004@gmail.com",
+      "userType": "contractor",
+      "role": "contractor",
+      "createdAt": {
+        "_seconds": 1744640241,
+        "_nanoseconds": 953000000
+      },
+      "lastName": "Weinfeld",
+      "website": "",
+      "serviceArea": "Baltimore Area, 30 miles",
+      "companyName": "410 Haulers",
+      "bio": "",
+      "yearsExperience": "0-2",
+      "firstName": "Benjamin",
+      "insuranceInfo": "",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Benjamin Weinfeld",
+      "serviceTypes": [
+        "hvac",
+        "carpentry",
+        "flooring",
+        "landscaping"
+      ],
+      "availabilityNotes": "",
+      "hourlyRate": 75,
+      "profileImageUrl": "",
+      "updatedAt": {
+        "_seconds": 1744640264,
+        "_nanoseconds": 614000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "SMtO2K0802exJbbK3K7gvYJb0kr1",
+      "onboardingComplete": true,
+      "role": "landlord",
+      "userType": "landlord",
+      "lastName": "Landlord",
+      "email": "test-landlord-1749661605848@example.com",
+      "firstName": "Test",
+      "createdAt": "2025-06-11T17:06:46.868Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "Tvm1Lk82qGWGGo2zNPW1BVqzYdQ2",
+      "email": "bweinfeld15@gmail.comrr3r",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": "2025-05-29T17:12:04.476Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "Benjamin",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "Propagentic LLC",
+      "name": "Benjamin Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "0L5X2dPcwYIBytjctrRo"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1748538800,
+        "_nanoseconds": 959000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "UB97oDvsS8fMdZPTqzSNEZ08qAt1",
+      "email": "plummer@gmail.com",
+      "userType": "contractor",
+      "role": "contractor",
+      "createdAt": {
+        "_seconds": 1748056788,
+        "_nanoseconds": 294000000
+      },
+      "lastName": "Weinfeld",
+      "website": "",
+      "serviceArea": "Baltimore Area, 30 miles",
+      "companyName": "410 Haulers",
+      "bio": "",
+      "yearsExperience": "3-5",
+      "firstName": "Benjamin",
+      "insuranceInfo": "",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "phone",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Benjamin Weinfeld",
+      "serviceTypes": [
+        "hvac"
+      ],
+      "availabilityNotes": "",
+      "hourlyRate": 50,
+      "profileImageUrl": "",
+      "updatedAt": {
+        "_seconds": 1748056811,
+        "_nanoseconds": 238000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "UL6W5U4sAlgXqIp2iA5Vk8ymjJp1",
+      "email": "weinba23@wfu.edul",
+      "userType": "contractor",
+      "createdAt": {
+        "_seconds": 1743646873,
+        "_nanoseconds": 300000000
+      },
+      "firstName": "3",
+      "lastName": "3",
+      "address": "3",
+      "phoneNumber": "3",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "3 3",
+      "updatedAt": {
+        "_seconds": 1743646884,
+        "_nanoseconds": 238000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "ULjbYU4EnLZxxHdcuv1h9Nslapf2",
+      "onboardingComplete": false,
+      "email": "bweinfeld15@gmail.comeee",
+      "isPremium": true,
+      "userType": "contractor",
+      "subscriptionTier": "premium",
+      "role": "contractor",
+      "createdAt": "2025-06-11T21:33:31.269Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "UdFRZSgb1oRpGr2xFdririTEqXH2",
+      "email": "weinba21@wfu.edu",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": {
+        "_seconds": 1744300542,
+        "_nanoseconds": 406000000
+      },
+      "yearsInBusiness": "1-5",
+      "firstName": "Michael",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "phone",
+      "onboardingComplete": true,
+      "businessName": "President of Kittredge Properties",
+      "name": "Michael Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "V4gijebJZZbTf98xyCMp"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1744300579,
+        "_nanoseconds": 229000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "Up09Yv0oCgPUhVOcEH4M1DT3QPl2",
+      "email": "Landlord5@gmail.com",
+      "userType": "landlord",
+      "createdAt": {
+        "_seconds": 1743628710,
+        "_nanoseconds": 29000000
+      },
+      "yearsInBusiness": "1-5",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "phone",
+      "onboardingComplete": true,
+      "businessName": "",
+      "name": "Ben Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "noD81dqDhCORZti6MeBU"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1743628752,
+        "_nanoseconds": 490000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "UyWPvU5ZVYOSpgUioEuarQidtRU2",
+      "email": "Tenant@gmail.net",
+      "userType": "tenant",
+      "role": "tenant",
+      "createdAt": {
+        "_seconds": 1744062973,
+        "_nanoseconds": 401000000
+      },
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "address": "3",
+      "phoneNumber": "3",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "Ben Weinfeld",
+      "updatedAt": {
+        "_seconds": 1744062986,
+        "_nanoseconds": 939000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "V2SjRZBMeLVliTY3ytMn4LGNXRF3",
+      "userType": "contractor",
+      "role": "contractor",
+      "subscriptionTier": "premium",
+      "email": "bweinfeld15@gmail.comrrr",
+      "isPremium": true,
+      "createdAt": "2025-06-11T21:39:18.993Z",
+      "lastName": "Contractor",
+      "website": "",
+      "w9FormUrl": "skipped-for-development",
+      "serviceArea": "Test Area",
+      "companyName": "",
+      "bio": "",
+      "bankAccountVerified": true,
+      "stripeAccountSetup": true,
+      "yearsExperience": "0-2",
+      "paymentMethodsSetup": false,
+      "firstName": "Test",
+      "insuranceInfo": "",
+      "phoneNumber": "(555) 123-4567",
+      "preferredContactMethod": "email",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Test Contractor",
+      "serviceTypes": [
+        "general"
+      ],
+      "availabilityNotes": "",
+      "hourlyRate": null,
+      "updatedAt": {
+        "_seconds": 1749677970,
+        "_nanoseconds": 109000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "Wrvld7gtRcf4qTL7ReNHXX9kELx1",
+      "email": "bweinfeld225@gmail.com",
+      "userType": "tenant",
+      "role": "tenant",
+      "createdAt": "2025-06-11T18:32:06.972Z",
+      "firstName": "Benjamin",
+      "lastName": "Weinfeld",
+      "address": "no",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "Benjamin Weinfeld",
+      "updatedAt": {
+        "_seconds": 1749666736,
+        "_nanoseconds": 738000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "Ww3DSVzUmSdXwQlexWcimhulDhH2",
+      "email": "weinba23@wfu.edu2",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": "2025-06-07T16:51:40.005Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "Benjamin",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "text",
+      "onboardingComplete": true,
+      "businessName": "Propagentic LLC",
+      "name": "Benjamin Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "ja0880JX1mjowVKYhhdW"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1749315117,
+        "_nanoseconds": 453000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "XyTmtD3eqXdLQM4HerKj7Veszup2",
+      "userType": "tenant",
+      "role": "tenant",
+      "email": "410hauler@gmail.com",
+      "createdAt": "2025-06-11T14:23:27.152Z",
+      "firstName": "Benjamin",
+      "lastName": "Weinfeld",
+      "address": "ok",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "Benjamin Weinfeld",
+      "updatedAt": {
+        "_seconds": 1749651832,
+        "_nanoseconds": 818000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "Ybb0Mcn0ngPQP2ZB4uugqfPPVp33",
+      "role": "landlord",
+      "onboardingComplete": true,
+      "firstName": "Test",
+      "userType": "landlord",
+      "email": "test-landlord-1749608962544@example.com",
+      "lastName": "Landlord",
+      "createdAt": "2025-06-11T02:29:24.225Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "ZPLO5EoblheVfY71aAzgGSdVjNq2",
+      "email": "efwefqwef@e.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": "2025-05-29T17:46:37.051Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "wecwcw",
+      "lastName": "qecwqc",
+      "phoneNumber": "wqecqwc",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "wqefw",
+      "name": "wecwcw qecwqc",
+      "totalProperties": "1",
+      "properties": [
+        "vLnHoYNdghm6f2nYORcG"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1748540812,
+        "_nanoseconds": 634000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "ZhkthTQjrqfdOo7D1Qs9QKYQTZt1",
+      "email": "bweinfeld15@gmail.comzxsac",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": "2025-05-29T17:41:38.142Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "Ben",
+      "lastName": "w",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "Propagentic LLC",
+      "name": "Ben w",
+      "totalProperties": "1",
+      "properties": [
+        "HBE8uGp84RpzRlHPjfEP"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1748540512,
+        "_nanoseconds": 474000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "aX5cXWXrbygyOFLA09NCG52ppm32",
+      "email": "Tenant2004@gmail.comrrr",
+      "userType": "contractor",
+      "role": "contractor",
+      "createdAt": {
+        "_seconds": 1748393711,
+        "_nanoseconds": 487000000
+      },
+      "lastName": "Weinfeld",
+      "website": "",
+      "w9FormUrl": "https://firebasestorage.googleapis.com/v0/b/propagentic.firebasestorage.app/o/contractors%2FaX5cXWXrbygyOFLA09NCG52ppm32%2Fw9%2Fw9-1748393727177-Screenshot%202025-05-27%20at%209.24.08%E2%80%AFAM.png?alt=media&token=1d5406ef-c290-49d9-b99d-f3b37fc34900",
+      "serviceArea": "b",
+      "companyName": "",
+      "bio": "",
+      "bankAccountVerified": true,
+      "stripeAccountSetup": true,
+      "yearsExperience": "0-2",
+      "paymentMethodsSetup": true,
+      "firstName": "Ben",
+      "insuranceInfo": "",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Ben Weinfeld",
+      "serviceTypes": [
+        "plumbing"
+      ],
+      "availabilityNotes": "",
+      "hourlyRate": null,
+      "updatedAt": {
+        "_seconds": 1748393747,
+        "_nanoseconds": 117000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "ahSu4zJcMTUI4irf7EFgXWCsdqk2",
+      "email": "LandLordNew2004@gmail.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": {
+        "_seconds": 1747701608,
+        "_nanoseconds": 55000000
+      },
+      "yearsInBusiness": "1-5",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "text",
+      "onboardingComplete": true,
+      "businessName": "Propagentic",
+      "name": "Ben Weinfeld",
+      "totalProperties": "2",
+      "properties": [
+        "Mt1E9NqAryawW7R2fdWQ"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1747701682,
+        "_nanoseconds": 220000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "bScCKUsabKMFpb784egIEnzxyN22",
+      "email": "Tenant2@gmail.com",
+      "userType": "tenant",
+      "createdAt": {
+        "_seconds": 1743612335,
+        "_nanoseconds": 948000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "bfWZt5CrHGeYEGznrYevmnNRb863",
+      "email": "Contactor2104@gmail.com",
+      "userType": "contractor",
+      "role": "contractor",
+      "createdAt": {
+        "_seconds": 1748392461,
+        "_nanoseconds": 839000000
+      },
+      "lastName": "Weinfeld",
+      "website": "",
+      "w9FormUrl": "https://firebasestorage.googleapis.com/v0/b/propagentic.firebasestorage.app/o/contractors%2FbfWZt5CrHGeYEGznrYevmnNRb863%2Fw9%2Fw9-1748392475419-Screenshot%202025-05-27%20at%209.24.08%E2%80%AFAM.png?alt=media&token=11ef2ed4-ab8e-4f9b-a275-5288cb5ae9d5",
+      "serviceArea": "b",
+      "companyName": "",
+      "bio": "",
+      "bankAccountVerified": true,
+      "stripeAccountSetup": true,
+      "yearsExperience": "0-2",
+      "paymentMethodsSetup": true,
+      "firstName": "Ben",
+      "insuranceInfo": "",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Ben Weinfeld",
+      "serviceTypes": [
+        "hvac"
+      ],
+      "availabilityNotes": "",
+      "hourlyRate": null,
+      "updatedAt": {
+        "_seconds": 1748392511,
+        "_nanoseconds": 722000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "bqFc3RlZ8DV0GjnNjRDf72Imu2p2",
+      "email": "Tenant20045@gmail.com",
+      "userType": "tenant",
+      "role": "tenant",
+      "createdAt": {
+        "_seconds": 1747663696,
+        "_nanoseconds": 508000000
+      },
+      "firstName": "Will",
+      "lastName": "Weinfeld",
+      "address": "123 Prop Row",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "text",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "Will Weinfeld",
+      "updatedAt": {
+        "_seconds": 1747663734,
+        "_nanoseconds": 355000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "c8qxfbrop6UnJunC07w8ob2VTxO2",
+      "lastName": "Landlord",
+      "firstName": "Second",
+      "email": "test-landlord-1749608857160@example.com",
+      "role": "landlord",
+      "onboardingComplete": true,
+      "userType": "landlord",
+      "createdAt": "2025-06-11T02:27:38.485Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "cGLBAf19eXSEtkOuLOCryeYMRd92",
+      "email": "Tenant2004@gmail.comeeqw",
+      "userType": "landlord",
+      "role": "landlord",
+      "onboardingComplete": false,
+      "createdAt": {
+        "_seconds": 1748456894,
+        "_nanoseconds": 987000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "czEtydswvUQfrj5LetjBYr3xx733",
+      "email": "bweinfeld15@gmail.com44",
+      "userType": "tenant",
+      "role": "tenant",
+      "createdAt": "2025-06-06T14:13:10.145Z",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "address": "43",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "Ben Weinfeld",
+      "updatedAt": {
+        "_seconds": 1749219200,
+        "_nanoseconds": 789000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "d1ZSAGDHZaX2UaJnf7Kc1TW07Vb2",
+      "role": "landlord",
+      "userType": "landlord",
+      "email": "bweinfeld15@gmail.com34",
+      "createdAt": "2025-06-11T02:28:19.666Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "Michael",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "President of Kittredge Properties",
+      "name": "Michael Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "e6WuJF2zPOJpigQKxhtS"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1749608916,
+        "_nanoseconds": 178000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "dLNAd5hy0ybdr390B97dpGBLwnY2",
+      "email": "Tenant2008@gmail.com",
+      "userType": "tenant",
+      "role": "tenant",
+      "onboardingComplete": false,
+      "createdAt": {
+        "_seconds": 1745979126,
+        "_nanoseconds": 164000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "dYMX6BOGbxcedROMMWzQDHNqW7u2",
+      "email": "LandLordNew2004@gmail.con",
+      "userType": "contractor",
+      "role": "contractor",
+      "onboardingComplete": false,
+      "createdAt": {
+        "_seconds": 1748368066,
+        "_nanoseconds": 437000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "eGvvmp2qCETs4lteOLGVeFi8Yc42",
+      "role": "landlord",
+      "lastName": "Landlord",
+      "onboardingComplete": true,
+      "firstName": "Test",
+      "userType": "landlord",
+      "email": "test-landlord-1749609044772@example.com",
+      "createdAt": "2025-06-11T02:30:46.048Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "ePUO8DULplYeNvVqtai1GEisWZY2",
+      "email": "bweinfeld15@gmail.coo",
+      "userType": "landlord",
+      "createdAt": {
+        "_seconds": 1743645064,
+        "_nanoseconds": 263000000
+      },
+      "yearsInBusiness": "1-5",
+      "firstName": "g",
+      "lastName": "g",
+      "phoneNumber": "g",
+      "preferredContactMethod": "text",
+      "onboardingComplete": true,
+      "businessName": "",
+      "name": "g g",
+      "totalProperties": "1",
+      "properties": [
+        "RQBJOvFZoIkRcuoLR93G"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1743645085,
+        "_nanoseconds": 405000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "eacCCOhCeJUOIM8HO4ZRHkjKmyd2",
+      "lastName": "Landlord",
+      "role": "landlord",
+      "firstName": "Test",
+      "onboardingComplete": true,
+      "userType": "landlord",
+      "email": "test-landlord-1749653810477@example.com",
+      "createdAt": "2025-06-11T14:56:51.224Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "fMhn9qpwgzPktnMmcb0h6icxdLt2",
+      "email": "Tenant5@gmail.com",
+      "userType": "tenant",
+      "createdAt": {
+        "_seconds": 1743619327,
+        "_nanoseconds": 89000000
+      },
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "address": "1 KL lane\n",
+      "updatedAt": {
+        "_seconds": 1743619358,
+        "_nanoseconds": 160000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "fPIlxNwDq7aN7Aoe63DAwv2StFN2",
+      "email": "Tenant2004@gmail.comi",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": "2025-05-29T19:18:59.617Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "ergerg",
+      "lastName": "ergeqrwg",
+      "phoneNumber": "ergeqrgeqrg",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "wrgwegweg",
+      "name": "ergerg ergeqrwg",
+      "totalProperties": "1",
+      "properties": [
+        "VijyVrBxXUMVb1JsDFVr"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1748546354,
+        "_nanoseconds": 385000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "ffDlQgQw19PYVCdz2hsexvlt1w03",
+      "email": "LL1@gmail.com",
+      "userType": "landlord",
+      "createdAt": {
+        "_seconds": 1743615097,
+        "_nanoseconds": 299000000
+      },
+      "firstName": "Michael",
+      "lastName": "Weinfeld",
+      "address": "f\n",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "phone",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "updatedAt": {
+        "_seconds": 1743615155,
+        "_nanoseconds": 553000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "g05qDLqvvyeBfVLCGwsK4TV8znM2",
+      "email": "mweinfeld@kittredgeproperties.con",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": "2025-06-10T17:45:52.710Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "Benjamin",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "",
+      "name": "Benjamin Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "Pc0HRV6op1NnJxDQxrt8"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1749577572,
+        "_nanoseconds": 519000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "g4hR9NBVGWNxDGg8Z1yAaUMX3iF3",
+      "email": "LL9@gmail.com",
+      "userType": "landlord",
+      "createdAt": {
+        "_seconds": 1744058595,
+        "_nanoseconds": 736000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "gS5y26zBwOcpJTrFsgM0p12OiLw2",
+      "email": "Contractor2@gmail.com",
+      "userType": "contractor",
+      "createdAt": {
+        "_seconds": 1743685239,
+        "_nanoseconds": 452000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "hqnGUl6LYvgJDcXPrqpNDpVJuiv1",
+      "email": "LandLordNew2004@gmail.comi",
+      "userType": "contractor",
+      "role": "contractor",
+      "onboardingComplete": false,
+      "createdAt": {
+        "_seconds": 1748372029,
+        "_nanoseconds": 272000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "i6L79mPjfbUY6hykgA97Hx0KPO53",
+      "email": "Contractor5@gmail.com",
+      "userType": "contractor",
+      "createdAt": {
+        "_seconds": 1743685557,
+        "_nanoseconds": 21000000
+      },
+      "lastName": "Weinfeld",
+      "website": "",
+      "serviceArea": "Baltimore Area, 30 miles",
+      "companyName": "410 Haulers",
+      "bio": "I am good",
+      "yearsExperience": "0-2",
+      "firstName": "Ben",
+      "insuranceInfo": "",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Ben Weinfeld",
+      "serviceTypes": [
+        "electrical",
+        "carpentry",
+        "landscaping",
+        "plumbing",
+        "general"
+      ],
+      "availabilityNotes": "24/7",
+      "hourlyRate": 50,
+      "profileImageUrl": "",
+      "updatedAt": {
+        "_seconds": 1743685637,
+        "_nanoseconds": 458000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "iRhVDQdKDMU10U2T7fbO9pIu3is2",
+      "email": "bweinfeld15@gmai.com",
+      "name": "Ben Weinfeld",
+      "role": "landlord",
+      "createdAt": "2025-03-31T19:18:00.072Z",
+      "phoneNumber": "4103504484",
+      "contactPreference": "text",
+      "propertyAddress": "1 Kittredge Lane",
+      "onboardingComplete": true,
+      "propertyType": "condo",
+      "fullName": "Benjamin A Weinfeld",
+      "numOfTenants": "6+",
+      "updatedAt": "2025-03-31T19:18:12.627Z",
+      "userType": "landlord",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "j01FuVGUbOR7bxat8Rakf8Rjs1r1",
+      "email": "Tenant@gmail.comt",
+      "userType": "contractor",
+      "role": "contractor",
+      "onboardingComplete": false,
+      "createdAt": {
+        "_seconds": 1748372918,
+        "_nanoseconds": 8000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "j8jZSh0MXSSZ5OfzBlwDadRn4na2",
+      "email": "bweinfel5@gmail.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": {
+        "_seconds": 1744074256,
+        "_nanoseconds": 303000000
+      },
+      "yearsInBusiness": "1-5",
+      "firstName": "b",
+      "lastName": "b",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "",
+      "name": "b b",
+      "totalProperties": "1",
+      "properties": [
+        "HUmc1wf3uk5PzlHb62aU"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1744074281,
+        "_nanoseconds": 639000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "jM3y1g8VN1b8dVgNCxiEUC95sax1",
+      "email": "Trey@gmail.col",
+      "userType": "contractor",
+      "createdAt": {
+        "_seconds": 1743646237,
+        "_nanoseconds": 154000000
+      },
+      "firstName": "trey",
+      "lastName": "w",
+      "address": "ww",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "trey w",
+      "updatedAt": {
+        "_seconds": 1743646251,
+        "_nanoseconds": 410000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "jT3WLt7yELSzMnXSPsfWOEicJmy2",
+      "email": "Yusuf@landlord.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": {
+        "_seconds": 1748527858,
+        "_nanoseconds": 938000000
+      },
+      "yearsInBusiness": "1-5",
+      "firstName": "Yusuf",
+      "lastName": "Kanbour",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "phone",
+      "onboardingComplete": true,
+      "businessName": "1 Kittredge Lane",
+      "name": "Yusuf Kanbour",
+      "totalProperties": "1",
+      "properties": [
+        "EZoK5r5RG18U0rODLb2w"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1748527911,
+        "_nanoseconds": 821000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "jWepLQNlBhNPpPLDJTQVNXVVsR53",
+      "role": "landlord",
+      "userType": "landlord",
+      "email": "JeffGouline69@hotmail.net",
+      "createdAt": "2025-06-09T15:03:49.462Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "1 Kittredge Lane",
+      "name": "Ben Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "s6TxUfraqyy8TYWCKBtw"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1749481449,
+        "_nanoseconds": 51000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "jp3iaPvdj9Nu94t0XeMs4qLBpcK2",
+      "email": "bweinfeld15@gmail.comrrr3egf",
+      "userType": "contractor",
+      "role": "contractor",
+      "isPremium": true,
+      "subscriptionTier": "premium",
+      "createdAt": {
+        "_seconds": 1748456989,
+        "_nanoseconds": 503000000
+      },
+      "lastName": "Weinfeld",
+      "website": "",
+      "w9FormUrl": "https://firebasestorage.googleapis.com/v0/b/propagentic.firebasestorage.app/o/contractors%2Fjp3iaPvdj9Nu94t0XeMs4qLBpcK2%2Fw9%2Fw9-1748457007976-Screenshot%202025-05-28%20at%2011.09.26%E2%80%AFAM.png?alt=media&token=ea98069e-9acf-4942-9575-a8f1234a9e3d",
+      "serviceArea": "refrewv",
+      "companyName": "410 Haulers",
+      "bio": "",
+      "bankAccountVerified": true,
+      "stripeAccountSetup": true,
+      "yearsExperience": "0-2",
+      "paymentMethodsSetup": false,
+      "firstName": "Benjamin",
+      "insuranceInfo": "",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Benjamin Weinfeld",
+      "serviceTypes": [
+        "hvac"
+      ],
+      "availabilityNotes": "",
+      "hourlyRate": null,
+      "updatedAt": {
+        "_seconds": 1748457020,
+        "_nanoseconds": 599000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "kEzJ8MAAA2T1znrI4ycHw2c9Ie53",
+      "email": "bweinfeld@gmail.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": {
+        "_seconds": 1744301091,
+        "_nanoseconds": 625000000
+      },
+      "yearsInBusiness": "1-5",
+      "firstName": "Benjamin",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "phone",
+      "onboardingComplete": true,
+      "businessName": "President of Kittredge Properties",
+      "name": "Benjamin Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "1ZlzimKJWXryEpHk09BX"
+      ],
+      "managementSoftware": "Property Management Software",
+      "updatedAt": {
+        "_seconds": 1744637322,
+        "_nanoseconds": 819000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "krzjGteYKcdTUegrOvEwPs5uj243",
+      "email": "LandLordNew2004@gmail.comrr",
+      "userType": "contractor",
+      "role": "contractor",
+      "isPremium": true,
+      "subscriptionTier": "premium",
+      "createdAt": {
+        "_seconds": 1748453354,
+        "_nanoseconds": 132000000
+      },
+      "lastName": "Weinfeld",
+      "website": "",
+      "w9FormUrl": "https://firebasestorage.googleapis.com/v0/b/propagentic.firebasestorage.app/o/contractors%2FkrzjGteYKcdTUegrOvEwPs5uj243%2Fw9%2Fw9-1748453402202-Screenshot%202025-05-28%20at%2010.54.28%E2%80%AFAM.png?alt=media&token=ab64b914-502e-42d2-a90d-1312c9c8bdda",
+      "serviceArea": "Baltimore",
+      "companyName": "1 Kittredge Lane",
+      "bio": "",
+      "bankAccountVerified": true,
+      "stripeAccountSetup": true,
+      "yearsExperience": "0-2",
+      "paymentMethodsSetup": true,
+      "firstName": "Ben",
+      "insuranceInfo": "",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Ben Weinfeld",
+      "serviceTypes": [
+        "painting"
+      ],
+      "availabilityNotes": "",
+      "hourlyRate": null,
+      "updatedAt": {
+        "_seconds": 1748453477,
+        "_nanoseconds": 317000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "kyyMz8nPkKOAFBIkb3zKw2QeM433",
+      "email": "Tenant2004@ghmail.com",
+      "userType": "contractor",
+      "role": "contractor",
+      "onboardingComplete": false,
+      "createdAt": {
+        "_seconds": 1748370181,
+        "_nanoseconds": 597000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "lZ3mIFSJ4hdRAp5kqJdFFGA0fA62",
+      "email": "Land2025@gmail.com",
+      "userType": "tenant",
+      "role": "tenant",
+      "createdAt": {
+        "_seconds": 1747678671,
+        "_nanoseconds": 903000000
+      },
+      "firstName": "f5",
+      "lastName": "rf",
+      "address": "24rf",
+      "phoneNumber": "42f",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "f5 rf",
+      "updatedAt": {
+        "_seconds": 1747678679,
+        "_nanoseconds": 644000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "lxgeCMQD0LbKpbM955JmMuQ7u9l2",
+      "email": "Mike@gmail.com",
+      "name": "Mike",
+      "role": "contractor",
+      "onboardingComplete": false,
+      "createdAt": "2025-03-31T18:16:35.018Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "lzkB0YnzfFbaeWN8kUB6z0GlTQE3",
+      "email": "bweinfeld15@gmail.comqwef",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": "2025-06-02T19:22:00.988Z",
+      "yearsInBusiness": "11-20",
+      "firstName": "Benjamin",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "text",
+      "onboardingComplete": true,
+      "businessName": "Propagentic LLC",
+      "name": "Benjamin Weinfeld",
+      "totalProperties": "2",
+      "properties": [
+        "DsQUXlvYvvubn4rZgPtt"
+      ],
+      "managementSoftware": "Property Management Software",
+      "updatedAt": {
+        "_seconds": 1748892146,
+        "_nanoseconds": 92000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "mgwSakj0TJQpfPsHK5TuTY91W9c2",
+      "email": "LL2@gmail.com",
+      "userType": "landlord",
+      "createdAt": {
+        "_seconds": 1743620472,
+        "_nanoseconds": 914000000
+      },
+      "firstName": "Benjamin",
+      "lastName": "Weinfeld",
+      "address": "nf",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "Benjamin Weinfeld",
+      "updatedAt": {
+        "_seconds": 1743620486,
+        "_nanoseconds": 591000000
+      },
+      "role": "landlord",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "murvj6tLFNMSBEjGKosM5KeTLr03",
+      "role": "tenant",
+      "email": "weinba23@wfu.edu5",
+      "userType": "tenant",
+      "createdAt": "2025-06-11T14:15:24.489Z",
+      "firstName": "Benjamin",
+      "lastName": "Weinfeld",
+      "address": "t",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "Benjamin Weinfeld",
+      "updatedAt": {
+        "_seconds": 1749651333,
+        "_nanoseconds": 305000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "nZJObaqOtvZOkYN3lQBtr51VfUx1",
+      "email": "weinba23@wfu.edur",
+      "userType": "contractor",
+      "role": "contractor",
+      "onboardingComplete": false,
+      "createdAt": {
+        "_seconds": 1748370777,
+        "_nanoseconds": 492000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "nn6KOUdn3ibQY6C4ohgErdaewUX2",
+      "email": "Tenant2004@gmail23.com",
+      "userType": "contractor",
+      "role": "contractor",
+      "isPremium": true,
+      "subscriptionTier": "premium",
+      "createdAt": {
+        "_seconds": 1748462375,
+        "_nanoseconds": 275000000
+      },
+      "lastName": "f",
+      "website": "",
+      "w9FormUrl": "https://firebasestorage.googleapis.com/v0/b/propagentic.firebasestorage.app/o/contractors%2Fnn6KOUdn3ibQY6C4ohgErdaewUX2%2Fw9%2Fw9-1748462680488-Screenshot%202025-05-28%20at%201.54.48%E2%80%AFPM.png?alt=media&token=cdf47344-dfb6-4959-ab37-6876d103ecdf",
+      "serviceArea": "1 Kittredge ln ",
+      "companyName": "410 Stink removal",
+      "bio": "",
+      "bankAccountVerified": true,
+      "stripeAccountSetup": true,
+      "yearsExperience": "3-5",
+      "paymentMethodsSetup": false,
+      "firstName": "Colin",
+      "insuranceInfo": "",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "phone",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Colin f",
+      "serviceTypes": [
+        "general"
+      ],
+      "availabilityNotes": "fgj",
+      "hourlyRate": 70,
+      "updatedAt": {
+        "_seconds": 1748462707,
+        "_nanoseconds": 517000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "oWUYLPBTknUUZyOAbdwf3KPN6Ez1",
+      "userType": "landlord",
+      "email": "45bweinfeld15@gmail.com",
+      "role": "landlord",
+      "createdAt": "2025-06-11T02:30:27.141Z",
+      "yearsInBusiness": "1-5",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "Propagentic LLC",
+      "name": "Ben Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "2n2eLfX9HuGzoH6uW5pS"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1749609038,
+        "_nanoseconds": 360000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "psc7w4vYATSDJMXEplBfpheRATk2",
+      "email": "test-landlord-1749608965221@example.com",
+      "firstName": "Test",
+      "userType": "landlord",
+      "onboardingComplete": true,
+      "role": "landlord",
+      "lastName": "Landlord",
+      "createdAt": "2025-06-11T02:29:26.138Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "ptu0GZ7xg4ZsXx6vVxAzl0we1y12",
+      "email": "Contract1@gmail.com",
+      "userType": "contractor",
+      "createdAt": {
+        "_seconds": 1743685191,
+        "_nanoseconds": 887000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "rvIAJxI0W1er6Mt358ApdVViSMv1",
+      "email": "bweinfeld15@icloud.com",
+      "name": "Michael Weinfeld",
+      "role": "contractor",
+      "createdAt": "2025-03-31T15:12:41.496Z",
+      "phoneNumber": "4103504484",
+      "contactPreference": "text",
+      "onboardingComplete": true,
+      "fullName": "Michael Weinfeld",
+      "specialization": "hvac",
+      "licenseNumber": "",
+      "certifications": "",
+      "serviceAreas": "21204",
+      "updatedAt": "2025-03-31T15:13:03.833Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "tSpZFdmtECSewUsj2ZQdHnaInRI3",
+      "email": "Contractor2001@gmail.com",
+      "userType": "contractor",
+      "role": "contractor",
+      "createdAt": {
+        "_seconds": 1744769951,
+        "_nanoseconds": 842000000
+      },
+      "lastName": "Weinfeld",
+      "website": "",
+      "serviceArea": "Baltimore Area, 30 miles",
+      "companyName": "410 Haulers",
+      "bio": "",
+      "yearsExperience": "0-2",
+      "firstName": "Ben",
+      "insuranceInfo": "",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "taxId": "",
+      "onboardingComplete": true,
+      "name": "Ben Weinfeld",
+      "serviceTypes": [
+        "painting",
+        "roofing",
+        "hvac"
+      ],
+      "availabilityNotes": "",
+      "hourlyRate": 50,
+      "profileImageUrl": "",
+      "updatedAt": {
+        "_seconds": 1744769974,
+        "_nanoseconds": 106000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "vKXAYSTkqFUXvinoyZHJvpnNo953",
+      "role": "landlord",
+      "lastName": "Landlord",
+      "userType": "landlord",
+      "onboardingComplete": true,
+      "firstName": "Second",
+      "email": "test-landlord-1749609054310@example.com",
+      "createdAt": {
+        "_seconds": 1749609055,
+        "_nanoseconds": 178000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "vXC5N9xnUFNn9rfE40oiag681cb2",
+      "email": "Landlord18@gmail.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": {
+        "_seconds": 1744303019,
+        "_nanoseconds": 569000000
+      },
+      "yearsInBusiness": "1-5",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "",
+      "name": "Ben Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "NJFHGO0HOBZcDYyQFFF2"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1744303034,
+        "_nanoseconds": 439000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "vq9CtS4Pa7azSV8CV9v4vEr4NYo2",
+      "email": "bweinfeld155@gmail.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": {
+        "_seconds": 1747702445,
+        "_nanoseconds": 973000000
+      },
+      "yearsInBusiness": "1-5",
+      "firstName": "f314d234",
+      "lastName": "f31cd234f",
+      "phoneNumber": "31f4231f4321",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "f31f3",
+      "name": "f314d234 f31cd234f",
+      "totalProperties": "1",
+      "properties": [
+        "VpqUqdPgYOaDryGtIEPk"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1747702462,
+        "_nanoseconds": 993000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "w8b0mcbCqIgo5A2bvsVqm6Yko5i2",
+      "email": "bweinfeld2004@gmail.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": {
+        "_seconds": 1744634837,
+        "_nanoseconds": 405000000
+      },
+      "yearsInBusiness": "1-5",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "phone",
+      "onboardingComplete": true,
+      "businessName": "Kittredge properties",
+      "name": "Ben Weinfeld",
+      "totalProperties": "7",
+      "properties": [
+        "nCwXTTbM8agrf6SJ01Wh"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1744639731,
+        "_nanoseconds": 432000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "wE7XEpxWG3VYxMSqZhBYwC80vaC2",
+      "email": "Trey@gmail.com",
+      "name": "Trey Wolfe",
+      "role": "tenant",
+      "createdAt": "2025-03-31T15:38:25.366Z",
+      "moveInDate": "2025-03-04",
+      "propertyAddress": "300 W Pennsylvania Ave, Towson, MD 21204",
+      "apartmentUnit": "Towson Overlook",
+      "onboardingComplete": true,
+      "fullName": "Trey Wolfe",
+      "maintenancePreference": "text",
+      "landlordName": "Michael Weinfeld",
+      "updatedAt": "2025-03-31T15:39:28.892Z",
+      "userType": "tenant",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "wW6l46oGFgMWv6nxMMLdQTnSsAF3",
+      "userType": "tenant",
+      "role": "tenant",
+      "email": "mweinfeld@kittredgeproperties.com",
+      "createdAt": "2025-06-11T01:55:08.057Z",
+      "firstName": "Benjamin",
+      "lastName": "Weinfeld",
+      "address": "123 Foundry Lane",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "Benjamin Weinfeld",
+      "updatedAt": {
+        "_seconds": 1749606928,
+        "_nanoseconds": 196000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "wkAhto8kWUecjYRYJkJAKlCbJjG3",
+      "email": "bweinfeld15@gmail.comrr",
+      "userType": "contractor",
+      "role": "contractor",
+      "subscriptionTier": "premium",
+      "onboardingComplete": false,
+      "isPremium": true,
+      "createdAt": "2025-06-11T03:07:47.680Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "wqZTw4N4dmf8nvIEL6B6GsdJLSs1",
+      "firstName": "Test",
+      "onboardingComplete": true,
+      "email": "test-landlord-1749659355466@example.com",
+      "lastName": "Landlord",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": "2025-06-11T16:29:16.496Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "x9UD3IWU3zcui1esOq020MZf5f02",
+      "email": "LL18@gmail.com",
+      "userType": "tenant",
+      "role": "tenant",
+      "createdAt": {
+        "_seconds": 1744064291,
+        "_nanoseconds": 940000000
+      },
+      "firstName": "Benjamin",
+      "lastName": "Weinfeld",
+      "address": "3",
+      "phoneNumber": "3",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Commercial Unit",
+      "name": "Benjamin Weinfeld",
+      "updatedAt": {
+        "_seconds": 1744064300,
+        "_nanoseconds": 254000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "xWKu0tNnZEMQT3K5wL3zV1AExCH2",
+      "email": "wankins@gmail.com",
+      "userType": "tenant",
+      "createdAt": {
+        "_seconds": 1743618662,
+        "_nanoseconds": 780000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "xY7wkEyZcfPjvlTsz2bNTmX9EMx1",
+      "email": "Land2005@gmail.com",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": {
+        "_seconds": 1747663894,
+        "_nanoseconds": 543000000
+      },
+      "yearsInBusiness": "1-5",
+      "firstName": "Mike",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4102963546",
+      "preferredContactMethod": "phone",
+      "onboardingComplete": true,
+      "businessName": "Kittredge Properties",
+      "name": "Mike Weinfeld",
+      "totalProperties": "15",
+      "properties": [
+        "m2UtxeOpu5KAafOrR4SX"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1747663957,
+        "_nanoseconds": 209000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "xfyxv2Bf2WYZcYm5NMmTNE2ZliA3",
+      "email": "Tenant19@gmail.com",
+      "userType": "tenant",
+      "role": "tenant",
+      "createdAt": {
+        "_seconds": 1744064194,
+        "_nanoseconds": 724000000
+      },
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "address": "4",
+      "phoneNumber": "4",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "Ben Weinfeld",
+      "updatedAt": {
+        "_seconds": 1744064203,
+        "_nanoseconds": 608000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "yRNmxnQTx5fY8r38NKJBAPcX6US2",
+      "email": "bweinfeld15@gmail.net",
+      "userType": "landlord",
+      "role": "landlord",
+      "createdAt": {
+        "_seconds": 1748056881,
+        "_nanoseconds": 408000000
+      },
+      "yearsInBusiness": "1-5",
+      "firstName": "Benjamin",
+      "lastName": "Weinfeld",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "email",
+      "onboardingComplete": true,
+      "businessName": "",
+      "name": "Benjamin Weinfeld",
+      "totalProperties": "1",
+      "properties": [
+        "uqs89RFNhHF4UX2AoweE"
+      ],
+      "managementSoftware": "None",
+      "updatedAt": {
+        "_seconds": 1748056900,
+        "_nanoseconds": 887000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "zIbfwUoKGQfn7kPDPAgvfjXxGPm1",
+      "role": "landlord",
+      "email": "test-landlord-1749659363489@example.com",
+      "lastName": "Landlord",
+      "firstName": "Second",
+      "onboardingComplete": true,
+      "userType": "landlord",
+      "createdAt": "2025-06-11T16:29:24.269Z",
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    },
+    {
+      "uid": "zvcOeXz0Tee5ZmbwI00KBprBIk72",
+      "email": "bweinfeld11@gmail.com",
+      "userType": "tenant",
+      "role": "tenant",
+      "createdAt": "2025-06-05T18:30:18.591Z",
+      "firstName": "Ben",
+      "lastName": "Weinfeld",
+      "address": "1 kittredge lane",
+      "phoneNumber": "4103504484",
+      "preferredContactMethod": "phone",
+      "onboardingComplete": true,
+      "propertyType": "Apartment",
+      "name": "Ben Weinfeld",
+      "updatedAt": {
+        "_seconds": 1749148242,
+        "_nanoseconds": 330000000
+      },
+      "hasAuthAccount": true,
+      "authEmailVerified": false
+    }
+  ],
+  "summary": {
+    "totalAuthUsers": 132,
+    "verifiedUsers": 1,
+    "unverifiedUsers": 131,
+    "testAccounts": 16,
+    "recommendedForDeletion": 132
+  }
+}

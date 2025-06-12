@@ -19,6 +19,7 @@ const LandingPage = lazy(() => import('./components/landing/LandingPage.jsx'));
 const CanvasLandingPage = lazy(() => import('./pages/CanvasLandingPage.tsx'));
 const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage.jsx'));
+const ForgotPassword = lazy(() => import('./components/auth/ForgotPassword.jsx'));
 const TenantDashboard = lazy(() => import('./pages/tenant/TenantDashboard.tsx'));
 const LandlordDashboard = lazy(() => import('./pages/landlord/LandlordDashboard.tsx'));
 const LandlordDashboardDemo = lazy(() => import('./pages/LandlordDashboardDemoPage.jsx'));
@@ -43,6 +44,7 @@ const SimpleUIShowcase = lazy(() => import('./pages/SimpleUIShowcase.jsx'));
 const MaintenanceSurvey = lazy(() => import('./components/maintenance/MaintenanceSurvey.tsx'));
 const EnhancedMaintenancePage = lazy(() => import('./pages/tenant/EnhancedMaintenancePage'));
 const PublicPropertyDashboardDemo = lazy(() => import('./pages/PublicPropertyDashboardDemo.jsx'));
+const DemoShowcase = lazy(() => import('./pages/DemoShowcase.jsx'));
 
 // Route Guards
 const PrivateRoute = ({ children }) => {
@@ -186,12 +188,14 @@ function App() {
                                 <Route path="/pricing" element={<PricingPage />} />
                                 <Route path="/about" element={<AboutPage />} />
                                 <Route path="/demo" element={<DemoPage />} />
+                                <Route path="/demo-showcase" element={<DemoShowcase />} />
                                 <Route path="/property-dashboard-demo" element={<PublicPropertyDashboardDemo />} />
                                 <Route path="/svg-test" element={<SVGTest />} />
                                 <Route path="/blueprint-test" element={<BlueprintTest />} />
                                 <Route path="/login" element={<LoginPage />} />
                                 <Route path="/register" element={<RegisterPage />} />
                                 <Route path="/signup" element={<RegisterPage />} />
+                                <Route path="/forgot-password" element={<ForgotPassword />} />
                                 <Route path="/auth" element={<AuthPage />} />
                                 <Route path="/dashboard" element={<PrivateRoute><RoleBasedRedirect /></PrivateRoute>} />
                                 <Route path="/tenant/dashboard" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />

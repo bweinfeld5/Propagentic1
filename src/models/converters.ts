@@ -63,32 +63,32 @@ function createConverter<T extends { [key: string]: any }>(
 /**
  * Converter for User document
  */
-export const userConverter = createTypedConverter<User>('uid');
+export const userConverter = createConverter<User>('uid');
 
 /**
  * Converter for Property document
  */
-export const propertyConverter = createTypedConverter<Property>('propertyId');
+export const propertyConverter = createConverter<Property>('propertyId');
 
 /**
  * Converter for MaintenanceTicket document
  */
-export const maintenanceTicketConverter = createTypedConverter<MaintenanceTicket>('ticketId');
+export const maintenanceTicketConverter = createConverter<MaintenanceTicket>('ticketId');
 
 /**
  * Converter for LandlordProfile document
  */
-export const landlordProfileConverter = createTypedConverter<LandlordProfile>('landlordId');
+export const landlordProfileConverter = createConverter<LandlordProfile>('landlordId');
 
 /**
  * Converter for ContractorProfile document
  */
-export const contractorProfileConverter = createTypedConverter<ContractorProfile>('contractorId');
+export const contractorProfileConverter = createConverter<ContractorProfile>('contractorId');
 
 /**
  * Converter for Invite document
  */
-export const inviteConverter = createTypedConverter<Invite>('inviteId');
+export const inviteConverter = createConverter<Invite>('inviteId');
 
 /**
  * Helper functions for creating new documents with default values

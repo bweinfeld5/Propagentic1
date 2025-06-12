@@ -4,6 +4,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import theme cleanup to remove dark mode */
+@import './styles/theme-cleanup.css';
+
 @layer base {
   :root {
     /* Light Mode Base Variables - Using Hex Codes */

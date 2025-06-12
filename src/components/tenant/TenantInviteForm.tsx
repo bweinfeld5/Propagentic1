@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
-import inviteCodeService from '../../services/inviteCodeService';
+import { validateInviteCode, redeemInviteCode } from '../../services/inviteCodeService';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { ExclamationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
@@ -69,7 +69,7 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
       console.log('🔍 Starting invite code validation for:', inviteCode.trim());
       console.log('🔍 Current user:', currentUser?.uid, currentUser?.email);
       
-      const validationResult = await inviteCodeService.validateInviteCode(inviteCode.trim());
+      const validationResult = await validateInviteCode(inviteCode.trim());
       
       console.log('🔍 Validation result:', validationResult);
       

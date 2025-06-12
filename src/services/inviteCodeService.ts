@@ -96,7 +96,16 @@ export const validateInviteCode = async (inviteCode: string) => {
     });
 
     // Check if property is active
+    console.log('🔍 Property status check:', {
+      status: propertyData.status,
+      statusType: typeof propertyData.status,
+      isNotActive: propertyData.status !== 'active',
+      hasStatus: !!propertyData.status,
+      fullCheck: propertyData.status && propertyData.status !== 'active'
+    });
+    
     if (propertyData.status && propertyData.status !== 'active') {
+      console.log('❌ Property marked as inactive:', propertyData.status);
       return {
         isValid: false,
         message: 'This property is not currently accepting new tenants.'

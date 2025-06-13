@@ -4,7 +4,9 @@ import {
   signInWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged, 
-  sendPasswordResetEmail 
+  sendPasswordResetEmail,
+  signInWithPopup,
+  GoogleAuthProvider
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
@@ -280,6 +282,73 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Google OAuth sign-in/sign-up
+  const signInWithGoogle = async (userType = 'tenant', isPremium = false) => {
+    try {
+      clearErrors();
+      
+      const provider = new GoogleAuthProvider();
+      // Add additional scopes if needed
+      provider.addScope('email');
+      provider.addScope('profile');
+      
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Check if this is a new user by looking for existing profile
+      let existingProfile = null;
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          existingProfile = userDoc.data();
+        }
+      } catch (error) {
+        console.log('No existing profile found, creating new one');
+      }
+      
+      // If no existing profile, create one
+      if (!existingProfile) {
+        const userData = {
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          userType,
+          role: userType, // For backwards compatibility
+          createdAt: serverTimestamp(),
+          uid: user.uid,
+          onboardingComplete: false,
+          provider: 'google'
+        };
+        
+        // Add premium flag for contractor accounts
+        if (userType === 'contractor' && isPremium) {
+          userData.isPremium = true;
+          userData.subscriptionTier = 'premium';
+        }
+        
+        // Store user data in Firestore
+        await setDoc(doc(db, 'users', user.uid), userData);
+        console.log('New Google user profile created');
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      
+      // Handle specific Google OAuth errors
+      if (error.code === 'auth/popup-closed-by-user') {
+        setAuthError('Sign-in was cancelled. Please try again.');
+      } else if (error.code === 'auth/popup-blocked') {
+        setAuthError('Pop-up was blocked by your browser. Please allow pop-ups and try again.');
+      } else if (error.code === 'auth/account-exists-with-different-credential') {
+        setAuthError('An account already exists with this email using a different sign-in method.');
+      } else {
+        setAuthError(getAuthErrorMessage(error.code));
+      }
+      throw error;
+    }
+  };
+
   // Monitor auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -332,7 +401,8 @@ export function AuthProvider({ children }) {
     isPremiumContractor,
     completeOnboarding,
     updateUserProfile,
-    updateLastValidRoute
+    updateLastValidRoute,
+    signInWithGoogle
   };
 
   return (

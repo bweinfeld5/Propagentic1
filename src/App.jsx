@@ -13,6 +13,7 @@ import LocalStorageDebug from './components/shared/LocalStorageDebug';
 import UniversalLoadingSpinner from './components/shared/UniversalLoadingSpinner';
 import PreLaunchGuard from './components/guards/PreLaunchGuard';
 import { Toaster } from 'react-hot-toast';
+import PitchDeckDemo from './pages/demo/PitchDeckDemo';
 
 // Lazy load page components
 const LandingPage = lazy(() => import('./components/landing/LandingPage.jsx'));
@@ -217,6 +218,7 @@ function App() {
                                 <Route path="/showcase/ui-test" element={<TestUIComponents />} />
                                 <Route path="/showcase/simple-ui" element={<SimpleUIShowcase />} />
                                 <Route path="/landlord/dashboard/demo" element={<LandlordDashboardDemo />} />
+                                <Route path="/demo/pitchdeck" element={<PitchDeckDemo />} />
                                 {/* Fallback/Not Found - Redirect to login or a dedicated 404 page */}
                                 <Route path="*" element={<Navigate to="/login" />} />
                               </Routes>

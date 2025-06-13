@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PropAgentic - AI-Powered Property Management Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #111827;
+      color: white;
+      overflow: hidden;
+    }
+    
+    .demo-frame {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+    }
+    
+    .demo-content {
+      text-align: center;
+      padding: 2rem;
+    }
+    
+    .logo {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #f97316 0%, #fbbf24 100%);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 2rem;
+      font-size: 2rem;
+    }
+    
+    h1 {
+      font-size: 3rem;
+      margin: 0 0 1rem;
+      background: linear-gradient(135deg, #f97316 0%, #fbbf24 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    p {
+      font-size: 1.25rem;
+      color: #9ca3af;
+      margin: 0 0 3rem;
+    }
+    
+    .demo-button {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background: linear-gradient(135deg, #f97316 0%, #fbbf24 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .demo-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(249, 115, 22, 0.3);
+    }
+    
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      margin: 3rem 0;
+    }
+    
+    .stat {
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #f97316;
+    }
+    
+    .stat-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    
+    @media (max-width: 768px) {
+      h1 { font-size: 2rem; }
+      p { font-size: 1rem; }
+      .stats { flex-direction: column; gap: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-frame">
+    <div class="demo-content">
+      <div class="logo">🏠</div>
+      <h1>PropAgentic Demo</h1>
+      <p>Experience the future of property management</p>
+      
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value">85%</div>
+          <div class="stat-label">Time Saved</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">24/7</div>
+          <div class="stat-label">AI Support</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">40%</div>
+          <div class="stat-label">Cost Reduction</div>
+        </div>
+      </div>
+      
+      <a href="/demo/pitchdeck" class="demo-button" target="_blank">
+        Launch Interactive Demo
+      </a>
+      
+      <p style="margin-top: 2rem; font-size: 0.875rem; color: #6b7280;">
+        Click above to explore our full interactive demo
+      </p>
+    </div>
+  </div>
+  
+  <script>
+    // Optional: Add any animations or interactions
+    document.querySelector('.logo').addEventListener('mouseenter', function() {
+      this.style.transform = 'rotate(10deg) scale(1.1)';
+    });
+    
+    document.querySelector('.logo').addEventListener('mouseleave', function() {
+      this.style.transform = 'rotate(0) scale(1)';
+    });
+  </script>
+</body>
+</html> 

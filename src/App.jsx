@@ -23,6 +23,7 @@ const RegisterPage = lazy(() => import('./pages/RegisterPage.jsx'));
 const ForgotPassword = lazy(() => import('./components/auth/ForgotPassword.jsx'));
 const TenantDashboard = lazy(() => import('./pages/tenant/TenantDashboard.tsx'));
 const EnhancedTenantDashboard = lazy(() => import('./pages/tenant/EnhancedTenantDashboard.tsx'));
+const AcceptInvitePage = lazy(() => import('./pages/tenant/AcceptInvitePage.tsx'));
 const LandlordDashboard = lazy(() => import('./pages/landlord/LandlordDashboard.tsx'));
 const LandlordDashboardDemo = lazy(() => import('./pages/LandlordDashboardDemoPage.jsx'));
 const ContractorDashboard = lazy(() => import('./components/contractor/EnhancedContractorDashboard'));
@@ -202,6 +203,9 @@ function App() {
                                 <Route path="/dashboard" element={<PrivateRoute><RoleBasedRedirect /></PrivateRoute>} />
                                 <Route path="/tenant/dashboard" element={<PrivateRoute><EnhancedTenantDashboard /></PrivateRoute>} />
                                 <Route path="/tenant/dashboard/legacy" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />
+                                <Route path="/tenant/accept/:inviteId" element={<PrivateRoute><AcceptInvitePage /></PrivateRoute>} />
+                                <Route path="/tenant/accept" element={<PrivateRoute><AcceptInvitePage /></PrivateRoute>} />
+                                <Route path="/invite/:inviteId" element={<AcceptInvitePage />} />
                                 <Route path="/landlord/dashboard" element={<PrivateRoute><LandlordDashboard /></PrivateRoute>} />
                                 <Route path="/contractor/dashboard" element={<PrivateRoute><ContractorDashboard /></PrivateRoute>} />
                                 <Route path="/contractor/messages" element={<PrivateRoute><ContractorMessagesPage /></PrivateRoute>} />

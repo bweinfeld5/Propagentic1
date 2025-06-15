@@ -271,7 +271,7 @@ const GlassyHeader = () => {
                 <NavLink to="/propagentic/new">Home</NavLink>
                 <NavLink to="/pricing">Pricing</NavLink>
                 <NavLink to="/about">About</NavLink>
-                <NavLink to="/demo">Demo</NavLink>
+                <NavLink to="/demo/pitchdeck">Demo</NavLink>
                 <div className="ml-4 flex items-center space-x-3">
                   {/* Theme Toggle for public pages */}
                   <div className="bg-white/10 backdrop-blur-sm rounded-lg">
@@ -339,7 +339,7 @@ const GlassyHeader = () => {
                 <MobileNavLink to="/propagentic/new" onClick={() => setMobileMenuOpen(false)}>Home</MobileNavLink>
                 <MobileNavLink to="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</MobileNavLink>
                 <MobileNavLink to="/about" onClick={() => setMobileMenuOpen(false)}>About</MobileNavLink>
-                <MobileNavLink to="/demo" onClick={() => setMobileMenuOpen(false)}>Demo</MobileNavLink>
+                <MobileNavLink to="/demo/pitchdeck" onClick={() => setMobileMenuOpen(false)}>Demo</MobileNavLink>
                 <div className="pt-4 flex flex-col space-y-3">
                   {/* Theme Toggle for mobile */}
                   <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2">

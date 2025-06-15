@@ -189,7 +189,7 @@ function App() {
                               <Routes>
                                 <Route path="/pricing" element={<PricingPage />} />
                                 <Route path="/about" element={<AboutPage />} />
-                                <Route path="/demo" element={<DemoPage />} />
+                                <Route path="/demo" element={<Navigate to="/demo/pitchdeck" replace />} />
                                 <Route path="/demo-showcase" element={<DemoShowcase />} />
                                 <Route path="/property-dashboard-demo" element={<PublicPropertyDashboardDemo />} />
                                 <Route path="/svg-test" element={<SVGTest />} />

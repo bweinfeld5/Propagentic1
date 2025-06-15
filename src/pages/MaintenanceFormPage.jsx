@@ -1,5 +1,5 @@
 import React from 'react';
-import MaintenanceRequestForm from '../components/maintenance/MaintenanceRequestForm';
+import MaintenanceRequestForm from '../components/tenant/MaintenanceRequestForm';
 
 const MaintenanceFormPage = () => {
   return (

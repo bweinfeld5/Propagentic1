@@ -149,7 +149,7 @@ const EnhancedHeroSection = () => {
                   Get Started Free
                 </Button>
                 <Button 
-                  to="/demo" 
+                  to="/demo/pitchdeck" 
                   variant="outline-inverse"
                   size="lg"
                   className="px-8 py-4 font-medium"

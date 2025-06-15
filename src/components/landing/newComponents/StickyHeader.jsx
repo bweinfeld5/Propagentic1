@@ -48,7 +48,7 @@ const HeaderTabs = () => {
                 <NavLink to="/propagentic/new" isSticky={isSticky}>Home</NavLink>
                 <NavLink to="/pricing" isSticky={isSticky}>Pricing</NavLink>
                 <NavLink to="/about" isSticky={isSticky}>About</NavLink>
-                <NavLink to="/demo" isSticky={isSticky}>Demo</NavLink>
+                <NavLink to="/demo/pitchdeck" isSticky={isSticky}>Demo</NavLink>
               </nav>
               
               <div className="flex items-center space-x-4">

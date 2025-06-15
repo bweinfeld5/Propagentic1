@@ -142,7 +142,7 @@ const LandingPage = () => {
               <Link to="/signup" className="bg-white text-orange-600 px-8 py-4 rounded-xl font-semibold shadow-lg hover:bg-gray-50 transform hover:-translate-y-1 transition duration-300 text-center">
                 Get Started Free
               </Link>
-              <Link to="/demo" className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/10 transform hover:-translate-y-1 transition duration-300 text-center">
+              <Link to="/demo/pitchdeck" className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/10 transform hover:-translate-y-1 transition duration-300 text-center">
                 Schedule a Demo
               </Link>
             </div>

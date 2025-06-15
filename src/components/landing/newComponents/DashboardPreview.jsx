@@ -274,7 +274,7 @@ const DashboardPreview = ({ activeTab: initialActiveTab = 'landlord' }) => {
         </SafeMotion.div>
         
         <div className="mt-10 text-center">
-          <Button to="/demo" size="lg" variant="outline" href="/demo">
+                      <Button to="/demo/pitchdeck" size="lg" variant="outline" href="/demo/pitchdeck">
             Explore Full Interactive Demo
           </Button>
         </div>

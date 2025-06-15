@@ -1,0 +1,46 @@
+{
+  "agentCanUpdateSnapshot": true,
+  "agentCanCreateFiles": true,
+  "agentCanModifyFiles": true,
+  "agentCanDeleteFiles": false,
+  "agentCanRunCommands": true,
+  "agentCanAccessNetwork": true,
+  "agentCanCreatePullRequests": true,
+  "agentCanCommentOnPullRequests": true,
+  "agentCanMergeCode": false,
+  "agentWorkingDirectory": "/Users/benweinfeld/Propagentic1",
+  "agentConfigPath": ".cursor/agent-config.md",
+  "agentWorkflowsPath": ".cursor/agent-workflows.md",
+  "projectType": "react-typescript-firebase",
+  "buildCommand": "npm run build",
+  "startCommand": "npm run start:fix",
+  "testCommand": "npm test",
+  "lintCommand": "npm run lint",
+  "taskMasterEnabled": true,
+  "taskMasterProjectRoot": "/Users/benweinfeld/Propagentic1",
+  "allowedFileExtensions": [
+    ".js",
+    ".jsx",
+    ".ts",
+    ".tsx",
+    ".json",
+    ".md",
+    ".css",
+    ".scss",
+    ".html"
+  ],
+  "restrictedDirectories": [
+    "node_modules",
+    ".git",
+    "build",
+    "dist"
+  ],
+  "requiredApprovals": {
+    "packageJsonChanges": true,
+    "configFileChanges": true,
+    "securitySensitiveChanges": true
+  },
+  "autoCommit": false,
+  "maxFilesPerOperation": 10,
+  "maxLinesPerFile": 1000
+}

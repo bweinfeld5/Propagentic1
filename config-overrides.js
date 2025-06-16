@@ -14,20 +14,24 @@ module.exports = override(
       plugin => !plugin.constructor.name.includes('ReactRefresh')
     );
 
-    // Only add FAST_REFRESH definition if it doesn't already exist
-    const hasDefinePlugin = config.plugins.some(
-      plugin => plugin.constructor.name === 'DefinePlugin' && 
-                plugin.definitions && 
-                plugin.definitions['process.env.FAST_REFRESH']
-    );
+    // Remove any existing FAST_REFRESH definitions to prevent conflicts
+    config.plugins = config.plugins.map(plugin => {
+      if (plugin.constructor.name === 'DefinePlugin' && 
+          plugin.definitions && 
+          plugin.definitions['process.env.FAST_REFRESH']) {
+        const newDefinitions = { ...plugin.definitions };
+        delete newDefinitions['process.env.FAST_REFRESH'];
+        return new webpack.DefinePlugin(newDefinitions);
+      }
+      return plugin;
+    });
 
-    if (!hasDefinePlugin) {
-      config.plugins.push(
-        new webpack.DefinePlugin({
-          'process.env.FAST_REFRESH': JSON.stringify('false'),
-        })
-      );
-    }
+    // Add our own FAST_REFRESH definition
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        'process.env.FAST_REFRESH': JSON.stringify('false'),
+      })
+    );
 
     // Core module fallbacks and polyfills
     config.resolve.fallback = {

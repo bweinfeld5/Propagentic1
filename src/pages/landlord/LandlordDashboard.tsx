@@ -31,6 +31,7 @@ import BulkOperations from '../../components/bulk/BulkOperations';
 // Debug components for data persistence investigation
 import DataPersistenceDiagnostic from '../../components/debug/DataPersistenceDiagnostic';
 import TestRunner from '../../components/debug/TestRunner';
+import InvitationFlowTest from '../../components/debug/InvitationFlowTest';
 
 // Define interfaces for type safety
 interface Property {
@@ -1076,6 +1077,7 @@ const LandlordDashboard: React.FC = () => {
         <>
           <DataPersistenceDiagnostic />
           <TestRunner />
+          <InvitationFlowTest />
         </>
       )}
     </div>

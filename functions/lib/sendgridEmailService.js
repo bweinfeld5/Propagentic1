@@ -1,208 +1,142 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendGridPropertyInvite = exports.sendEmail = void 0;
-const functions = __importStar(require("firebase-functions"));
-const admin = __importStar(require("firebase-admin"));
-const mail_1 = __importDefault(require("@sendgrid/mail"));
-// Initialize Firebase Admin if not already done
-if (!admin.apps.length) {
-    admin.initializeApp();
-}
-// Initialize SendGrid
-const sendGridConfig = functions.config().sendgrid;
-const apiKey = sendGridConfig === null || sendGridConfig === void 0 ? void 0 : sendGridConfig.api_key;
-if (!apiKey) {
-    console.error('SendGrid API key not found in Firebase config');
+exports.sendPropertyInviteEmail = exports.sendEmail = void 0;
+const sgMail = require("@sendgrid/mail");
+const functions = require("firebase-functions");
+const logger = require("firebase-functions/logger");
+// Initialize SendGrid with API key from environment
+const SENDGRID_API_KEY = ((_a = functions.config().sendgrid) === null || _a === void 0 ? void 0 : _a.api_key) || process.env.SENDGRID_API_KEY;
+if (SENDGRID_API_KEY) {
+    sgMail.setApiKey(SENDGRID_API_KEY);
 }
 else {
-    mail_1.default.setApiKey(apiKey);
-    console.log('SendGrid initialized successfully');
+    logger.warn('SendGrid API key not found. Email sending will fail.');
 }
-// Core email sending function
-const sendEmail = async (to, subject, htmlContent, textContent) => {
+/**
+ * Send email using SendGrid
+ * @param emailData - Email configuration object
+ * @returns Promise<boolean> - Success status
+ */
+const sendEmail = async (emailData) => {
+    var _a;
+    if (!SENDGRID_API_KEY) {
+        logger.error('SendGrid API key not configured');
+        return false;
+    }
     try {
-        if (!apiKey) {
-            throw new Error('SendGrid API key not configured');
-        }
         const msg = {
-            to,
-            from: 'ben@propagenticai.com', // Updated to use verified sender
-            subject,
-            text: textContent || '',
-            html: htmlContent,
+            to: emailData.to,
+            from: emailData.from || 'noreply@propagentic.com', // Your verified sender
+            subject: emailData.subject,
+            text: emailData.text || '',
+            html: emailData.html,
         };
-        const result = await mail_1.default.send(msg);
-        console.log('Email sent successfully', { to, subject, messageId: result[0].headers['x-message-id'] });
-        return result;
+        logger.info(`Sending email via SendGrid to: ${emailData.to}`);
+        const [response] = await sgMail.send(msg);
+        logger.info(`Email sent successfully via SendGrid`, {
+            to: emailData.to,
+            statusCode: response.statusCode,
+            messageId: response.headers['x-message-id']
+        });
+        return true;
     }
     catch (error) {
-        console.error('Failed to send email:', error);
-        throw error;
+        logger.error('Failed to send email via SendGrid', {
+            error: error.message,
+            code: error.code,
+            response: (_a = error.response) === null || _a === void 0 ? void 0 : _a.body
+        });
+        return false;
     }
 };
 exports.sendEmail = sendEmail;
-// Function triggered when a new invite is created (using v1 syntax)
-exports.sendGridPropertyInvite = functions.firestore
-    .onDocumentCreated('invites/{inviteId}', async (event) => {
-    try {
-        const snap = event.data;
-        if (!snap) {
-            console.log('No data associated with the event');
-            return;
-        }
-        const inviteData = snap.data();
-        const { inviteId } = event.params;
-        if (!inviteData) {
-            console.error('No invite data found');
-            return;
-        }
-        console.log('Processing invite email', { inviteId, inviteData });
-        // Get property and landlord details
-        const propertyRef = admin.firestore().doc(`properties/${inviteData.propertyId}`);
-        const landlordRef = admin.firestore().doc(`users/${inviteData.landlordId}`);
-        const [propertyDoc, landlordDoc] = await Promise.all([
-            propertyRef.get(),
-            landlordRef.get()
-        ]);
-        const propertyData = propertyDoc.data();
-        const landlordData = landlordDoc.data();
-        if (!propertyData || !landlordData) {
-            console.error('Property or landlord data not found', {
-                propertyFound: !!propertyData,
-                landlordFound: !!landlordData
-            });
-            return;
-        }
-        // Create beautiful HTML email
-        const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Property Invitation - PropAgentic</title>
-        </head>
-        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc;">
-          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-            <!-- Header with PropAgentic Branding -->
-            <div style="background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%); padding: 40px 30px; text-align: center;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                PropAgentic
-              </h1>
-              <p style="color: #ffffff; margin: 8px 0 0 0; font-size: 16px; opacity: 0.9;">
-                Property Management Made Simple
-              </p>
-            </div>
-            
-            <!-- Main Content -->
-            <div style="padding: 40px 30px;">
-              <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px; font-weight: 600;">
-                You're Invited to Join a Property!
-              </h2>
-              
-              <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
-                <strong>${landlordData.firstName} ${landlordData.lastName}</strong> has invited you to join their property on PropAgentic.
-              </p>
-              
-              <!-- Property Details Card -->
-              <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 25px; margin: 25px 0;">
-                <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">
-                  Property Details
-                </h3>
-                <div style="color: #4b5563; font-size: 16px; line-height: 1.6;">
-                  <p style="margin: 8px 0;"><strong>Address:</strong> ${propertyData.address}</p>
-                  <p style="margin: 8px 0;"><strong>Landlord:</strong> ${landlordData.firstName} ${landlordData.lastName}</p>
-                  <p style="margin: 8px 0;"><strong>Email:</strong> ${landlordData.email}</p>
-                  ${inviteData.message ? `<p style="margin: 15px 0 8px 0;"><strong>Message:</strong></p><p style="margin: 0; font-style: italic;">"${inviteData.message}"</p>` : ''}
-                </div>
-              </div>
-              
-              <!-- Call to Action Button -->
-              <div style="text-align: center; margin: 35px 0;">
-                <a href="https://propagentic.com/invite/${inviteId}" 
-                   style="display: inline-block; background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%); color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3); transition: all 0.3s ease;">
-                  Accept Invitation
-                </a>
-              </div>
-              
-              <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 25px 0 0 0; text-align: center;">
-                This invitation will expire in 7 days. If you have any questions, please contact your landlord directly.
-              </p>
-            </div>
-            
-            <!-- Footer -->
-            <div style="background-color: #f9fafb; padding: 25px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-              <p style="color: #6b7280; font-size: 12px; margin: 0; line-height: 1.5;">
-                This email was sent by PropAgentic on behalf of ${landlordData.firstName} ${landlordData.lastName}.<br>
-                © 2024 PropAgentic. All rights reserved.
-              </p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `;
-        const textContent = `
-Property Invitation - PropAgentic
+/**
+ * Send property invitation email using SendGrid
+ * @param tenantEmail - Recipient email address
+ * @param inviteCode - Unique invitation code
+ * @param landlordName - Name of the landlord
+ * @param propertyName - Name of the property
+ * @param appDomain - Application domain for links
+ * @returns Promise<boolean> - Success status
+ */
+const sendPropertyInviteEmail = async (tenantEmail, inviteCode, landlordName, propertyName, appDomain = 'https://propagentic.com') => {
+    const inviteLink = `${appDomain}/invite?code=${inviteCode}`;
+    const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="color: #4F46E5; margin: 0; padding: 0;">PropAgentic</h1>
+        <p style="color: #64748b; font-size: 16px; margin-top: 5px;">Property Management, Simplified</p>
+      </div>
+      
+      <div style="background-color: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <h2 style="color: #333; font-size: 20px; margin-top: 0;">You've Been Invited!</h2>
+        
+        <p style="font-size: 16px; line-height: 1.5; color: #555;">
+          ${landlordName} has invited you to join 
+          <strong>${propertyName}</strong> on PropAgentic.
+        </p>
+        
+        <div style="background-color: #EEF2FF; border-left: 4px solid #4F46E5; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <p style="margin: 0; font-weight: bold; color: #333;">Your Invitation Code:</p>
+          <p style="font-size: 24px; letter-spacing: 2px; color: #4F46E5; margin: 10px 0; font-weight: bold; font-family: monospace;">${inviteCode}</p>
+          <p style="margin: 5px 0 0; font-size: 14px; color: #64748b;">This code is valid for 7 days</p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${inviteLink}" 
+             style="background-color: #4F46E5; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-weight: bold; display: inline-block;">
+             Accept Invitation
+          </a>
+        </div>
+        
+        <p style="font-size: 14px; color: #64748b; line-height: 1.5;">
+          If the button doesn't work, you can also manually enter your invitation code after signing up at 
+          <a href="${appDomain}" style="color: #4F46E5; text-decoration: none;">${appDomain}</a>
+        </p>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+          <h3 style="color: #333; font-size: 16px; margin-bottom: 10px;">What's Next?</h3>
+          <ul style="color: #555; font-size: 14px; line-height: 1.6; margin: 0; padding-left: 20px;">
+            <li>Click the button above or visit PropAgentic and enter your invite code</li>
+            <li>Create your tenant account (or sign in if you already have one)</li>
+            <li>Complete your profile to get started</li>
+            <li>Submit maintenance requests, view property info, and communicate with your landlord</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #64748b; font-size: 12px;">
+        <p>This is an automated message from PropAgentic. Please do not reply to this email.</p>
+        <p>If you have questions, please contact your landlord: ${landlordName}</p>
+        <p>&copy; ${new Date().getFullYear()} PropAgentic. All rights reserved.</p>
+      </div>
+    </div>
+  `;
+    const textContent = `
+You've been invited to join ${propertyName} on PropAgentic by ${landlordName}. 
 
-Hi there!
+Your invitation code is: ${inviteCode}
 
-${landlordData.firstName} ${landlordData.lastName} has invited you to join their property on PropAgentic.
+Visit ${inviteLink} to accept the invitation.
 
-Property Details:
-- Address: ${propertyData.address}
-- Landlord: ${landlordData.firstName} ${landlordData.lastName}
-- Email: ${landlordData.email}
+What's Next?
+1. Click the link above or visit PropAgentic and enter your invite code
+2. Create your tenant account (or sign in if you already have one)  
+3. Complete your profile to get started
+4. Submit maintenance requests, view property info, and communicate with your landlord
 
-${inviteData.message ? `Message: "${inviteData.message}"` : ''}
+This code is valid for 7 days.
 
-To accept this invitation, please visit: https://propagentic.com/invite/${inviteId}
+This is an automated message from PropAgentic. If you have questions, please contact your landlord: ${landlordName}
 
-This invitation will expire in 7 days.
-
-Best regards,
-The PropAgentic Team
-      `;
-        await (0, exports.sendEmail)(inviteData.email, `Property Invitation from ${landlordData.firstName} ${landlordData.lastName}`, htmlContent, textContent);
-        console.log('Invite email sent successfully', { inviteId, email: inviteData.email });
-    }
-    catch (error) {
-        console.error('Error sending invite email:', error);
-    }
-});
-//# sourceMappingURL=sendgridEmailService.js.map
+© ${new Date().getFullYear()} PropAgentic. All rights reserved.
+  `;
+    return await (0, exports.sendEmail)({
+        to: tenantEmail,
+        subject: `You're Invited to Join ${propertyName} on PropAgentic`,
+        html: htmlContent,
+        text: textContent
+    });
+};
+exports.sendPropertyInviteEmail = sendPropertyInviteEmail;

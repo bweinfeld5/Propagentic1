@@ -17,6 +17,7 @@ import {
   safeGetUserData,
   getAuthErrorMessage 
 } from '../utils/authHelpers';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 // Create Auth context
 const AuthContext = createContext();
@@ -81,6 +82,10 @@ export function AuthProvider({ children }) {
       
       // Store user data in Firestore
       await setDoc(doc(db, 'users', user.uid), userData);
+      
+      // TODO: Set custom claims for Firestore rules (requires working Cloud Function)
+      // For now, we'll rely on the user document in Firestore
+      console.log('User registered successfully. Custom claims will be added later.');
       
       return userCredential;
     } catch (error) {

@@ -9,7 +9,6 @@ const {onDocumentCreated} = require("firebase-functions/v2/firestore");
 const {onInit} = require("firebase-functions/v2/core");
 const admin = require("firebase-admin");
 const logger = require("firebase-functions/logger");
-const nodemailer = require("nodemailer");
 const twilio = require("twilio");
 
 // Initialize admin if not already initialized
@@ -22,21 +21,6 @@ const db = admin.firestore();
 const usersCollection = db.collection("users");
 const notificationsCollection = db.collection("notifications");
 const deliveryCollection = db.collection("notification_delivery");
-
-// Lazy-loaded email transport
-let _mailTransport;
-function getMailTransport() {
-  if (!_mailTransport) {
-    _mailTransport = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
-      }
-    });
-  }
-  return _mailTransport;
-}
 
 // Lazy-loaded SMS client
 let _twilioClient;
@@ -51,9 +35,6 @@ function getTwilioClient() {
 onInit(async () => {
   // Pre-warm connections
   try {
-    const mailTransport = getMailTransport();
-    logger.info("Email transport initialized");
-    
     const twilioClient = getTwilioClient();
     if (twilioClient) {
       logger.info("Twilio client initialized");
@@ -187,36 +168,43 @@ async function sendEmailNotification(notification, user, deliveryRef) {
       }
     });
     
-    // Prepare email content
-    const mailOptions = {
-      from: `Propagentic <${process.env.EMAIL_USER}>`,
+    // Use Firebase Extension to send email
+    const emailData = {
       to: user.email,
-      subject: notification.title,
-      text: notification.message,
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>${notification.title}</h2>
-          <p>${notification.message}</p>
-          ${notification.data && notification.data.ticketId ? 
-            `<p><a href="${process.env.APP_URL}/tickets/${notification.data.ticketId}" 
-              style="background-color: #4CAF50; color: white; padding: 10px 15px; 
-              text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 10px;">
-              View Details
-            </a></p>` : ''
-          }
-          <hr>
-          <p style="color: #777; font-size: 12px;">
-            This is an automated message from Propagentic Property Management.
-            You can manage your notification preferences in your account settings.
-          </p>
-        </div>
-      `
+      message: {
+        subject: notification.title,
+        text: notification.message,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>${notification.title}</h2>
+            <p>${notification.message}</p>
+            ${notification.data && notification.data.ticketId ? 
+              `<p><a href="${process.env.APP_URL}/tickets/${notification.data.ticketId}" 
+                style="background-color: #4CAF50; color: white; padding: 10px 15px; 
+                text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 10px;">
+                View Details
+              </a></p>` : ''
+            }
+            <hr>
+            <p style="color: #777; font-size: 12px;">
+              This is an automated message from Propagentic Property Management.
+              You can manage your notification preferences in your account settings.
+            </p>
+          </div>
+        `
+      },
+      // Add metadata for tracking
+      metadata: {
+        notificationId: notification.id,
+        userId: user.uid || user.id,
+        type: 'notification_delivery'
+      }
     };
     
-    // Send the email using lazy-loaded transport
-    await getMailTransport().sendMail(mailOptions);
+    // Add email to the mail collection for Firebase Extension to process
+    await db.collection('mail').add(emailData);
     
-    // Update delivery status to successful
+    // Update delivery status to successful (queued)
     await deliveryRef.update({
       "channels.email": { 
         status: "delivered", 
@@ -224,7 +212,7 @@ async function sendEmailNotification(notification, user, deliveryRef) {
       }
     });
     
-    logger.info(`Email notification sent to ${user.email} for notification ${notification.id}`);
+    logger.info(`Email notification queued for ${user.email} for notification ${notification.id}`);
     return true;
   } catch (error) {
     logger.error(`Error sending email notification:`, error);

@@ -48,7 +48,7 @@ const EMAIL_SEQUENCES = {
     {
       delay: 14 * 24 * 60 * 60 * 1000, // 2 weeks
       templateId: 'landlord_feedback_request',
-      subject: 'How's Your PropAgentic Experience So Far?',
+      subject: 'How\'s Your PropAgentic Experience So Far?',
       type: 'feedback'
     }
   ],
@@ -112,163 +112,56 @@ const EMAIL_SEQUENCES = {
 const EMAIL_TEMPLATES = {
   // Landlord Templates
   landlord_welcome: {
-    html: `
-      <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 32px;">Welcome to PropAgentic!</h1>
-          <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 18px;">Your property management just got smarter</p>
-        </div>
-        <div style="padding: 40px 20px;">
-          <h2>Hi {{firstName}},</h2>
-          <p>Welcome to PropAgentic! We're excited to help you streamline your property management and maximize your rental income.</p>
-          
-          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="margin-top: 0;">What's Next?</h3>
-            <ul style="margin: 0; padding-left: 20px;">
-              <li>Add your properties to get started</li>
-              <li>Invite your tenants to the platform</li>
-              <li>Connect with vetted contractors in your area</li>
-              <li>Set up automated maintenance workflows</li>
-            </ul>
-          </div>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="{{dashboardUrl}}" style="background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block;">Go to Dashboard</a>
-          </div>
-          
-          <p>If you have any questions, just reply to this email or contact our support team.</p>
-          <p>Best regards,<br>The PropAgentic Team</p>
-        </div>
-      </div>
-    `,
-    text: `
-      Welcome to PropAgentic!
-      
-      Hi {{firstName}},
-      
-      Welcome to PropAgentic! We're excited to help you streamline your property management and maximize your rental income.
-      
-      What's Next?
-      - Add your properties to get started
-      - Invite your tenants to the platform
-      - Connect with vetted contractors in your area
-      - Set up automated maintenance workflows
-      
-      Go to your dashboard: {{dashboardUrl}}
-      
-      If you have any questions, just reply to this email or contact our support team.
-      
-      Best regards,
-      The PropAgentic Team
-    `
+    html: '<div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;"><div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center;"><h1 style="color: white; margin: 0; font-size: 32px;">Welcome to PropAgentic!</h1><p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 18px;">Your property management just got smarter</p></div><div style="padding: 40px 20px;"><h2>Hi {{firstName}},</h2><p>Welcome to PropAgentic! We\'re excited to help you streamline your property management and maximize your rental income.</p><div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;"><h3 style="margin-top: 0;">What\'s Next?</h3><ul style="margin: 0; padding-left: 20px;"><li>Add your properties to get started</li><li>Invite your tenants to the platform</li><li>Connect with vetted contractors in your area</li><li>Set up automated maintenance workflows</li></ul></div><div style="text-align: center; margin: 30px 0;"><a href="{{dashboardUrl}}" style="background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block;">Go to Dashboard</a></div><p>If you have any questions, just reply to this email or contact our support team.</p><p>Best regards,<br>The PropAgentic Team</p></div></div>',
+    text: 'Welcome to PropAgentic!\n\nHi {{firstName}},\n\nWelcome to PropAgentic! We\'re excited to help you streamline your property management and maximize your rental income.\n\nWhat\'s Next?\n- Add your properties to get started\n- Invite your tenants to the platform\n- Connect with vetted contractors in your area\n- Set up automated maintenance workflows\n\nGo to your dashboard: {{dashboardUrl}}\n\nIf you have any questions, just reply to this email or contact our support team.\n\nBest regards,\nThe PropAgentic Team'
   },
 
   // Contractor Templates
   contractor_welcome: {
-    html: `
-      <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
-        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 40px 20px; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 32px;">Welcome to PropAgentic!</h1>
-          <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 18px;">Start earning with quality maintenance jobs</p>
-        </div>
-        <div style="padding: 40px 20px;">
-          <h2>Hi {{firstName}},</h2>
-          <p>Welcome to PropAgentic! You're now part of our network of professional contractors serving property managers and landlords.</p>
-          
-          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="margin-top: 0;">Getting Started:</h3>
-            <ul style="margin: 0; padding-left: 20px;">
-              <li>Complete your contractor profile</li>
-              <li>Set your service areas and specialties</li>
-              <li>Upload certifications and insurance</li>
-              <li>Start receiving job requests</li>
-            </ul>
-          </div>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="{{dashboardUrl}}" style="background: #f5576c; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block;">Complete Profile</a>
-          </div>
-          
-          <p>Ready to start earning? Complete your profile to receive your first job opportunities!</p>
-          <p>Best regards,<br>The PropAgentic Team</p>
-        </div>
-      </div>
-    `,
-    text: `
-      Welcome to PropAgentic!
-      
-      Hi {{firstName}},
-      
-      Welcome to PropAgentic! You're now part of our network of professional contractors serving property managers and landlords.
-      
-      Getting Started:
-      - Complete your contractor profile
-      - Set your service areas and specialties
-      - Upload certifications and insurance
-      - Start receiving job requests
-      
-      Complete your profile: {{dashboardUrl}}
-      
-      Ready to start earning? Complete your profile to receive your first job opportunities!
-      
-      Best regards,
-      The PropAgentic Team
-    `
+    html: '<div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;"><div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 40px 20px; text-align: center;"><h1 style="color: white; margin: 0; font-size: 32px;">Welcome to PropAgentic!</h1><p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 18px;">Start earning with quality maintenance jobs</p></div><div style="padding: 40px 20px;"><h2>Hi {{firstName}},</h2><p>Welcome to PropAgentic! You\'re now part of our network of professional contractors serving property managers and landlords.</p><div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;"><h3 style="margin-top: 0;">Getting Started:</h3><ul style="margin: 0; padding-left: 20px;"><li>Complete your contractor profile</li><li>Set your service areas and specialties</li><li>Upload certifications and insurance</li><li>Start receiving job requests</li></ul></div><div style="text-align: center; margin: 30px 0;"><a href="{{dashboardUrl}}" style="background: #f5576c; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block;">Complete Profile</a></div><p>Ready to start earning? Complete your profile to receive your first job opportunities!</p><p>Best regards,<br>The PropAgentic Team</p></div></div>',
+    text: 'Welcome to PropAgentic!\n\nHi {{firstName}},\n\nWelcome to PropAgentic! You\'re now part of our network of professional contractors serving property managers and landlords.\n\nGetting Started:\n- Complete your contractor profile\n- Set your service areas and specialties\n- Upload certifications and insurance\n- Start receiving job requests\n\nComplete your profile: {{dashboardUrl}}\n\nReady to start earning? Complete your profile to receive your first job opportunities!\n\nBest regards,\nThe PropAgentic Team'
   },
 
   // Tenant Templates
   tenant_welcome: {
-    html: `
-      <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
-        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 40px 20px; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 32px;">Welcome to PropAgentic!</h1>
-          <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 18px;">Maintenance requests made simple</p>
-        </div>
-        <div style="padding: 40px 20px;">
-          <h2>Hi {{firstName}},</h2>
-          <p>Welcome to PropAgentic! Your landlord has set up this platform to make maintenance requests and communication easier for everyone.</p>
-          
-          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="margin-top: 0;">How It Works:</h3>
-            <ul style="margin: 0; padding-left: 20px;">
-              <li>Submit maintenance requests instantly</li>
-              <li>Upload photos to help contractors understand the issue</li>
-              <li>Track the status of your requests in real-time</li>
-              <li>Rate and review completed work</li>
-            </ul>
-          </div>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="{{dashboardUrl}}" style="background: #4facfe; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block;">Submit Request</a>
-          </div>
-          
-          <p>Have a maintenance issue? Don't wait - submit your first request now!</p>
-          <p>Best regards,<br>The PropAgentic Team</p>
-        </div>
-      </div>
-    `,
-    text: `
-      Welcome to PropAgentic!
-      
-      Hi {{firstName}},
-      
-      Welcome to PropAgentic! Your landlord has set up this platform to make maintenance requests and communication easier for everyone.
-      
-      How It Works:
-      - Submit maintenance requests instantly
-      - Upload photos to help contractors understand the issue
-      - Track the status of your requests in real-time
-      - Rate and review completed work
-      
-      Submit your first request: {{dashboardUrl}}
-      
-      Have a maintenance issue? Don't wait - submit your first request now!
-      
-      Best regards,
-      The PropAgentic Team
-    `
+    html: '<div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;"><div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 40px 20px; text-align: center;"><h1 style="color: white; margin: 0; font-size: 32px;">Welcome to PropAgentic!</h1><p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 18px;">Maintenance requests made simple</p></div><div style="padding: 40px 20px;"><h2>Hi {{firstName}},</h2><p>Welcome to PropAgentic! Your landlord has set up this platform to make maintenance requests and communication easier for everyone.</p><div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;"><h3 style="margin-top: 0;">How It Works:</h3><ul style="margin: 0; padding-left: 20px;"><li>Submit maintenance requests instantly</li><li>Upload photos to help contractors understand the issue</li><li>Track the status of your requests in real-time</li><li>Rate and review completed work</li></ul></div><div style="text-align: center; margin: 30px 0;"><a href="{{dashboardUrl}}" style="background: #4facfe; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block;">Submit Request</a></div><p>Have a maintenance issue? Don\'t wait - submit your first request now!</p><p>Best regards,<br>The PropAgentic Team</p></div></div>',
+    text: 'Welcome to PropAgentic!\n\nHi {{firstName}},\n\nWelcome to PropAgentic! Your landlord has set up this platform to make maintenance requests and communication easier for everyone.\n\nHow It Works:\n- Submit maintenance requests instantly\n- Upload photos to help contractors understand the issue\n- Track the status of your requests in real-time\n- Rate and review completed work\n\nSubmit your first request: {{dashboardUrl}}\n\nHave a maintenance issue? Don\'t wait - submit your first request now!\n\nBest regards,\nThe PropAgentic Team'
   }
 };
+
+/**
+ * Helper function to send email
+ */
+async function sendEmail(emailData) {
+  const template = EMAIL_TEMPLATES[emailData.templateId];
+  
+  if (!template) {
+    throw new Error('Template not found: ' + emailData.templateId);
+  }
+  
+  // Replace template variables
+  const variables = {
+    firstName: emailData.firstName,
+    dashboardUrl: 'https://app.propagentic.com/' + emailData.userRole + '/dashboard'
+  };
+  
+  let htmlContent = template.html;
+  let textContent = template.text;
+  
+  Object.keys(variables).forEach(key => {
+    const placeholder = '{{' + key + '}}';
+    htmlContent = htmlContent.replace(new RegExp(placeholder, 'g'), variables[key]);
+    textContent = textContent.replace(new RegExp(placeholder, 'g'), variables[key]);
+  });
+  
+  // Here you would integrate with your email service (SendGrid, Mailgun, etc.)
+  // For now, just log the email (replace with actual email service)
+  console.log('Sending email to ' + emailData.userEmail + ':');
+  console.log('Subject: ' + emailData.subject);
+  console.log('Template: ' + emailData.templateId);
+  
+  return true;
+}
 
 /**
  * Cloud Function: Trigger welcome email sequence when user completes registration
@@ -285,7 +178,7 @@ exports.triggerWelcomeSequence = functions.firestore
       const sequence = EMAIL_SEQUENCES[userRole];
       
       if (!sequence) {
-        console.log(`No email sequence found for role: ${userRole}`);
+        console.log('No email sequence found for role: ' + userRole);
         return null;
       }
 
@@ -317,7 +210,7 @@ exports.triggerWelcomeSequence = functions.firestore
       
       await batch.commit();
       
-      console.log(`Scheduled ${sequence.length} emails for user ${userId} (${userRole})`);
+      console.log('Scheduled ' + sequence.length + ' emails for user ' + userId + ' (' + userRole + ')');
       
       // Track the event
       await db.collection('analytics_events').add({
@@ -370,7 +263,7 @@ exports.processScheduledEmails = functions.pubsub
             sentAt: now
           });
           
-          console.log(`Email sent: ${emailData.templateId} to ${emailData.userEmail}`);
+          console.log('Email sent: ' + emailData.templateId + ' to ' + emailData.userEmail);
           
           // Track the event
           await db.collection('analytics_events').add({
@@ -382,7 +275,7 @@ exports.processScheduledEmails = functions.pubsub
           });
           
         } catch (error) {
-          console.error(`Error sending email ${doc.id}:`, error);
+          console.error('Error sending email ' + doc.id + ':', error);
           
           // Update status to failed
           await doc.ref.update({
@@ -394,7 +287,7 @@ exports.processScheduledEmails = functions.pubsub
       });
       
       await Promise.all(emailPromises);
-      console.log(`Processed ${query.docs.length} emails`);
+      console.log('Processed ' + query.docs.length + ' emails');
       
       return null;
     } catch (error) {
@@ -402,59 +295,6 @@ exports.processScheduledEmails = functions.pubsub
       throw error;
     }
   });
-
-/**
- * Helper function to send email
- */
-async function sendEmail(emailData) {
-  const template = EMAIL_TEMPLATES[emailData.templateId];
-  
-  if (!template) {
-    throw new Error(`Template not found: ${emailData.templateId}`);
-  }
-  
-  // Replace template variables
-  const variables = {
-    firstName: emailData.firstName,
-    dashboardUrl: `https://app.propagentic.com/${emailData.userRole}/dashboard`
-  };
-  
-  let htmlContent = template.html;
-  let textContent = template.text;
-  
-  Object.keys(variables).forEach(key => {
-    const placeholder = `{{${key}}}`;
-    htmlContent = htmlContent.replace(new RegExp(placeholder, 'g'), variables[key]);
-    textContent = textContent.replace(new RegExp(placeholder, 'g'), variables[key]);
-  });
-  
-  // Here you would integrate with your email service (SendGrid, Mailgun, etc.)
-  // For example, using SendGrid:
-  /*
-  const sgMail = require('@sendgrid/mail');
-  sgMail.setApiKey(EMAIL_SERVICE_CONFIG.apiKey);
-  
-  const msg = {
-    to: emailData.userEmail,
-    from: {
-      email: EMAIL_SERVICE_CONFIG.fromEmail,
-      name: EMAIL_SERVICE_CONFIG.fromName
-    },
-    subject: emailData.subject,
-    text: textContent,
-    html: htmlContent
-  };
-  
-  await sgMail.send(msg);
-  */
-  
-  // For now, just log the email (replace with actual email service)
-  console.log(`Sending email to ${emailData.userEmail}:`);
-  console.log(`Subject: ${emailData.subject}`);
-  console.log(`Template: ${emailData.templateId}`);
-  
-  return true;
-}
 
 /**
  * Cloud Function: Manual email sequence management

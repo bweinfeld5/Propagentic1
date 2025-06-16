@@ -10,7 +10,8 @@ import {
   HomeIcon,
   UsersIcon,
   DocumentTextIcon,
-  PlusIcon
+  PlusIcon,
+  EnvelopeIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext';
 import { useDemoMode } from '../../context/DemoModeContext';
@@ -62,8 +63,16 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
     parkingSpaces: 0,
     furnished: false,
     notes: '',
-    availability: 'available'
+    availability: 'available',
+    
+    // Step 6: Tenant Invitations
+    tenantEmails: [''],
+    skipInvites: false
   });
+
+  // Additional state for invite management
+  const [inviteStatus, setInviteStatus] = useState({});
+  const [createdProperty, setCreatedProperty] = useState(null);
 
   // Form steps configuration
   const steps = [
@@ -96,6 +105,12 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
       title: 'Final Details',
       description: 'Additional information',
       icon: DocumentTextIcon
+    },
+    {
+      id: 6,
+      title: 'Invite Tenants',
+      description: 'Send invitations (optional)',
+      icon: UsersIcon
     }
   ];
 
@@ -155,6 +170,9 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
       case 5:
         // Optional step, no required fields
         break;
+      case 6:
+        // Optional step, no required fields
+        break;
     }
     
     setErrors(newErrors);
@@ -181,81 +199,198 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
   const handleSubmit = async () => {
     if (!validateStep(currentStep)) return;
     
+    // If we're on the last step and there are invites to send
+    if (currentStep === 6) {
+      return handleSendInvites();
+    }
+    
+    // If we're on step 5 and user wants to skip invites
+    if (currentStep === 5 && formData.skipInvites) {
+      return await createPropertyAndFinish();
+    }
+    
+    // If we're on step 5 and moving to invites
+    if (currentStep === 5 && !formData.skipInvites) {
+      await createPropertyAndContinue();
+      setCurrentStep(6);
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      // Prepare property data for Firebase
-      const propertyData = {
-        // Basic information
-        name: formData.name,
-        propertyType: formData.propertyType,
-        description: formData.description,
-        
-        // Address as both object and string for compatibility
-        address: {
-          street: formData.street,
-          city: formData.city,
-          state: formData.state,
-          zip: formData.zipCode,
-          country: formData.country
-        },
-        street: formData.street,
-        city: formData.city,
-        state: formData.state,
-        zipCode: formData.zipCode,
-        
-        // Property details
-        units: parseInt(formData.units),
-        bedrooms: parseInt(formData.bedrooms),
-        bathrooms: parseInt(formData.bathrooms),
-        squareFootage: formData.squareFootage ? parseInt(formData.squareFootage) : null,
-        yearBuilt: formData.yearBuilt ? parseInt(formData.yearBuilt) : null,
-        amenities: formData.amenities,
-        
-        // Financial information
-        monthlyRent: parseFloat(formData.monthlyRent),
-        monthlyRevenue: parseFloat(formData.monthlyRent), // For dashboard calculations
-        deposit: formData.deposit ? parseFloat(formData.deposit) : 0,
-        utilities: formData.utilities,
-        leaseTerm: parseInt(formData.leaseTerm),
-        petPolicy: formData.petPolicy,
-        petDeposit: formData.petDeposit ? parseFloat(formData.petDeposit) : 0,
-        
-        // Additional details
-        parkingSpaces: parseInt(formData.parkingSpaces),
-        furnished: formData.furnished,
-        notes: formData.notes,
-        availability: formData.availability,
-        
-        // System fields
-        status: 'active',
-        occupiedUnits: 0, // Initially no tenants
-        occupancy: 0,
-        isOccupied: false,
-        landlordId: currentUser.uid,
-        landlordEmail: userProfile?.email || currentUser.email,
-        source: 'manual_entry'
-      };
+      await createPropertyAndFinish();
+    } catch (error) {
+      console.error('Error creating property:', error);
+      setErrors({ submit: error.message || 'Failed to create property. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-      // Create property in Firebase
+  const createPropertyAndContinue = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      const propertyData = buildPropertyData();
       const newProperty = await dataService.createProperty(propertyData);
-      
+      setCreatedProperty(newProperty);
       console.log('Property created successfully:', newProperty);
+    } catch (error) {
+      console.error('Error creating property:', error);
+      setErrors({ submit: error.message || 'Failed to create property. Please try again.' });
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const createPropertyAndFinish = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      let property = createdProperty;
+      if (!property) {
+        const propertyData = buildPropertyData();
+        property = await dataService.createProperty(propertyData);
+      }
       
       // Call success callback
       if (onPropertyAdded) {
-        onPropertyAdded(newProperty);
+        onPropertyAdded(property);
       }
       
       // Close modal
-      onClose(); 
+      onClose();
       
-      // Show success message (you can implement toast notifications)
+      // Show success message
       alert('Property added successfully!');
       
     } catch (error) {
       console.error('Error creating property:', error);
       setErrors({ submit: error.message || 'Failed to create property. Please try again.' });
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const buildPropertyData = () => {
+    // Prepare property data for Firebase
+    return {
+      // Basic information
+      name: formData.name,
+      propertyType: formData.propertyType,
+      description: formData.description,
+      
+      // Address as both object and string for compatibility
+      address: {
+        street: formData.street,
+        city: formData.city,
+        state: formData.state,
+        zip: formData.zipCode,
+        country: formData.country
+      },
+      street: formData.street,
+      city: formData.city,
+      state: formData.state,
+      zipCode: formData.zipCode,
+      
+      // Property details
+      units: parseInt(formData.units),
+      bedrooms: parseInt(formData.bedrooms),
+      bathrooms: parseInt(formData.bathrooms),
+      squareFootage: formData.squareFootage ? parseInt(formData.squareFootage) : null,
+      yearBuilt: formData.yearBuilt ? parseInt(formData.yearBuilt) : null,
+      amenities: formData.amenities,
+      
+      // Financial information
+      monthlyRent: parseFloat(formData.monthlyRent),
+      monthlyRevenue: parseFloat(formData.monthlyRent), // For dashboard calculations
+      deposit: formData.deposit ? parseFloat(formData.deposit) : 0,
+      utilities: formData.utilities,
+      leaseTerm: parseInt(formData.leaseTerm),
+      petPolicy: formData.petPolicy,
+      petDeposit: formData.petDeposit ? parseFloat(formData.petDeposit) : 0,
+      
+      // Additional details
+      parkingSpaces: parseInt(formData.parkingSpaces),
+      furnished: formData.furnished,
+      notes: formData.notes,
+      availability: formData.availability,
+      
+      // System fields
+      status: 'active',
+      occupiedUnits: 0, // Initially no tenants
+      occupancy: 0,
+      isOccupied: false,
+      landlordId: currentUser.uid,
+      landlordEmail: userProfile?.email || currentUser.email,
+      source: 'manual_entry'
+    };
+  };
+
+  const handleSendInvites = async () => {
+    if (!createdProperty) {
+      setErrors({ submit: 'Property must be created before sending invites.' });
+      return;
+    }
+
+    const validEmails = formData.tenantEmails.filter(email => 
+      email.trim() && /\S+@\S+\.\S+/.test(email.trim())
+    );
+
+    if (validEmails.length === 0) {
+      await createPropertyAndFinish();
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const functions = getFunctions();
+      const sendPropertyInvite = httpsCallable(functions, 'sendPropertyInvite');
+
+      const invitePromises = validEmails.map(async (email) => {
+        try {
+          setInviteStatus(prev => ({ ...prev, [email]: 'sending' }));
+          
+          const result = await sendPropertyInvite({
+            propertyId: createdProperty.id,
+            tenantEmail: email.trim()
+          });
+
+          setInviteStatus(prev => ({ ...prev, [email]: 'sent' }));
+          return { email, success: true, result };
+        } catch (error) {
+          console.error(`Failed to send invite to ${email}:`, error);
+          setInviteStatus(prev => ({ ...prev, [email]: 'failed' }));
+          return { email, success: false, error: error.message };
+        }
+      });
+
+      const results = await Promise.all(invitePromises);
+      const successful = results.filter(r => r.success).length;
+      const failed = results.filter(r => !r.success).length;
+
+      // Show results
+      if (successful > 0 && failed === 0) {
+        alert(`🎉 All ${successful} invitation(s) sent successfully!`);
+      } else if (successful > 0 && failed > 0) {
+        alert(`⚠️ ${successful} invitation(s) sent, ${failed} failed. Check the status above.`);
+      } else if (failed > 0) {
+        alert(`❌ All ${failed} invitation(s) failed to send.`);
+      }
+
+      // Wait a moment to show the status, then finish
+      setTimeout(() => {
+        createPropertyAndFinish();
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error sending invites:', error);
+      setErrors({ submit: 'Failed to send some invitations. You can send them later from the property dashboard.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -266,6 +401,47 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
     if (isOpen) {
       setCurrentStep(1);
       setErrors({});
+      setInviteStatus({});
+      setCreatedProperty(null);
+      setFormData({
+        // Step 1: Basic Information
+        name: '',
+        propertyType: 'apartment',
+        description: '',
+        
+        // Step 2: Location Details
+        street: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        country: 'United States',
+        
+        // Step 3: Property Details
+        units: 1,
+        bedrooms: 1,
+        bathrooms: 1,
+        squareFootage: '',
+        yearBuilt: '',
+        amenities: [],
+        
+        // Step 4: Financial Information
+        monthlyRent: '',
+        deposit: '',
+        utilities: 'tenant',
+        leaseTerm: 12,
+        petPolicy: 'no-pets',
+        petDeposit: '',
+        
+        // Step 5: Additional Details
+        parkingSpaces: 0,
+        furnished: false,
+        notes: '',
+        availability: 'available',
+        
+        // Step 6: Tenant Invitations
+        tenantEmails: [''],
+        skipInvites: false
+      });
     }
   }, [isOpen]);
 
@@ -319,7 +495,7 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
             >
               <XMarkIcon className="w-6 h-6" />
             </button>
-                    </div>
+          </div>
 
           {/* Step Indicator */}
           <div className="flex items-center justify-center px-6 py-4 border-b border-gray-200/50">
@@ -371,7 +547,7 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
                 onClick={handleNext}
                 className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
               >
-                Next
+                {currentStep === 5 ? 'Continue' : 'Next'}
               </button>
             ) : (
               <button
@@ -382,14 +558,34 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
                 {isSubmitting ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Creating...
+                    {formData.skipInvites || formData.tenantEmails.filter(e => e.trim()).length === 0 
+                      ? 'Finishing...' 
+                      : 'Sending Invites...'
+                    }
                   </>
                 ) : (
                   <>
-                    <PlusIcon className="w-4 h-4" />
-                    Create Property
+                    <CheckCircleIcon className="w-4 h-4" />
+                    {formData.skipInvites || formData.tenantEmails.filter(e => e.trim()).length === 0 
+                      ? 'Finish' 
+                      : 'Send Invites & Finish'
+                    }
                   </>
                 )}
+              </button>
+            )}
+            
+            {/* Skip to end button for step 5 */}
+            {currentStep === 5 && (
+              <button
+                onClick={() => {
+                  updateFormData('skipInvites', true);
+                  handleSubmit();
+                }}
+                disabled={isSubmitting}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ml-2"
+              >
+                Skip & Finish
               </button>
             )}
           </div>
@@ -417,6 +613,8 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
         return renderFinancialInformation();
       case 5:
         return renderAdditionalDetails();
+      case 6:
+        return renderInviteTenants();
       default:
         return null;
     }
@@ -425,12 +623,12 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
   function renderBasicInformation() {
     return (
       <div className="space-y-6">
-                  <div>
+        <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Property Name *
           </label>
-                    <input
-                      type="text"
+          <input
+            type="text"
             value={formData.name}
             onChange={(e) => updateFormData('name', e.target.value)}
             placeholder="e.g., Sunset Apartments Unit 1A"
@@ -471,8 +669,8 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
             placeholder="Brief description of the property..."
             rows={3}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                    />
-                  </div>
+          />
+        </div>
       </div>
     );
   }
@@ -547,12 +745,12 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
             {errors.zipCode && <p className="mt-1 text-sm text-red-600">{errors.zipCode}</p>}
           </div>
 
-                  <div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Country
             </label>
-                    <input
-                      type="text"
+            <input
+              type="text"
               value={formData.country}
               onChange={(e) => updateFormData('country', e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
@@ -717,11 +915,11 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
                 className={`w-full pl-8 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors ${
                   errors.deposit ? 'border-red-300' : 'border-gray-300'
                 }`}
-                    />
-                  </div>
+              />
+            </div>
             {errors.deposit && <p className="mt-1 text-sm text-red-600">{errors.deposit}</p>}
           </div>
-                    </div>
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -737,7 +935,7 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
               <option value="landlord">Landlord Pays</option>
               <option value="split">Split</option>
             </select>
-                    </div>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -751,15 +949,15 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
               onChange={(e) => updateFormData('leaseTerm', e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
             />
-                    </div>
-                  </div>
+          </div>
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Pet Policy
             </label>
-                    <select 
+            <select 
               value={formData.petPolicy}
               onChange={(e) => updateFormData('petPolicy', e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
@@ -769,8 +967,8 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
               <option value="dogs-only">Dogs Only</option>
               <option value="cats-and-dogs">Cats and Dogs</option>
               <option value="all-pets">All Pets Welcome</option>
-                       </select>
-                     </div>
+            </select>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -812,7 +1010,7 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
             />
           </div>
 
-                     <div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Availability
             </label>
@@ -827,7 +1025,7 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
               <option value="coming-soon">Coming Soon</option>
             </select>
           </div>
-                     </div>
+        </div>
 
         <div>
           <label className="flex items-center space-x-2">
@@ -839,7 +1037,7 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
             />
             <span className="text-sm font-medium text-gray-700">Furnished Property</span>
           </label>
-                </div>
+        </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -852,20 +1050,215 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
             rows={4}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
           />
-                </div>
+        </div>
 
         {/* Summary */}
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-          <h4 className="font-medium text-orange-900 mb-2">Property Summary</h4>
-          <div className="text-sm text-orange-800 space-y-1">
-            <p><strong>Property:</strong> {formData.name || 'Unnamed Property'}</p>
-            <p><strong>Type:</strong> {propertyTypes.find(t => t.value === formData.propertyType)?.label}</p>
-            <p><strong>Location:</strong> {formData.city && formData.state ? `${formData.city}, ${formData.state}` : 'Location not set'}</p>
-            <p><strong>Units:</strong> {formData.units} • <strong>Rent:</strong> ${formData.monthlyRent || 0}/month</p>
+          <h4 className="text-sm font-medium text-orange-800 mb-2">Property Summary</h4>
+          <div className="grid grid-cols-2 gap-2 text-sm text-orange-700">
+            <div><span className="font-medium">Property:</span> {formData.name}</div>
+            <div><span className="font-medium">Type:</span> {formData.propertyType}</div>
+            <div><span className="font-medium">Rent:</span> ${formData.monthlyRent}/month</div>
+            <div><span className="font-medium">Units:</span> {formData.units}</div>
           </div>
         </div>
+
+        {/* Next Steps Preview */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-blue-800 mb-2">What's Next?</h4>
+          <div className="space-y-2 text-sm text-blue-700">
+            <label className="flex items-center space-x-2">
+              <input
+                type="radio"
+                name="nextStep"
+                checked={!formData.skipInvites}
+                onChange={() => updateFormData('skipInvites', false)}
+                className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+              />
+              <span>Invite tenants immediately (recommended)</span>
+            </label>
+            <label className="flex items-center space-x-2">
+              <input
+                type="radio"
+                name="nextStep"
+                checked={formData.skipInvites}
+                onChange={() => updateFormData('skipInvites', true)}
+                className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+              />
+              <span>Create property only (invite tenants later)</span>
+            </label>
+          </div>
+          <p className="text-xs text-blue-600 mt-2">
+            {!formData.skipInvites 
+              ? "You'll be able to add tenant email addresses in the next step."
+              : "You can always invite tenants later from your property dashboard."
+            }
+          </p>
+        </div>
       </div>
-  );
+    );
+  }
+
+  function renderInviteTenants() {
+    const addEmailField = () => {
+      updateFormData('tenantEmails', [...formData.tenantEmails, '']);
+    };
+
+    const removeEmailField = (index) => {
+      const newEmails = formData.tenantEmails.filter((_, i) => i !== index);
+      updateFormData('tenantEmails', newEmails.length > 0 ? newEmails : ['']);
+    };
+
+    const updateEmailField = (index, value) => {
+      const newEmails = [...formData.tenantEmails];
+      newEmails[index] = value;
+      updateFormData('tenantEmails', newEmails);
+    };
+
+    const getStatusIcon = (email) => {
+      const status = inviteStatus[email];
+      switch (status) {
+        case 'sending':
+          return (
+            <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          );
+        case 'sent':
+          return <CheckCircleIcon className="w-5 h-5 text-green-500" />;
+        case 'failed':
+          return <XMarkIcon className="w-5 h-5 text-red-500" />;
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        {/* Header with property info */}
+        {createdProperty && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <CheckCircleIcon className="w-5 h-5 text-green-500 mr-2" />
+              <h3 className="text-sm font-medium text-green-800">Property Created Successfully!</h3>
+            </div>
+            <p className="text-sm text-green-700 mt-1">
+              <strong>{createdProperty.name}</strong> is ready. Now you can invite tenants.
+            </p>
+          </div>
+        )}
+
+        <div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Invite Tenants (Optional)</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Send email invitations to potential tenants. They'll receive instructions to join your property on PropAgentic.
+          </p>
+        </div>
+
+        {/* Skip option */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={formData.skipInvites}
+              onChange={(e) => updateFormData('skipInvites', e.target.checked)}
+              className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+            />
+            <span className="text-sm font-medium text-blue-800">
+              Skip invitations for now (you can send them later)
+            </span>
+          </label>
+        </div>
+
+        {!formData.skipInvites && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Tenant Email Addresses
+              </label>
+              
+              <div className="space-y-3">
+                {formData.tenantEmails.map((email, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <div className="flex-1 relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <EnvelopeIcon className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => updateEmailField(index, e.target.value)}
+                        placeholder="tenant@example.com"
+                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                      />
+                      {getStatusIcon(email) && (
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                          {getStatusIcon(email)}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {formData.tenantEmails.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeEmailField(index)}
+                        className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                        disabled={isSubmitting}
+                      >
+                        <XMarkIcon className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={addEmailField}
+                disabled={isSubmitting}
+                className="mt-3 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <PlusIcon className="w-4 h-4 mr-1" />
+                Add Another Email
+              </button>
+            </div>
+
+            {/* Preview of what will be sent */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-gray-800 mb-2">What tenants will receive:</h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Email invitation with property details</li>
+                <li>• Unique invitation code to join your property</li>
+                <li>• Instructions to create their PropAgentic account</li>
+                <li>• Direct link to accept the invitation</li>
+              </ul>
+            </div>
+
+            {/* Status summary */}
+            {Object.keys(inviteStatus).length > 0 && (
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-800 mb-3">Invitation Status:</h4>
+                <div className="space-y-2">
+                  {Object.entries(inviteStatus).map(([email, status]) => (
+                    <div key={email} className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">{email}</span>
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon(email)}
+                        <span className={`capitalize ${
+                          status === 'sent' ? 'text-green-600' : 
+                          status === 'failed' ? 'text-red-600' : 
+                          'text-orange-600'
+                        }`}>
+                          {status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
   }
 };
 

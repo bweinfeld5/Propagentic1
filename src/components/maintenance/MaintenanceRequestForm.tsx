@@ -6,15 +6,26 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from '../../firebase/config';
 import { formatFirebaseError } from '../../utils/ErrorHandling';
 import { toast } from 'react-hot-toast';
+import { XCircleIcon, PhotoIcon } from '@heroicons/react/24/outline';
 
 // Category options for maintenance requests
 const CATEGORIES = [
-  { id: 'plumbing', label: 'Plumbing' },
-  { id: 'electrical', label: 'Electrical' },
-  { id: 'hvac', label: 'HVAC/Heating/Cooling' },
-  { id: 'structural', label: 'Structural/Building' },
-  { id: 'appliance', label: 'Appliance Issue' },
-  { id: 'other', label: 'Other' },
+  { id: 'plumbing', label: 'Plumbing', examples: 'Leaks, clogs, water pressure' },
+  { id: 'electrical', label: 'Electrical', examples: 'Outlets, switches, lighting' },
+  { id: 'hvac', label: 'HVAC/Heating/Cooling', examples: 'AC, heating, ventilation' },
+  { id: 'appliance', label: 'Appliance Issue', examples: 'Refrigerator, dishwasher, washer/dryer' },
+  { id: 'structural', label: 'Structural/Building', examples: 'Walls, floors, ceilings, doors' },
+  { id: 'pest', label: 'Pest Control', examples: 'Insects, rodents' },
+  { id: 'other', label: 'Other', examples: 'General maintenance issues' },
+];
+
+// Time slot options
+const TIME_SLOTS = [
+  { id: 'morning', label: 'Morning (8AM - 12PM)' },
+  { id: 'afternoon', label: 'Afternoon (12PM - 5PM)' },
+  { id: 'evening', label: 'Evening (5PM - 8PM)' },
+  { id: 'weekend', label: 'Weekends' },
+  { id: 'anytime', label: 'Anytime' },
 ];
 
 // Interface for form data
@@ -27,6 +38,8 @@ interface MaintenanceFormData {
   contactPreference: 'email' | 'phone' | 'text';
   availableTimes: string[];
   unitNumber: string;
+  allowEntry: boolean;
+  phoneNumber?: string;
 }
 
 const MaintenanceRequestForm: React.FC = () => {
@@ -41,47 +54,75 @@ const MaintenanceRequestForm: React.FC = () => {
     photos: [],
     contactPreference: 'email',
     availableTimes: [],
-    unitNumber: ''
+    unitNumber: '',
+    allowEntry: false,
+    phoneNumber: userProfile?.phone || ''
   });
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState('');
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData(prev => ({ ...prev, [name]: checked }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleTimeSlotChange = (slotId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      availableTimes: prev.availableTimes.includes(slotId)
+        ? prev.availableTimes.filter((id: string) => id !== slotId)
+        : [...prev.availableTimes, slotId]
+    }));
   };
 
   const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        setError('Photo size must be less than 5MB');
+    if (e.target.files && e.target.files.length > 0) {
+      const files = Array.from(e.target.files);
+      const validFiles: File[] = [];
+      const newPreviews: string[] = [];
+      
+      // Check total photos limit (5 max)
+      if (formData.photos.length + files.length > 5) {
+        setError('Maximum 5 photos allowed');
         return;
       }
-      setPhoto(file);
-      // Add to photos array
+      
+      files.forEach(file => {
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+          setError(`Photo ${file.name} is too large. Maximum size is 5MB`);
+          return;
+        }
+        validFiles.push(file);
+        newPreviews.push(URL.createObjectURL(file));
+      });
+      
       setFormData(prev => ({
         ...prev,
-        photos: [...prev.photos, file]
+        photos: [...prev.photos, ...validFiles]
       }));
-      setPhotoPreview(URL.createObjectURL(file));
+      setPhotoPreviews(prev => [...prev, ...newPreviews]);
       setError('');
     }
   };
 
-  const removePhoto = () => {
-    if (photoPreview) {
-      URL.revokeObjectURL(photoPreview);
-    }
-    setPhoto(null);
+  const removePhoto = (index: number) => {
+    // Clean up object URL
+    URL.revokeObjectURL(photoPreviews[index]);
+    
     setFormData(prev => ({
       ...prev,
-      photos: []
+      photos: prev.photos.filter((_, i) => i !== index)
     }));
-    setPhotoPreview('');
+    setPhotoPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -89,6 +130,12 @@ const MaintenanceRequestForm: React.FC = () => {
     
     if (!currentUser) {
       setError("You must be logged in to submit a maintenance request");
+      return;
+    }
+    
+    // Validate phone number if phone or text contact preference
+    if ((formData.contactPreference === 'phone' || formData.contactPreference === 'text') && !formData.phoneNumber) {
+      setError("Please provide a phone number for your selected contact preference");
       return;
     }
     
@@ -150,8 +197,10 @@ const MaintenanceRequestForm: React.FC = () => {
         status: 'new',
         photos: photoUrls,
         contactPreference: formData.contactPreference,
+        contactPhone: formData.phoneNumber,
         availableTimes: formData.availableTimes,
         unitNumber: formData.unitNumber,
+        allowEntry: formData.allowEntry,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         timeline: [{
@@ -197,53 +246,9 @@ const MaintenanceRequestForm: React.FC = () => {
                 <label htmlFor="issueTitle" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issue Title *</label>
                 <input type="text" name="issueTitle" id="issueTitle" required value={formData.issueTitle} onChange={handleChange} className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-slate-800 focus:outline-none focus:ring-teal-500 focus:border-teal-500 focus:z-10 sm:text-sm" />
             </div>
-            <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description *</label>
-                <textarea name="description" id="description" required rows={4} value={formData.description} onChange={handleChange} className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-slate-800 focus:outline-none focus:ring-teal-500 focus:border-teal-500 focus:z-10 sm:text-sm"></textarea>
-            </div>
-            <div>
-                <label htmlFor="unitNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Unit Number *</label>
-                <input type="text" name="unitNumber" id="unitNumber" required value={formData.unitNumber} onChange={handleChange} className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-slate-800 focus:outline-none focus:ring-teal-500 focus:border-teal-500 focus:z-10 sm:text-sm" />
-            </div>
-            <div>
-                <label htmlFor="urgency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Urgency</label>
-                <select name="urgency" id="urgency" value={formData.urgency} onChange={handleChange} className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-slate-800 focus:outline-none focus:ring-teal-500 focus:border-teal-500 focus:z-10 sm:text-sm">
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                </select>
-            </div>
-        
-            {/* Photo Upload */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Photo (Optional, Max 5MB)</label>
-                {!photoPreview ? (
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg bg-white dark:bg-slate-800">
-                    <div className="space-y-1 text-center">
-                        {/* SVG Icon */}
-                        <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                        <div className="flex text-sm text-gray-600 dark:text-gray-400">
-                            <label htmlFor="photo-upload" className="relative cursor-pointer bg-white dark:bg-slate-800 rounded-md font-medium text-teal-600 dark:text-teal-500 hover:text-teal-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-teal-500">
-                                <span>Upload a file</span>
-                                <input id="photo-upload" name="photo" type="file" className="sr-only" accept="image/*" onChange={handlePhotoChange} />
-                            </label>
-                            <p className="pl-1">or drag and drop</p>
-                        </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG, GIF up to 5MB</p>
-                    </div>
-                </div>
-                ) : (
-                    <div className="mt-2 relative">
-                        <img src={photoPreview} alt="Preview" className="max-h-60 w-auto rounded-lg border border-gray-300 dark:border-gray-600" />
-                        <button type="button" onClick={removePhoto} className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 text-xs leading-none hover:bg-red-700 focus:outline-none">
-                            &times;
-                        </button>
-                    </div>
-                )}
-            </div>
-        
+            
             <div className="form-group">
-                <label htmlFor="issueType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issue Type</label>
+                <label htmlFor="issueType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issue Type *</label>
                 <select
                     id="issueType"
                     name="issueType"
@@ -254,14 +259,167 @@ const MaintenanceRequestForm: React.FC = () => {
                 >
                     <option value="">Select an issue type</option>
                     {CATEGORIES.map(category => (
-                        <option key={category.id} value={category.id}>{category.label}</option>
+                        <option key={category.id} value={category.id}>{category.label} - {category.examples}</option>
                     ))}
                 </select>
             </div>
+            
+            <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description *</label>
+                <textarea name="description" id="description" required rows={4} value={formData.description} onChange={handleChange} placeholder="Please describe the issue in detail..." className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-slate-800 focus:outline-none focus:ring-teal-500 focus:border-teal-500 focus:z-10 sm:text-sm"></textarea>
+            </div>
+            
+            <div>
+                <label htmlFor="unitNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Unit Number *</label>
+                <input type="text" name="unitNumber" id="unitNumber" required value={formData.unitNumber} onChange={handleChange} className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-slate-800 focus:outline-none focus:ring-teal-500 focus:border-teal-500 focus:z-10 sm:text-sm" />
+            </div>
+            
+            <div>
+                <label htmlFor="urgency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Urgency Level *</label>
+                <select name="urgency" id="urgency" value={formData.urgency} onChange={handleChange} className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-slate-800 focus:outline-none focus:ring-teal-500 focus:border-teal-500 focus:z-10 sm:text-sm">
+                    <option value="low">Low - Can wait a few days</option>
+                    <option value="medium">Medium - Should be addressed soon</option>
+                    <option value="high">High - Needs attention within 24 hours</option>
+                    <option value="emergency">Emergency - Immediate attention required</option>
+                </select>
+            </div>
+        
+            {/* Multiple Photo Upload */}
+            <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Photos (Optional, Max 5 photos, 5MB each)
+                </label>
+                <div className="mt-2 space-y-2">
+                    {photoPreviews.length < 5 && (
+                        <div className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg bg-white dark:bg-slate-800">
+                            <div className="space-y-1 text-center">
+                                <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
+                                <div className="flex text-sm text-gray-600 dark:text-gray-400">
+                                    <label htmlFor="photo-upload" className="relative cursor-pointer bg-white dark:bg-slate-800 rounded-md font-medium text-teal-600 dark:text-teal-500 hover:text-teal-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-teal-500">
+                                        <span>Upload photos</span>
+                                        <input 
+                                            id="photo-upload" 
+                                            name="photos" 
+                                            type="file" 
+                                            className="sr-only" 
+                                            accept="image/*" 
+                                            multiple 
+                                            onChange={handlePhotoChange} 
+                                        />
+                                    </label>
+                                    <p className="pl-1">or drag and drop</p>
+                                </div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    PNG, JPG, GIF up to 5MB ({5 - photoPreviews.length} remaining)
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Photo previews */}
+                    {photoPreviews.length > 0 && (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {photoPreviews.map((preview, index) => (
+                                <div key={index} className="relative group">
+                                    <img 
+                                        src={preview} 
+                                        alt={`Preview ${index + 1}`} 
+                                        className="h-32 w-full object-cover rounded-lg border border-gray-300 dark:border-gray-600" 
+                                    />
+                                    <button 
+                                        type="button" 
+                                        onClick={() => removePhoto(index)} 
+                                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <XCircleIcon className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Availability Times */}
+            <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    When are you available? (Select all that apply)
+                </label>
+                <div className="space-y-2">
+                    {TIME_SLOTS.map(slot => (
+                        <label key={slot.id} className="flex items-center">
+                            <input
+                                type="checkbox"
+                                checked={formData.availableTimes.includes(slot.id)}
+                                onChange={() => handleTimeSlotChange(slot.id)}
+                                className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{slot.label}</span>
+                        </label>
+                    ))}
+                </div>
+            </div>
+
+            {/* Contact Preferences */}
+            <div>
+                <label htmlFor="contactPreference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Preferred Contact Method *
+                </label>
+                <select 
+                    name="contactPreference" 
+                    id="contactPreference" 
+                    value={formData.contactPreference} 
+                    onChange={handleChange} 
+                    className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-slate-800 focus:outline-none focus:ring-teal-500 focus:border-teal-500 focus:z-10 sm:text-sm"
+                >
+                    <option value="email">Email</option>
+                    <option value="phone">Phone Call</option>
+                    <option value="text">Text Message</option>
+                </select>
+            </div>
+
+            {/* Phone number field (shown when phone or text is selected) */}
+            {(formData.contactPreference === 'phone' || formData.contactPreference === 'text') && (
+                <div>
+                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Phone Number *
+                    </label>
+                    <input 
+                        type="tel" 
+                        name="phoneNumber" 
+                        id="phoneNumber" 
+                        value={formData.phoneNumber} 
+                        onChange={handleChange} 
+                        placeholder="(555) 123-4567"
+                        className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-slate-800 focus:outline-none focus:ring-teal-500 focus:border-teal-500 focus:z-10 sm:text-sm" 
+                    />
+                </div>
+            )}
+
+            {/* Entry Permission */}
+            <div className="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                <label className="flex items-start">
+                    <input
+                        type="checkbox"
+                        name="allowEntry"
+                        checked={formData.allowEntry}
+                        onChange={handleChange}
+                        className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded mt-1"
+                    />
+                    <div className="ml-3">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Allow entry when I'm not home
+                        </span>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            I authorize maintenance personnel to enter my unit if I'm not available during the scheduled time
+                        </p>
+                    </div>
+                </label>
+            </div>
         
             <div>
-                <button type="submit" disabled={loading} className="w-full py-2 px-4 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-propagentic-teal hover:bg-teal-700 focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50">
-                    {loading ? 'Submitting...' : 'Submit Request'}
+                <button type="submit" disabled={loading} className="w-full py-2 px-4 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-propagentic-teal hover:bg-teal-700 focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 transition-colors">
+                    {loading ? 'Submitting...' : 'Submit Maintenance Request'}
                 </button>
             </div>
         </form>

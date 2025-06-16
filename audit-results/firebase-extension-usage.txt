@@ -1,11 +1,11 @@
+./functions/lib/notifyAssignedContractor.js:        await admin.firestore().collection('mail').add({
+./functions/notificationDelivery.js:    await db.collection('mail').add(emailData);
+./functions/src/emailSequences.js:    await db.collection('mail').add({
+./functions/src/invites.ts:      await db.collection('mail').add(emailData);
+./functions/src/notifyAssignedContractor.ts:    await admin.firestore().collection('mail').add({
+./functions/test-extension.js:    const mailRef = db.collection('mail');
 ./scripts/test-direct-email.js:    const mailRef = await db.collection('mail').add(emailData);
 ./scripts/test-direct-email.js:    const mailDoc = await db.collection('mail').doc(mailId).get();
-./functions/notificationDelivery.js:    await db.collection('mail').add(emailData);
-./functions/test-extension.js:    const mailRef = db.collection('mail');
-./functions/lib/notifyAssignedContractor.js:        await admin.firestore().collection('mail').add({
-./functions/src/emailSequences.js:    await db.collection('mail').add({
-./functions/src/notifyAssignedContractor.ts:    await admin.firestore().collection('mail').add({
-./functions/src/invites.ts:      await db.collection('mail').add(emailData);
-./src/scripts/verify-invite-data.js:  const mailRef = db.collection('mail');
 ./src/scripts/adminMailTest.js:    const mailRef = db.collection('mail');
 ./src/scripts/test-invite-process.js:  const mailRef = await db.collection('mail').add(mailData);
+./src/scripts/verify-invite-data.js:  const mailRef = db.collection('mail');

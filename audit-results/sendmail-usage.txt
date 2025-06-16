@@ -1,0 +1,17 @@
+./node_modules/@types/nodemailer/lib/mailer/index.d.ts:    sendMail(mailOptions: Mail.Options, callback: (err: Error | null, info: T) => void): void;
+./node_modules/@types/nodemailer/lib/mailer/index.d.ts:    sendMail(mailOptions: Mail.Options): Promise<T>;
+./node_modules/lodash/debounce.js: * // Invoke `sendMail` when clicked, debouncing subsequent calls.
+./node_modules/lodash/debounce.js: * jQuery(element).on('click', _.debounce(sendMail, 300, {
+./node_modules/lodash/lodash.js:     * // Invoke `sendMail` when clicked, debouncing subsequent calls.
+./node_modules/lodash/lodash.js:     * jQuery(element).on('click', _.debounce(sendMail, 300, {
+./node_modules/lodash.debounce/index.js: * // Invoke `sendMail` when clicked, debouncing subsequent calls.
+./node_modules/lodash.debounce/index.js: * jQuery(element).on('click', _.debounce(sendMail, 300, {
+./node_modules/@firebase/testing/node_modules/protobufjs/cli/node_modules/lodash/debounce.js: * // Invoke `sendMail` when clicked, debouncing subsequent calls.
+./node_modules/@firebase/testing/node_modules/protobufjs/cli/node_modules/lodash/debounce.js: * jQuery(element).on('click', _.debounce(sendMail, 300, {
+./node_modules/@firebase/testing/node_modules/protobufjs/cli/node_modules/lodash/lodash.js:     * // Invoke `sendMail` when clicked, debouncing subsequent calls.
+./node_modules/@firebase/testing/node_modules/protobufjs/cli/node_modules/lodash/lodash.js:     * jQuery(element).on('click', _.debounce(sendMail, 300, {
+./node_modules/nodemailer/lib/mailer/index.js:    sendMail(data, callback = null) {
+./functions/test.js:    const info = await mailTransport.sendMail(mailOptions);
+./functions/lib/invites.js:        const info = await mailTransport.sendMail(mailOptions);
+./src/inviteEmail.ts:export const sendMailOnCreate = functions
+./src/inviteEmail.ts:      const info = await transporter.sendMail({

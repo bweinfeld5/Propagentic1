@@ -45,4 +45,9 @@ export { createNotificationOnInvite };
 import { sendEmail, sendPropertyInviteEmail } from './sendgridEmailService';
 export { sendEmail, sendPropertyInviteEmail };
 
-console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid).");
+// Import and export test functions
+import { testSendGrid, testPing } from './testSendGrid';
+import { simpleTest } from './simpleTest';
+export { testSendGrid, testPing, simpleTest };
+
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests).");

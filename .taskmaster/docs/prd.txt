@@ -149,4 +149,254 @@ status: 'new' | 'pending_classification' | 'classified' | 'assigned' | 'in_progr
 
 ---
 
-*Version 1.0 – June 2024* 
+*Version 1.0 – June 2024*
+
+# PropAgentic Property Creation & Invitation System Rebuild - PRD
+
+## Executive Summary
+
+Rebuild the property creation and tenant invitation system from the ground up to ensure reliable email delivery, clean user experience, and robust error handling. The current system has multiple architectural issues including unverified SendGrid senders, mixed email delivery approaches, and fragmented user flows.
+
+## Problem Statement
+
+### Current Issues
+1. **Email Delivery Failure**: SendGrid rejecting emails due to unverified sender identity
+2. **Architectural Inconsistency**: Mixed Firebase Extension and direct SendGrid approaches
+3. **Poor Error Handling**: Users receive generic "internal" errors without actionable feedback
+4. **Fragmented UX**: Property creation and tenant invitation flows are disconnected
+5. **Testing Gaps**: Limited end-to-end testing of the complete workflow
+
+### Impact
+- Landlords cannot successfully invite tenants
+- Poor user experience leads to abandonment
+- Support burden from failed invitations
+- Loss of user trust in the platform
+
+## Solution Overview
+
+### Core Objectives
+1. **Reliable Email Delivery**: Establish verified SendGrid infrastructure with fallback strategies
+2. **Unified Architecture**: Single, consistent approach to email sending and property management
+3. **Exceptional UX**: Seamless, intuitive property creation and invitation flow
+4. **Robust Error Handling**: Clear, actionable error messages and recovery paths
+5. **Comprehensive Testing**: Full test coverage for all workflows
+
+### Success Metrics
+- 99%+ email delivery success rate
+- <2 second property creation completion time
+- Zero "internal error" messages shown to users
+- 95%+ user completion rate for property setup flow
+- <1 minute average time for landlord to invite first tenant
+
+## Technical Requirements
+
+### Email Infrastructure
+- **SendGrid Setup**: Verify sender domains and email addresses
+- **Domain Authentication**: Implement SPF, DKIM, and DMARC records
+- **Fallback Strategy**: Multiple verified sender addresses for redundancy
+- **Delivery Monitoring**: Real-time tracking of email delivery status
+- **Template System**: Professional, branded email templates
+
+### Property Creation System
+- **Wizard Flow**: 6-step guided property creation process
+- **Data Validation**: Real-time validation with clear error messages
+- **Auto-save**: Prevent data loss during multi-step process
+- **Image Upload**: Property photos with automatic optimization
+- **Address Validation**: Integration with address validation service
+
+### Invitation System
+- **Bulk Invitations**: Support for multiple tenant emails per property
+- **Status Tracking**: Real-time invitation status (sent, delivered, opened, accepted)
+- **Retry Mechanism**: Automatic retry for failed deliveries
+- **Custom Messages**: Personalized invitation messages from landlords
+- **Expiration Handling**: Automatic invitation expiry and renewal
+
+### Integration Points
+- **Firebase Firestore**: Property and invitation data storage
+- **Firebase Auth**: User authentication and authorization
+- **SendGrid API**: Email delivery service
+- **Cloud Functions**: Server-side business logic
+- **React Frontend**: Modern, responsive user interface
+
+## User Experience Requirements
+
+### Landlord Property Creation Flow
+1. **Welcome Screen**: Clear value proposition and process overview
+2. **Property Details**: Address, type, units, rent information
+3. **Property Photos**: Drag-and-drop image upload with preview
+4. **Tenant Information**: Optional tenant details for immediate invitation
+5. **Invitation Settings**: Customize invitation message and timing
+6. **Confirmation**: Review all details before submission
+
+### Tenant Invitation Flow
+1. **Email Delivery**: Professional, branded invitation email
+2. **Landing Page**: Clean, mobile-responsive invitation acceptance page
+3. **Account Creation**: Streamlined tenant registration process
+4. **Property Access**: Immediate access to property information and maintenance requests
+5. **Confirmation**: Welcome message and next steps
+
+### Error Handling
+- **Clear Messages**: Specific, actionable error descriptions
+- **Recovery Options**: Multiple paths to resolve issues
+- **Support Integration**: Easy access to help and support
+- **Progress Preservation**: Maintain user progress during errors
+
+## Technical Architecture
+
+### Frontend Components
+- **PropertyCreationWizard**: Multi-step property creation component
+- **InvitationManager**: Bulk invitation management interface
+- **StatusDashboard**: Real-time invitation status tracking
+- **ErrorBoundary**: Comprehensive error handling and recovery
+
+### Backend Services
+- **PropertyService**: Property CRUD operations and validation
+- **InvitationService**: Invitation creation, sending, and tracking
+- **EmailService**: Unified email sending with multiple providers
+- **ValidationService**: Data validation and sanitization
+
+### Database Schema
+- **Properties**: Enhanced property data model with invitation tracking
+- **Invitations**: Comprehensive invitation status and metadata
+- **EmailLogs**: Detailed email delivery tracking and analytics
+- **UserProfiles**: Extended user profiles with preferences
+
+## Security Requirements
+
+### Data Protection
+- **Input Validation**: Comprehensive server-side validation
+- **SQL Injection Prevention**: Parameterized queries and ORM usage
+- **XSS Protection**: Input sanitization and output encoding
+- **CSRF Protection**: Token-based request validation
+
+### Email Security
+- **SPF Records**: Sender Policy Framework implementation
+- **DKIM Signing**: DomainKeys Identified Mail authentication
+- **DMARC Policy**: Domain-based Message Authentication
+- **Rate Limiting**: Prevent email abuse and spam
+
+### Access Control
+- **Role-Based Permissions**: Landlord/tenant role separation
+- **Property Access Control**: Secure property-tenant associations
+- **Invitation Validation**: Secure invitation token handling
+- **Session Management**: Secure user session handling
+
+## Performance Requirements
+
+### Response Times
+- **Property Creation**: <2 seconds for form submission
+- **Email Sending**: <5 seconds for invitation delivery
+- **Page Load**: <1 second for all user interfaces
+- **Database Queries**: <500ms for all data operations
+
+### Scalability
+- **Concurrent Users**: Support 1000+ simultaneous users
+- **Email Volume**: Handle 10,000+ emails per hour
+- **Database Load**: Efficient queries with proper indexing
+- **CDN Integration**: Global content delivery for assets
+
+### Reliability
+- **Uptime**: 99.9% system availability
+- **Error Rate**: <0.1% error rate for all operations
+- **Recovery Time**: <5 minutes for system recovery
+- **Data Backup**: Automated daily backups with point-in-time recovery
+
+## Testing Requirements
+
+### Unit Testing
+- **Component Tests**: 90%+ code coverage for React components
+- **Service Tests**: 95%+ coverage for backend services
+- **Utility Tests**: 100% coverage for utility functions
+- **Integration Tests**: API endpoint testing with mock data
+
+### End-to-End Testing
+- **User Workflows**: Complete property creation and invitation flows
+- **Email Delivery**: Automated email sending and delivery verification
+- **Error Scenarios**: Comprehensive error handling testing
+- **Performance Testing**: Load testing for peak usage scenarios
+
+### Manual Testing
+- **User Acceptance**: Real user testing with feedback collection
+- **Cross-Browser**: Testing across all major browsers and devices
+- **Accessibility**: WCAG 2.1 compliance testing
+- **Security Testing**: Penetration testing and vulnerability assessment
+
+## Deployment Requirements
+
+### Environment Setup
+- **Development**: Local development with Firebase emulators
+- **Staging**: Production-like environment for testing
+- **Production**: Scalable, monitored production deployment
+- **CI/CD Pipeline**: Automated testing and deployment
+
+### Monitoring
+- **Application Monitoring**: Real-time performance and error tracking
+- **Email Analytics**: Delivery rates, open rates, and engagement metrics
+- **User Analytics**: User behavior and conversion tracking
+- **Infrastructure Monitoring**: Server health and resource usage
+
+### Documentation
+- **API Documentation**: Comprehensive API reference
+- **User Guides**: Step-by-step user documentation
+- **Developer Docs**: Technical implementation guides
+- **Troubleshooting**: Common issues and resolution steps
+
+## Success Criteria
+
+### Technical Success
+- All email delivery tests pass with 99%+ success rate
+- Property creation flow completes in <2 seconds
+- Zero unhandled errors in production
+- 95%+ test coverage across all components
+
+### User Success
+- 90%+ user completion rate for property setup
+- <5% support tickets related to invitation issues
+- 4.5+ star average user rating for the feature
+- 80%+ tenant acceptance rate for invitations
+
+### Business Success
+- 25% increase in landlord onboarding completion
+- 40% reduction in support burden
+- 15% increase in tenant engagement
+- 20% improvement in user retention
+
+## Timeline
+
+### Phase 1: Foundation (Week 1-2)
+- SendGrid verification and domain authentication
+- Email infrastructure setup and testing
+- Basic property creation API development
+
+### Phase 2: Core Development (Week 3-4)
+- Property creation wizard implementation
+- Invitation system development
+- Database schema implementation
+
+### Phase 3: Integration (Week 5-6)
+- Frontend-backend integration
+- End-to-end testing implementation
+- Error handling and validation
+
+### Phase 4: Polish & Launch (Week 7-8)
+- User experience refinement
+- Performance optimization
+- Production deployment and monitoring
+
+## Risk Mitigation
+
+### Technical Risks
+- **Email Delivery Issues**: Multiple verified senders and fallback providers
+- **Performance Bottlenecks**: Load testing and optimization
+- **Security Vulnerabilities**: Regular security audits and updates
+- **Integration Failures**: Comprehensive testing and rollback procedures
+
+### Business Risks
+- **User Adoption**: User testing and feedback integration
+- **Support Burden**: Comprehensive documentation and self-service options
+- **Competitive Pressure**: Rapid development and feature differentiation
+- **Regulatory Compliance**: Legal review and compliance verification
+
+## Conclusion
+
+This comprehensive rebuild will establish PropAgentic as the leading property management platform with reliable, user-friendly property creation and tenant invitation capabilities. The systematic approach ensures all current issues are addressed while building a foundation for future growth and feature expansion. 

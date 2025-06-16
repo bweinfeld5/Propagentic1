@@ -34,21 +34,16 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.testPing = exports.testSendGrid = void 0;
-const https_1 = require("firebase-functions/v2/https");
+const functions = __importStar(require("firebase-functions"));
 const logger = __importStar(require("firebase-functions/logger"));
 const sendgridEmailService_1 = require("./sendgridEmailService");
 /**
  * Test function to verify SendGrid integration
- * Call with: curl -X POST https://your-region-your-project.cloudfunctions.net/testSendGrid -H "Content-Type: application/json" -d '{"email":"test@example.com"}'
  */
-exports.testSendGrid = (0, https_1.onCall)(async (request) => {
-    // Check authentication
-    if (!request.auth) {
-        throw new https_1.HttpsError('unauthenticated', 'You must be authenticated to test email sending.');
-    }
-    const testEmail = request.data.email || request.auth.token.email;
+exports.testSendGrid = functions.https.onCall(async (data) => {
+    const testEmail = data.email;
     if (!testEmail) {
-        throw new https_1.HttpsError('invalid-argument', 'Email address is required for testing.');
+        throw new functions.https.HttpsError('invalid-argument', 'Email address is required for testing.');
     }
     logger.info(`Testing SendGrid with email: ${testEmail}`);
     try {
@@ -86,17 +81,18 @@ exports.testSendGrid = (0, https_1.onCall)(async (request) => {
     }
     catch (error) {
         logger.error('SendGrid test failed:', error);
-        throw new https_1.HttpsError('internal', `SendGrid test failed: ${error.message}`, { error: error.message, timestamp: new Date().toISOString() });
+        throw new functions.https.HttpsError('internal', `SendGrid test failed: ${error.message}`, { error: error.message, timestamp: new Date().toISOString() });
     }
 });
 /**
  * Simple ping function to test if functions are deployed
  */
-exports.testPing = (0, https_1.onCall)(async () => {
+exports.testPing = functions.https.onCall(async () => {
     return {
         message: "pong",
         timestamp: new Date().toISOString(),
-        sendGridConfigured: !!process.env.SENDGRID_API_KEY
+        sendGridConfigured: !!(process.env.SENDGRID_API_KEY ||
+            (functions.config().sendgrid && functions.config().sendgrid.api_key))
     };
 });
 //# sourceMappingURL=testSendGrid.js.map

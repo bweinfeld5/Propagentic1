@@ -18,7 +18,21 @@ if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-const APP_DOMAIN = functions.config().app?.domain || process.env.APP_DOMAIN || 'https://propagentic.com';
+// Lazy initialization for APP_DOMAIN
+let APP_DOMAIN: string;
+const getAppDomain = (): string => {
+  if (!APP_DOMAIN) {
+    try {
+      APP_DOMAIN = process.env.APP_DOMAIN || 
+        (functions.config().app && functions.config().app.domain) || 
+        'https://propagentic.com';
+    } catch (error) {
+      logger.warn('Failed to get app domain from config, using default');
+      APP_DOMAIN = 'https://propagentic.com';
+    }
+  }
+  return APP_DOMAIN;
+};
 
 /**
  * Firestore trigger: Send invite email when invite document is created
@@ -71,7 +85,7 @@ export const sendInviteEmail = functions.firestore
         inviteCode,
         landlordName,
         propertyName,
-        APP_DOMAIN
+        getAppDomain()
       );
 
       if (emailSent) {

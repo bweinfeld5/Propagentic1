@@ -1,15 +1,32 @@
-import * as sgMail from '@sendgrid/mail';
+import sgMail from '@sendgrid/mail';
 import * as functions from 'firebase-functions';
 import * as logger from 'firebase-functions/logger';
 
-// Initialize SendGrid with API key from environment
-const SENDGRID_API_KEY = functions.config().sendgrid?.api_key || process.env.SENDGRID_API_KEY;
+// Lazy initialization - only initialize when needed
+let sendGridInitialized = false;
+let SENDGRID_API_KEY: string | undefined;
 
-if (SENDGRID_API_KEY) {
-  sgMail.setApiKey(SENDGRID_API_KEY);
-} else {
-  logger.warn('SendGrid API key not found. Email sending will fail.');
-}
+const initializeSendGrid = () => {
+  if (sendGridInitialized) return;
+  
+  try {
+    // Initialize SendGrid with API key from environment variables (Cloud Functions v2)
+    // Fallback to functions.config() for backward compatibility during transition
+    SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || 
+      (functions.config().sendgrid && functions.config().sendgrid.api_key);
+
+    if (SENDGRID_API_KEY) {
+      sgMail.setApiKey(SENDGRID_API_KEY);
+      logger.info('SendGrid initialized successfully');
+    } else {
+      logger.warn('SendGrid API key not found in environment variables or config. Email sending will fail.');
+    }
+  } catch (error: any) {
+    logger.error('Failed to initialize SendGrid:', error.message);
+  }
+  
+  sendGridInitialized = true;
+};
 
 interface EmailData {
   to: string;
@@ -25,6 +42,9 @@ interface EmailData {
  * @returns Promise<boolean> - Success status
  */
 export const sendEmail = async (emailData: EmailData): Promise<boolean> => {
+  // Initialize SendGrid on first use
+  initializeSendGrid();
+  
   if (!SENDGRID_API_KEY) {
     logger.error('SendGrid API key not configured');
     return false;

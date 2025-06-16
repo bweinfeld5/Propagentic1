@@ -63,6 +63,55 @@ exports.ping = require('firebase-functions').https.onCall(async () => {
   return { message: "pong", timestamp: Date.now() };
 });
 
+// Set custom claims for users (for Firestore rules)
+exports.setUserClaims = require('firebase-functions').https.onCall(async (data, context) => {
+  // Check if user is authenticated
+  if (!context.auth) {
+    throw new require('firebase-functions').https.HttpsError(
+      'unauthenticated',
+      'The function must be called while authenticated.'
+    );
+  }
+
+  const { uid, userType } = data;
+  
+  // Validate input
+  if (!uid || !userType) {
+    throw new require('firebase-functions').https.HttpsError(
+      'invalid-argument',
+      'Missing uid or userType'
+    );
+  }
+
+  // Validate userType
+  const validUserTypes = ['landlord', 'tenant', 'contractor', 'admin'];
+  if (!validUserTypes.includes(userType)) {
+    throw new require('firebase-functions').https.HttpsError(
+      'invalid-argument',
+      'Invalid userType'
+    );
+  }
+
+  try {
+    // Set custom claims
+    await admin.auth().setCustomUserClaims(uid, { userType });
+    
+    console.log(`Set custom claims for user ${uid}: userType=${userType}`);
+    
+    return { 
+      success: true, 
+      message: `Custom claims set for user ${uid}`,
+      userType 
+    };
+  } catch (error) {
+    console.error('Error setting custom claims:', error);
+    throw new require('firebase-functions').https.HttpsError(
+      'internal',
+      'Failed to set custom claims'
+    );
+  }
+});
+
 // Legacy stub functions (keeping for backward compatibility if needed)
 // These should NOT override the actual implementations above
 

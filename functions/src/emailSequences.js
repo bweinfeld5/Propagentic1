@@ -428,32 +428,31 @@ async function sendEmail(emailData) {
     textContent = textContent.replace(new RegExp(placeholder, 'g'), variables[key]);
   });
   
-  // Here you would integrate with your email service (SendGrid, Mailgun, etc.)
-  // For example, using SendGrid:
-  /*
-  const sgMail = require('@sendgrid/mail');
-  sgMail.setApiKey(EMAIL_SERVICE_CONFIG.apiKey);
-  
-  const msg = {
-    to: emailData.userEmail,
-    from: {
-      email: EMAIL_SERVICE_CONFIG.fromEmail,
-      name: EMAIL_SERVICE_CONFIG.fromName
-    },
-    subject: emailData.subject,
-    text: textContent,
-    html: htmlContent
-  };
-  
-  await sgMail.send(msg);
-  */
-  
-  // For now, just log the email (replace with actual email service)
-  console.log(`Sending email to ${emailData.userEmail}:`);
-  console.log(`Subject: ${emailData.subject}`);
-  console.log(`Template: ${emailData.templateId}`);
-  
-  return true;
+  // Use Firebase Extension to send email
+  try {
+    await db.collection('mail').add({
+      to: emailData.userEmail,
+      message: {
+        subject: emailData.subject,
+        text: textContent,
+        html: htmlContent
+      },
+      // Add metadata for tracking
+      metadata: {
+        userId: emailData.userId,
+        templateId: emailData.templateId,
+        userRole: emailData.userRole,
+        sequenceIndex: emailData.sequenceIndex,
+        type: emailData.type
+      }
+    });
+    
+    console.log(`Email queued successfully: ${emailData.templateId} to ${emailData.userEmail}`);
+    return true;
+  } catch (error) {
+    console.error(`Error queueing email: ${error.message}`);
+    throw error;
+  }
 }
 
 /**

@@ -47,6 +47,7 @@ const MaintenanceSurvey = lazy(() => import('./components/maintenance/Maintenanc
 const EnhancedMaintenancePage = lazy(() => import('./pages/tenant/EnhancedMaintenancePage'));
 const PublicPropertyDashboardDemo = lazy(() => import('./pages/PublicPropertyDashboardDemo.jsx'));
 const DemoShowcase = lazy(() => import('./pages/DemoShowcase.jsx'));
+const TestPage = lazy(() => import('./pages/TestPage.jsx'));
 
 // Route Guards
 const PrivateRoute = ({ children }) => {
@@ -194,6 +195,7 @@ function App() {
                                 <Route path="/property-dashboard-demo" element={<PublicPropertyDashboardDemo />} />
                                 <Route path="/svg-test" element={<SVGTest />} />
                                 <Route path="/blueprint-test" element={<BlueprintTest />} />
+                                <Route path="/test" element={<PrivateRoute><TestPage /></PrivateRoute>} />
                                 <Route path="/login" element={<LoginPage />} />
                                 <Route path="/register" element={<RegisterPage />} />
                                 <Route path="/signup" element={<RegisterPage />} />

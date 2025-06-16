@@ -112,7 +112,7 @@ class DataService {
 
     const getPropertiesOperation = async () => {
       try {
-        // Use landlordId as the standard field name
+        // Use only landlordId field for consistency
         console.log('Querying properties with landlordId field');
         const q = query(
           collection(db, 'properties'), 

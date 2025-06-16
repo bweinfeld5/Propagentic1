@@ -297,6 +297,61 @@ exports.processScheduledEmails = functions.pubsub
   });
 
 /**
+<<<<<<< HEAD
+=======
+ * Helper function to send email
+ */
+async function sendEmail(emailData) {
+  const template = EMAIL_TEMPLATES[emailData.templateId];
+  
+  if (!template) {
+    throw new Error(`Template not found: ${emailData.templateId}`);
+  }
+  
+  // Replace template variables
+  const variables = {
+    firstName: emailData.firstName,
+    dashboardUrl: `https://app.propagentic.com/${emailData.userRole}/dashboard`
+  };
+  
+  let htmlContent = template.html;
+  let textContent = template.text;
+  
+  Object.keys(variables).forEach(key => {
+    const placeholder = `{{${key}}}`;
+    htmlContent = htmlContent.replace(new RegExp(placeholder, 'g'), variables[key]);
+    textContent = textContent.replace(new RegExp(placeholder, 'g'), variables[key]);
+  });
+  
+  // Use Firebase Extension to send email
+  try {
+    await db.collection('mail').add({
+      to: emailData.userEmail,
+      message: {
+        subject: emailData.subject,
+        text: textContent,
+        html: htmlContent
+      },
+      // Add metadata for tracking
+      metadata: {
+        userId: emailData.userId,
+        templateId: emailData.templateId,
+        userRole: emailData.userRole,
+        sequenceIndex: emailData.sequenceIndex,
+        type: emailData.type
+      }
+    });
+    
+    console.log(`Email queued successfully: ${emailData.templateId} to ${emailData.userEmail}`);
+    return true;
+  } catch (error) {
+    console.error(`Error queueing email: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+>>>>>>> origin/feature/sendgrid-integration-audit
  * Cloud Function: Manual email sequence management
  */
 exports.manageEmailSequence = functions.https.onCall(async (data, context) => {

@@ -1,60 +1,107 @@
 {
+  "environment": "development",
   "project": {
     "name": "PropAgentic",
-    "type": "React + Firebase",
-    "description": "AI-powered property management SaaS"
+    "type": "React TypeScript Application",
+    "framework": "React 18",
+    "buildTool": "Create React App (rewired)",
+    "packageManager": "npm"
   },
-  "environment": {
-    "NODE_ENV": "development",
-    "FIREBASE_PROJECT_ID": "propagentic",
-    "SENDGRID_CONFIGURED": true,
-    "EMAIL_EXTENSION_ACTIVE": true
+  "phase": {
+    "current": "Phase 1: Core Stability",
+    "branch": "feature/phase1-core-stability",
+    "priority": "critical",
+    "focus": ["data-persistence", "crud-operations", "error-handling", "loading-states"]
   },
-  "directories": {
-    "functions": "./functions/src/",
-    "services": "./src/services/",
-    "components": "./src/components/",
-    "pages": "./src/pages/",
-    "scripts": "./scripts/"
+  "development": {
+    "nodeVersion": "18+",
+    "startCommand": "npm run start:fix",
+    "buildCommand": "npm run build",
+    "testCommand": "npm test",
+    "lintCommand": "npm run lint",
+    "typecheckCommand": "npm run typecheck"
   },
-  "email_config": {
-    "provider": "SendGrid",
-    "method": "Firebase Extension",
-    "extension_name": "firestore-send-email",
-    "collection": "mail",
-    "status": "working",
-    "test_email": "410haulers@gmail.com"
+  "dependencies": {
+    "runtime": {
+      "react": "^18.2.0",
+      "react-dom": "^18.2.0",
+      "typescript": "5.8.3",
+      "firebase": "^11.6.0",
+      "@sendgrid/mail": "^8.1.5"
+    },
+    "ui": {
+      "tailwindcss": "~3.3.0",
+      "@heroicons/react": "^2.2.0",
+      "framer-motion": "^6.5.1"
+    },
+    "development": {
+      "react-app-rewired": "^2.2.1",
+      "cross-env": "^7.0.3",
+      "eslint": "^9.26.0"
+    }
   },
-  "audit_scope": [
-    "nodemailer",
-    "transporter",
-    "sendMail",
-    "createTransport",
-    "smtp://",
-    "smtps://",
-    "email",
-    "mail"
+  "firebase": {
+    "services": ["auth", "firestore", "functions"],
+    "region": "us-central1",
+    "emulator": false
+  },
+  "features": {
+    "sendgrid": {
+      "enabled": true,
+      "configured": true,
+      "testComponent": "src/components/testing/SendGridTester.jsx"
+    },
+    "authentication": {
+      "enabled": true,
+      "provider": "firebase-auth"
+    },
+    "dataService": {
+      "location": "src/services/dataService.js",
+      "issues": ["persistence", "subscriptions", "error-handling"]
+    }
+  },
+  "knownIssues": [
+    {
+      "type": "warning",
+      "description": "FAST_REFRESH conflicting values",
+      "impact": "build warnings",
+      "priority": "low"
+    },
+    {
+      "type": "critical",
+      "description": "Data persistence issues in debug panel",
+      "impact": "user experience",
+      "priority": "critical"
+    },
+    {
+      "type": "missing",
+      "description": "Property edit/delete functionality",
+      "impact": "core features",
+      "priority": "high"
+    },
+    {
+      "type": "missing",
+      "description": "Error boundaries and retry logic",
+      "impact": "stability",
+      "priority": "high"
+    }
   ],
-  "priority_files": [
-    "functions/src/",
-    "src/services/",
-    "src/components/",
-    "src/pages/"
-  ],
-  "working_examples": [
-    "functions/src/invites.ts",
-    "functions/src/notifyAssignedContractor.ts",
-    "functions/src/emailSequences.js",
-    "functions/notificationDelivery.js"
-  ],
-  "deliverables": [
-    "SENDGRID_AUDIT_REPORT.md",
-    "EMAIL_TESTING_RESULTS.md",
-    "Updated functions",
-    "Email template library"
-  ],
-  "git": {
-    "branch": "feature/sendgrid-integration-audit",
-    "base_branch": "main"
+  "paths": {
+    "components": "src/components/",
+    "pages": "src/pages/",
+    "services": "src/services/",
+    "hooks": "src/hooks/",
+    "context": "src/context/",
+    "utils": "src/utils/"
+  },
+  "testing": {
+    "framework": "Jest + React Testing Library",
+    "coverage": false,
+    "e2e": false
+  },
+  "deployment": {
+    "platform": "Firebase Hosting",
+    "buildDir": "build",
+    "publicDir": "public"
   }
 } 

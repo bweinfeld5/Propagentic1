@@ -1,209 +1,199 @@
 import React, { useState } from 'react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { useAuth } from '../../context/AuthContext';
+import toast from 'react-hot-toast';
 import Button from '../ui/Button';
-import { CheckCircleIcon, XCircleIcon, ClockIcon } from '@heroicons/react/24/outline';
 
 /**
  * SendGrid Integration Tester Component
  * Use this to test that SendGrid integration is working properly
  */
 const SendGridTester = () => {
-  const { currentUser } = useAuth();
-  const [testResults, setTestResults] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [testEmail, setTestEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState(null);
 
   const runSendGridTest = async () => {
-    if (!currentUser) {
-      alert('You must be logged in to test email sending');
+    if (!testEmail) {
+      toast.error('Please enter an email address');
       return;
     }
 
-    setIsLoading(true);
-    setTestResults(null);
+    setLoading(true);
+    setResults(null);
 
     try {
       const functions = getFunctions();
       
-      // Test 1: Ping test
-      console.log('🏓 Running ping test...');
+      // Test 1: Basic ping test
+      console.log('Testing basic ping...');
       const testPing = httpsCallable(functions, 'testPing');
       const pingResult = await testPing();
-      
-      // Test 2: SendGrid email test
-      console.log('📧 Running SendGrid email test...');
+      console.log('Ping result:', pingResult.data);
+
+      // Test 2: SendGrid test
+      console.log('Testing SendGrid...');
       const testSendGrid = httpsCallable(functions, 'testSendGrid');
-      const emailResult = await testSendGrid({ 
-        email: testEmail || currentUser.email 
+      const sendGridResult = await testSendGrid({ email: testEmail });
+      console.log('SendGrid result:', sendGridResult.data);
+
+      setResults({
+        ping: pingResult.data,
+        sendGrid: sendGridResult.data,
+        success: true
       });
 
-      setTestResults({
-        success: true,
-        ping: pingResult.data,
-        email: emailResult.data,
-        timestamp: new Date().toISOString()
-      });
-
-      console.log('✅ SendGrid test completed successfully:', {
-        ping: pingResult.data,
-        email: emailResult.data
-      });
+      toast.success(`✅ SendGrid test completed! Check ${testEmail} for test emails.`);
 
     } catch (error) {
-      console.error('❌ SendGrid test failed:', error);
-      setTestResults({
-        success: false,
+      console.error('SendGrid test failed:', error);
+      
+      setResults({
         error: error.message,
-        timestamp: new Date().toISOString()
+        code: error.code,
+        details: error.details,
+        success: false
       });
+
+      toast.error(`❌ SendGrid test failed: ${error.message}`);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const StatusIcon = ({ status }) => {
-    if (status === 'loading') return <ClockIcon className="w-5 h-5 text-orange-500 animate-spin" />;
-    if (status === 'success') return <CheckCircleIcon className="w-5 h-5 text-green-500" />;
-    return <XCircleIcon className="w-5 h-5 text-red-500" />;
+  const testInviteFlow = async () => {
+    if (!testEmail) {
+      toast.error('Please enter an email address');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const functions = getFunctions();
+      const sendPropertyInvite = httpsCallable(functions, 'sendPropertyInvite');
+      
+      // Create a test invite
+      const result = await sendPropertyInvite({
+        propertyId: 'test-property-id',
+        tenantEmail: testEmail,
+        propertyName: 'Test Property - 123 Main St',
+        landlordName: 'Test Landlord'
+      });
+
+      console.log('Invite test result:', result.data);
+      
+      if (result.data.success) {
+        toast.success(`✅ Test invitation sent to ${testEmail}!`);
+        setResults({
+          invite: result.data,
+          success: true
+        });
+      } else {
+        throw new Error(result.data.message || 'Invite failed');
+      }
+
+    } catch (error) {
+      console.error('Invite test failed:', error);
+      toast.error(`❌ Invite test failed: ${error.message}`);
+      setResults({
+        error: error.message,
+        success: false
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded-xl shadow-lg border border-gray-200">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          SendGrid Integration Tester
-        </h2>
-        <p className="text-gray-600 dark:text-gray-300">
-          Test that SendGrid email delivery is working properly for tenant invitations.
-        </p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">📧 SendGrid Integration Tester</h2>
+        <p className="text-gray-600">Test email delivery and diagnose any issues with the SendGrid integration.</p>
       </div>
 
-      {/* Test Email Input */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Test Email Address (optional)
-        </label>
-        <input
-          type="email"
-          value={testEmail}
-          onChange={(e) => setTestEmail(e.target.value)}
-          placeholder={currentUser?.email || 'your-email@example.com'}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-        />
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Leave empty to use your logged-in email: {currentUser?.email}
-        </p>
-      </div>
-
-      {/* Test Button */}
-      <div className="mb-6">
-        <Button
-          onClick={runSendGridTest}
-          disabled={isLoading || !currentUser}
-          variant="primary"
-          className="w-full"
-        >
-          {isLoading ? (
-            <>
-              <ClockIcon className="w-4 h-4 mr-2 animate-spin" />
-              Running Tests...
-            </>
-          ) : (
-            '🧪 Run SendGrid Tests'
-          )}
-        </Button>
-      </div>
-
-      {/* Test Results */}
-      {testResults && (
-        <div className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-          <div className="flex items-center mb-4">
-            <StatusIcon status={testResults.success ? 'success' : 'error'} />
-            <h3 className="ml-2 text-lg font-semibold text-gray-900 dark:text-white">
-              Test Results {testResults.success ? '✅' : '❌'}
-            </h3>
-          </div>
-
-          {testResults.success ? (
-            <div className="space-y-4">
-              {/* Ping Test Results */}
-              <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-md">
-                <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">
-                  🏓 Ping Test - Success
-                </h4>
-                <div className="text-sm text-green-700 dark:text-green-300">
-                  <p>Functions are deployed and accessible</p>
-                  <p>SendGrid configured: {testResults.ping.sendGridConfigured ? '✅' : '❌'}</p>
-                  <p>Timestamp: {testResults.ping.timestamp}</p>
-                </div>
-              </div>
-
-              {/* Email Test Results */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md">
-                <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">
-                  📧 Email Test - Success
-                </h4>
-                <div className="text-sm text-blue-700 dark:text-blue-300">
-                  <p>Test emails sent to: {testResults.email.results.testEmail}</p>
-                  <p>Basic email: {testResults.email.results.basicEmail ? '✅' : '❌'}</p>
-                  <p>Invite email: {testResults.email.results.inviteEmail ? '✅' : '❌'}</p>
-                  <p className="mt-2 font-medium">
-                    📬 Check your inbox for test emails!
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>Next Steps:</strong>
-                  <br />
-                  1. Check your email inbox for 2 test emails
-                  <br />
-                  2. If emails arrive, SendGrid is working perfectly!
-                  <br />
-                  3. Try creating a property and inviting a tenant
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-md">
-              <h4 className="font-medium text-red-800 dark:text-red-200 mb-2">
-                ❌ Test Failed
-              </h4>
-              <div className="text-sm text-red-700 dark:text-red-300">
-                <p>Error: {testResults.error}</p>
-                <p className="mt-2">
-                  <strong>Possible solutions:</strong>
-                  <br />
-                  • Check that SendGrid API key is configured
-                  <br />
-                  • Verify functions are deployed
-                  <br />
-                  • Check Firebase Functions logs
-                  <br />
-                  • See SENDGRID_SETUP.md for detailed setup instructions
-                </p>
-              </div>
-            </div>
-          )}
-
-          <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-            Test completed at: {new Date(testResults.timestamp).toLocaleString()}
-          </div>
+      <div className="space-y-6">
+        <div>
+          <label htmlFor="testEmail" className="block text-sm font-semibold text-gray-700 mb-2">
+            Test Email Address
+          </label>
+          <input
+            type="email"
+            id="testEmail"
+            className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            placeholder="your-email@example.com"
+            value={testEmail}
+            onChange={(e) => setTestEmail(e.target.value)}
+          />
         </div>
-      )}
 
-      {/* Setup Instructions */}
-      <div className="mt-6 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-        <h4 className="font-medium text-gray-900 dark:text-white mb-2">
-          📚 Setup Instructions
-        </h4>
-        <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-          <p>1. Configure SendGrid API key in Firebase Functions</p>
-          <p>2. Deploy functions with: <code className="bg-gray-200 dark:bg-gray-600 px-1 rounded">firebase deploy --only functions</code></p>
-          <p>3. Run this test to verify email delivery</p>
-          <p>4. Check the SENDGRID_SETUP.md file for detailed instructions</p>
+        <div className="flex gap-3">
+          <Button
+            onClick={runSendGridTest}
+            isLoading={loading}
+            disabled={loading || !testEmail}
+            variant="primary"
+            className="flex-1"
+          >
+            {loading ? 'Testing...' : '🧪 Test SendGrid'}
+          </Button>
+          
+          <Button
+            onClick={testInviteFlow}
+            isLoading={loading}
+            disabled={loading || !testEmail}
+            variant="secondary"
+            className="flex-1"
+          >
+            {loading ? 'Testing...' : '📨 Test Invite Flow'}
+          </Button>
+        </div>
+
+        {results && (
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Test Results</h3>
+            <div className={`rounded-xl p-4 border ${
+              results.success 
+                ? 'bg-green-50 border-green-200' 
+                : 'bg-red-50 border-red-200'
+            }`}>
+              <pre className="text-sm overflow-auto">
+                {JSON.stringify(results, null, 2)}
+              </pre>
+            </div>
+
+            {results.success ? (
+              <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <h4 className="font-semibold text-blue-800 mb-2">✅ Next Steps:</h4>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>• Check your email inbox for test messages</li>
+                  <li>• Verify that emails are not in spam folder</li>
+                  <li>• If emails arrive, SendGrid is working correctly</li>
+                  <li>• If no emails arrive, check Firebase Functions logs</li>
+                </ul>
+              </div>
+            ) : (
+              <div className="mt-4 p-4 bg-red-50 rounded-xl border border-red-200">
+                <h4 className="font-semibold text-red-800 mb-2">❌ Troubleshooting:</h4>
+                <ul className="text-sm text-red-700 space-y-1">
+                  <li>• Check if SendGrid API key is configured in Firebase Functions</li>
+                  <li>• Verify that functions are deployed correctly</li>
+                  <li>• Check Firebase Functions logs for detailed errors</li>
+                  <li>• Ensure SendGrid sender email is verified</li>
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+          <h4 className="font-semibold text-gray-800 mb-2">📋 Debugging Checklist:</h4>
+          <ul className="text-sm text-gray-700 space-y-1">
+            <li>• ✅ SendGrid API key configured in Firebase Functions config</li>
+            <li>• ✅ Functions deployed with latest code</li>
+            <li>• ❓ Sender email verified in SendGrid dashboard</li>
+            <li>• ❓ Domain authentication set up (recommended)</li>
+            <li>• ❓ Check Firebase Functions logs for errors</li>
+          </ul>
         </div>
       </div>
     </div>

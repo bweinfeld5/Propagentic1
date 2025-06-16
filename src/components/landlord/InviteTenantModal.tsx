@@ -163,7 +163,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-10" onClose={onClose}>
+      <Dialog as="div" className="relative z-50" onClose={onClose}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -173,7 +173,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -187,195 +187,217 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
-                <div className="flex justify-between items-center mb-4">
-                  <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 dark:text-white">
-                    {inviteSuccess ? 'Invitation Sent!' : 'Invite a Tenant'}
-                  </Dialog.Title>
-                  <button
-                    type="button"
-                    className="text-gray-400 hover:text-gray-500 focus:outline-none"
-                    onClick={onClose}
-                  >
-                    <XMarkIcon className="h-6 w-6" aria-hidden="true" />
-                  </button>
+              <Dialog.Panel className="w-full max-w-lg transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all border border-gray-200">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <Dialog.Title as="h3" className="text-xl font-semibold text-white">
+                      {inviteSuccess ? '✅ Invitation Sent!' : '📧 Invite a Tenant'}
+                    </Dialog.Title>
+                    <button
+                      type="button"
+                      className="text-white/80 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+                      onClick={onClose}
+                    >
+                      <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
 
-                {inviteSuccess ? (
-                  <div className="mt-4">
-                    <div className="rounded-md bg-green-50 dark:bg-green-900/20 p-4 mb-4">
-                      <div className="flex">
-                        <div className="flex-shrink-0">
-                          <CheckCircleIcon className="h-5 w-5 text-green-400" aria-hidden="true" />
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="text-sm font-medium text-green-800 dark:text-green-200">Invitation Sent Successfully!</h3>
-                          <div className="mt-2 text-sm text-green-700 dark:text-green-300">
-                            <p>An invitation has been sent to <span className="font-semibold">{email}</span> for <span className="font-semibold">{selectedPropertyName}</span>.</p>
-                            <p className="mt-1">They'll receive an email with instructions on how to join your property.</p>
+                {/* Content */}
+                <div className="px-6 py-6">
+                  {inviteSuccess ? (
+                    <div className="space-y-6">
+                      <div className="rounded-xl bg-green-50 p-4 border border-green-200">
+                        <div className="flex">
+                          <div className="flex-shrink-0">
+                            <CheckCircleIcon className="h-6 w-6 text-green-500" aria-hidden="true" />
+                          </div>
+                          <div className="ml-3">
+                            <h3 className="text-lg font-medium text-green-800">Success!</h3>
+                            <div className="mt-2 text-sm text-green-700">
+                              <p>An invitation has been sent to <span className="font-semibold">{email}</span> for <span className="font-semibold">{selectedPropertyName}</span>.</p>
+                              <p className="mt-1">They'll receive an email with instructions on how to join your property.</p>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Invitation Details */}
-                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-md p-4 mb-4">
-                      <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">Next Steps:</h4>
-                      <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-                        <li>• The tenant will receive an email invitation</li>
-                        <li>• They'll create an account (if they don't have one)</li>
-                        <li>• They'll get access to submit maintenance requests</li>
-                        <li>• You'll be able to communicate directly through the platform</li>
-                      </ul>
-                    </div>
-
-                    {/* Show invite ID if available */}
-                    {inviteId && (
-                      <div className="mb-4">
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Invitation ID:</p>
-                        <div className="bg-gray-100 dark:bg-gray-700 rounded-md px-3 py-2 font-mono text-sm text-center">
-                          {inviteId}
-                        </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
-                          Reference this ID if you need to track or manage this invitation.
-                        </p>
+                      {/* Next Steps */}
+                      <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                        <h4 className="text-sm font-semibold text-blue-800 mb-3 flex items-center">
+                          <InformationCircleIcon className="h-5 w-5 mr-2" />
+                          What happens next?
+                        </h4>
+                        <ul className="text-sm text-blue-700 space-y-2">
+                          <li className="flex items-start">
+                            <span className="text-blue-500 mr-2">•</span>
+                            The tenant will receive an email invitation
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-blue-500 mr-2">•</span>
+                            They'll create an account (if they don't have one)
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-blue-500 mr-2">•</span>
+                            They'll get access to submit maintenance requests
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-blue-500 mr-2">•</span>
+                            You'll be able to communicate directly through the platform
+                          </li>
+                        </ul>
                       </div>
-                    )}
 
-                    {inviteCode && (
-                      <div className="mb-4">
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Invitation code:</p>
-                        <div className="flex items-center justify-center">
-                          <div className="bg-gray-100 dark:bg-gray-700 rounded-md px-4 py-2 font-mono text-center text-lg tracking-wider">
-                            {inviteCode}
+                      {/* Show invite ID if available */}
+                      {inviteId && (
+                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                          <p className="text-sm font-medium text-gray-700 mb-2">Invitation Reference:</p>
+                          <div className="bg-white rounded-lg px-3 py-2 font-mono text-sm text-center border border-gray-300">
+                            {inviteId}
                           </div>
+                          <p className="text-xs text-gray-500 mt-2 text-center">
+                            Save this ID to track or manage this invitation later.
+                          </p>
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                          The tenant will receive this code in their email.
-                        </p>
-                      </div>
-                    )}
+                      )}
 
-                    <div className="mt-6 flex justify-center gap-3">
-                      <Button
-                        type="button"
-                        variant="primary"
-                        onClick={onClose}
-                      >
-                        Close
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() => {
-                          setEmail('');
-                          setInviteSuccess(false);
-                          setInviteCode('');
-                          setInviteId('');
-                          setSelectedPropertyId(initialPropertyId || '');
-                          setSelectedPropertyName(initialPropertyName || '');
-                        }}
-                      >
-                        Send Another Invitation
-                      </Button>
+                      <div className="flex gap-3 pt-4">
+                        <Button
+                          type="button"
+                          variant="primary"
+                          onClick={onClose}
+                          className="flex-1"
+                        >
+                          Close
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => {
+                            setEmail('');
+                            setInviteSuccess(false);
+                            setInviteCode('');
+                            setInviteId('');
+                            setSelectedPropertyId(initialPropertyId || '');
+                            setSelectedPropertyName(initialPropertyName || '');
+                          }}
+                          className="flex-1"
+                        >
+                          Send Another
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="rounded-md bg-blue-50 dark:bg-blue-900/20 p-4 mb-4">
-                      <div className="flex">
-                        <div className="flex-shrink-0">
-                          <InformationCircleIcon className="h-5 w-5 text-blue-400" aria-hidden="true" />
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">How it works</h3>
-                          <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                            <ul className="list-disc list-inside space-y-1">
-                              <li>We'll send a professional email invitation to the tenant</li>
-                              <li>They'll receive a unique invitation code</li>
-                              <li>The tenant can accept directly from the email or enter the code manually</li>
-                              <li>Once accepted, they'll have access to submit maintenance requests</li>
+                  ) : (
+                    <>
+                      {/* How it works info */}
+                      <div className="rounded-xl bg-blue-50 p-4 mb-6 border border-blue-200">
+                        <div className="flex">
+                          <div className="flex-shrink-0">
+                            <InformationCircleIcon className="h-6 w-6 text-blue-500" aria-hidden="true" />
+                          </div>
+                          <div className="ml-3">
+                            <h3 className="text-sm font-semibold text-blue-800 mb-2">How it works</h3>
+                            <ul className="text-sm text-blue-700 space-y-1">
+                              <li className="flex items-start">
+                                <span className="text-blue-500 mr-2">•</span>
+                                We'll send a professional email invitation to the tenant
+                              </li>
+                              <li className="flex items-start">
+                                <span className="text-blue-500 mr-2">•</span>
+                                They'll receive a unique invitation code
+                              </li>
+                              <li className="flex items-start">
+                                <span className="text-blue-500 mr-2">•</span>
+                                The tenant can accept directly from the email or enter the code manually
+                              </li>
+                              <li className="flex items-start">
+                                <span className="text-blue-500 mr-2">•</span>
+                                Once accepted, they'll have access to submit maintenance requests
+                              </li>
                             </ul>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-                      <div>
-                        <label htmlFor="property" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Select Property
-                        </label>
-                        {properties.length > 0 ? (
+                      <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                          <label htmlFor="property" className="block text-sm font-semibold text-gray-700 mb-2">
+                            Select Property
+                          </label>
+                          {properties.length > 0 ? (
+                            <div className="relative">
+                              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <BuildingOfficeIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                              </div>
+                              <select
+                                id="property"
+                                className={`block w-full pl-10 pr-4 py-3 text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors ${
+                                  errors.propertyId ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                                }`}
+                                value={selectedPropertyId}
+                                onChange={(e) => setSelectedPropertyId(e.target.value)}
+                              >
+                                <option value="">Choose a property...</option>
+                                {properties.map((prop) => (
+                                  <option key={prop.id} value={prop.id}>{prop.name}</option>
+                                ))}
+                              </select>
+                              {errors.propertyId && <p className="mt-2 text-sm text-red-600">{errors.propertyId}</p>}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-500 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                              No properties available. Please add a property first.
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                            Tenant's Email
+                          </label>
                           <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <BuildingOfficeIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                              <EnvelopeIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
                             </div>
-                            <select
-                              id="property"
-                              className={`block w-full pl-10 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                                errors.propertyId ? 'border-red-500' : ''
+                            <input
+                              type="email"
+                              id="email"
+                              className={`block w-full pl-10 pr-4 py-3 text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors ${
+                                errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
                               }`}
-                              value={selectedPropertyId}
-                              onChange={(e) => setSelectedPropertyId(e.target.value)}
-                            >
-                              <option value="">Choose a property...</option>
-                              {properties.map((prop) => (
-                                <option key={prop.id} value={prop.id}>{prop.name}</option>
-                              ))}
-                            </select>
-                            {errors.propertyId && <p className="mt-2 text-sm text-red-600">{errors.propertyId}</p>}
+                              placeholder="tenant@example.com"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                            />
                           </div>
-                        ) : (
-                          <div className="text-sm text-gray-500 p-2 bg-gray-50 rounded-md dark:bg-gray-700 dark:text-gray-300">
-                            No properties available. Please add a property first.
-                          </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Tenant's Email
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <EnvelopeIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                          </div>
-                          <input
-                            type="email"
-                            id="email"
-                            className={`block w-full pl-10 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
-                              errors.email ? 'border-red-500' : ''
-                            }`}
-                            placeholder="tenant@example.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                          />
+                          {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
                         </div>
-                        {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
-                      </div>
 
-                      <div className="mt-6 flex justify-between">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          onClick={onClose}
-                          disabled={loading}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          type="submit"
-                          variant="primary"
-                          isLoading={loading}
-                          disabled={loading || !email || !selectedPropertyId}
-                        >
-                          {loading ? 'Sending...' : 'Send Invitation'}
-                        </Button>
-                      </div>
-                    </form>
-                  </>
-                )}
+                        <div className="flex gap-3 pt-4">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={onClose}
+                            disabled={loading}
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="submit"
+                            variant="primary"
+                            isLoading={loading}
+                            disabled={loading || !email || !selectedPropertyId}
+                            className="flex-1"
+                          >
+                            {loading ? 'Sending...' : 'Send Invitation'}
+                          </Button>
+                        </div>
+                      </form>
+                    </>
+                  )}
+                </div>
               </Dialog.Panel>
             </Transition.Child>
           </div>

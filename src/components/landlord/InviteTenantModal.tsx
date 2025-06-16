@@ -288,9 +288,14 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                           <InformationCircleIcon className="h-5 w-5 text-blue-400" aria-hidden="true" />
                         </div>
                         <div className="ml-3">
-                          <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">Information</h3>
+                          <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">How it works</h3>
                           <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                            <p>The tenant will receive an email with an invitation code to join your property.</p>
+                            <ul className="list-disc list-inside space-y-1">
+                              <li>We'll send a professional email invitation to the tenant</li>
+                              <li>They'll receive a unique invitation code</li>
+                              <li>The tenant can accept directly from the email or enter the code manually</li>
+                              <li>Once accepted, they'll have access to submit maintenance requests</li>
+                            </ul>
                           </div>
                         </div>
                       </div>

@@ -14,7 +14,8 @@ const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [hasInteracted, setHasInteracted] = useState(false);
-  const { login, fetchUserProfile } = useAuth();
+  const [showResendVerification, setShowResendVerification] = useState(false);
+  const { login, fetchUserProfile, resendVerificationEmail } = useAuth();
   const navigate = useNavigate();
 
   // Firebase error message mapping for user-friendly messages
@@ -25,10 +26,33 @@ const LoginPage = () => {
       'auth/invalid-email': 'Please provide a valid email address.',
       'auth/too-many-requests': 'Too many unsuccessful attempts. Please try again later.',
       'auth/user-disabled': 'This account has been disabled. Please contact support.',
-      'auth/network-request-failed': 'Network error. Please check your connection and try again.'
+      'auth/network-request-failed': 'Network error. Please check your connection and try again.',
+      'email-not-verified': 'Please verify your email address before logging in.'
     };
     
     return errorMessages[errorCode] || 'Failed to sign in. Please check your credentials.';
+  };
+
+  // Handle resend verification email
+  const handleResendVerification = async () => {
+    try {
+      setLoading(true);
+      const result = await resendVerificationEmail(email, password);
+      
+      if (result.alreadyVerified) {
+        setError('Your email is already verified. Please try logging in again.');
+        setShowResendVerification(false);
+      } else {
+        setError('');
+        setShowResendVerification(false);
+        // Show success message
+        alert('Verification email sent! Please check your inbox.');
+      }
+    } catch (error) {
+      setError('Failed to send verification email. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Real-time validation
@@ -118,8 +142,13 @@ const LoginPage = () => {
       }
     } catch (error) {
       console.error('Login Error:', error);
-      const errorCode = error.code || 'unknown';
+      const errorCode = error.code || error.message || 'unknown';
       setError(getErrorMessage(errorCode));
+      
+      // Show resend verification option for unverified emails
+      if (errorCode === 'email-not-verified') {
+        setShowResendVerification(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -201,6 +230,21 @@ const LoginPage = () => {
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm animate-in slide-in-from-top duration-300">
                 {error}
+                {showResendVerification && (
+                  <div className="mt-3 pt-3 border-t border-red-200">
+                    <p className="text-sm text-red-600 mb-2">
+                      Haven't received the verification email?
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={loading}
+                      className="text-sm font-medium text-red-700 hover:text-red-800 underline disabled:opacity-50"
+                    >
+                      Resend verification email
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             

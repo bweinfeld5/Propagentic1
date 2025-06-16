@@ -21,6 +21,7 @@ const CanvasLandingPage = lazy(() => import('./pages/CanvasLandingPage.tsx'));
 const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage.jsx'));
 const ForgotPassword = lazy(() => import('./components/auth/ForgotPassword.jsx'));
+const EmailVerificationPage = lazy(() => import('./pages/EmailVerificationPage.jsx'));
 const TenantDashboard = lazy(() => import('./pages/tenant/TenantDashboard.tsx'));
 const EnhancedTenantDashboard = lazy(() => import('./pages/tenant/EnhancedTenantDashboard.tsx'));
 const LandlordDashboard = lazy(() => import('./pages/landlord/LandlordDashboard.tsx'));
@@ -198,6 +199,7 @@ function App() {
                                 <Route path="/register" element={<RegisterPage />} />
                                 <Route path="/signup" element={<RegisterPage />} />
                                 <Route path="/forgot-password" element={<ForgotPassword />} />
+                                <Route path="/verify-email" element={<EmailVerificationPage />} />
                                 <Route path="/auth" element={<AuthPage />} />
                                 <Route path="/dashboard" element={<PrivateRoute><RoleBasedRedirect /></PrivateRoute>} />
                                 <Route path="/tenant/dashboard" element={<PrivateRoute><EnhancedTenantDashboard /></PrivateRoute>} />

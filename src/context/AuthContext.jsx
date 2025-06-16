@@ -5,10 +5,12 @@ import {
   signOut, 
   onAuthStateChanged, 
   sendPasswordResetEmail,
+  sendEmailVerification,
+  applyActionCode,
   signInWithPopup,
   GoogleAuthProvider
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 import { 
   validateUserRole, 
@@ -55,7 +57,7 @@ export function AuthProvider({ children }) {
     setIsProfileCorrupted(false);
   };
 
-  // Register a new user with user type
+  // Register a new user with user type and email verification
   const register = async (email, password, userType, isPremium = false) => {
     try {
       clearErrors();
@@ -64,6 +66,12 @@ export function AuthProvider({ children }) {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
+      // Send email verification immediately
+      await sendEmailVerification(user, {
+        url: `${window.location.origin}/verify-email?continue=/onboarding`,
+        handleCodeInApp: true
+      });
+      
       // Prepare user data object
       const userData = {
         email,
@@ -71,6 +79,8 @@ export function AuthProvider({ children }) {
         role: userType, // Add role field to match userType for backwards compatibility
         createdAt: serverTimestamp(),
         uid: user.uid,
+        emailVerified: false, // Mark as unverified initially
+        verificationEmailSent: serverTimestamp(),
         onboardingComplete: false // Set default onboarding state
       };
       
@@ -83,11 +93,14 @@ export function AuthProvider({ children }) {
       // Store user data in Firestore
       await setDoc(doc(db, 'users', user.uid), userData);
       
-      // TODO: Set custom claims for Firestore rules (requires working Cloud Function)
-      // For now, we'll rely on the user document in Firestore
-      console.log('User registered successfully. Custom claims will be added later.');
+      // Sign out immediately - force verification first
+      await signOut(auth);
       
-      return userCredential;
+      return { 
+        success: true, 
+        message: 'Verification email sent! Please check your inbox and verify your email before logging in.',
+        requiresVerification: true
+      };
     } catch (error) {
       console.error('Registration error:', error);
       setAuthError(getAuthErrorMessage(error.code));
@@ -95,11 +108,26 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Login an existing user
+  // Login with email verification check
   const login = async (email, password) => {
     try {
       clearErrors();
-      return await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Check if email is verified
+      if (!user.emailVerified) {
+        await signOut(auth);
+        throw new Error('email-not-verified');
+      }
+      
+      // Update user profile to reflect verification
+      await updateDoc(doc(db, 'users', user.uid), {
+        emailVerified: true,
+        lastLogin: serverTimestamp()
+      });
+      
+      return userCredential;
     } catch (error) {
       console.error('Login error:', error);
       setAuthError(getAuthErrorMessage(error.code));
@@ -132,6 +160,54 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error('Password reset error:', error);
       setAuthError(getAuthErrorMessage(error.code));
+      throw error;
+    }
+  };
+
+  // Resend verification email
+  const resendVerificationEmail = async (email, password) => {
+    try {
+      clearErrors();
+      // Temporarily sign in to get user object
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      if (user.emailVerified) {
+        await signOut(auth);
+        return { success: true, alreadyVerified: true };
+      }
+      
+      // Send new verification email
+      await sendEmailVerification(user, {
+        url: `${window.location.origin}/verify-email?continue=/onboarding`,
+        handleCodeInApp: true
+      });
+      
+      // Update timestamp in Firestore
+      await updateDoc(doc(db, 'users', user.uid), {
+        verificationEmailSent: serverTimestamp()
+      });
+      
+      // Sign out again
+      await signOut(auth);
+      
+      return { success: true, message: 'Verification email sent!' };
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      setAuthError(getAuthErrorMessage(error.code));
+      throw error;
+    }
+  };
+
+  // Verify email with action code
+  const verifyEmail = async (actionCode) => {
+    try {
+      clearErrors();
+      await applyActionCode(auth, actionCode);
+      return { success: true };
+    } catch (error) {
+      console.error('Email verification error:', error);
+      setAuthError('Email verification failed. The link may be expired.');
       throw error;
     }
   };
@@ -407,7 +483,9 @@ export function AuthProvider({ children }) {
     completeOnboarding,
     updateUserProfile,
     updateLastValidRoute,
-    signInWithGoogle
+    signInWithGoogle,
+    resendVerificationEmail,
+    verifyEmail
   };
 
   return (

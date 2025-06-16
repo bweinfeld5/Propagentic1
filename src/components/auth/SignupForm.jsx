@@ -135,28 +135,29 @@ const SignupForm = ({ initialRole, isPremium }) => {
     try {
       // Use the register function from AuthContext
       console.log('Attempting to register user with email:', email);
-      const userCredential = await register(email, password, userType, isPremium);
+      const result = await register(email, password, userType, isPremium);
       console.log('User registered successfully');
       
-      // Fetch user profile data to ensure it's loaded in context
-      console.log('Fetching user profile data...');
-      await fetchUserProfile(userCredential.user.uid);
-      console.log('User profile data loaded');
-      
-      // Set success state
-      setSuccess(true);
-      
-      // Redirect based on user type
-      console.log('Redirecting to onboarding based on user type:', userType);
-      setTimeout(() => {
-        if (userType === 'landlord') {
-          navigate('/landlord-onboarding');
-        } else if (userType === 'contractor') {
-          navigate('/contractor-onboarding');
-        } else {
-          navigate('/onboarding');
-        }
-      }, 1000); // Short delay to show success state
+      // Check if email verification is required
+      if (result.requiresVerification) {
+        setSuccess(true);
+        // Don't redirect - show success message about email verification
+        console.log('Email verification required - showing success message');
+      } else {
+        // Legacy path for existing users (shouldn't happen with new implementation)
+        await fetchUserProfile(result.user.uid);
+        setSuccess(true);
+        
+        setTimeout(() => {
+          if (userType === 'landlord') {
+            navigate('/landlord-onboarding');
+          } else if (userType === 'contractor') {
+            navigate('/contractor-onboarding');
+          } else {
+            navigate('/onboarding');
+          }
+        }, 1000);
+      }
       
     } catch (error) {
       console.error('Firebase Auth Error:', error);
@@ -183,7 +184,16 @@ const SignupForm = ({ initialRole, isPremium }) => {
       
       {success && (
         <div className="bg-success-subtle dark:bg-success-darkSubtle border-l-4 border-success text-green-700 dark:text-emerald-300 p-4 mb-4 rounded-md" role="alert">
-          <p>Account created successfully! Redirecting...</p>
+          <div>
+            <p className="font-medium">Account created successfully!</p>
+            <p className="mt-2 text-sm">
+              We've sent a verification email to <strong>{email}</strong>. 
+              Please check your inbox and click the verification link to activate your account.
+            </p>
+            <p className="mt-2 text-sm">
+              After verifying your email, you can <Link to="/login" className="underline hover:no-underline">sign in here</Link>.
+            </p>
+          </div>
         </div>
       )}
       

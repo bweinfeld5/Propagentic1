@@ -42,7 +42,7 @@ import { createNotificationOnInvite } from './inviteTriggers';
 export { createNotificationOnInvite };
 
 // Import and export SendGrid email functions
-import { sendGridPropertyInvite } from './sendgridEmailService';
-export { sendGridPropertyInvite };
+import { sendEmail, sendPropertyInviteEmail } from './sendgridEmailService';
+export { sendEmail, sendPropertyInviteEmail };
 
 console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid).");

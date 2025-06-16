@@ -141,20 +141,29 @@ class DataService {
   }
 
   /**
-   * Set up a real-time listener for properties
+   * Set up a real-time listener for properties with enhanced reliability
    * @param {Function} onData - Callback for data updates
    * @param {Function} onError - Callback for errors
+   * @param {Object} options - Configuration options
    * @returns {Function} Unsubscribe function
    */
-  subscribeToProperties(onData, onError) {
+  subscribeToProperties(onData, onError, options = {}) {
+    const {
+      enableRetry = true,
+      maxRetries = 5,
+      retryDelay = 2000,
+      enableConnectionMonitoring = true
+    } = options;
+
     if (!this.currentUser) {
       console.error('subscribeToProperties: No authenticated user');
-      onError(new Error('No authenticated user'));
+      const error = new Error('No authenticated user');
+      onError(error);
       return () => {};
     }
 
     const userId = this.currentUser.uid;
-    console.log(`Setting up properties subscription for user: ${userId}`);
+    console.log(`Setting up enhanced properties subscription for user: ${userId}`);
 
     if (this.isDemoMode) {
       console.log('Using demo data for properties subscription');
@@ -167,48 +176,160 @@ class DataService {
       return () => {};
     }
 
-    try {
-      // Check for empty or invalid user ID
-      if (!userId || userId.trim() === '') {
-        console.error('Invalid user ID for properties subscription');
-        onError(new Error('Invalid user ID'));
-        return () => {};
-      }
+    let unsubscribe = null;
+    let retryCount = 0;
+    let retryTimeout = null;
+    let connectionMonitor = null;
+    let isActive = true;
 
-      // Set up subscription using just the landlordId field
-      console.log('Setting up properties subscription with landlordId field');
-      
-      const q = query(
-        collection(db, 'properties'),
-        where('landlordId', '==', userId)
-      );
-      
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const properties = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-          
-          console.log(`Properties subscription returned ${properties.length} properties`);
-          onData(properties);
-        },
-        (error) => {
-          console.error('Properties subscription failed:', error);
+    // Enhanced subscription setup with retry logic
+    const setupSubscription = async () => {
+      if (!isActive) return;
+
+      try {
+        // Check for empty or invalid user ID
+        if (!userId || userId.trim() === '') {
+          console.error('Invalid user ID for properties subscription');
+          const error = new Error('Invalid user ID');
           onError(error);
+          return;
         }
-      );
+
+        console.log(`Setting up properties subscription (attempt ${retryCount + 1})`);
+        
+        const q = query(
+          collection(db, 'properties'),
+          where('landlordId', '==', userId)
+        );
+        
+        unsubscribe = onSnapshot(
+          q,
+          (snapshot) => {
+            if (!isActive) return;
+
+            try {
+              const properties = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                // Ensure dates are properly converted
+                createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : new Date(),
+                updatedAt: doc.data().updatedAt?.toDate ? doc.data().updatedAt.toDate() : new Date()
+              }));
+              
+              console.log(`Properties subscription success: ${properties.length} properties received`);
+              
+              // Reset retry count on successful data receive
+              retryCount = 0;
+              
+              onData(properties);
+            } catch (dataError) {
+              console.error('Error processing properties data:', dataError);
+              onError(dataError);
+            }
+          },
+          (error) => {
+            if (!isActive) return;
+
+            console.error(`Properties subscription failed (attempt ${retryCount + 1}):`, error);
+            
+            // Classify error type for retry decision
+            const isRetryableError = 
+              error.code === 'unavailable' ||
+              error.code === 'deadline-exceeded' ||
+              error.code === 'resource-exhausted' ||
+              error.code === 'internal' ||
+              error.code === 'failed-precondition' ||
+              error.message?.includes('network') ||
+              error.message?.includes('connection');
+
+            if (enableRetry && isRetryableError && retryCount < maxRetries) {
+              retryCount++;
+              const delay = retryDelay * Math.pow(2, retryCount - 1); // Exponential backoff
+              
+              console.log(`Retrying properties subscription in ${delay}ms (attempt ${retryCount}/${maxRetries})`);
+              
+              retryTimeout = setTimeout(() => {
+                if (isActive) {
+                  setupSubscription();
+                }
+              }, delay);
+            } else {
+              console.error(`Properties subscription failed permanently after ${retryCount} retries`);
+              onError(error);
+            }
+          }
+        );
+        
+      } catch (setupError) {
+        console.error('Error setting up properties subscription:', setupError);
+        
+        if (enableRetry && retryCount < maxRetries) {
+          retryCount++;
+          const delay = retryDelay * Math.pow(2, retryCount - 1);
+          
+          console.log(`Retrying subscription setup in ${delay}ms`);
+          retryTimeout = setTimeout(() => {
+            if (isActive) {
+              setupSubscription();
+            }
+          }, delay);
+        } else {
+          onError(setupError);
+        }
+      }
+    };
+
+    // Connection monitoring (if available)
+    if (enableConnectionMonitoring && typeof window !== 'undefined') {
+      const handleOnline = () => {
+        if (isActive) {
+          console.log('Connection restored, re-establishing properties subscription');
+          retryCount = 0; // Reset retry count on connection restore
+          setupSubscription();
+        }
+      };
+
+      const handleOffline = () => {
+        console.log('Connection lost, properties subscription may be affected');
+        // Don't call onError for offline events, just log
+      };
+
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
       
-      // Return unsubscribe function
-      return unsubscribe;
-    } catch (error) {
-      console.error('Error setting up properties subscription:', error);
-      onError(error);
-      
-      // Return a no-op cleanup function
-      return () => {};
+      connectionMonitor = () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      };
     }
+
+    // Start the subscription
+    setupSubscription();
+    
+    // Return enhanced cleanup function
+    return () => {
+      isActive = false;
+      
+      console.log('Cleaning up properties subscription');
+      
+      // Clear retry timeout
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+        retryTimeout = null;
+      }
+      
+      // Unsubscribe from Firestore
+      if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
+      }
+      
+      // Clean up connection monitoring
+      if (connectionMonitor) {
+        connectionMonitor();
+        connectionMonitor = null;
+      }
+    };
   }
 
   /**

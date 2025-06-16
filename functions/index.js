@@ -28,6 +28,25 @@ try {
   console.error('❌ Failed to load userRelationships functions:', error.message);
 }
 
+// SendGrid Email functions (NEW)
+try {
+  const sendgridTests = require('./lib/testSendGrid');
+  exports.testSendGrid = sendgridTests.testSendGrid;
+  exports.testPing = sendgridTests.testPing;
+  console.log('✅ Loaded SendGrid test functions');
+} catch (error) {
+  console.error('❌ Failed to load SendGrid test functions:', error.message);
+}
+
+// Updated Invite functions with SendGrid
+try {
+  const invites = require('./lib/invites');
+  exports.sendInviteEmail = invites.sendInviteEmail;
+  console.log('✅ Loaded SendGrid-powered invite functions');
+} catch (error) {
+  console.error('❌ Failed to load invite functions:', error.message);
+}
+
 // Invite Code functions
 try {
   const inviteCode = require('./lib/inviteCode');
@@ -37,15 +56,6 @@ try {
   console.log('✅ Loaded inviteCode functions');
 } catch (error) {
   console.error('❌ Failed to load inviteCode functions:', error.message);
-}
-
-// Email invite function
-try {
-  const invites = require('./lib/invites');
-  exports.sendInviteEmail = invites.sendInviteEmail;
-  console.log('✅ Loaded email invite function');
-} catch (error) {
-  console.error('❌ Failed to load invites functions:', error.message);
 }
 
 // Notification trigger functions

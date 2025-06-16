@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendPropertyInviteEmail = exports.sendEmail = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
+exports.simpleTest = exports.testPing = exports.testSendGrid = exports.sendPropertyInviteEmail = exports.sendEmail = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 // Initialize Firebase Admin SDK
@@ -65,5 +65,11 @@ Object.defineProperty(exports, "createNotificationOnInvite", { enumerable: true,
 const sendgridEmailService_1 = require("./sendgridEmailService");
 Object.defineProperty(exports, "sendEmail", { enumerable: true, get: function () { return sendgridEmailService_1.sendEmail; } });
 Object.defineProperty(exports, "sendPropertyInviteEmail", { enumerable: true, get: function () { return sendgridEmailService_1.sendPropertyInviteEmail; } });
-console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid).");
+// Import and export test functions
+const testSendGrid_1 = require("./testSendGrid");
+Object.defineProperty(exports, "testSendGrid", { enumerable: true, get: function () { return testSendGrid_1.testSendGrid; } });
+Object.defineProperty(exports, "testPing", { enumerable: true, get: function () { return testSendGrid_1.testPing; } });
+const simpleTest_1 = require("./simpleTest");
+Object.defineProperty(exports, "simpleTest", { enumerable: true, get: function () { return simpleTest_1.simpleTest; } });
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests).");
 //# sourceMappingURL=index.js.map

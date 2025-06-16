@@ -32,7 +32,6 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendInviteEmail = void 0;
 const functions = __importStar(require("firebase-functions"));
@@ -52,7 +51,22 @@ const generateInviteCode = (length = 8) => {
 if (!admin.apps.length) {
     admin.initializeApp();
 }
-const APP_DOMAIN = ((_a = functions.config().app) === null || _a === void 0 ? void 0 : _a.domain) || process.env.APP_DOMAIN || 'https://propagentic.com';
+// Lazy initialization for APP_DOMAIN
+let APP_DOMAIN;
+const getAppDomain = () => {
+    if (!APP_DOMAIN) {
+        try {
+            APP_DOMAIN = process.env.APP_DOMAIN ||
+                (functions.config().app && functions.config().app.domain) ||
+                'https://propagentic.com';
+        }
+        catch (error) {
+            logger.warn('Failed to get app domain from config, using default');
+            APP_DOMAIN = 'https://propagentic.com';
+        }
+    }
+    return APP_DOMAIN;
+};
 /**
  * Firestore trigger: Send invite email when invite document is created
  * Now uses SendGrid instead of Firebase mail extension
@@ -92,7 +106,7 @@ exports.sendInviteEmail = functions.firestore
     const tenantEmail = inviteData.tenantEmail;
     try {
         logger.info(`Sending invite email via SendGrid to: ${tenantEmail}`);
-        const emailSent = await (0, sendgridEmailService_1.sendPropertyInviteEmail)(tenantEmail, inviteCode, landlordName, propertyName, APP_DOMAIN);
+        const emailSent = await (0, sendgridEmailService_1.sendPropertyInviteEmail)(tenantEmail, inviteCode, landlordName, propertyName, getAppDomain());
         if (emailSent) {
             // Update document with success status
             await snap.ref.update({

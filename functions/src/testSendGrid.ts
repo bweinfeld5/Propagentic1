@@ -1,24 +1,15 @@
-import { onCall, HttpsError } from "firebase-functions/v2/https";
-import * as logger from "firebase-functions/logger";
-import { sendEmail, sendPropertyInviteEmail } from "./sendgridEmailService";
+import * as functions from 'firebase-functions';
+import * as logger from 'firebase-functions/logger';
+import { sendEmail, sendPropertyInviteEmail } from './sendgridEmailService';
 
 /**
  * Test function to verify SendGrid integration
- * Call with: curl -X POST https://your-region-your-project.cloudfunctions.net/testSendGrid -H "Content-Type: application/json" -d '{"email":"test@example.com"}'
  */
-export const testSendGrid = onCall(async (request) => {
-  // Check authentication
-  if (!request.auth) {
-    throw new HttpsError(
-      'unauthenticated', 
-      'You must be authenticated to test email sending.'
-    );
-  }
-
-  const testEmail = request.data.email || request.auth.token.email;
+export const testSendGrid = functions.https.onCall(async (data: any) => {
+  const testEmail = data.email;
   
   if (!testEmail) {
-    throw new HttpsError(
+    throw new functions.https.HttpsError(
       'invalid-argument', 
       'Email address is required for testing.'
     );
@@ -71,7 +62,7 @@ export const testSendGrid = onCall(async (request) => {
   } catch (error: any) {
     logger.error('SendGrid test failed:', error);
     
-    throw new HttpsError(
+    throw new functions.https.HttpsError(
       'internal',
       `SendGrid test failed: ${error.message}`,
       { error: error.message, timestamp: new Date().toISOString() }
@@ -82,10 +73,11 @@ export const testSendGrid = onCall(async (request) => {
 /**
  * Simple ping function to test if functions are deployed
  */
-export const testPing = onCall(async () => {
+export const testPing = functions.https.onCall(async () => {
   return { 
     message: "pong", 
     timestamp: new Date().toISOString(),
-    sendGridConfigured: !!process.env.SENDGRID_API_KEY
+    sendGridConfigured: !!(process.env.SENDGRID_API_KEY || 
+      (functions.config().sendgrid && functions.config().sendgrid.api_key))
   };
 });

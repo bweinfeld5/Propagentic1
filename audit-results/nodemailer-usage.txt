@@ -1,10 +1,3 @@
-./node_modules/nodemailer/lib/nodemailer.js:const ETHEREAL_API = (process.env.ETHEREAL_API || 'https://api.nodemailer.com').replace(/\/+$/, '');
-./node_modules/nodemailer/lib/nodemailer.js:                let error = new Error('Using legacy SES configuration, expecting @aws-sdk/client-sesv2, see https://nodemailer.com/transports/ses/');
-./node_modules/nodemailer/lib/fetch/index.js:        'user-agent': 'nodemailer/' + packageData.version
-./functions/test.js:const nodemailer = require('nodemailer');
-./functions/test.js:const mailTransport = nodemailer.createTransport({
-./functions/test.js:          <p>This is a test email sent directly using nodemailer with SMTP.</p>
-./functions/test.js:    console.log('Preview URL:', nodemailer.getTestMessageUrl(info));
 ./functions/lib/invites.js:const nodemailer = __importStar(require("nodemailer"));
 ./functions/lib/invites.js:// Initialize nodemailer transporter.
 ./functions/lib/invites.js:// const mailTransport = nodemailer.createTransport({
@@ -12,5 +5,9 @@
 ./functions/src/invites.ts:import * as nodemailer from 'nodemailer';
 ./functions/src/invites.ts:// Initialize nodemailer transporter.
 ./functions/src/invites.ts:// const mailTransport = nodemailer.createTransport({
+./functions/test.js:const nodemailer = require('nodemailer');
+./functions/test.js:const mailTransport = nodemailer.createTransport({
+./functions/test.js:          <p>This is a test email sent directly using nodemailer with SMTP.</p>
+./functions/test.js:    console.log('Preview URL:', nodemailer.getTestMessageUrl(info));
 ./src/inviteEmail.ts:import * as nodemailer from 'nodemailer';
 ./src/inviteEmail.ts:const transporter = nodemailer.createTransport({

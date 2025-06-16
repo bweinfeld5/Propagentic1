@@ -1,18 +1,5 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import * as nodemailer from 'nodemailer';
-
-// Initialize nodemailer transporter.
-// IMPORTANT: Replace with your actual email service configuration.
-// It's recommended to store sensitive info in Firebase Functions config.
-// Example using Gmail (less secure, for testing only, requires "less secure app access"):
-// const mailTransport = nodemailer.createTransport({
-//   service: 'gmail',
-//   auth: {
-//     user: functions.config().gmail?.email || 'YOUR_GMAIL_EMAIL',
-//     pass: functions.config().gmail?.password || 'YOUR_GMAIL_PASSWORD',
-//   },
-// });
 
 // Helper to generate a random code
 const generateInviteCode = (length = 8) => {
@@ -29,9 +16,6 @@ if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-// Unused SMTP config function removed to fix TypeScript compilation
-
-const APP_NAME = 'PropAgentic';
 const APP_DOMAIN = functions.config().app?.domain || 'http://localhost:3000';
 
 // This function will now generate a code and update the document

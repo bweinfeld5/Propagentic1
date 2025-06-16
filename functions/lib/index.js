@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendGridPropertyInvite = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
+exports.sendPropertyInviteEmail = exports.sendEmail = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 // Initialize Firebase Admin SDK
@@ -63,6 +63,7 @@ const inviteTriggers_1 = require("./inviteTriggers");
 Object.defineProperty(exports, "createNotificationOnInvite", { enumerable: true, get: function () { return inviteTriggers_1.createNotificationOnInvite; } });
 // Import and export SendGrid email functions
 const sendgridEmailService_1 = require("./sendgridEmailService");
-Object.defineProperty(exports, "sendGridPropertyInvite", { enumerable: true, get: function () { return sendgridEmailService_1.sendGridPropertyInvite; } });
+Object.defineProperty(exports, "sendEmail", { enumerable: true, get: function () { return sendgridEmailService_1.sendEmail; } });
+Object.defineProperty(exports, "sendPropertyInviteEmail", { enumerable: true, get: function () { return sendgridEmailService_1.sendPropertyInviteEmail; } });
 console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid).");
 //# sourceMappingURL=index.js.map

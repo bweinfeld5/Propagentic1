@@ -102,7 +102,7 @@ class MessageService {
 
       // Create title based on participants
       const title = participants
-        .filter(p => p.role !== 'system')
+        .filter(p => p.role !== 'system' as any)
         .map(p => p.name)
         .join(', ');
 
@@ -276,7 +276,7 @@ class MessageService {
 
       // Update conversation
       const conversationRef = doc(this.conversationsRef, conversationId);
-      const conversationUpdate = {
+      const conversationUpdate: any = {
         lastMessage: {
           text: text || `Sent a ${type}`,
           timestamp: serverTimestamp(),

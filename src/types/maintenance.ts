@@ -536,27 +536,4 @@ export interface NotificationSettings {
   updatedAt: Timestamp;
 }
 
-/**
- * Export all interfaces for easy importing
- */
-export type {
-  MaintenanceCategory,
-  MaintenancePriority,
-  MaintenanceStatus,
-  UserRole,
-  StatusChange,
-  Communication,
-  CostBreakdown,
-  MaterialCost,
-  AdditionalCharge,
-  TimeTracking,
-  PhotoDocumentation,
-  ContractorRating,
-  RequestTemplate,
-  MaintenanceRequest,
-  MaintenanceRequestCreate,
-  ContractorMaintenanceProfile,
-  BulkOperation,
-  MaintenanceMetrics,
-  NotificationSettings
-}; 
+// All types and interfaces are exported individually above 

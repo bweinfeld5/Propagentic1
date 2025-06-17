@@ -112,14 +112,9 @@ export const inviteConverter = createConverter<Invite>('inviteId');
 export const maintenanceRequestConverter = createConverter<MaintenanceRequest>('id');
 
 /**
- * Converter for StatusChange document (subcollection)
- */
-export const statusChangeConverter = createTypedConverter<StatusChange>('id');
-
-/**
  * Converter for Communication document (subcollection)
  */
-export const communicationConverter = createTypedConverter<Communication>('id');
+export const communicationConverter = createConverter<Communication>('id');
 
 /**
  * Converter for ContractorMaintenanceProfile document
@@ -149,12 +144,12 @@ export const notificationSettingsConverter = createConverter<NotificationSetting
 /**
  * Converter for PhotoDocumentation document (subcollection)
  */
-export const photoDocumentationConverter = createTypedConverter<PhotoDocumentation>('id');
+export const photoDocumentationConverter = createConverter<PhotoDocumentation>('id');
 
 /**
  * Converter for TimeTracking document (subcollection)
  */
-export const timeTrackingConverter = createTypedConverter<TimeTracking>('sessionId');
+export const timeTrackingConverter = createConverter<TimeTracking>('sessionId');
 
 /**
  * Helper functions for creating new documents with default values

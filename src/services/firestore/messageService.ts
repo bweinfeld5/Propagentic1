@@ -23,7 +23,7 @@ export interface MessageParticipant {
   id: string;
   name: string;
   email: string;
-  role: 'landlord' | 'contractor' | 'tenant' | 'system';
+  role: 'landlord' | 'contractor' | 'tenant';
   avatar?: string;
   company?: string;
 }
@@ -41,7 +41,7 @@ export interface Message {
   conversationId: string;
   senderId: string;
   senderName: string;
-  senderRole: 'landlord' | 'contractor' | 'tenant' | 'system';
+  senderRole: 'landlord' | 'contractor' | 'tenant';
   text: string;
   type: 'text' | 'image' | 'file' | 'system';
   attachments?: MessageAttachment[];
@@ -244,7 +244,7 @@ class MessageService {
     conversationId: string,
     senderId: string,
     senderName: string,
-    senderRole: 'landlord' | 'contractor' | 'tenant' | 'system',
+    senderRole: 'landlord' | 'contractor' | 'tenant',
     text: string,
     type: Message['type'] = 'text',
     attachments?: MessageAttachment[]
@@ -276,7 +276,7 @@ class MessageService {
 
       // Update conversation
       const conversationRef = doc(this.conversationsRef, conversationId);
-      const conversationUpdate: Record<string, any> = {
+      const conversationUpdate = {
         lastMessage: {
           text: text || `Sent a ${type}`,
           timestamp: serverTimestamp(),
@@ -293,7 +293,7 @@ class MessageService {
         
         conversation.participants.forEach(participant => {
           if (participant.id !== senderId) {
-            (conversationUpdate as any)[`unreadCounts.${participant.id}`] = increment(1);
+            conversationUpdate[`unreadCounts.${participant.id}`] = increment(1);
           }
         });
       }
@@ -415,17 +415,17 @@ class MessageService {
         
         // Mark as read if not already read by this user
         if (!message.readBy || !message.readBy[userId]) {
-          const updateData: Record<string, any> = {};
-          updateData[`readBy.${userId}`] = serverTimestamp();
-          batch.update(doc.ref, updateData);
+          batch.update(doc.ref, {
+            [`readBy.${userId}`]: serverTimestamp()
+          });
         }
       });
 
       // Reset unread count for this user in conversation
       const conversationRef = doc(this.conversationsRef, conversationId);
-      const conversationUpdateData: Record<string, any> = {};
-      conversationUpdateData[`unreadCounts.${userId}`] = 0;
-      batch.update(conversationRef, conversationUpdateData);
+      batch.update(conversationRef, {
+        [`unreadCounts.${userId}`]: 0
+      });
 
       await batch.commit();
       console.log('Messages marked as read for user:', userId);

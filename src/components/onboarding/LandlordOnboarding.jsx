@@ -88,6 +88,35 @@ const LandlordOnboarding = () => {
     setCurrentStep(prev => prev - 1);
   };
 
+  const handleSkip = () => {
+    setError('');
+    
+    // Set some default values for skipped steps to prevent issues
+    if (currentStep === 1) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: prev.firstName || 'Test',
+        lastName: prev.lastName || 'Landlord',
+        phoneNumber: prev.phoneNumber || '(555) 123-4567'
+      }));
+    } else if (currentStep === 2) {
+      setFormData(prev => ({
+        ...prev,
+        streetAddress: prev.streetAddress || '123 Test Street',
+        city: prev.city || 'Test City',
+        state: prev.state || 'CA',
+        zipCode: prev.zipCode || '12345',
+        propertyType: prev.propertyType || 'Single-Family Home'
+      }));
+    } else if (currentStep === 3) {
+      // Business details are optional, no defaults needed
+    } else if (currentStep === 4) {
+      // Tenant invite is optional, no defaults needed
+    }
+    
+    setCurrentStep(prev => prev + 1);
+  };
+
   const validateStep = () => {
     switch (currentStep) {
       case 1: // Profile
@@ -659,6 +688,14 @@ const LandlordOnboarding = () => {
                 )}
 
                 {currentStep < 5 ? (
+                  <div className="flex space-x-3">
+                    <button
+                      type="button"
+                      onClick={handleSkip}
+                      className="px-6 py-3 border border-gray-300 rounded-lg text-gray-600 font-medium hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200"
+                    >
+                      Skip for now
+                    </button>
                   <button
                     type="button"
                     onClick={handleNext}
@@ -666,6 +703,7 @@ const LandlordOnboarding = () => {
                   >
                     Next
                   </button>
+                  </div>
                 ) : (
                   <button
                     type="submit"

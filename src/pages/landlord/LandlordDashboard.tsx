@@ -312,7 +312,7 @@ const LandlordDashboard: React.FC = () => {
   const renderActionBar = (): JSX.Element => {
     if (currentView === 'dashboard' && dashboardMode === 'default') {
       return (
-        <div className="bg-white border-b border-gray-200 px-6 py-3">
+        <div className="bg-gradient-to-r from-white to-orange-50 border-b border-orange-100 px-6 py-3 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <h1 className="text-xl font-semibold text-gray-900">
@@ -320,7 +320,7 @@ const LandlordDashboard: React.FC = () => {
               </h1>
               <button
                 onClick={() => setDashboardMode('custom')}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors flex items-center gap-2"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors flex items-center gap-2"
               >
                 <Square3Stack3DIcon className="w-4 h-4" />
                 Switch to Custom View
@@ -330,7 +330,7 @@ const LandlordDashboard: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowGlobalSearch(true)}
-                className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+                className="px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors flex items-center gap-2"
                 title="Search (Ctrl+K)"
               >
                 <MagnifyingGlassIcon className="w-4 h-4" />
@@ -344,13 +344,13 @@ const LandlordDashboard: React.FC = () => {
 
     if (currentView === 'dashboard' && dashboardMode === 'custom') {
       return (
-        <div className="bg-white border-b border-gray-200 px-6 py-3">
+        <div className="bg-gradient-to-r from-white to-orange-50 border-b border-orange-100 px-6 py-3 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <h1 className="text-xl font-semibold text-gray-900">Custom Dashboard</h1>
               <button
                 onClick={() => setDashboardMode('default')}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-orange-100 text-orange-700 transition-colors flex items-center gap-2"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors flex items-center gap-2"
               >
                 <Square3Stack3DIcon className="w-4 h-4" />
                 Switch to Default View
@@ -363,12 +363,12 @@ const LandlordDashboard: React.FC = () => {
 
     if (currentView === 'properties') {
       return (
-        <div className="bg-white border-b border-gray-200 px-6 py-3">
+        <div className="bg-gradient-to-r from-white to-orange-50 border-b border-orange-100 px-6 py-3 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <h1 className="text-xl font-semibold text-gray-900">Properties</h1>
               {selectedItems.length > 0 && (
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-orange-600">
                   {selectedItems.length} selected
                 </span>
               )}
@@ -377,7 +377,7 @@ const LandlordDashboard: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowGlobalSearch(true)}
-                className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+                className="px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors flex items-center gap-2"
                 title="Search (Ctrl+K)"
               >
                 <MagnifyingGlassIcon className="w-4 h-4" />
@@ -392,7 +392,7 @@ const LandlordDashboard: React.FC = () => {
               </button>
               <button
                 onClick={() => setShowImportModal(true)}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2"
               >
                 <CloudArrowUpIcon className="w-4 h-4" />
                 Import CSV
@@ -405,13 +405,13 @@ const LandlordDashboard: React.FC = () => {
 
     if (currentView === 'tenants') {
       return (
-        <div className="bg-white border-b border-gray-200 px-6 py-3">
+        <div className="bg-gradient-to-r from-white to-orange-50 border-b border-orange-100 px-6 py-3 shadow-sm">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-900">Tenant Management</h1>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setShowInviteTenantModal(true)}
-                className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+                onClick={() => setShowGlobalSearch(true)}
+                className="px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors flex items-center gap-2"
                 title="Search (Ctrl+K)"
               >
                 <MagnifyingGlassIcon className="w-4 h-4" />
@@ -432,14 +432,14 @@ const LandlordDashboard: React.FC = () => {
 
     // Default action bar for other views
     return (
-      <div className="bg-white border-b border-gray-200 px-6 py-3">
+      <div className="bg-gradient-to-r from-white to-orange-50 border-b border-orange-100 px-6 py-3 shadow-sm">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold text-gray-900">
             {navigationItems.find(item => item.view === currentView)?.label || 'Dashboard'}
           </h1>
           <button
             onClick={() => setShowGlobalSearch(true)}
-            className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+            className="px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors flex items-center gap-2"
             title="Search (Ctrl+K)"
           >
             <MagnifyingGlassIcon className="w-4 h-4" />
@@ -455,8 +455,8 @@ const LandlordDashboard: React.FC = () => {
       case 'dashboard':
         if (dashboardMode === 'custom') {
           return (
-            <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-full">
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+            <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
+              <div className="bg-white rounded-xl border border-orange-100 shadow-sm p-8 text-center">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Custom Dashboard</h3>
                 <p className="text-gray-600">Drag & drop dashboard coming soon - requires additional dependencies.</p>
                 <button
@@ -472,8 +472,8 @@ const LandlordDashboard: React.FC = () => {
         return renderDefaultDashboard();
       case 'reports':
         return (
-          <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-full">
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+          <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
+            <div className="bg-white rounded-xl border border-orange-100 shadow-sm p-8 text-center">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Reports & Analytics</h3>
               <p className="text-gray-600">Advanced reporting features coming soon - requires additional dependencies.</p>
             </div>
@@ -492,8 +492,8 @@ const LandlordDashboard: React.FC = () => {
         return <CommunicationCenter userRole="landlord" currentUser={currentUser} />;
       case 'import':
         return (
-          <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-full">
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+          <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
+            <div className="bg-white rounded-xl border border-orange-100 shadow-sm p-8 text-center">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Bulk Property Import</h3>
               <p className="text-gray-600">CSV import functionality coming soon - requires additional dependencies.</p>
               <button
@@ -511,10 +511,10 @@ const LandlordDashboard: React.FC = () => {
   };
 
   const renderDefaultDashboard = (): JSX.Element => (
-    <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-full">
+    <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-gradient-to-br from-white to-orange-50 p-6 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Properties</p>
@@ -526,7 +526,7 @@ const LandlordDashboard: React.FC = () => {
           </div>
         </div>
         
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-gradient-to-br from-white to-orange-50 p-6 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Units</p>
@@ -534,13 +534,13 @@ const LandlordDashboard: React.FC = () => {
                 {properties.reduce((sum, p) => sum + safeNumber(p.units, 1), 0)}
               </p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <HomeIcon className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-orange-100 rounded-lg">
+              <HomeIcon className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>
         
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-gradient-to-br from-white to-orange-50 p-6 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Occupancy Rate</p>
@@ -553,13 +553,13 @@ const LandlordDashboard: React.FC = () => {
                   : 0}%
               </p>
             </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <UsersIcon className="w-6 h-6 text-green-600" />
+            <div className="p-3 bg-orange-100 rounded-lg">
+              <UsersIcon className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>
         
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-gradient-to-br from-white to-orange-50 p-6 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Monthly Revenue</p>
@@ -567,8 +567,8 @@ const LandlordDashboard: React.FC = () => {
                 ${properties.reduce((sum, p) => sum + safeNumber(p.monthlyRevenue || p.monthlyRent), 0).toLocaleString()}
               </p>
             </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <ArrowTrendingUpIcon className="w-6 h-6 text-purple-600" />
+            <div className="p-3 bg-orange-100 rounded-lg">
+              <ArrowTrendingUpIcon className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>
@@ -576,7 +576,7 @@ const LandlordDashboard: React.FC = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Properties</h3>
           <div className="space-y-3">
             {properties.slice(0, 3).map((property) => {
@@ -585,7 +585,7 @@ const LandlordDashboard: React.FC = () => {
               const occupancyRate = units > 0 ? Math.round((occupiedUnits / units) * 100) : 0;
               
               return (
-                <div key={property.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={property.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-white rounded-lg border border-orange-100">
                   <div>
                     <div className="font-medium text-gray-900">{getPropertyName(property)}</div>
                     <div className="text-sm text-gray-600">{formatAddress(property)}</div>
@@ -601,7 +601,7 @@ const LandlordDashboard: React.FC = () => {
             })}
             {properties.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                <BuildingOfficeIcon className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <BuildingOfficeIcon className="w-12 h-12 mx-auto mb-2 text-orange-300" />
                 <p>No properties found</p>
                 <button
                   onClick={() => setShowAddPropertyModal(true)}
@@ -614,12 +614,12 @@ const LandlordDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setShowAddPropertyModal(true)}
-              className="p-4 border border-gray-200 rounded-lg hover:border-orange-200 hover:bg-orange-50 transition-colors text-left"
+              className="p-4 border border-orange-200 rounded-lg hover:border-orange-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-white transition-all text-left"
             >
               <PlusIcon className="w-5 h-5 text-orange-600 mb-2" />
               <div className="font-medium text-gray-900">Add Property</div>
@@ -628,27 +628,27 @@ const LandlordDashboard: React.FC = () => {
             
             <button
               onClick={() => setCurrentView('reports')}
-              className="p-4 border border-gray-200 rounded-lg hover:border-blue-200 hover:bg-blue-50 transition-colors text-left"
+              className="p-4 border border-orange-200 rounded-lg hover:border-orange-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-white transition-all text-left"
             >
-              <ChartBarIcon className="w-5 h-5 text-blue-600 mb-2" />
+              <ChartBarIcon className="w-5 h-5 text-orange-600 mb-2" />
               <div className="font-medium text-gray-900">View Reports</div>
               <div className="text-sm text-gray-600">Analytics & insights</div>
             </button>
             
             <button
               onClick={() => setDashboardMode('custom')}
-              className="p-4 border border-gray-200 rounded-lg hover:border-purple-200 hover:bg-purple-50 transition-colors text-left"
+              className="p-4 border border-orange-200 rounded-lg hover:border-orange-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-white transition-all text-left"
             >
-              <Square3Stack3DIcon className="w-5 h-5 text-purple-600 mb-2" />
+              <Square3Stack3DIcon className="w-5 h-5 text-orange-600 mb-2" />
               <div className="font-medium text-gray-900">Customize Dashboard</div>
               <div className="text-sm text-gray-600">Drag & drop widgets</div>
             </button>
             
             <button
               onClick={() => setShowGlobalSearch(true)}
-              className="p-4 border border-gray-200 rounded-lg hover:border-green-200 hover:bg-green-50 transition-colors text-left"
+              className="p-4 border border-orange-200 rounded-lg hover:border-orange-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-white transition-all text-left"
             >
-              <MagnifyingGlassIcon className="w-5 h-5 text-green-600 mb-2" />
+              <MagnifyingGlassIcon className="w-5 h-5 text-orange-600 mb-2" />
               <div className="font-medium text-gray-900">Global Search</div>
               <div className="text-sm text-gray-600">Find anything quickly</div>
             </button>
@@ -659,9 +659,9 @@ const LandlordDashboard: React.FC = () => {
   );
 
   const renderPropertiesView = (): JSX.Element => (
-    <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-full">
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-        <div className="p-6 border-b border-gray-200">
+    <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
+      <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
+        <div className="p-6 border-b border-orange-100">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">Properties</h3>
             <div className="flex items-center gap-3">
@@ -684,7 +684,7 @@ const LandlordDashboard: React.FC = () => {
         <div className="p-6">
           {properties.length === 0 ? (
             <div className="text-center py-12">
-              <BuildingOfficeIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <BuildingOfficeIcon className="w-16 h-16 mx-auto mb-4 text-orange-300" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">No Properties Found</h3>
               <p className="text-gray-600 mb-6">
                 Start by adding your first property to get started with property management.
@@ -699,7 +699,7 @@ const LandlordDashboard: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setShowImportModal(true)}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+                  className="px-6 py-3 border border-orange-300 text-orange-700 rounded-lg hover:bg-orange-50 transition-colors flex items-center gap-2"
                 >
                   <CloudArrowUpIcon className="w-5 h-5" />
                   Import CSV
@@ -716,10 +716,10 @@ const LandlordDashboard: React.FC = () => {
                 return (
                   <div
                     key={property.id}
-                    className={`p-4 border rounded-lg transition-colors cursor-pointer ${
+                    className={`p-4 border rounded-lg transition-all cursor-pointer ${
                       selectedItems.includes(property.id)
-                        ? 'border-orange-200 bg-orange-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-orange-300 bg-gradient-to-r from-orange-100 to-orange-50 shadow-md'
+                        : 'border-orange-200 hover:border-orange-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-white'
                     }`}
                     onClick={() => {
                       if (selectedItems.includes(property.id)) {
@@ -768,9 +768,9 @@ const LandlordDashboard: React.FC = () => {
   );
 
   const renderTenantsView = (): JSX.Element => (
-    <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-full">
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-        <div className="p-6 border-b border-gray-200">
+    <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
+      <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
+        <div className="p-6 border-b border-orange-100">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">Tenant Management</h3>
             <button
@@ -786,7 +786,7 @@ const LandlordDashboard: React.FC = () => {
         <div className="p-6">
           {tenants.length === 0 ? (
             <div className="text-center py-12">
-              <UsersIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <UsersIcon className="w-16 h-16 mx-auto mb-4 text-orange-300" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">No Tenants Found</h3>
               <p className="text-gray-600 mb-6">
                 Start by inviting tenants to your properties to manage leases and communications.
@@ -802,7 +802,7 @@ const LandlordDashboard: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {tenants.map((tenant) => (
-                <div key={tenant.id} className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
+                <div key={tenant.id} className="p-4 border border-orange-200 rounded-lg hover:border-orange-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-white transition-all">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -846,16 +846,16 @@ const LandlordDashboard: React.FC = () => {
   );
 
   const renderMaintenanceView = (): JSX.Element => (
-    <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-full">
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-        <div className="p-6 border-b border-gray-200">
+    <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
+      <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
+        <div className="p-6 border-b border-orange-100">
           <h3 className="text-lg font-semibold text-gray-900">Maintenance Requests</h3>
         </div>
         
         <div className="p-6">
           {tickets.length === 0 ? (
             <div className="text-center py-12">
-              <WrenchScrewdriverIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <WrenchScrewdriverIcon className="w-16 h-16 mx-auto mb-4 text-orange-300" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">No Maintenance Requests</h3>
               <p className="text-gray-600">
                 Maintenance requests from tenants will appear here for tracking and management.
@@ -864,7 +864,7 @@ const LandlordDashboard: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {tickets.map((ticket) => (
-                <div key={ticket.id} className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
+                <div key={ticket.id} className="p-4 border border-orange-200 rounded-lg hover:border-orange-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-white transition-all">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
@@ -919,8 +919,8 @@ const LandlordDashboard: React.FC = () => {
   );
 
   const renderDocumentsView = (): JSX.Element => (
-    <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-full">
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+    <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
+      <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow p-8 text-center">
         <DocumentTextIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Document Management</h3>
         <p className="text-gray-600">Coming in next phase - store and organize leases, contracts, and property documents.</p>
@@ -968,24 +968,27 @@ const LandlordDashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center">
+        <div className="text-center bg-white/95 backdrop-blur-sm rounded-xl p-8 shadow-2xl border border-orange-200">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex">
       {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 h-full">
-        <div className="p-6 border-b border-gray-200">
+      <div className="w-64 bg-gradient-to-b from-white to-orange-50 border-r border-orange-100 h-full shadow-sm">
+        <div className="p-6 border-b border-orange-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg flex items-center justify-center shadow-sm">
               <BuildingOfficeIcon className="w-6 h-6 text-orange-600" />
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">PropAgentic</h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-orange-600">
                 {userProfile ? (
                   `Welcome, ${userProfile.firstName && userProfile.lastName 
                     ? `${userProfile.firstName} ${userProfile.lastName}` 
@@ -1004,10 +1007,10 @@ const LandlordDashboard: React.FC = () => {
               <button
                 key={item.id}
                 onClick={() => setCurrentView(item.view)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all ${
                   currentView === item.view
-                    ? 'bg-orange-50 text-orange-700 border-r-2 border-orange-500'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-gradient-to-r from-orange-100 to-orange-50 text-orange-700 border-r-2 border-orange-500 shadow-sm'
+                    : 'text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-white'
                 }`}
               >
                 <item.icon className="w-5 h-5" />

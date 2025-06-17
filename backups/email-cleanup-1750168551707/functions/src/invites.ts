@@ -1,7 +1,7 @@
-// NOTE: Email sending migrated to unified service in src/services/unifiedEmailService.ts
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
+import { sendPropertyInviteEmail } from './sendgridEmailService';
 
 // Helper to generate a random code
 const generateInviteCode = (length = 8): string => {

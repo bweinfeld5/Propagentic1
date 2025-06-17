@@ -14,19 +14,7 @@ module.exports = override(
       plugin => !plugin.constructor.name.includes('ReactRefresh')
     );
 
-    // Remove any existing FAST_REFRESH definitions to prevent conflicts
-    config.plugins = config.plugins.map(plugin => {
-      if (plugin.constructor.name === 'DefinePlugin' && 
-          plugin.definitions && 
-          plugin.definitions['process.env.FAST_REFRESH']) {
-        const newDefinitions = { ...plugin.definitions };
-        delete newDefinitions['process.env.FAST_REFRESH'];
-        return new webpack.DefinePlugin(newDefinitions);
-      }
-      return plugin;
-    });
-
-    // Add our own FAST_REFRESH definition
+    // Disable Fast Refresh in environment
     config.plugins.push(
       new webpack.DefinePlugin({
         'process.env.FAST_REFRESH': JSON.stringify('false'),

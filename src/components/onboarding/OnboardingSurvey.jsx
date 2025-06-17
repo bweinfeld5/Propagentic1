@@ -4,9 +4,6 @@ import { useAuth } from '../../context/AuthContext';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import HomeNavLink from '../layout/HomeNavLink';
-import PropertySelector from '../tenant/PropertySelector';
-import toast from 'react-hot-toast';
-
 
 const OnboardingSurvey = () => {
   const { currentUser, userProfile, fetchUserProfile } = useAuth();
@@ -15,7 +12,6 @@ const OnboardingSurvey = () => {
   // Form state
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [validatedProperty, setValidatedProperty] = useState(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -62,28 +58,6 @@ const OnboardingSurvey = () => {
     }));
   };
 
-  // Handle property selection
-  const handlePropertySelected = async (property) => {
-    console.log('🎉 Property selected in onboarding:', property);
-    
-    try {
-      // Store the selected property info
-      const propertyInfo = {
-        propertyId: property.id,
-        propertyName: property.name,
-        unitId: property.address?.unit || null
-      };
-      
-      setValidatedProperty(propertyInfo);
-      toast.success(`Successfully selected ${property.name}!`);
-      // Automatically move to next step
-      setCurrentStep(2);
-    } catch (error) {
-      console.error('Error selecting property during onboarding:', error);
-      toast.error('Error selecting property');
-    }
-  };
-
   // Navigate to next step
   const handleNext = () => {
     setCurrentStep(prev => prev + 1);
@@ -92,6 +66,36 @@ const OnboardingSurvey = () => {
   // Navigate to previous step
   const handleBack = () => {
     setCurrentStep(prev => prev - 1);
+  };
+
+  // Skip current step for development
+  const handleSkip = () => {
+    // Set some default values for skipped steps to prevent issues
+    if (currentStep === 1) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: prev.firstName || 'Test',
+        lastName: prev.lastName || 'Tenant'
+      }));
+    } else if (currentStep === 2) {
+      setFormData(prev => ({
+        ...prev,
+        phoneNumber: prev.phoneNumber || '(555) 123-4567',
+        preferredContactMethod: prev.preferredContactMethod || 'email'
+      }));
+    } else if (currentStep === 3) {
+      setFormData(prev => ({
+        ...prev,
+        address: prev.address || '123 Test Address, Test City, CA 12345'
+      }));
+    } else if (currentStep === 4) {
+      setFormData(prev => ({
+        ...prev,
+        propertyType: prev.propertyType || 'Apartment'
+      }));
+    }
+    
+    setCurrentStep(prev => prev + 1);
   };
 
   // Submit form to Firestore
@@ -106,7 +110,7 @@ const OnboardingSurvey = () => {
       // 1. Update the user document
       const userDocRef = doc(db, 'users', currentUser.uid);
       
-      // Create user data with preserved role/userType fields and property info
+      // Create user data with preserved role/userType fields
       const userData = {
         ...formData,
         // Preserve existing userType and role values
@@ -114,10 +118,6 @@ const OnboardingSurvey = () => {
         role: userProfile?.role || 'tenant',
         onboardingComplete: true,
         name: `${formData.firstName} ${formData.lastName}`,
-        // Add property information from validated invite code
-        propertyId: validatedProperty?.propertyId,
-        propertyName: validatedProperty?.propertyName,
-        unitId: validatedProperty?.unitId,
         updatedAt: serverTimestamp()
       };
       
@@ -139,10 +139,6 @@ const OnboardingSurvey = () => {
           preferredContactMethod: formData.preferredContactMethod,
           address: formData.address,
           propertyType: formData.propertyType,
-          // Add property information
-          propertyId: validatedProperty?.propertyId,
-          propertyName: validatedProperty?.propertyName,
-          unitId: validatedProperty?.unitId,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         };
@@ -179,12 +175,12 @@ const OnboardingSurvey = () => {
     }
   };
 
-  // Progress indicator - now 6 steps instead of 5
+  // Progress indicator
   const ProgressIndicator = () => {
     return (
       <div className="mb-8 flex justify-center">
         <div className="flex items-center">
-          {[1, 2, 3, 4, 5, 6].map((step) => (
+          {[1, 2, 3, 4, 5].map((step) => (
             <React.Fragment key={step}>
               <div 
                 className={`rounded-full h-8 w-8 flex items-center justify-center border-2 
@@ -194,7 +190,7 @@ const OnboardingSurvey = () => {
               >
                 {step}
               </div>
-              {step < 6 && (
+              {step < 5 && (
                 <div 
                   className={`w-10 h-1 mx-1 
                     ${currentStep > step ? 'bg-teal-500' : 'bg-gray-300'}`}
@@ -207,43 +203,8 @@ const OnboardingSurvey = () => {
     );
   };
 
-  // Step 1: Property Selection
+  // Step 1: Name
   const renderStep1 = () => (
-    <div>
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Select Your Property</h3>
-      <p className="text-sm text-gray-600 mb-6">
-        Choose the property you'll be living in from the available options.
-      </p>
-      
-      {validatedProperty && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h4 className="text-sm font-medium text-green-800">
-                Property selected successfully!
-              </h4>
-              <p className="text-sm text-green-700 mt-1">
-                <span className="font-medium">Property:</span> {validatedProperty.propertyName}
-              </p>
-              {validatedProperty.unitId && (
-                <p className="text-sm text-green-700">
-                  <span className="font-medium">Unit:</span> {validatedProperty.unitId}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  // Step 2: Name (was Step 1)
-  const renderStep2 = () => (
     <div>
       <h3 className="text-lg font-medium text-gray-900 mb-4">Tell us your name</h3>
       <div className="space-y-4">
@@ -279,8 +240,8 @@ const OnboardingSurvey = () => {
     </div>
   );
 
-  // Step 3: Contact Info (was Step 2)
-  const renderStep3 = () => (
+  // Step 2: Contact Info
+  const renderStep2 = () => (
     <div>
       <h3 className="text-lg font-medium text-gray-900 mb-4">Contact Information</h3>
       <div className="space-y-4">
@@ -318,8 +279,8 @@ const OnboardingSurvey = () => {
     </div>
   );
 
-  // Step 4: Address (was Step 3)
-  const renderStep4 = () => (
+  // Step 3: Address
+  const renderStep3 = () => (
     <div>
       <h3 className="text-lg font-medium text-gray-900 mb-4">Living Address</h3>
       <div>
@@ -340,8 +301,8 @@ const OnboardingSurvey = () => {
     </div>
   );
 
-  // Step 5: Property Type (was Step 4)
-  const renderStep5 = () => (
+  // Step 4: Property Type
+  const renderStep4 = () => (
     <div>
       <h3 className="text-lg font-medium text-gray-900 mb-4">Property Information</h3>
       <div>
@@ -363,26 +324,10 @@ const OnboardingSurvey = () => {
     </div>
   );
 
-  // Step 6: Confirmation (was Step 5)
-  const renderStep6 = () => (
+  // Step 5: Confirmation
+  const renderStep5 = () => (
     <div>
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Review & Complete</h3>
-      
-      {/* Property Information */}
-      {validatedProperty && (
-        <div className="p-4 bg-blue-50 rounded-md mb-4">
-          <h4 className="font-medium text-blue-800 mb-2">Property Information</h4>
-          <p className="text-sm text-blue-700">
-            <span className="font-medium">Property:</span> {validatedProperty.propertyName}
-          </p>
-          {validatedProperty.unitId && (
-            <p className="text-sm text-blue-700">
-              <span className="font-medium">Unit:</span> {validatedProperty.unitId}
-            </p>
-          )}
-        </div>
-      )}
-      
+      <h3 className="text-lg font-medium text-gray-900 mb-4">Role Confirmation</h3>
       <div className="p-4 bg-gray-50 rounded-md">
         <p className="text-gray-700 mb-2">
           <span className="font-medium">Account Type:</span> {userProfile?.userType ? userProfile.userType.charAt(0).toUpperCase() + userProfile.userType.slice(1) : 'User'}
@@ -415,8 +360,6 @@ const OnboardingSurvey = () => {
         return renderStep4();
       case 5:
         return renderStep5();
-      case 6:
-        return renderStep6();
       default:
         return null;
     }
@@ -426,16 +369,14 @@ const OnboardingSurvey = () => {
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
-        return validatedProperty !== null; // Must have selected property
-      case 2:
         return formData.firstName && formData.lastName;
-      case 3:
+      case 2:
         return formData.phoneNumber && formData.preferredContactMethod;
-      case 4:
+      case 3:
         return formData.address;
-      case 5:
+      case 4:
         return formData.propertyType;
-      case 6:
+      case 5:
         return true;
       default:
         return false;
@@ -457,47 +398,46 @@ const OnboardingSurvey = () => {
 
         <ProgressIndicator />
         
-        {/* Step 1: Render property selector outside main form to avoid nesting */}
-        {currentStep === 1 && !validatedProperty && (
-          <PropertySelector
-            onPropertySelected={handlePropertySelected}
-            className="space-y-4 mb-8"
-          />
-        )}
-        
-        {/* Main form for steps 2-6 or step 1 when property is validated */}
-        {(currentStep > 1 || validatedProperty) && (
-          <form onSubmit={currentStep === 6 ? handleSubmit : (e) => e.preventDefault()}>
-            {renderStepContent()}
+        <form onSubmit={currentStep === 5 ? handleSubmit : (e) => e.preventDefault()}>
+          {renderStepContent()}
+          
+          <div className="mt-8 flex justify-between">
+            {currentStep > 1 && (
+              <button
+                type="button"
+                onClick={handleBack}
+                className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+              >
+                Back
+              </button>
+            )}
             
-            <div className="mt-8 flex justify-between">
-              {currentStep > 1 && (
+            {currentStep < 5 ? (
+              <div className="flex space-x-3 ml-auto">
                 <button
                   type="button"
-                  onClick={handleBack}
-                  className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+                  onClick={handleSkip}
+                  className="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                 >
-                  Back
+                  Skip for now
                 </button>
-              )}
-              
-              {currentStep < 6 ? (
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  disabled={!isStepValid()}
-                  className={`ml-auto py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
-                    ${isStepValid() 
-                      ? 'bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500' 
-                      : 'bg-teal-300 cursor-not-allowed'}`}
-                >
-                  Next
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="ml-auto py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+              <button
+                type="button"
+                onClick={handleNext}
+                disabled={!isStepValid()}
+                  className={`py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
+                  ${isStepValid() 
+                    ? 'bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500' 
+                    : 'bg-teal-300 cursor-not-allowed'}`}
+              >
+                Next
+              </button>
+              </div>
+            ) : (
+              <button
+                type="submit"
+                disabled={loading}
+                className="ml-auto py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
               >
                 {loading ? (
                   <div className="flex items-center">
@@ -514,7 +454,6 @@ const OnboardingSurvey = () => {
             )}
           </div>
         </form>
-        )}
       </div>
     </div>
   );

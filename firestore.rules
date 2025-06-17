@@ -12,15 +12,14 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
-    // Simplified role checking with fallback to user document
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
     function isUserRole(role) {
-      // First try custom claims (if available)
-      return isSignedIn() && (
-        (request.auth.token.keys().hasAny(['userType']) && request.auth.token.userType == role) ||
-        // Fallback to reading user document (less efficient but works)
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == role) ||
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role)
-      );
+      // Check both 'userType' and 'role' fields for broader compatibility
+      let userData = getUserData();
+      return isSignedIn() && (userData.userType == role || userData.role == role);
     }
 
     function isLandlord() { 
@@ -43,24 +42,15 @@ service cloud.firestore {
     }
 
     function isPropertyTenant(propertyId) {
-      // Simplified check - if user is a tenant and signed in, allow for now
-      // TODO: Implement proper tenant-property relationship checking
-      return isTenant();
+      let userData = getUserData();
+      // Check both direct propertyId and properties array
+      return isTenant() && 
+             (userData.propertyId == propertyId || 
+              (userData.properties != null && propertyId in userData.properties));
     }
 
     function isAdmin() {
       return isUserRole('admin');
-    }
-
-    // --- DEMO UTILITY FUNCTIONS ---
-    function isDemoProperty() {
-      return request.resource.data.keys().hasAny(['isDemo']) && 
-             request.resource.data.isDemo == true;
-    }
-
-    function isReadingDemoProperty() {
-      return resource.data.keys().hasAny(['isDemo']) && 
-             resource.data.isDemo == true;
     }
 
     // --- DATA VALIDATION FUNCTIONS ---
@@ -86,7 +76,7 @@ service cloud.firestore {
       return (isTenant() && 
               data.status == 'accepted' && 
               data.tenantId == request.auth.uid &&
-              existingData.tenantEmail == request.auth.token.email) ||
+              existingData.tenantEmail == getUserData().email) ||
              // Landlord revoking the invite
              (isLandlord() &&
               isPropertyOwner(existingData.propertyId) &&
@@ -110,39 +100,41 @@ service cloud.firestore {
 
     // --- RULES ---
 
-    // Users Collection - Allow broader access for development
+    // Users Collection
     match /users/{userId} {
-      allow read: if isSignedIn();
+      allow read, update: if isOwner(userId) || isAdmin();
       allow create: if isSignedIn();
-      allow update: if isOwner(userId) || isAdmin();
     }
 
     // Tenant Profiles Collection
     match /tenantProfiles/{tenantId} {
-      allow read: if isSignedIn();
+      // Tenants can read/update their own profile, landlords can read their tenants' profiles, admins can access all
+      allow read: if isOwner(tenantId) || 
+                     (isLandlord() && resource.data.landlordId == request.auth.uid) ||
+                     isAdmin();
       allow create: if isOwner(tenantId) && isTenant();
-      allow update: if isOwner(tenantId) || isAdmin();
+      allow update: if isOwner(tenantId) || 
+                       (isLandlord() && resource.data.landlordId == request.auth.uid) ||
+                       isAdmin();
       allow delete: if isOwner(tenantId) || isAdmin();
     }
 
-    // Properties Collection - Simplified for development
+    // Properties Collection
     match /properties/{propertyId} {
-      // Allow reading demo properties by anyone (for invite code validation)
-      allow get: if isReadingDemoProperty() || isSignedIn();
-      
-      // Allow listing properties for signed-in users (simplified for development)
-      allow list: if isSignedIn();
-      
-      // Allow creating properties for landlords/admins
+      // Allow individual document reads for property owners, managers, tenants, and admins
+      allow get: if isSignedIn() && ((isLandlord() && resource.data.landlordId == request.auth.uid) || isPropertyManager(propertyId) || isPropertyTenant(propertyId) || isAdmin());
+      // Allow listing properties for landlords (they can query their own properties)
+      allow list: if isSignedIn() && (isLandlord() || isAdmin());
       allow create: if isSignedIn() && (isLandlord() || isAdmin());
-      
       allow update: if isSignedIn() && (isPropertyOwner(propertyId) || isPropertyManager(propertyId) || isAdmin());
       allow delete: if isSignedIn() && (isPropertyOwner(propertyId) || isAdmin());
     }
 
-    // Tickets Collection - Simplified permissions
+    // Tickets Collection
     match /tickets/{ticketId} {
-      allow read, update: if isSignedIn();
+      // Submitted by user, or owner/manager of the property can read/update.
+      allow read, update: if isSignedIn() && (isOwner(resource.data.submittedBy) || isPropertyOwner(resource.data.propertyId) || isPropertyManager(resource.data.propertyId) || isAdmin());
+      // Any signed-in user can create a ticket.
       allow create: if isSignedIn(); 
     }
 
@@ -171,12 +163,12 @@ service cloud.firestore {
     // Conversations Collection - for real-time messaging
     match /conversations/{conversationId} {
       function isParticipant() {
-        return isSignedIn() && request.auth.uid in resource.data.participants;
+        return isSignedIn() && request.auth.uid in resource.data.participants[].id;
       }
 
       function isValidParticipant() {
         return isSignedIn() && 
-               request.auth.uid in request.resource.data.participants;
+               request.auth.uid in request.resource.data.participants[].id;
       }
 
       // Read conversations if user is a participant
@@ -196,13 +188,13 @@ service cloud.firestore {
     match /messages/{messageId} {
       function isMessageParticipant() {
         let conversation = get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data;
-        return isSignedIn() && request.auth.uid in conversation.participants;
+        return isSignedIn() && request.auth.uid in conversation.participants[].id;
       }
 
       function canCreateMessage() {
         let conversation = get(/databases/$(database)/documents/conversations/$(request.resource.data.conversationId)).data;
         return isSignedIn() && 
-               request.auth.uid in conversation.participants &&
+               request.auth.uid in conversation.participants[].id &&
                request.resource.data.senderId == request.auth.uid;
       }
 
@@ -217,21 +209,6 @@ service cloud.firestore {
       
       // Delete messages if user is the sender
       allow delete: if isSignedIn() && resource.data.senderId == request.auth.uid;
-    }
-
-    // Notifications Collection
-    match /notifications/{notificationId} {
-      // Users can read their own notifications
-      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
-      
-      // Users can update their own notifications (mark as read, etc.)
-      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
-      
-      // System/functions can create notifications for users
-      allow create: if isSignedIn();
-      
-      // Users can delete their own notifications
-      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
   }
 }

@@ -1,0 +1,346 @@
+{
+  "name": "Phase 2 Maintenance Components Agent",
+  "version": "1.0.0",
+  "phase": "Phase 2: Essential Features",
+  "focus": "Maintenance Management System",
+  "branch": "feature/phase2-maintenance-components",
+  
+  "objective": "Implement the missing maintenance management components for PropAgentic's Phase 2 Essential Features, focusing on role-specific dashboards and real-time status tracking.",
+  
+  "context": {
+    "project": "PropAgentic - Property Management Platform",
+    "tech_stack": {
+      "frontend": "React 18 + TypeScript + Tailwind CSS",
+      "backend": "Firebase (Firestore, Auth, Storage, Functions)",
+      "email": "SendGrid API",
+      "file_handling": "Firebase Storage with compression",
+      "testing": "Jest, React Testing Library, Cypress"
+    },
+    "existing_foundation": {
+      "phase1_complete": true,
+      "authentication": "Firebase Auth with role-based access",
+      "database": "Firestore with security rules",
+      "email_service": "SendGrid configured",
+      "ui_components": "Comprehensive design system with dark mode",
+      "phase3_ux": "Advanced UX components already implemented"
+    }
+  },
+
+  "tasks": [
+    {
+      "id": "1",
+      "title": "MaintenanceDashboard.tsx (Landlord View)",
+      "priority": "high",
+      "estimated_hours": "8-10",
+      "description": "Create a comprehensive dashboard for property managers/landlords to manage all maintenance requests",
+      "file_path": "src/components/maintenance/MaintenanceDashboard.tsx",
+      "requirements": [
+        "Overview of all maintenance requests across properties",
+        "Filter by property, status, priority, contractor",
+        "Real-time status updates with live notifications",
+        "Bulk operations (assign contractors, update status, close requests)",
+        "Cost tracking and budget management",
+        "Performance metrics (response time, completion rate)",
+        "Calendar view for scheduled maintenance",
+        "Export functionality for reports",
+        "Integration with existing BulkOperations component",
+        "Mobile-responsive design with touch interactions"
+      ],
+      "ui_features": [
+        "Interactive status cards with progress indicators",
+        "Priority-based color coding (urgent=red, high=orange, etc.)",
+        "Quick action buttons for common operations",
+        "Search and advanced filtering",
+        "Sortable columns with saved preferences",
+        "Drag-and-drop for status changes",
+        "Real-time notification badges",
+        "Expandable request details"
+      ],
+      "data_integration": [
+        "Connect to existing maintenanceService.ts",
+        "Real-time Firestore listeners for live updates",
+        "Aggregate data from multiple properties",
+        "Cost calculation and budget tracking",
+        "Performance analytics"
+      ]
+    },
+    
+    {
+      "id": "2", 
+      "title": "TenantRequestHistory.tsx (Tenant View)",
+      "priority": "high",
+      "estimated_hours": "6-8",
+      "description": "Create a tenant-focused interface for viewing and managing their maintenance requests",
+      "file_path": "src/components/maintenance/TenantRequestHistory.tsx",
+      "requirements": [
+        "Personal request history with status tracking",
+        "Photo upload capability for new requests",
+        "Communication thread with property manager/contractor",
+        "Request categorization (plumbing, electrical, HVAC, etc.)",
+        "Priority selection with guidelines",
+        "Estimated completion time display",
+        "Rating system for completed work",
+        "Request templates for common issues",
+        "Emergency request handling",
+        "Mobile-first design for tenant accessibility"
+      ],
+      "ui_features": [
+        "Timeline view of request progress",
+        "Photo gallery with before/after comparisons",
+        "Status badges with clear explanations", 
+        "Quick request submission form",
+        "Chat-like communication interface",
+        "Rating stars for contractor feedback",
+        "Template selection for faster submissions",
+        "Emergency contact information"
+      ],
+      "data_integration": [
+        "Filter requests by current tenant",
+        "Photo upload to Firebase Storage",
+        "Real-time status updates",
+        "Communication logging",
+        "Rating and feedback storage"
+      ]
+    },
+
+    {
+      "id": "3",
+      "title": "ContractorJobBoard.tsx (Contractor View)", 
+      "priority": "medium",
+      "estimated_hours": "8-10",
+      "description": "Create a contractor-focused dashboard for viewing, accepting, and managing assigned maintenance jobs",
+      "file_path": "src/components/maintenance/ContractorJobBoard.tsx",
+      "requirements": [
+        "Available job listings with details and photos",
+        "Job acceptance/decline functionality", 
+        "Current assignments with progress tracking",
+        "Photo upload for work progress and completion",
+        "Time tracking and cost estimation tools",
+        "Communication with tenants and property managers",
+        "Job history and performance metrics",
+        "Route optimization for multiple properties",
+        "Material and cost reporting",
+        "Calendar integration for scheduling"
+      ],
+      "ui_features": [
+        "Kanban board view (available, in-progress, completed)",
+        "Job cards with key details and photos",
+        "Map integration for location-based job selection",
+        "Timer component for work tracking",
+        "Cost breakdown forms",
+        "Progress photo upload with annotations",
+        "Communication center",
+        "Performance dashboard with ratings"
+      ],
+      "data_integration": [
+        "Filter jobs by contractor assignment",
+        "Job acceptance/status updates",
+        "Time tracking data storage",
+        "Cost and material logging",
+        "Photo documentation storage",
+        "Communication thread management"
+      ]
+    },
+
+    {
+      "id": "4",
+      "title": "RequestStatusTracker.tsx (Real-time Status)",
+      "priority": "high", 
+      "estimated_hours": "6-8",
+      "description": "Create a universal status tracking component that provides real-time updates for all user roles",
+      "file_path": "src/components/maintenance/RequestStatusTracker.tsx",
+      "requirements": [
+        "Real-time status updates using Firestore listeners",
+        "Visual progress indicator with timeline",
+        "Role-based status information display",
+        "Notification system for status changes",
+        "Historical status change log",
+        "Estimated completion time calculations",
+        "Automatic status transitions based on actions",
+        "Integration with email notifications",
+        "Mobile-responsive status cards",
+        "Accessibility features for screen readers"
+      ],
+      "ui_features": [
+        "Progress bar with percentage completion",
+        "Status timeline with timestamps",
+        "Next action indicators",
+        "Notification badges and alerts",
+        "Color-coded status indicators",
+        "Expandable details for each status",
+        "Quick action buttons for status updates",
+        "Real-time sync indicators"
+      ],
+      "data_integration": [
+        "Real-time Firestore listeners",
+        "Status change event logging",
+        "Notification trigger integration",
+        "Time-based status calculations",
+        "Cross-component state synchronization"
+      ]
+    }
+  ],
+
+  "technical_requirements": {
+    "typescript": {
+      "strict_mode": true,
+      "interfaces_required": true,
+      "proper_typing": "All props, state, and functions must be properly typed"
+    },
+    "firebase_integration": {
+      "firestore": "Real-time listeners for live data updates",
+      "storage": "Photo upload and management",
+      "auth": "Role-based access control (landlord, tenant, contractor)",
+      "functions": "Server-side logic for notifications and status automation"
+    },
+    "responsive_design": {
+      "mobile_first": true,
+      "touch_friendly": "44px+ touch targets",
+      "breakpoints": ["320px", "640px", "768px", "1024px", "1280px"]
+    },
+    "accessibility": {
+      "wcag_compliance": "WCAG 2.1 AA",
+      "screen_reader": "Full ARIA support",
+      "keyboard_navigation": "All functionality accessible via keyboard",
+      "color_contrast": "4.5:1 minimum ratio"
+    },
+    "performance": {
+      "lazy_loading": "Implement for large data sets",
+      "pagination": "Firebase pagination for maintenance lists",
+      "image_optimization": "Automatic compression and resizing",
+      "caching": "Efficient data caching strategies"
+    }
+  },
+
+  "integration_points": {
+    "existing_components": [
+      "BulkOperations.jsx - For bulk maintenance actions",
+      "ActionFeedback.jsx - For user notifications",
+      "MobileTable.jsx - For responsive data display", 
+      "SwipeableCard.jsx - For mobile maintenance card interactions",
+      "ContextualHelp.jsx - For feature guidance",
+      "ConfirmationDialog.jsx - For critical actions"
+    ],
+    "existing_services": [
+      "maintenanceService.ts - Core maintenance data operations",
+      "authHelpers.js - User role and permission management",
+      "toastService.ts - Notification management"
+    ],
+    "existing_hooks": [
+      "useActionFeedback.js - For user feedback",
+      "useKeyboardShortcuts.js - For keyboard navigation",
+      "useSwipeGestures.js - For mobile interactions"
+    ]
+  },
+
+  "data_schemas": {
+    "MaintenanceRequest": {
+      "id": "string",
+      "propertyId": "string",
+      "tenantId": "string", 
+      "contractorId": "string | null",
+      "title": "string",
+      "description": "string",
+      "category": "'plumbing' | 'electrical' | 'hvac' | 'general' | 'emergency'",
+      "priority": "'low' | 'medium' | 'high' | 'urgent'",
+      "status": "'submitted' | 'assigned' | 'in-progress' | 'completed' | 'cancelled'",
+      "photos": "string[]",
+      "estimatedCost": "number | null",
+      "actualCost": "number | null",
+      "scheduledDate": "Date | null",
+      "completedDate": "Date | null",
+      "createdAt": "Date",
+      "updatedAt": "Date",
+      "statusHistory": "StatusChange[]",
+      "communications": "Communication[]"
+    },
+    "StatusChange": {
+      "status": "string",
+      "timestamp": "Date",
+      "userId": "string",
+      "userRole": "'landlord' | 'tenant' | 'contractor'",
+      "notes": "string | null"
+    },
+    "Communication": {
+      "id": "string",
+      "userId": "string",
+      "userRole": "'landlord' | 'tenant' | 'contractor'",
+      "message": "string",
+      "timestamp": "Date",
+      "attachments": "string[]"
+    }
+  },
+
+  "testing_strategy": {
+    "unit_tests": [
+      "Component rendering with different props",
+      "User interaction handlers",
+      "Data filtering and sorting logic",
+      "Status update functions",
+      "Real-time listener management"
+    ],
+    "integration_tests": [
+      "Firebase Firestore operations",
+      "Photo upload workflows",
+      "Real-time status synchronization",
+      "Role-based access control",
+      "Cross-component communication"
+    ],
+    "e2e_tests": [
+      "Complete maintenance request workflow",
+      "Contractor job acceptance and completion",
+      "Landlord dashboard management",
+      "Tenant request submission and tracking"
+    ]
+  },
+
+  "implementation_order": [
+    "1. Set up component directory structure and base TypeScript interfaces",
+    "2. Implement RequestStatusTracker.tsx as the foundation component",
+    "3. Build MaintenanceDashboard.tsx with comprehensive landlord features",
+    "4. Create TenantRequestHistory.tsx with tenant-focused functionality", 
+    "5. Develop ContractorJobBoard.tsx with contractor workflow",
+    "6. Integrate all components with existing services and components",
+    "7. Add comprehensive testing coverage",
+    "8. Optimize performance and accessibility",
+    "9. Create documentation and usage examples"
+  ],
+
+  "success_criteria": {
+    "functionality": [
+      "All maintenance workflows operate end-to-end",
+      "Real-time status updates work across all user roles",
+      "Photo upload and management functions properly",
+      "Bulk operations integrate seamlessly",
+      "Communication features enable clear coordination"
+    ],
+    "performance": [
+      "Components load in < 2 seconds",
+      "Real-time updates appear within 1 second",
+      "Photo uploads complete in < 30 seconds",
+      "Large maintenance lists scroll smoothly",
+      "Mobile interactions are responsive"
+    ],
+    "user_experience": [
+      "Intuitive navigation for all user roles",
+      "Clear visual status indicators",
+      "Efficient bulk management capabilities", 
+      "Seamless mobile experience",
+      "Comprehensive accessibility support"
+    ]
+  },
+
+  "environment_variables": {
+    "REACT_APP_FIREBASE_API_KEY": "Firebase configuration",
+    "REACT_APP_FIREBASE_PROJECT_ID": "Firebase project identifier", 
+    "REACT_APP_SENDGRID_API_KEY": "Email notification service",
+    "REACT_APP_STORAGE_BUCKET": "Firebase Storage bucket for photos"
+  },
+
+  "deployment_notes": {
+    "firebase_rules": "Update Firestore security rules for maintenance collections",
+    "storage_rules": "Configure Firebase Storage rules for photo uploads",
+    "indexes": "Create Firestore indexes for maintenance queries",
+    "functions": "Deploy Cloud Functions for status automation and notifications"
+  }
+} 

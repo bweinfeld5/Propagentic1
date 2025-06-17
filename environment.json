@@ -1,5 +1,100 @@
 {
-  "environment": "development",
+  "name": "PropAgentic Development Environment",
+  "description": "AI-powered property management platform with automated background agents",
+  "version": "2.1.0",
+  "agents": {
+    "InvitationEmailRefiner": {
+      "name": "InvitationEmailRefiner",
+      "description": "Maintains and optimizes email invitation templates across the codebase",
+      "status": "active",
+      "trigger": "on_push_to_main",
+      "lastRun": "2024-06-17T10:03:00Z",
+      "successCriteria": [
+        "Single UnifiedInviteEmail component exists",
+        "Zero duplicate email template files",
+        "Build passes without errors",
+        "Email templates follow PropAgentic branding"
+      ]
+    },
+    "TenantAcceptanceAgent": {
+      "name": "TenantAcceptanceAgent", 
+      "description": "Implements complete tenant invitation acceptance and onboarding system",
+      "status": "active",
+      "trigger": "on_push_to_feature_branch",
+      "branch": "feature/tenant-acceptance-system",
+      "phase": "1",
+      "currentObjective": "Build accept invitation infrastructure with real-time dashboard updates",
+      "successCriteria": [
+        "Accept invitation route (/accept-invite/:code) functional",
+        "Firebase Functions for invite validation and acceptance",
+        "Real-time tenant list updates in landlord dashboard", 
+        "Multi-step tenant onboarding wizard",
+        "Email verification and security measures",
+        "All builds pass without errors"
+      ],
+      "implementation": {
+        "phase1": {
+          "name": "Accept Invitation Infrastructure",
+          "duration": "1 week",
+          "components": [
+            "src/pages/AcceptInvitePage.tsx",
+            "src/components/tenant/InviteAcceptanceForm.tsx", 
+            "functions/src/acceptInvite.ts",
+            "Database schema updates for invite expiration"
+          ]
+        },
+        "phase2": {
+          "name": "Real-time Dashboard Updates",
+          "duration": "1 week", 
+          "components": [
+            "src/components/landlord/RealTimeTenantList.tsx",
+            "src/components/notifications/TenantAcceptanceNotification.tsx",
+            "Firestore listeners and real-time subscriptions"
+          ]
+        },
+        "phase3": {
+          "name": "Tenant Onboarding Flow",
+          "duration": "1 week",
+          "components": [
+            "src/components/onboarding/TenantOnboardingWizard.tsx",
+            "src/components/onboarding/steps/*.tsx",
+            "Progressive form validation and data collection"
+          ]
+        },
+        "phase4": {
+          "name": "Security & Polish", 
+          "duration": "1 week",
+          "components": [
+            "Email verification integration",
+            "Rate limiting and security measures",
+            "Error handling and edge cases",
+            "Production readiness testing"
+          ]
+        }
+      }
+    }
+  },
+  "environment": {
+    "node_version": "18.20.8",
+    "framework": "React 18 + TypeScript",
+    "backend": "Firebase (Auth, Firestore, Functions)",
+    "styling": "Tailwind CSS",
+    "build_system": "react-app-rewired"
+  },
+  "monitoring": {
+    "build_status": "passing",
+    "last_deployment": "2024-06-17T10:03:00Z",
+    "active_features": [
+      "invitation-email-refiner",
+      "tenant-acceptance-system"
+    ]
+  },
+  "automation": {
+    "background_agents": true,
+    "auto_cleanup": true,
+    "real_time_monitoring": true,
+    "progressive_implementation": true
+  },
   "project": {
     "name": "PropAgentic",
     "type": "React TypeScript Application",

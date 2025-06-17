@@ -208,3 +208,34 @@ const inviteService = {
 };
 
 export default inviteService; 
+
+// Enhanced invite service with acceptance functionality
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../../firebase/config';
+
+// Existing invite creation functions...
+// ... (keep existing code)
+
+/**
+ * Validate an invite code
+ */
+export const validateInviteCode = async (inviteCode: string) => {
+  const validateInvite = httpsCallable(functions, 'validateInviteCode');
+  const result = await validateInvite({ inviteCode });
+  return result.data;
+};
+
+/**
+ * Accept an invitation
+ */
+export const acceptInvite = async (inviteData: {
+  inviteCode: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+  email: string;
+}) => {
+  const acceptInvitation = httpsCallable(functions, 'acceptInvite');
+  const result = await acceptInvitation(inviteData);
+  return result.data;
+};

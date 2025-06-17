@@ -1,3 +1,4 @@
+import AcceptInvitePage from './pages/tenant/AcceptInvitePage';
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
@@ -227,7 +228,8 @@ function App() {
                             </>
                           }
                         />
-                      </Routes>
+                                  <Route path="/accept-invite/:inviteCode" element={<AcceptInvitePage />} />
+</Routes>
                       </Suspense>
                       {/* Toast Notifications */}
                       <Toaster

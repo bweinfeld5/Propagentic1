@@ -45,9 +45,13 @@ export { createNotificationOnInvite };
 import { sendEmail } from './sendgridEmailService';
 export { sendEmail };
 
+// Import and export invite acceptance functions
+import { validateInviteCode, acceptInvite } from './acceptInvite';
+export { validateInviteCode, acceptInvite };
+
 // Import and export test functions
 import { testSendGrid, testPing } from './testSendGrid';
 import { simpleTest } from './simpleTest';
 export { testSendGrid, testPing, simpleTest };
 
-console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests).");
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, invite acceptance).");

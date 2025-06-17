@@ -1,0 +1,26 @@
+{
+  "timestamp": "2025-06-17T13:56:16.097Z",
+  "deletedFiles": [
+    "email-templates/tenant-invitation.html",
+    "email-templates/base-template.html",
+    "email-templates/README.md",
+    "functions/src/emailSequences.js",
+    "functions/lib/sendgridEmailService.js",
+    "src/scripts/test-invite-process.js",
+    "test-email-fix.js",
+    "temp-tenant-dashboard.jsx"
+  ],
+  "updatedFiles": [
+    "functions/src/invites.ts",
+    "functions/src/sendgridEmailService.ts",
+    "src/pages/PreLaunchPage.jsx"
+  ],
+  "errors": [
+    "Build validation failed: Command failed: npm run build"
+  ],
+  "unifiedComponents": [
+    "src/components/emails/UnifiedInviteEmail.tsx",
+    "src/services/unifiedEmailService.ts",
+    "src/services/firestore/inviteService.ts"
+  ]
+}

@@ -42,8 +42,8 @@ import { createNotificationOnInvite } from './inviteTriggers';
 export { createNotificationOnInvite };
 
 // Import and export SendGrid email functions
-import { sendEmail, sendPropertyInviteEmail } from './sendgridEmailService';
-export { sendEmail, sendPropertyInviteEmail };
+import { sendEmail } from './sendgridEmailService';
+export { sendEmail };
 
 // Import and export test functions
 import { testSendGrid, testPing } from './testSendGrid';

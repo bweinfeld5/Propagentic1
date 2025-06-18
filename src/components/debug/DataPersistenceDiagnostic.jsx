@@ -49,7 +49,8 @@ const DataPersistenceDiagnostic = () => {
       
       // Test user document
       const userDocRef = doc(db, 'users', currentUser.uid);
-      const userDocSnap = await getDoc(userDocRef);
+      addLog('Fetching user document from server');
+      const userDocSnap = await getDoc(userDocRef, { source: 'server' });
       
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data();
@@ -65,7 +66,8 @@ const DataPersistenceDiagnostic = () => {
         where('landlordId', '==', currentUser.uid)
       );
       
-      const propertiesSnapshot = await getDocs(propertiesQuery);
+      addLog('Querying properties from server');
+      const propertiesSnapshot = await getDocs(propertiesQuery, { source: 'server' });
       const properties = propertiesSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -161,6 +163,7 @@ const DataPersistenceDiagnostic = () => {
         source: 'diagnostic_test'
       };
 
+      addLog('Creating test property');
       const newProperty = await dataService.createProperty(testPropertyData);
       addLog('Property created successfully', newProperty);
       

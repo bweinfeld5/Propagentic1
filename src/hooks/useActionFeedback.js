@@ -77,12 +77,23 @@ const useActionFeedback = () => {
     }));
   }, []);
 
+  const showInfo = useCallback((title, message) => {
+    showFeedback({
+      type: 'info',
+      title,
+      message,
+      showUndo: false,
+      showRetry: false
+    });
+  }, [showFeedback]);
+
   return {
     feedbackState,
     showFeedback,
     showLoading,
     showSuccess,
     showError,
+    showInfo,
     showProgress,
     hideFeedback,
     updateProgress

@@ -1,6 +1,52 @@
-import { communicationService, Conversation, Message, Participant } from './communicationService';
-import { jobService, Job, Bid, JobUpdate } from './jobService';
-import { notificationService, Notification, NotificationRule } from './notificationService';
+import {
+  doc,
+  collection,
+  getDoc,
+  query,
+  where,
+  getDocs,
+} from 'firebase/firestore';
+import { db } from '../../firebase/config';
+import { communicationService } from './communicationService';
+// TODO: Create these services
+import * as realJobService from './jobService';
+// import * as notificationService from './notificationService';
+import { 
+  Conversation, 
+  CommunicationMessage,
+  Participant,
+  CommunicationRole,
+} from '../../models';
+// TODO: Create Job and Notification models
+import { Job } from './jobService';
+import { Message } from '../../models/Communication';
+// import { Notification, NotificationRule } from '../../models/Notification';
+
+// Temporary stub types until actual models are created
+type Notification = {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+};
+
+// Use real job service
+const jobServiceInstance = realJobService.default || realJobService;
+const jobService = {
+  getJob: async (jobId: string): Promise<Job | null> => {
+    try {
+      return await jobServiceInstance.getJob(jobId);
+    } catch (error) {
+      console.error('Error getting job:', error);
+      return null;
+    }
+  }
+};
+
+const notificationService = {
+  createNotification: async (data: any): Promise<void> => {}
+};
 
 export interface CommunicationStats {
   conversations: {
@@ -63,28 +109,25 @@ class CommunicationIntegrationService {
 
       const participants: Participant[] = [
         {
-          id: landlordId,
+          id: landlordProfile.id || landlordId,
           name: landlordProfile.name || `${landlordProfile.firstName} ${landlordProfile.lastName}`,
           email: landlordProfile.email,
           role: 'landlord'
         },
         {
-          id: tenantId,
+          id: tenantProfile.id || tenantId,
           name: tenantProfile.name || `${tenantProfile.firstName} ${tenantProfile.lastName}`,
           email: tenantProfile.email,
-          role: 'tenant',
-          property: propertyData.nickname || propertyData.streetAddress
+          role: 'tenant'
         }
       ];
 
-      const conversation: Omit<Conversation, 'id' | 'createdAt' | 'updatedAt'> = {
-        type: 'tenant-landlord',
+      const conversation: Omit<Conversation, 'id' | 'createdAt' | 'updatedAt' | 'lastMessage' | 'unreadCounts'> = {
+        type: 'general',
         participants,
         title: `${propertyData.nickname || propertyData.streetAddress} - Communication`,
-        unreadCounts: {},
         priority: 'normal',
         propertyId,
-        isArchived: false,
         tags: ['property', 'tenant-landlord']
       };
 
@@ -98,7 +141,6 @@ class CommunicationIntegrationService {
           senderName: participants[0].name,
           senderRole: 'landlord',
           text: initialMessage,
-          type: 'text'
         });
       }
 
@@ -138,20 +180,17 @@ class CommunicationIntegrationService {
           id: contractorId,
           name: contractorProfile.name || `${contractorProfile.firstName} ${contractorProfile.lastName}`,
           email: contractorProfile.email,
-          role: 'contractor',
-          company: contractorProfile.businessName
+          role: 'contractor'
         }
       ];
 
-      const conversation: Omit<Conversation, 'id' | 'createdAt' | 'updatedAt'> = {
-        type: 'contractor-communication',
+      const conversation: Omit<Conversation, 'id' | 'createdAt' | 'updatedAt' | 'lastMessage' | 'unreadCounts'> = {
+        type: 'general',
         participants,
         title: `Job: ${jobData.title}`,
-        unreadCounts: {},
         priority: jobData.priority,
         propertyId: jobData.propertyId,
         jobId,
-        isArchived: false,
         tags: ['job', 'contractor-communication', jobData.category]
       };
 
@@ -165,7 +204,6 @@ class CommunicationIntegrationService {
           senderName: participants[0].name,
           senderRole: 'landlord',
           text: initialMessage,
-          type: 'text'
         });
       }
 
@@ -388,8 +426,8 @@ class CommunicationIntegrationService {
 
       // Notify all participants except the sender
       const recipients = conversation.participants
-        .filter(p => p.id !== message.sender)
-        .map(p => ({
+        .filter((p: Participant) => p.id !== message.sender)
+        .map((p: Participant) => ({
           userId: p.id,
           name: p.name,
           role: p.role,
@@ -419,26 +457,26 @@ class CommunicationIntegrationService {
 
   async getCommunicationStats(userId: string): Promise<CommunicationStats> {
     try {
-      const [conversations, notifications, jobs] = await Promise.all([
+      const [conversations, jobs] = await Promise.all([
         communicationService.getConversationsForUser(userId),
-        notificationService.getNotifications(userId),
         this.getUserJobs(userId)
       ]);
+      const notifications: Notification[] = []; // TODO: Implement getNotifications
 
       // Calculate unread conversations
-      const unreadConversations = conversations.filter(conv => 
+      const unreadConversations = conversations.filter((conv: Conversation) => 
         conv.unreadCounts[userId] > 0
       ).length;
 
       // Calculate active conversations (messages in last 7 days)
-      const activeConversations = conversations.filter(conv => 
+      const activeConversations = conversations.filter((conv: Conversation) => 
         conv.lastMessage && 
-        new Date(conv.lastMessage.timestamp).getTime() > (Date.now() - 7 * 24 * 60 * 60 * 1000)
+        conv.lastMessage.timestamp.toDate().getTime() > (Date.now() - 7 * 24 * 60 * 60 * 1000)
       ).length;
 
       // Calculate unread notifications
-      const unreadNotifications = notifications.filter(notif => 
-        !notif.delivery.inApp?.readAt
+      const unreadNotifications = notifications.filter((notif: Notification) => 
+        !notif.isRead
       ).length;
 
       return {
@@ -454,9 +492,9 @@ class CommunicationIntegrationService {
         },
         jobs: {
           total: jobs.length,
-          open: jobs.filter(j => j.status === 'open').length,
-          inProgress: jobs.filter(j => j.status === 'in_progress').length,
-          completed: jobs.filter(j => j.status === 'completed').length
+          open: jobs.filter((j: Job) => j.status === 'open').length,
+          inProgress: jobs.filter((j: Job) => j.status === 'in_progress').length,
+          completed: jobs.filter((j: Job) => j.status === 'completed').length
         },
         notifications: {
           total: notifications.length,
@@ -484,18 +522,14 @@ class CommunicationIntegrationService {
     notifications: Notification[];
   }> {
     try {
-      const [conversations, jobs, notifications] = await Promise.all([
-        communicationService.searchConversations(userId, searchTerm),
+      const [jobs, notifications] = await Promise.all([
         this.searchUserJobs(userId, searchTerm),
         this.searchUserNotifications(userId, searchTerm)
       ]);
-
-      // Search messages in user's conversations
-      const messagePromises = conversations.map(conv => 
-        communicationService.searchMessages(conv.id!, searchTerm)
-      );
-      const messageResults = await Promise.all(messagePromises);
-      const messages = messageResults.flat();
+      
+      // TODO: Implement searchConversations and searchMessages
+      const conversations: Conversation[] = [];
+      const messages: any[] = []; // TODO: Add proper Message type
 
       return {
         conversations,
@@ -571,21 +605,21 @@ class CommunicationIntegrationService {
       onJobsUpdate?: (jobs: Job[]) => void;
     }
   ): () => void {
-    const unsubscribeFunctions: (() => void)[] = [];
+    const unsubscribes: (() => void)[] = [];
 
     // Subscribe to conversations
     const unsubscribeConversations = communicationService.subscribeToConversations(
       userId,
       callbacks.onConversationsUpdate
     );
-    unsubscribeFunctions.push(unsubscribeConversations);
+    unsubscribes.push(unsubscribeConversations);
 
-    // Subscribe to notifications
-    const unsubscribeNotifications = notificationService.subscribeToNotifications(
-      userId,
-      callbacks.onNotificationsUpdate
-    );
-    unsubscribeFunctions.push(unsubscribeNotifications);
+    // TODO: Subscribe to notifications
+    // const unsubscribeNotifications = notificationService.subscribeToNotifications(
+    //   userId,
+    //   callbacks.onNotificationsUpdate
+    // );
+    // unsubscribes.push(unsubscribeNotifications);
 
     // Subscribe to jobs if callback provided
     if (callbacks.onJobsUpdate) {
@@ -594,7 +628,7 @@ class CommunicationIntegrationService {
 
     // Return function to unsubscribe from all
     return () => {
-      unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
+      unsubscribes.forEach(unsubscribe => unsubscribe());
     };
   }
 }

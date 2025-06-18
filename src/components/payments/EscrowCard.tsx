@@ -9,6 +9,7 @@ import {
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
 import StatusPill from '../ui/StatusPill';
+import EscrowStatusPill from '../ui/EscrowStatusPill';
 import Button from '../ui/Button';
 import { EscrowAccount as ServiceEscrowAccount } from '../../services/firestore/escrowService';
 
@@ -132,7 +133,7 @@ const EscrowCard: React.FC<EscrowCardProps> = ({
               <h3 className="text-lg font-semibold text-gray-900 truncate">
                 {escrow.jobTitle}
               </h3>
-              <StatusPill
+              <EscrowStatusPill
                 status={escrow.status}
                 className={getStatusStyles(escrow.status)}
               />

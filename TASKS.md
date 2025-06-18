@@ -3378,3 +3378,439 @@ Create a compelling investor demo at `http://localhost:3000/demo/pitchdeck` that
 - Testing device acquisition
 
 ---
+
+# Phase 2 Maintenance Components - Task Breakdown
+
+## Project Overview
+**Project**: PropAgentic Phase 2 Essential Features - Maintenance Management System  
+**Branch**: feature/phase2-maintenance-components  
+**Total Estimated Time**: 28-36 hours  
+**Priority**: High (Core business functionality)  
+
+## Core Components to Implement
+
+### 1. RequestStatusTracker.tsx (Foundation Component)
+**Priority**: High | **Time**: 6-8 hours | **Dependencies**: None
+
+Create a universal status tracking component that provides real-time updates for all user roles. This component serves as the foundation for all other maintenance components.
+
+**Key Features**:
+- Real-time status updates using Firestore listeners
+- Visual progress indicator with detailed timeline
+- Role-based status information display (landlord, tenant, contractor)
+- Notification system for status changes
+- Historical status change log with timestamps
+- Estimated completion time calculations
+- Automatic status transitions based on actions
+- Integration with email notifications
+
+**Technical Requirements**:
+- TypeScript interfaces for MaintenanceRequest, StatusChange, Communication
+- Real-time Firestore listeners with proper cleanup
+- Status change event logging
+- Cross-component state synchronization
+- Mobile-responsive design with touch interactions
+- WCAG 2.1 AA accessibility compliance
+
+**UI Components**:
+- Progress bar with percentage completion
+- Status timeline with timestamps and user actions
+- Next action indicators
+- Notification badges and alerts
+- Color-coded status indicators (urgent=red, high=orange, etc.)
+- Expandable details for each status
+- Quick action buttons for status updates
+- Real-time sync indicators
+
+**Integration Points**:
+- Connect to existing maintenanceService.ts
+- Use ActionFeedback.jsx for user notifications
+- Integrate with toastService.ts for notifications
+- Real-time Firestore listeners for live updates
+
+**Test Strategy**:
+- Unit tests for component rendering with different props
+- Real-time listener setup and cleanup testing
+- Status change validation
+- Cross-role status display testing
+
+---
+
+### 2. MaintenanceDashboard.tsx (Landlord View)
+**Priority**: High | **Time**: 8-10 hours | **Dependencies**: RequestStatusTracker.tsx
+
+Create a comprehensive dashboard for property managers/landlords to manage all maintenance requests across their properties.
+
+**Key Features**:
+- Real-time overview of all maintenance requests across properties
+- Advanced filtering (property, status, priority, contractor, date range)
+- Bulk operations integration (assign contractors, update status, close requests)
+- Interactive status cards with progress indicators
+- Cost tracking and budget management
+- Performance metrics (response time, completion rate)
+- Calendar view for scheduled maintenance
+- Export functionality for reports
+
+**Technical Requirements**:
+- Integration with existing BulkOperations.jsx component
+- Real-time Firestore listeners for live updates
+- Aggregate data from multiple properties
+- Cost calculation and budget tracking
+- Performance analytics calculations
+- Efficient pagination for large data sets
+- Role-based access control (landlord permissions)
+
+**UI Components**:
+- Interactive status cards with progress indicators
+- Priority-based color coding system
+- Quick action buttons for common operations
+- Search and advanced filtering interface
+- Sortable columns with saved preferences
+- Drag-and-drop for status changes
+- Real-time notification badges
+- Expandable request details
+- Calendar integration for scheduling
+- Export buttons and report generation
+
+**Integration Points**:
+- BulkOperations.jsx for bulk maintenance actions
+- RequestStatusTracker.tsx for individual request status
+- MobileTable.jsx for responsive data display
+- ConfirmationDialog.jsx for critical actions
+- maintenanceService.ts for data operations
+
+**Test Strategy**:
+- Bulk operations functionality testing
+- Real-time updates across multiple properties
+- Filtering and sorting logic validation
+- Performance testing with large datasets
+- Role-based access control verification
+
+---
+
+### 3. TenantRequestHistory.tsx (Tenant View)
+**Priority**: High | **Time**: 6-8 hours | **Dependencies**: RequestStatusTracker.tsx
+
+Create a tenant-focused interface for viewing and managing their personal maintenance requests.
+
+**Key Features**:
+- Personal request history with detailed status tracking
+- Photo upload capability for new requests
+- Communication thread with property manager/contractor
+- Request categorization (plumbing, electrical, HVAC, etc.)
+- Priority selection with clear guidelines
+- Estimated completion time display
+- Rating system for completed work
+- Request templates for common issues
+- Emergency request handling with priority routing
+
+**Technical Requirements**:
+- Filter requests by current tenant user
+- Firebase Storage integration for photo uploads
+- Real-time status updates with notifications
+- Communication logging and threading
+- Rating and feedback storage system
+- Request template management
+- Emergency request priority routing
+- Mobile-first responsive design
+
+**UI Components**:
+- Timeline view of request progress
+- Photo gallery with before/after comparisons
+- Status badges with tenant-friendly explanations
+- Quick request submission form
+- Chat-like communication interface
+- Star rating system for contractor feedback
+- Template selection for faster submissions
+- Emergency contact information
+- Photo upload with compression
+
+**Integration Points**:
+- RequestStatusTracker.tsx for status display
+- Firebase Storage for photo management
+- SwipeableCard.jsx for mobile interactions
+- Communication logging system
+- Emergency notification system
+
+**Test Strategy**:
+- Photo upload workflow testing
+- Communication threading functionality
+- Rating system validation
+- Emergency request handling
+- Mobile responsiveness testing
+
+---
+
+### 4. ContractorJobBoard.tsx (Contractor View)
+**Priority**: Medium | **Time**: 8-10 hours | **Dependencies**: RequestStatusTracker.tsx
+
+Create a contractor-focused dashboard for viewing, accepting, and managing assigned maintenance jobs.
+
+**Key Features**:
+- Available job listings with full details and photos
+- Job acceptance/decline functionality
+- Current assignments with progress tracking
+- Photo upload for work progress and completion documentation
+- Time tracking and cost estimation tools
+- Communication with tenants and property managers
+- Job history and performance metrics
+- Route optimization for multiple properties
+- Material and cost reporting
+
+**Technical Requirements**:
+- Filter jobs by contractor assignment and availability
+- Job acceptance/status update functionality
+- Time tracking data storage and calculations
+- Cost and material logging system
+- Photo documentation with annotations
+- Communication thread management
+- Performance metrics calculation
+- Route optimization integration (Google Maps API)
+
+**UI Components**:
+- Kanban board view (available, in-progress, completed)
+- Interactive job cards with key details and photos
+- Map integration for location-based job selection
+- Timer component for accurate work tracking
+- Cost breakdown forms with material tracking
+- Progress photo upload with annotations
+- Communication center interface
+- Performance dashboard with ratings and metrics
+
+**Integration Points**:
+- RequestStatusTracker.tsx for job status updates
+- Google Maps API for routing optimization
+- Photo upload and annotation system
+- Time tracking and cost calculation
+- Communication system integration
+
+**Test Strategy**:
+- Job acceptance/decline workflow
+- Time tracking accuracy
+- Cost calculation validation
+- Photo documentation functionality
+- Route optimization testing
+
+---
+
+## Infrastructure Tasks
+
+### 5. TypeScript Interfaces and Models
+**Priority**: High | **Time**: 2-3 hours | **Dependencies**: None
+
+Set up comprehensive TypeScript interfaces and data models for the maintenance system.
+
+**Key Deliverables**:
+- MaintenanceRequest interface with all required fields
+- StatusChange interface for tracking history
+- Communication interface for messaging
+- Contractor interface for job management
+- Update existing models/converters.ts as needed
+
+**Technical Requirements**:
+- Strict TypeScript typing for all data structures
+- Firestore converter functions
+- Proper type exports for component usage
+- Documentation for interface usage
+
+---
+
+### 6. Firebase Integration Setup
+**Priority**: High | **Time**: 3-4 hours | **Dependencies**: TypeScript Interfaces
+
+Configure Firebase services for maintenance system functionality.
+
+**Key Deliverables**:
+- Update Firestore security rules for maintenance collections
+- Create required Firestore indexes for efficient queries
+- Configure Firebase Storage rules for photo uploads
+- Set up Cloud Functions for notifications (if needed)
+
+**Technical Requirements**:
+- Role-based security rules (landlord, tenant, contractor)
+- Efficient query indexes for filtering and sorting
+- Photo upload security and file type validation
+- Real-time listener optimization
+
+---
+
+### 7. Enhanced maintenanceService.ts
+**Priority**: High | **Time**: 4-5 hours | **Dependencies**: TypeScript Interfaces, Firebase Setup
+
+Enhance the existing maintenance service with new functionality for the components.
+
+**Key Deliverables**:
+- Real-time listener management functions
+- Bulk operations support
+- Photo upload and management
+- Status change tracking
+- Communication threading
+- Performance analytics calculations
+
+**Technical Requirements**:
+- Efficient Firestore queries with pagination
+- Real-time listener setup and cleanup
+- Bulk operation transaction handling
+- Photo compression and upload management
+- Error handling and retry logic
+
+---
+
+## Testing and Quality Assurance
+
+### 8. Component Unit Tests
+**Priority**: Medium | **Time**: 6-8 hours | **Dependencies**: All Components
+
+Create comprehensive unit tests for all maintenance components.
+
+**Key Deliverables**:
+- Unit tests for each component with different props and states
+- User interaction testing (clicks, form submissions, etc.)
+- Data filtering and sorting logic validation
+- Real-time listener management testing
+- Error state handling verification
+
+**Test Files**:
+- MaintenanceDashboard.test.tsx
+- TenantRequestHistory.test.tsx
+- ContractorJobBoard.test.tsx
+- RequestStatusTracker.test.tsx
+
+---
+
+### 9. Integration Testing
+**Priority**: Medium | **Time**: 4-5 hours | **Dependencies**: Component Unit Tests
+
+Test integration between components and Firebase services.
+
+**Key Deliverables**:
+- Firebase Firestore operations testing
+- Photo upload workflow validation
+- Real-time status synchronization testing
+- Role-based access control verification
+- Cross-component communication testing
+
+---
+
+### 10. End-to-End Testing
+**Priority**: Medium | **Time**: 5-6 hours | **Dependencies**: Integration Testing
+
+Create E2E tests for critical maintenance workflows.
+
+**Key Deliverables**:
+- Complete maintenance request workflow testing
+- Contractor job acceptance and completion flow
+- Landlord dashboard management operations
+- Tenant request submission and tracking
+- Real-time updates across multiple user roles
+
+**Test Files**:
+- cypress/e2e/maintenance/landlord-dashboard.cy.ts
+- cypress/e2e/maintenance/tenant-requests.cy.ts
+- cypress/e2e/maintenance/contractor-workflow.cy.ts
+- cypress/e2e/maintenance/real-time-updates.cy.ts
+
+---
+
+## Performance and Accessibility
+
+### 11. Performance Optimization
+**Priority**: Medium | **Time**: 3-4 hours | **Dependencies**: All Components
+
+Optimize components for performance and scalability.
+
+**Key Deliverables**:
+- Implement lazy loading for large data sets
+- Add pagination for maintenance request lists
+- Optimize image loading and compression
+- Add caching strategies for frequently accessed data
+- Performance monitoring and metrics
+
+**Technical Requirements**:
+- Component load time < 2 seconds
+- Real-time updates within 1 second
+- Photo uploads complete in < 30 seconds
+- Smooth scrolling at 60fps
+- Efficient memory management
+
+---
+
+### 12. Accessibility Implementation
+**Priority**: Medium | **Time**: 3-4 hours | **Dependencies**: All Components
+
+Ensure WCAG 2.1 AA compliance for all maintenance components.
+
+**Key Deliverables**:
+- ARIA labels for all interactive components
+- Keyboard navigation support
+- Screen reader compatibility
+- High contrast mode support
+- Focus management and indicators
+
+**Technical Requirements**:
+- Color contrast ratio: 4.5:1 minimum
+- All functionality accessible via keyboard
+- Proper semantic HTML structure
+- Screen reader announcements for status changes
+
+---
+
+## Documentation and Deployment
+
+### 13. Component Documentation
+**Priority**: Low | **Time**: 2-3 hours | **Dependencies**: All Components
+
+Create comprehensive documentation for the maintenance components.
+
+**Key Deliverables**:
+- Component usage examples and props documentation
+- Integration guide for existing components
+- Troubleshooting guide for common issues
+- Performance optimization recommendations
+
+---
+
+### 14. Deployment Preparation
+**Priority**: Low | **Time**: 2-3 hours | **Dependencies**: All Tasks
+
+Prepare components for production deployment.
+
+**Key Deliverables**:
+- Production environment variable configuration
+- Firebase rules and indexes deployment
+- Performance monitoring setup
+- Error tracking configuration
+- Deployment checklist completion
+
+---
+
+## Success Criteria
+
+### Functionality Requirements
+- [ ] All maintenance workflows operate end-to-end
+- [ ] Real-time status updates work across all user roles
+- [ ] Photo upload and management functions properly
+- [ ] Bulk operations integrate seamlessly
+- [ ] Communication features enable clear coordination
+
+### Performance Requirements
+- [ ] Components load in < 2 seconds
+- [ ] Real-time updates appear within 1 second
+- [ ] Photo uploads complete in < 30 seconds
+- [ ] Large maintenance lists scroll smoothly
+- [ ] Mobile interactions are responsive
+
+### User Experience Requirements
+- [ ] Intuitive navigation for all user roles
+- [ ] Clear visual status indicators
+- [ ] Efficient bulk management capabilities
+- [ ] Seamless mobile experience
+- [ ] Comprehensive accessibility support
+
+---
+
+**Total Estimated Time**: 58-75 hours  
+**Critical Path**: RequestStatusTracker → MaintenanceDashboard → TenantRequestHistory → ContractorJobBoard  
+**Priority Order**: Foundation components first, then role-specific dashboards, followed by testing and optimization
+
+---

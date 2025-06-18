@@ -16,6 +16,8 @@ import {
 } from '@heroicons/react/24/outline';
 import Button from '../ui/Button';
 import StatusPill from '../ui/StatusPill';
+import DisputeStatusPill from '../ui/DisputeStatusPill';
+import PriorityStatusPill from '../ui/PriorityStatusPill';
 import disputeService, { Dispute, DisputeEvidence, DisputeMessage } from '../../services/firestore/disputeService';
 
 interface SettlementOffer {
@@ -258,11 +260,11 @@ const DisputeManager: React.FC<DisputeManagerProps> = ({ userRole }) => {
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="font-medium text-gray-900 text-sm">{dispute.title}</h4>
                       <div className="flex gap-1">
-                        <StatusPill
+                        <DisputeStatusPill
                           status={dispute.status}
                           className={getStatusStyles(dispute.status)}
                         />
-                        <StatusPill
+                        <PriorityStatusPill
                           status={dispute.priority}
                           className={getPriorityStyles(dispute.priority)}
                         />
@@ -300,11 +302,11 @@ const DisputeManager: React.FC<DisputeManagerProps> = ({ userRole }) => {
                     </h3>
                     <p className="text-gray-600">{selectedDispute.jobTitle}</p>
                     <div className="flex items-center gap-2 mt-2">
-                      <StatusPill
+                      <DisputeStatusPill
                         status={selectedDispute.status}
                         className={getStatusStyles(selectedDispute.status)}
                       />
-                      <StatusPill
+                      <PriorityStatusPill
                         status={selectedDispute.priority}
                         className={getPriorityStyles(selectedDispute.priority)}
                       />

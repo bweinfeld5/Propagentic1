@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import Button from '../ui/Button';
 import StatusPill from '../ui/StatusPill';
+import VerificationStatusPill from '../ui/VerificationStatusPill';
 import { useAuth } from '../../context/AuthContext';
 import { 
   collection, 
@@ -477,7 +478,7 @@ const DocumentVerificationDashboard: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-2">
                         {getStatusIcon(document.verificationStatus)}
-                        <StatusPill status={document.verificationStatus} className="" />
+                        <VerificationStatusPill status={document.verificationStatus} />
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -611,7 +612,7 @@ const DocumentVerificationDashboard: React.FC = () => {
                   <div className="space-y-2 text-sm">
                     <div><span className="font-medium">Name:</span> {selectedDocument.name}</div>
                     <div><span className="font-medium">Type:</span> {formatDocumentType(selectedDocument.documentType)}</div>
-                    <div><span className="font-medium">Status:</span> <StatusPill status={selectedDocument.verificationStatus} className="" /></div>
+                    <div><span className="font-medium">Status:</span> <VerificationStatusPill status={selectedDocument.verificationStatus} /></div>
                     <div><span className="font-medium">Upload Date:</span> {selectedDocument.uploadedAt.toLocaleDateString()}</div>
                     {selectedDocument.expirationDate && (
                       <div><span className="font-medium">Expiration:</span> {selectedDocument.expirationDate.toLocaleDateString()}</div>

@@ -13,6 +13,8 @@ import {
 } from '@heroicons/react/24/outline';
 import Button from '../ui/Button';
 import StatusPill from '../ui/StatusPill';
+import EscrowStatusPill from '../ui/EscrowStatusPill';
+import MilestoneStatusPill from '../ui/MilestoneStatusPill';
 import { escrowService } from '../../services/firestore/escrowService';
 import EscrowCard from './EscrowCard';
 import CreateEscrowModal from './CreateEscrowModal';
@@ -360,7 +362,7 @@ const EscrowDashboard: React.FC<EscrowDashboardProps> = ({ userRole }) => {
                         <div className="flex justify-between">
                           <dt className="text-gray-500">Status:</dt>
                           <dd>
-                            <StatusPill
+                            <EscrowStatusPill
                               status={selectedEscrow.status}
                               className={selectedEscrow.status === 'funded' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}
                             />
@@ -400,7 +402,7 @@ const EscrowDashboard: React.FC<EscrowDashboardProps> = ({ userRole }) => {
                             </div>
                             <div className="text-right">
                               <div className="font-semibold text-gray-900">${milestone.amount.toLocaleString()}</div>
-                              <StatusPill
+                              <MilestoneStatusPill
                                 status={milestone.status}
                                 className={milestone.status === 'completed' ? 'bg-green-100 text-green-800' : milestone.status === 'released' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}
                               />

@@ -1,0 +1,1 @@
+export type VerificationStatus = 'pending' | 'approved' | 'rejected' | 'requires_review'; 

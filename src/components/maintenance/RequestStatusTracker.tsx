@@ -269,6 +269,11 @@ const RequestStatusTracker: React.FC<RequestStatusTrackerProps> = ({
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.5, ease: 'easeInOut' }}
+          role="progressbar"
+          aria-valuenow={progress}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`Request progress: ${progress}% complete`}
         />
       </div>
     );
@@ -302,14 +307,20 @@ const RequestStatusTracker: React.FC<RequestStatusTrackerProps> = ({
     });
 
     return (
-      <div className="mt-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Request History</h3>
-        <ul>
+      <section className="mt-6" aria-labelledby="request-timeline-title">
+        <h3 id="request-timeline-title" className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Request History
+        </h3>
+        <ol role="list" aria-label="Status change timeline">
           {sortedHistory.map((change, index) => (
-            <TimelineEvent key={index} statusChange={change} isLast={index === sortedHistory.length - 1} />
+            <TimelineEvent 
+              key={index} 
+              statusChange={change} 
+              isLast={index === sortedHistory.length - 1} 
+            />
           ))}
-        </ul>
-      </div>
+        </ol>
+      </section>
     );
   };
 
@@ -324,11 +335,16 @@ const RequestStatusTracker: React.FC<RequestStatusTrackerProps> = ({
   if (error) return (
     <div className={`p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 ${className}`}>
       <div className="flex items-center text-red-600 dark:text-red-400">
-        <ExclamationTriangleIcon className="h-6 w-6" />
+        <ExclamationTriangleIcon className="h-6 w-6" aria-hidden="true" />
         <span className="ml-2 font-semibold">{error}</span>
       </div>
       { !isRealtimeConnected && (
-        <button onClick={setupRequestListener} className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline">
+        <button 
+          onClick={setupRequestListener}
+          onKeyDown={(e) => e.key === 'Enter' && setupRequestListener()}
+          className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+          aria-label="Reconnect to real-time status updates"
+        >
           Attempt to reconnect
         </button>
       )}
@@ -343,46 +359,64 @@ const RequestStatusTracker: React.FC<RequestStatusTrackerProps> = ({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0 }}
         className={`p-4 rounded-lg bg-white dark:bg-gray-800 shadow-md ${className}`}
+        role="region"
+        aria-labelledby="request-status-title"
+        aria-describedby="request-status-description"
       >
         {/* Header */}
-        <div className="flex justify-between items-start">
+        <header className="flex justify-between items-start">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">{request.title}</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">#{request.id.slice(0, 6)}</p>
+            <h2 
+              id="request-status-title"
+              className="text-xl font-bold text-gray-900 dark:text-white"
+            >
+              {request.title}
+            </h2>
+            <p 
+              id="request-status-description"
+              className="text-sm text-gray-500 dark:text-gray-400"
+            >
+              <span className="sr-only">Request number </span>#{request.id.slice(0, 6)}
+              <span className="sr-only"> - Status tracking and history</span>
+            </p>
           </div>
           <StatusPill 
             status={request.status} 
+            aria-label={`Current request status: ${request.status}`}
           />
-        </div>
+        </header>
 
         {/* Progress Bar */}
         <ProgressBar />
 
         {/* Core Details */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 text-sm">
-          <div className="flex items-center text-gray-600 dark:text-gray-300">
-            <InformationCircleIcon className="h-5 w-5 mr-2 text-gray-400" />
-            <span>Category: <span className="font-semibold">{request.category}</span></span>
-          </div>
-          <div className="flex items-center text-gray-600 dark:text-gray-300">
-            <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-gray-400" />
-            <span>Priority: <span className="font-semibold">{request.priority}</span></span>
-          </div>
-          <div className="flex items-center text-gray-600 dark:text-gray-300">
-            <UserIcon className="h-5 w-5 mr-2 text-gray-400" />
-            <span>Submitted by: <span className="font-semibold">{request.tenantName}</span></span>
-          </div>
-          {request.contractorName && (
+        <section aria-labelledby="request-details-title">
+          <h3 id="request-details-title" className="sr-only">Request Details</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 text-sm">
             <div className="flex items-center text-gray-600 dark:text-gray-300">
-              <WrenchScrewdriverIcon className="h-5 w-5 mr-2 text-gray-400" />
-              <span>Assigned to: <span className="font-semibold">{request.contractorName}</span></span>
+              <InformationCircleIcon className="h-5 w-5 mr-2 text-gray-400" aria-hidden="true" />
+              <span>Category: <span className="font-semibold">{request.category}</span></span>
             </div>
-          )}
-          <div className="flex items-center text-gray-600 dark:text-gray-300">
-            <ClockIcon className="h-5 w-5 mr-2 text-gray-400" />
-            <span>Last Updated: <span className="font-semibold">{formatDate(lastStatusUpdate || request.updatedAt)}</span></span>
+            <div className="flex items-center text-gray-600 dark:text-gray-300">
+              <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-gray-400" aria-hidden="true" />
+              <span>Priority: <span className="font-semibold">{request.priority}</span></span>
+            </div>
+            <div className="flex items-center text-gray-600 dark:text-gray-300">
+              <UserIcon className="h-5 w-5 mr-2 text-gray-400" aria-hidden="true" />
+              <span>Submitted by: <span className="font-semibold">{request.tenantName}</span></span>
+            </div>
+            {request.contractorName && (
+              <div className="flex items-center text-gray-600 dark:text-gray-300">
+                <WrenchScrewdriverIcon className="h-5 w-5 mr-2 text-gray-400" aria-hidden="true" />
+                <span>Assigned to: <span className="font-semibold">{request.contractorName}</span></span>
+              </div>
+            )}
+            <div className="flex items-center text-gray-600 dark:text-gray-300">
+              <ClockIcon className="h-5 w-5 mr-2 text-gray-400" aria-hidden="true" />
+              <span>Last Updated: <span className="font-semibold">{formatDate(lastStatusUpdate || request.updatedAt)}</span></span>
+            </div>
           </div>
-        </div>
+        </section>
         
         {/* Timeline */}
         <Timeline />
@@ -395,6 +429,8 @@ const RequestStatusTracker: React.FC<RequestStatusTrackerProps> = ({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
+              role="alert"
+              aria-live="polite"
             >
               <ActionFeedback
                 isOpen={notification.isOpen}

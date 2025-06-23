@@ -80,6 +80,30 @@ service cloud.firestore {
               request.auth.uid == job.assignedContractorId);
     }
 
+    // --- CONTRACTOR BID VALIDATION FUNCTIONS ---
+    function isValidBidAcceptance(bidId) {
+      let bid = get(/databases/$(database)/documents/bids/$(bidId)).data;
+      let job = get(/databases/$(database)/documents/jobs/$(bid.jobId)).data;
+      return isSignedIn() && 
+             bid.contractorId == request.auth.uid &&
+             bid.status == 'pending' &&
+             job.status == 'open';
+    }
+
+    function isValidBidRejection(bidId) {
+      let bid = get(/databases/$(database)/documents/bids/$(bidId)).data;
+      return isSignedIn() && 
+             bid.contractorId == request.auth.uid &&
+             bid.status == 'pending';
+    }
+
+    function isValidBidUpdate(bidId) {
+      let bid = get(/databases/$(database)/documents/bids/$(bidId)).data;
+      return isSignedIn() && 
+             bid.contractorId == request.auth.uid &&
+             bid.status == 'pending';
+    }
+
     // --- DATA VALIDATION FUNCTIONS ---
     function isValidEmail(email) {
       return email is string && email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$');
@@ -137,7 +161,9 @@ service cloud.firestore {
       let data = request.resource.data;
       return isContractor() &&
              data.contractorId == request.auth.uid &&
-             data.keys().hasAll(['jobId', 'contractorId', 'amount', 'description']);
+             data.keys().hasAll(['jobId', 'contractorId', 'amount', 'description', 'estimatedDuration', 'proposedStartDate', 'laborCost', 'materialsCost', 'totalCost']) &&
+             data.amount > 0 &&
+             data.totalCost > 0;
     }
 
     // --- RULES ---
@@ -194,7 +220,7 @@ service cloud.firestore {
       allow delete: if isJobOwner(jobId) || isAdmin();
     }
 
-    // Bids Collection
+    // Bids Collection - Enhanced for contractor bid operations
     match /bids/{bidId} {
       // Contractors can read their own bids, landlords can read bids for their jobs
       allow read: if isSignedIn() && 
@@ -202,7 +228,8 @@ service cloud.firestore {
                       isJobOwner(resource.data.jobId) ||
                       isAdmin());
       allow create: if isValidBidCreate();
-      allow update: if isBidOwner(bidId) || isAdmin();
+      // Contractors can update their own pending bids (for acceptance/rejection)
+      allow update: if isValidBidUpdate(bidId) || isAdmin();
       allow delete: if isBidOwner(bidId) || isAdmin();
     }
 
@@ -215,11 +242,11 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Job Notifications Collection
+    // Job Notifications Collection - Enhanced for contractor bid notifications
     match /jobNotifications/{notificationId} {
       // Users can read their own notifications
       allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
-      // Only Cloud Functions can create notifications
+      // Only Cloud Functions can create notifications (for bid acceptance/rejection)
       allow create: if false;
       // Users can update their own notifications (mark as read)
       allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
@@ -324,6 +351,11 @@ service cloud.firestore {
       
       // Delete messages if user is the sender
       allow delete: if isSignedIn() && resource.data.senderId == request.auth.uid;
+    }
+
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

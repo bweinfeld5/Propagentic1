@@ -432,8 +432,8 @@ export async function executeBulkOperation(
                 parameters.notes || ''
               )
             );
-          }
-          break;
+      }
+      break;
         case 'archive':
           updateData.isArchived = true;
           break;

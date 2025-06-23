@@ -246,8 +246,10 @@ export async function updatePropertyHVACData(
     const property = await getEnhancedPropertyById(propertyId);
     if (property?.address?.zip || property?.enhancedAddress?.zip) {
       const zipCode = property.address?.zip || property.enhancedAddress?.zip;
-      const climateZone = await getClimateZoneByZip(zipCode);
-      hvacData.climateZone = climateZone.zone;
+      if (zipCode) {
+        const climateZone = await getClimateZoneByZip(zipCode);
+        hvacData.climateZone = climateZone.zone;
+      }
     }
   }
   

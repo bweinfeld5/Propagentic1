@@ -51,6 +51,7 @@ const SVGTest = lazy(() => import('./components/branding/SVGTest'));
 const BlueprintTest = lazy(() => import('./components/testing/BlueprintTest'));
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
 const ContractorEstimateReadinessDemo = lazy(() => import('./components/landlord/ContractorEstimateReadinessDemo.jsx'));
+const TenantDataTest = lazy(() => import('./components/test/TenantDataTest.jsx'));
 
 // Route Guards
 const PrivateRoute = ({ children }) => {
@@ -203,6 +204,7 @@ function App() {
                                 <Route path="/svg-test" element={<SVGTest />} />
                                 <Route path="/blueprint-test" element={<BlueprintTest />} />
                                 <Route path="/test" element={<PrivateRoute><TestPage /></PrivateRoute>} />
+                                <Route path="/test/tenant-data" element={<PrivateRoute><TenantDataTest /></PrivateRoute>} />
                                 <Route path="/login" element={<LoginPage />} />
                                 <Route path="/register" element={<RegisterPage />} />
                                 <Route path="/signup" element={<RegisterPage />} />

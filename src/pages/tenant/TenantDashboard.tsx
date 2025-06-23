@@ -341,12 +341,36 @@ const TenantDashboard: React.FC = () => {
               {/* Property Management Section */}
               {tenantProperties.length === 0 ? (
                 <div className="mb-8">
-                  <EmptyStateCard
-                    title="No properties yet"
-                    message="Properties are added during account setup. If you need to add a property, please contact support or create a new account."
-                    actionLabel=""
-                    onAction={undefined}
-                  />
+                  {pendingPropertyInvitations.length === 0 && pendingInvites.length === 0 ? (
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-8 text-center">
+                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Home className="w-8 h-8 text-blue-600" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">Welcome to PropAgentic!</h3>
+                      <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                        You're all set up! You'll see property invitations here when landlords invite you to their properties.
+                      </p>
+                      <div className="bg-white rounded-lg p-4 border border-blue-200 text-left max-w-sm mx-auto">
+                        <h4 className="font-medium text-gray-900 mb-2">How it works:</h4>
+                        <ul className="text-sm text-gray-600 space-y-1">
+                          <li>• Landlords can send you property invitations</li>
+                          <li>• Invitations will appear on this dashboard</li>
+                          <li>• Accept invitations to access property features</li>
+                          <li>• Submit maintenance requests and communicate with landlords</li>
+                        </ul>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-6 text-center">
+                      <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <BellIcon className="w-6 h-6 text-yellow-600" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Pending Invitations</h3>
+                      <p className="text-gray-600">
+                        You have pending property invitations above. Accept them to start managing your properties.
+                      </p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="mb-8">

@@ -201,6 +201,30 @@ service cloud.firestore {
     // Generic mail collection for triggering emails
     match /mail/{mailId} {
       allow create: if isSignedIn(); // Allow any signed-in user to create an email document
+      allow read: if isSignedIn(); // Allow read access for testing email system functionality
+    }
+
+    // Property Invitations Collection - for tenant property invitations
+    match /propertyInvitations/{invitationId} {
+      // Landlords can create invitations for their properties
+      allow create: if isLandlord() && isPropertyOwner(request.resource.data.propertyId);
+      // Invited tenants can read their own invitations via email match
+      allow read: if isSignedIn() && (
+        (isLandlord() && isPropertyOwner(resource.data.propertyId)) ||
+        (isTenant() && resource.data.tenantEmail == request.auth.token.email) ||
+        isAdmin()
+      );
+      // Tenants can update to accept/decline, landlords can update their own invitations
+      allow update: if isSignedIn() && (
+        (isLandlord() && isPropertyOwner(resource.data.propertyId)) ||
+        (isTenant() && resource.data.tenantEmail == request.auth.token.email) ||
+        isAdmin()
+      );
+      // Landlords can delete their own invitations
+      allow delete: if isSignedIn() && (
+        (isLandlord() && isPropertyOwner(resource.data.propertyId)) ||
+        isAdmin()
+      );
     }
 
     // Notifications Collection

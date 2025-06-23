@@ -26,7 +26,7 @@ const TenantInviteModal: React.FC<TenantInviteModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, refreshUserData } = useAuth();
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [validatedProperty, setValidatedProperty] = useState<{
     propertyId: string;
@@ -62,6 +62,9 @@ const TenantInviteModal: React.FC<TenantInviteModalProps> = ({
       );
       
       if (result.success) {
+        // Refresh user data to get updated profile with propertyId and landlordId
+        await refreshUserData();
+        
         toast.success(`You've successfully joined ${validatedProperty.propertyName}!`);
         
         // Notify parent component of success

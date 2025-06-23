@@ -13,8 +13,6 @@ import {
 import { CreateInviteSchema, CreateInviteData } from '../../schemas/CreateInviteSchema';
 import { api } from '../../services/api';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase/config';
 import toast from 'react-hot-toast';
 import Button from '../ui/Button';
 import { auth } from '../../firebase/config';
@@ -73,6 +71,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
   const [filteredTenants, setFilteredTenants] = useState<TenantAccount[]>([]);
   const [selectedTenant, setSelectedTenant] = useState<TenantAccount | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [sendEmailNotifications, setSendEmailNotifications] = useState<boolean>(true);
 
   useEffect(() => {
     if (isOpen) {
@@ -118,63 +117,42 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
   }, [searchQuery, existingTenants]);
 
   /**
-   * Load all existing tenant accounts from the system
+   * Load all existing tenant accounts from the system using Cloud Function
    */
   const loadExistingTenants = async () => {
     setLoadingTenants(true);
     try {
-      // Query all users with role 'tenant' or userType 'tenant'
-      const usersRef = collection(db, 'users');
-      const tenantQuery1 = query(usersRef, where('role', '==', 'tenant'));
-      const tenantQuery2 = query(usersRef, where('userType', '==', 'tenant'));
+      const functions = getFunctions();
+      const getAllTenantsFunction = httpsCallable(functions, 'getAllTenants');
       
-      const [snapshot1, snapshot2] = await Promise.all([
-        getDocs(tenantQuery1),
-        getDocs(tenantQuery2)
-      ]);
-      
-      const tenantAccounts: TenantAccount[] = [];
-      const addedEmails = new Set<string>(); // Prevent duplicates
-      
-      // Process both query results
-      [snapshot1, snapshot2].forEach(snapshot => {
-        snapshot.docs.forEach(doc => {
-          const data = doc.data();
-          const email = data.email;
-          
-          // Skip if we already added this email
-          if (addedEmails.has(email)) return;
-          addedEmails.add(email);
-          
-          const tenant: TenantAccount = {
-            uid: doc.id,
-            email: data.email,
-            name: data.name,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            displayName: data.displayName,
-            role: data.role || data.userType,
-            userType: data.userType,
-            status: data.status || 'active',
-            phone: data.phone
-          };
-          
-          tenantAccounts.push(tenant);
-        });
+      console.log('📋 Loading existing tenants via Cloud Function...');
+      const result = await getAllTenantsFunction({ 
+        searchQuery: searchQuery,
+        limit: 200 
       });
       
-      // Sort by name/email for better UX
-      tenantAccounts.sort((a, b) => {
-        const nameA = a.name || a.displayName || `${a.firstName} ${a.lastName}` || a.email;
-        const nameB = b.name || b.displayName || `${b.firstName} ${b.lastName}` || b.email;
-        return nameA.localeCompare(nameB);
-      });
+      const data = result.data as any;
+      
+      const tenantAccounts: TenantAccount[] = data.tenants.map((tenant: any) => ({
+        uid: tenant.uid,
+        email: tenant.email || '',
+        name: tenant.name,
+        firstName: tenant.firstName,
+        lastName: tenant.lastName,
+        displayName: tenant.displayName,
+        role: tenant.role || tenant.userType,
+        userType: tenant.userType,
+        status: tenant.status || 'active',
+        phone: tenant.phone
+      }));
       
       setExistingTenants(tenantAccounts);
-      console.log(`Loaded ${tenantAccounts.length} existing tenant accounts`);
+      console.log(`✅ Loaded ${tenantAccounts.length} existing tenant accounts via Cloud Function`);
+      toast.success(`Found ${tenantAccounts.length} tenant accounts`);
     } catch (error) {
-      console.error('Error loading existing tenants:', error);
-      toast.error('Failed to load existing tenant accounts');
+      console.error('❌ Error calling getAllTenants Cloud Function:', error);
+      toast.error('Failed to load existing tenant accounts. Please check permissions.');
+      setExistingTenants([]);
     } finally {
       setLoadingTenants(false);
     }
@@ -615,6 +593,46 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                               />
                             </div>
                             {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
+                          </div>
+                        )}
+
+                        {/* Email Notification Option for Existing Tenants */}
+                        {inviteMode === 'existing' && selectedTenant && (
+                          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                            <div className="flex items-start">
+                              <div className="flex-shrink-0">
+                                <EnvelopeIcon className="h-5 w-5 text-amber-600 mt-0.5" />
+                              </div>
+                              <div className="ml-3 flex-1">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <h4 className="text-sm font-medium text-amber-800">
+                                      Email Notification
+                                    </h4>
+                                    <p className="text-sm text-amber-700 mt-1">
+                                      Notify {selectedTenant.name || selectedTenant.email} about this invitation via email
+                                    </p>
+                                  </div>
+                                  <div className="ml-4">
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={sendEmailNotifications}
+                                        onChange={(e) => setSendEmailNotifications(e.target.checked)}
+                                      />
+                                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+                                    </label>
+                                  </div>
+                                </div>
+                                <p className="text-xs text-amber-600 mt-2">
+                                  {sendEmailNotifications 
+                                    ? "✓ They'll receive an email notification about the invitation" 
+                                    : "⚠️ They'll only see the invitation when they log in"
+                                  }
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         )}
 

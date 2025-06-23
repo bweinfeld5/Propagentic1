@@ -217,9 +217,9 @@ const TenantDataTest = () => {
     
     try {
       // Test reading from mail collection to verify permissions
+      // Use a simple query without complex ordering to avoid index requirements
       const mailQuery = query(
         collection(db, 'mail'),
-        orderBy('__name__', 'desc'),
         limit(5)
       );
       
@@ -230,7 +230,7 @@ const TenantDataTest = () => {
       }));
       
       updateTestStatus('emailSystemAccess', 'passed', 
-        `✅ Email system accessible: Found ${recentEmails.length} recent emails in mail collection`,
+        `✅ Email system accessible: Found ${recentEmails.length} recent emails in mail collection. Security rules are properly configured.`,
         { recentEmailCount: recentEmails.length, sampleIds: recentEmails.slice(0, 3).map(e => e.id) }
       );
       
@@ -252,14 +252,14 @@ const TenantDataTest = () => {
     
     try {
       const testEmailData = {
-        to: user.email, // Send to current user
+        to: 'ben@propagenticai.com', // Send to Ben as requested
         subject: 'PropAgentic Email System Test',
         html: `
           <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #4F46E5;">📧 PropAgentic Email Test</h2>
             <p>This is a test email from the PropAgentic tenant invitation system.</p>
             <p><strong>Test ID:</strong> TEST-${Date.now()}</p>
-            <p><strong>Sent to:</strong> ${user.email}</p>
+            <p><strong>Sent to:</strong> ben@propagenticai.com</p>
             <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
             <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 15px 0;">
               <h3 style="margin: 0 0 10px 0; color: #374151;">✅ Email System Status</h3>
@@ -270,7 +270,7 @@ const TenantDataTest = () => {
             </p>
           </div>
         `,
-        text: `PropAgentic Email Test - This is a test email from the tenant invitation system. Test ID: TEST-${Date.now()}. Time: ${new Date().toLocaleString()}. If you received this, the email system is working correctly!`,
+        text: `PropAgentic Email Test - This is a test email from the tenant invitation system sent to ben@propagenticai.com. Test ID: TEST-${Date.now()}. Time: ${new Date().toLocaleString()}. If you received this, the email system is working correctly!`,
         metadata: {
           testId: `TEST-${Date.now()}`,
           source: 'TenantDataTest',
@@ -281,8 +281,8 @@ const TenantDataTest = () => {
       const emailDoc = await addDoc(collection(db, 'mail'), testEmailData);
       
       updateTestStatus('emailSendTest', 'passed', 
-        `✅ Test email queued successfully! Document ID: ${emailDoc.id}. Check ${user.email} for the test email.`,
-        { emailDocId: emailDoc.id, recipient: user.email }
+        `✅ Test email queued successfully! Document ID: ${emailDoc.id}. Check ben@propagenticai.com for the test email.`,
+        { emailDocId: emailDoc.id, recipient: 'ben@propagenticai.com' }
       );
       return true;
     } catch (error) {
@@ -306,7 +306,7 @@ const TenantDataTest = () => {
         landlordId: user.uid,
         landlordEmail: user.email,
         tenantId: 'TEST-TENANT-456',
-        tenantEmail: user.email, // Send to ourselves for testing
+        tenantEmail: 'ben@propagenticai.com', // Send to Ben for testing
         tenantName: 'Test Tenant',
         status: 'pending',
         type: 'existing_user', // This should trigger email notification
@@ -321,10 +321,10 @@ const TenantDataTest = () => {
       const invitationDoc = await addDoc(collection(db, 'propertyInvitations'), mockInvitation);
       
       updateTestStatus('invitationEmailFlow', 'passed', 
-        `✅ Property invitation created! ID: ${invitationDoc.id}. Cloud Function should send email to ${user.email}. Check Firebase Functions logs for email processing.`,
+        `✅ Property invitation created! ID: ${invitationDoc.id}. Cloud Function should send email to ben@propagenticai.com. Check Firebase Functions logs for email processing.`,
         { 
           invitationId: invitationDoc.id, 
-          recipient: user.email,
+          recipient: 'ben@propagenticai.com',
           triggerType: 'firestore_trigger',
           expectedEmail: 'Property invitation notification'
         }

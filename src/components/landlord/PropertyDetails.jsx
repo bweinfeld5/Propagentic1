@@ -45,6 +45,7 @@ import {
   getPropertyTypeLabel
 } from '../../models/Property';
 import ContractorEstimateReadinessIndicator from './ContractorEstimateReadinessIndicator';
+import PropertyDataCompletenessIndicator from './PropertyDataCompletenessIndicator';
 
 const PropertyDetails = ({
   property,
@@ -303,6 +304,7 @@ const PropertyDetails = ({
                 <Tabs>
                   <TabList>
                     <Tab>Details</Tab>
+                    <Tab>Data Quality</Tab>
                     <Tab>Estimates</Tab>
                     <Tab>Financial</Tab>
                     <Tab>Documents</Tab>
@@ -482,6 +484,18 @@ const PropertyDetails = ({
                       </div>
                     </TabPanel>
                     
+                    {/* Data Quality Tab */}
+                    <TabPanel>
+                      <div className="p-2">
+                        <PropertyDataCompletenessIndicator
+                          property={property}
+                          onImproveData={() => onEdit?.(property.id)}
+                          compact={false}
+                          showActions={true}
+                        />
+                      </div>
+                    </TabPanel>
+                    
                     {/* Contractor Estimates Tab */}
                     <TabPanel>
                       <div className="p-2">
@@ -651,8 +665,18 @@ const PropertyDetails = ({
           
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Contractor Estimate Readiness */}
+            {/* Data Completeness Indicator */}
             <SlideUp delay={0.3}>
+              <PropertyDataCompletenessIndicator
+                property={property}
+                onImproveData={() => onEdit?.(property.id)}
+                compact={true}
+                showActions={true}
+              />
+            </SlideUp>
+            
+            {/* Contractor Estimate Readiness */}
+            <SlideUp delay={0.4}>
               <ContractorEstimateReadinessIndicator
                 property={property}
                 onImproveData={handleImproveData}

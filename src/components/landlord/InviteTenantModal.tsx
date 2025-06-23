@@ -1,9 +1,20 @@
 import { useState, useEffect, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { XMarkIcon, EnvelopeIcon, BuildingOfficeIcon, InformationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { 
+  XMarkIcon, 
+  EnvelopeIcon, 
+  BuildingOfficeIcon, 
+  InformationCircleIcon, 
+  CheckCircleIcon,
+  UserGroupIcon,
+  MagnifyingGlassIcon,
+  UserPlusIcon
+} from '@heroicons/react/24/outline';
 import { CreateInviteSchema, CreateInviteData } from '../../schemas/CreateInviteSchema';
 import { api } from '../../services/api';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 import toast from 'react-hot-toast';
 import Button from '../ui/Button';
 import { auth } from '../../firebase/config';
@@ -14,6 +25,19 @@ interface Property {
   nickname?: string;
   streetAddress?: string;
   [key: string]: any; // Allow other properties
+}
+
+interface TenantAccount {
+  uid: string;
+  email: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  displayName?: string;
+  role: string;
+  userType?: string;
+  status?: string;
+  phone?: string;
 }
 
 interface InviteTenantModalProps {
@@ -37,10 +61,18 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>(initialPropertyId || '');
   const [selectedPropertyName, setSelectedPropertyName] = useState<string>(initialPropertyName || '');
   const [loading, setLoading] = useState<boolean>(false);
+  const [loadingTenants, setLoadingTenants] = useState<boolean>(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [inviteSuccess, setInviteSuccess] = useState<boolean>(false);
   const [inviteCode, setInviteCode] = useState<string>('');
   const [inviteId, setInviteId] = useState<string>('');
+  
+  // New state for existing tenants
+  const [inviteMode, setInviteMode] = useState<'new' | 'existing'>('new');
+  const [existingTenants, setExistingTenants] = useState<TenantAccount[]>([]);
+  const [filteredTenants, setFilteredTenants] = useState<TenantAccount[]>([]);
+  const [selectedTenant, setSelectedTenant] = useState<TenantAccount | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -51,6 +83,12 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
       setInviteSuccess(false);
       setInviteCode('');
       setInviteId('');
+      setInviteMode('new');
+      setSelectedTenant(null);
+      setSearchQuery('');
+      
+      // Load existing tenants when modal opens
+      loadExistingTenants();
     }
   }, [isOpen, initialPropertyId, initialPropertyName]);
 
@@ -63,10 +101,93 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
     }
   }, [selectedPropertyId, properties]);
 
+  // Filter tenants based on search query
+  useEffect(() => {
+    if (!searchQuery) {
+      setFilteredTenants(existingTenants);
+    } else {
+      const query = searchQuery.toLowerCase();
+      const filtered = existingTenants.filter(tenant => 
+        tenant.email.toLowerCase().includes(query) ||
+        tenant.name?.toLowerCase().includes(query) ||
+        `${tenant.firstName} ${tenant.lastName}`.toLowerCase().includes(query) ||
+        tenant.displayName?.toLowerCase().includes(query)
+      );
+      setFilteredTenants(filtered);
+    }
+  }, [searchQuery, existingTenants]);
+
+  /**
+   * Load all existing tenant accounts from the system
+   */
+  const loadExistingTenants = async () => {
+    setLoadingTenants(true);
+    try {
+      // Query all users with role 'tenant' or userType 'tenant'
+      const usersRef = collection(db, 'users');
+      const tenantQuery1 = query(usersRef, where('role', '==', 'tenant'));
+      const tenantQuery2 = query(usersRef, where('userType', '==', 'tenant'));
+      
+      const [snapshot1, snapshot2] = await Promise.all([
+        getDocs(tenantQuery1),
+        getDocs(tenantQuery2)
+      ]);
+      
+      const tenantAccounts: TenantAccount[] = [];
+      const addedEmails = new Set<string>(); // Prevent duplicates
+      
+      // Process both query results
+      [snapshot1, snapshot2].forEach(snapshot => {
+        snapshot.docs.forEach(doc => {
+          const data = doc.data();
+          const email = data.email;
+          
+          // Skip if we already added this email
+          if (addedEmails.has(email)) return;
+          addedEmails.add(email);
+          
+          const tenant: TenantAccount = {
+            uid: doc.id,
+            email: data.email,
+            name: data.name,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            displayName: data.displayName,
+            role: data.role || data.userType,
+            userType: data.userType,
+            status: data.status || 'active',
+            phone: data.phone
+          };
+          
+          tenantAccounts.push(tenant);
+        });
+      });
+      
+      // Sort by name/email for better UX
+      tenantAccounts.sort((a, b) => {
+        const nameA = a.name || a.displayName || `${a.firstName} ${a.lastName}` || a.email;
+        const nameB = b.name || b.displayName || `${b.firstName} ${b.lastName}` || b.email;
+        return nameA.localeCompare(nameB);
+      });
+      
+      setExistingTenants(tenantAccounts);
+      console.log(`Loaded ${tenantAccounts.length} existing tenant accounts`);
+    } catch (error) {
+      console.error('Error loading existing tenants:', error);
+      toast.error('Failed to load existing tenant accounts');
+    } finally {
+      setLoadingTenants(false);
+    }
+  };
+
   const validateForm = () => {
     try {
+      const emailToValidate = inviteMode === 'existing' && selectedTenant 
+        ? selectedTenant.email 
+        : email;
+        
       CreateInviteSchema.parse({
-        tenantEmail: email,
+        tenantEmail: emailToValidate,
         propertyId: selectedPropertyId,
         landlordId: auth.currentUser?.uid || '',
         createdAt: new Date(),
@@ -100,17 +221,19 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
     
     const property = properties.find(p => p.id === selectedPropertyId);
     const propertyNameForInvite = property?.nickname || property?.name || property?.streetAddress || selectedPropertyName || 'Unknown Property';
+    const emailToInvite = inviteMode === 'existing' && selectedTenant ? selectedTenant.email : email;
     
     try {
       // Use Firebase Cloud Function directly for better reliability
       const functions = getFunctions();
       const sendPropertyInvite = httpsCallable(functions, 'sendPropertyInvite');
       
-      console.log(`Sending invitation to ${email} for property ${selectedPropertyId}`);
+      console.log(`Sending invitation to ${emailToInvite} for property ${selectedPropertyId}`);
       
       const result = await sendPropertyInvite({
         propertyId: selectedPropertyId,
-        tenantEmail: email
+        tenantEmail: emailToInvite,
+        existingTenant: inviteMode === 'existing' ? selectedTenant : null
       });
       
       const data = result.data as any;
@@ -120,8 +243,12 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
         setInviteId(data.inviteId || '');
         
         // Enhanced success toast message
+        const tenantName = inviteMode === 'existing' && selectedTenant 
+          ? (selectedTenant.name || selectedTenant.displayName || `${selectedTenant.firstName} ${selectedTenant.lastName}` || selectedTenant.email)
+          : emailToInvite;
+          
         toast.success(
-          `🎉 Invitation sent to ${email}!\nThey'll receive an email with instructions to join ${propertyNameForInvite}.`,
+          `🎉 Invitation sent to ${tenantName}!\nThey'll receive an email with instructions to join ${propertyNameForInvite}.`,
           {
             duration: 5000,
             style: {
@@ -161,6 +288,24 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
     }
   };
 
+  const renderTenantDisplay = (tenant: TenantAccount) => {
+    const displayName = tenant.name || tenant.displayName || `${tenant.firstName || ''} ${tenant.lastName || ''}`.trim() || tenant.email;
+    return (
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="font-medium text-gray-900">{displayName}</div>
+          <div className="text-sm text-gray-600">{tenant.email}</div>
+          {tenant.phone && (
+            <div className="text-xs text-gray-500">{tenant.phone}</div>
+          )}
+        </div>
+        <div className="text-xs text-gray-500">
+          {tenant.status || 'active'}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -187,7 +332,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-lg transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all border border-gray-200">
+              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all border border-gray-200">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
                   <div className="flex items-center justify-between">
@@ -205,7 +350,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                 </div>
 
                 {/* Content */}
-                <div className="px-6 py-6">
+                <div className="px-6 py-6 max-h-[80vh] overflow-y-auto">
                   {inviteSuccess ? (
                     <div className="space-y-6">
                       <div className="rounded-xl bg-green-50 p-4 border border-green-200">
@@ -216,7 +361,12 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                           <div className="ml-3">
                             <h3 className="text-lg font-medium text-green-800">Success!</h3>
                             <div className="mt-2 text-sm text-green-700">
-                              <p>An invitation has been sent to <span className="font-semibold">{email}</span> for <span className="font-semibold">{selectedPropertyName}</span>.</p>
+                              <p>An invitation has been sent to <span className="font-semibold">
+                                {inviteMode === 'existing' && selectedTenant 
+                                  ? (selectedTenant.name || selectedTenant.displayName || `${selectedTenant.firstName} ${selectedTenant.lastName}` || selectedTenant.email)
+                                  : email
+                                }
+                              </span> for <span className="font-semibold">{selectedPropertyName}</span>.</p>
                               <p className="mt-1">They'll receive an email with instructions on how to join your property.</p>
                             </div>
                           </div>
@@ -236,7 +386,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                           </li>
                           <li className="flex items-start">
                             <span className="text-blue-500 mr-2">•</span>
-                            They'll create an account (if they don't have one)
+                            {inviteMode === 'existing' ? 'They\'ll get access to the property in their existing account' : 'They\'ll create an account (if they don\'t have one)'}
                           </li>
                           <li className="flex items-start">
                             <span className="text-blue-500 mr-2">•</span>
@@ -281,6 +431,9 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                             setInviteId('');
                             setSelectedPropertyId(initialPropertyId || '');
                             setSelectedPropertyName(initialPropertyName || '');
+                            setInviteMode('new');
+                            setSelectedTenant(null);
+                            setSearchQuery('');
                           }}
                           className="flex-1"
                         >
@@ -301,15 +454,11 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                             <ul className="text-sm text-blue-700 space-y-1">
                               <li className="flex items-start">
                                 <span className="text-blue-500 mr-2">•</span>
+                                Choose to invite an existing tenant account or create a new invitation
+                              </li>
+                              <li className="flex items-start">
+                                <span className="text-blue-500 mr-2">•</span>
                                 We'll send a professional email invitation to the tenant
-                              </li>
-                              <li className="flex items-start">
-                                <span className="text-blue-500 mr-2">•</span>
-                                They'll receive a unique invitation code
-                              </li>
-                              <li className="flex items-start">
-                                <span className="text-blue-500 mr-2">•</span>
-                                The tenant can accept directly from the email or enter the code manually
                               </li>
                               <li className="flex items-start">
                                 <span className="text-blue-500 mr-2">•</span>
@@ -352,27 +501,122 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                           )}
                         </div>
 
+                        {/* Invite Mode Selection */}
                         <div>
-                          <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                            Tenant's Email
+                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                            Tenant Selection
                           </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <EnvelopeIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                            </div>
-                            <input
-                              type="email"
-                              id="email"
-                              className={`block w-full pl-10 pr-4 py-3 text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors ${
-                                errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                          <div className="grid grid-cols-2 gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setInviteMode('existing')}
+                              className={`p-4 border-2 rounded-xl transition-all ${
+                                inviteMode === 'existing'
+                                  ? 'border-orange-500 bg-orange-50 text-orange-700'
+                                  : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                               }`}
-                              placeholder="tenant@example.com"
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                            />
+                            >
+                              <UserGroupIcon className="h-6 w-6 mx-auto mb-2" />
+                              <div className="text-sm font-medium">Existing Tenant</div>
+                              <div className="text-xs mt-1 opacity-70">
+                                Select from {existingTenants.length} accounts
+                              </div>
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => setInviteMode('new')}
+                              className={`p-4 border-2 rounded-xl transition-all ${
+                                inviteMode === 'new'
+                                  ? 'border-orange-500 bg-orange-50 text-orange-700'
+                                  : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                              }`}
+                            >
+                              <UserPlusIcon className="h-6 w-6 mx-auto mb-2" />
+                              <div className="text-sm font-medium">New Invitation</div>
+                              <div className="text-xs mt-1 opacity-70">
+                                Send by email
+                              </div>
+                            </button>
                           </div>
-                          {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
                         </div>
+
+                        {/* Existing Tenant Selection */}
+                        {inviteMode === 'existing' && (
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Select Existing Tenant
+                            </label>
+                            
+                            {/* Search */}
+                            <div className="relative mb-3">
+                              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                              </div>
+                              <input
+                                type="text"
+                                placeholder="Search tenants by name or email..."
+                                className="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                              />
+                            </div>
+
+                            {/* Tenant List */}
+                            <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg bg-white">
+                              {loadingTenants ? (
+                                <div className="p-4 text-center text-gray-500">
+                                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500 mx-auto mb-2"></div>
+                                  Loading tenant accounts...
+                                </div>
+                              ) : filteredTenants.length === 0 ? (
+                                <div className="p-4 text-center text-gray-500">
+                                  {searchQuery ? 'No tenants match your search' : 'No tenant accounts found'}
+                                </div>
+                              ) : (
+                                <div className="divide-y divide-gray-200">
+                                  {filteredTenants.map((tenant) => (
+                                    <button
+                                      key={tenant.uid}
+                                      type="button"
+                                      onClick={() => setSelectedTenant(tenant)}
+                                      className={`w-full p-4 text-left hover:bg-gray-50 transition-colors ${
+                                        selectedTenant?.uid === tenant.uid ? 'bg-orange-50 border-r-4 border-orange-500' : ''
+                                      }`}
+                                    >
+                                      {renderTenantDisplay(tenant)}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* New Email Invitation */}
+                        {inviteMode === 'new' && (
+                          <div>
+                            <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                              Tenant's Email
+                            </label>
+                            <div className="relative">
+                              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <EnvelopeIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                              </div>
+                              <input
+                                type="email"
+                                id="email"
+                                className={`block w-full pl-10 pr-4 py-3 text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors ${
+                                  errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                                }`}
+                                placeholder="tenant@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                              />
+                            </div>
+                            {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
+                          </div>
+                        )}
 
                         <div className="flex gap-3 pt-4">
                           <Button
@@ -388,7 +632,12 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                             type="submit"
                             variant="primary"
                             isLoading={loading}
-                            disabled={loading || !email || !selectedPropertyId}
+                            disabled={
+                              loading || 
+                              !selectedPropertyId || 
+                              (inviteMode === 'new' && !email) || 
+                              (inviteMode === 'existing' && !selectedTenant)
+                            }
                             className="flex-1"
                           >
                             {loading ? 'Sending...' : 'Send Invitation'}

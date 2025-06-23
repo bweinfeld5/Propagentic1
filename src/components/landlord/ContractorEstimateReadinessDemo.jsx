@@ -144,6 +144,7 @@ const ContractorEstimateReadinessDemo = () => {
               onImproveData={handleImproveData}
               compact={false}
               showActions={true}
+              demoMode={true}
             />
           </div>
         </div>
@@ -159,6 +160,7 @@ const ContractorEstimateReadinessDemo = () => {
               onImproveData={handleImproveData}
               compact={false}
               showActions={true}
+              demoMode={true}
             />
           </div>
         </div>
@@ -174,6 +176,7 @@ const ContractorEstimateReadinessDemo = () => {
               onImproveData={handleImproveData}
               compact={false}
               showActions={true}
+              demoMode={true}
             />
           </div>
         </div>
@@ -191,6 +194,7 @@ const ContractorEstimateReadinessDemo = () => {
                 onImproveData={handleImproveData}
                 compact={true}
                 showActions={true}
+                demoMode={true}
               />
             </div>
 
@@ -201,6 +205,7 @@ const ContractorEstimateReadinessDemo = () => {
                 onImproveData={handleImproveData}
                 compact={true}
                 showActions={true}
+                demoMode={true}
               />
             </div>
 
@@ -211,6 +216,7 @@ const ContractorEstimateReadinessDemo = () => {
                 onImproveData={handleImproveData}
                 compact={true}
                 showActions={true}
+                demoMode={true}
               />
             </div>
           </div>

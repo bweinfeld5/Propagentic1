@@ -7,8 +7,8 @@ import {
   UserGroupIcon,
   InformationCircleIcon
 } from '@heroicons/react/24/outline';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db, auth } from '../../firebase/config';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { auth } from '../../firebase/config';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import Button from '../ui/Button';
 
@@ -61,72 +61,51 @@ const TenantDataTest = () => {
   };
 
   /**
-   * Test 2: Database Access
+   * Test 2: Cloud Function Access
    */
   const testDatabaseAccess = async () => {
-    updateTestStatus('databaseAccess', 'running', 'Testing Firestore access...');
+    updateTestStatus('databaseAccess', 'running', 'Testing Cloud Function access...');
     
     try {
-      const testQuery = query(collection(db, 'users'), where('role', '!=', 'non-existent-role'));
-      await getDocs(testQuery);
-      updateTestStatus('databaseAccess', 'passed', 'Successfully accessed Firestore');
+      const functions = getFunctions();
+      const ping = httpsCallable(functions, 'ping');
+      await ping();
+      updateTestStatus('databaseAccess', 'passed', 'Successfully accessed Firebase Cloud Functions');
       return true;
     } catch (error) {
-      updateTestStatus('databaseAccess', 'failed', `Database access failed: ${error.message}`);
+      updateTestStatus('databaseAccess', 'failed', `Cloud Function access failed: ${error.message}`);
       return false;
     }
   };
 
   /**
-   * Test 3: Tenant Query
+   * Test 3: Tenant Query via Cloud Function
    */
   const testTenantQuery = async () => {
-    updateTestStatus('tenantQuery', 'running', 'Querying tenant accounts...');
+    updateTestStatus('tenantQuery', 'running', 'Querying tenant accounts via Cloud Function...');
     
     try {
-      // Query all users with role 'tenant'
-      const tenantQuery1 = query(collection(db, 'users'), where('role', '==', 'tenant'));
-      const tenantSnapshot1 = await getDocs(tenantQuery1);
+      const functions = getFunctions();
+      const getAllTenantsFunction = httpsCallable(functions, 'getAllTenants');
       
-      // Query all users with userType 'tenant'
-      const tenantQuery2 = query(collection(db, 'users'), where('userType', '==', 'tenant'));
-      const tenantSnapshot2 = await getDocs(tenantQuery2);
+      const result = await getAllTenantsFunction({ limit: 100 });
+      const data = result.data;
       
-      // Combine and deduplicate results
-      const tenantMap = new Map();
+      const tenants = data.tenants.map(tenant => ({
+        id: tenant.uid,
+        ...tenant,
+        foundBy: 'cloudFunction'
+      }));
       
-      tenantSnapshot1.forEach(doc => {
-        const data = doc.data();
-        tenantMap.set(doc.id, {
-          id: doc.id,
-          ...data,
-          foundBy: 'role'
-        });
-      });
-      
-      tenantSnapshot2.forEach(doc => {
-        const data = doc.data();
-        if (tenantMap.has(doc.id)) {
-          tenantMap.get(doc.id).foundBy = 'both';
-        } else {
-          tenantMap.set(doc.id, {
-            id: doc.id,
-            ...data,
-            foundBy: 'userType'
-          });
-        }
-      });
-      
-      const tenants = Array.from(tenantMap.values());
       setTenantData(tenants);
       
       updateTestStatus('tenantQuery', 'passed', 
-        `Found ${tenants.length} tenant accounts (${tenantSnapshot1.size} by role, ${tenantSnapshot2.size} by userType)`,
-        { total: tenants.length, byRole: tenantSnapshot1.size, byUserType: tenantSnapshot2.size }
+        `✅ Found ${data.totalCount} tenant accounts via Cloud Function: ${data.message}`,
+        { total: data.totalCount, source: 'getAllTenants Cloud Function' }
       );
       return tenants;
     } catch (error) {
-      updateTestStatus('tenantQuery', 'failed', `Tenant query failed: ${error.message}`);
+      updateTestStatus('tenantQuery', 'failed', `❌ Cloud Function call failed: ${error.message}`);
       return [];
     }
   };

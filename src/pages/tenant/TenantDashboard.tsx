@@ -8,6 +8,7 @@ import { collection, query, where, orderBy, onSnapshot, getDocs } from 'firebase
 import { PropAgenticMark } from '../../components/brand/PropAgenticMark';
 import EmptyStateCard from '../../components/EmptyStateCard';
 import InvitationBanner from '../../components/InvitationBanner';
+import PropertyInvitationBanner from '../../components/PropertyInvitationBanner';
 import PropertyList from '../../components/PropertyList';
 import { Skeleton } from '../../components/ui/Skeleton';
 import Button from '../../components/ui/Button';
@@ -16,6 +17,7 @@ import RequestHistory from '../../components/tenant/RequestHistory';
 import HeaderBar from '../../components/layout/HeaderBar';
 import NotificationPanel from '../../components/layout/NotificationPanel';
 import inviteService from '../../services/firestore/inviteService';
+import propertyInvitationService from '../../services/firestore/propertyInvitationService';
 import dataService from '../../services/dataService';
 import { getDemoProperty, getDemoMaintenanceTickets, isDemoProperty } from '../../services/demoDataService';
 
@@ -45,6 +47,7 @@ const TenantDashboard: React.FC = () => {
   
   // Property and invite states
   const [pendingInvites, setPendingInvites] = useState<any[]>([]);
+  const [pendingPropertyInvitations, setPendingPropertyInvitations] = useState<any[]>([]);
   const [tenantProperties, setTenantProperties] = useState<any[]>([]);
   
   // Maintenance/ticket states
@@ -97,10 +100,16 @@ const TenantDashboard: React.FC = () => {
           userType: userProfile?.userType || userProfile?.role || 'tenant'
         });
         
-        // Fetch pending invites
+        // Fetch pending invites (traditional invite codes)
         if (currentUser.email) {
           const invites = await inviteService.getPendingInvitesForTenant(currentUser.email);
           setPendingInvites(invites || []);
+        }
+
+        // Fetch pending property invitations (from landlords to existing tenants)
+        if (currentUser.email && currentUser.uid) {
+          const propertyInvitations = await propertyInvitationService.getPendingPropertyInvitations(currentUser.email);
+          setPendingPropertyInvitations(propertyInvitations || []);
         }
         
         // Fetch associated properties if the tenant has any
@@ -187,7 +196,7 @@ const TenantDashboard: React.FC = () => {
     fetchTickets();
   }, [currentUser, userProfile]);
   
-  // Handle invite acceptance
+  // Handle invite acceptance (traditional invites)
   const handleAcceptInvite = async (inviteId: string) => {
     if (!currentUser?.uid) {
       toast.error('You must be logged in to accept an invitation');
@@ -197,9 +206,40 @@ const TenantDashboard: React.FC = () => {
     return inviteService.updateInviteStatus(inviteId, 'accepted', currentUser.uid);
   };
   
-  // Handle invite decline
+  // Handle invite decline (traditional invites)
   const handleDeclineInvite = async (inviteId: string) => {
     return inviteService.updateInviteStatus(inviteId, 'declined');
+  };
+
+  // Handle property invitation acceptance
+  const handleAcceptPropertyInvitation = async (invitationId: string) => {
+    if (!currentUser?.uid) {
+      toast.error('You must be logged in to accept an invitation');
+      return;
+    }
+    
+    try {
+      await propertyInvitationService.acceptPropertyInvitation(invitationId, currentUser.uid);
+      // Remove from pending invitations
+      setPendingPropertyInvitations(prev => prev.filter(inv => inv.id !== invitationId));
+      // Refresh tenant data to show new property
+      // You might want to add logic here to fetch the property details and add to tenantProperties
+    } catch (error) {
+      console.error('Error accepting property invitation:', error);
+      throw error;
+    }
+  };
+  
+  // Handle property invitation decline
+  const handleDeclinePropertyInvitation = async (invitationId: string) => {
+    try {
+      await propertyInvitationService.declinePropertyInvitation(invitationId);
+      // Remove from pending invitations
+      setPendingPropertyInvitations(prev => prev.filter(inv => inv.id !== invitationId));
+    } catch (error) {
+      console.error('Error declining property invitation:', error);
+      throw error;
+    }
   };
   
   // Handle maintenance request
@@ -273,15 +313,26 @@ const TenantDashboard: React.FC = () => {
             </div>
           ) : (
             <>
-              {/* Invitation Banner */}
-              {pendingInvites.length > 0 && (
+              {/* Invitation Banners */}
+              {(pendingInvites.length > 0 || pendingPropertyInvitations.length > 0) && (
                 <div className="space-y-4 mb-8">
+                  {/* Traditional invite codes */}
                   {pendingInvites.map(invite => (
                     <InvitationBanner
                       key={invite.id}
                       invite={invite}
                       onAccept={handleAcceptInvite}
                       onDecline={handleDeclineInvite}
+                    />
+                  ))}
+                  
+                  {/* Property invitations from landlords */}
+                  {pendingPropertyInvitations.map(invitation => (
+                    <PropertyInvitationBanner
+                      key={invitation.id}
+                      invitation={invitation}
+                      onAccept={handleAcceptPropertyInvitation}
+                      onDecline={handleDeclinePropertyInvitation}
                     />
                   ))}
                 </div>

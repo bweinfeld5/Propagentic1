@@ -10,6 +10,7 @@ import {
   UsersIcon
 } from '@heroicons/react/24/outline';
 import Button from '../ui/Button';
+import ContractorEstimateReadinessIndicator from './ContractorEstimateReadinessIndicator';
 
 /**
  * PropertyCard Component
@@ -20,10 +21,23 @@ import Button from '../ui/Button';
  * @param {function} onUpdate - Callback when property is updated
  * @param {function} onDelete - Callback when property is deleted
  * @param {function} onInviteTenant - Callback when inviting a tenant
+ * @param {function} onEditProperty - Callback when editing property for contractor data
  */
-const PropertyCard = ({ property, onUpdate, onDelete, onInviteTenant }) => {
+const PropertyCard = ({ property, onUpdate, onDelete, onInviteTenant, onEditProperty }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProperty, setEditedProperty] = useState({ ...property });
+
+  // Handle improving contractor estimate data
+  const handleImproveData = (property, tradeType = 'all') => {
+    if (tradeType === 'request-estimates') {
+      // Future: Open contractor request flow
+      console.log('Opening contractor estimate request for:', property.id);
+      return;
+    }
+    
+    // Open property edit modal with focus on the specific trade
+    onEditProperty?.(property.id, { focusSection: tradeType });
+  };
 
   // Handle input change
   const handleChange = (e) => {
@@ -73,6 +87,16 @@ const PropertyCard = ({ property, onUpdate, onDelete, onInviteTenant }) => {
             <span className="ml-2 text-xs">({property.occupancyRate}% Occupied)</span>
           )} */}
         </div>
+      </div>
+      
+      {/* Contractor Estimate Readiness */}
+      <div className="mb-4">
+        <ContractorEstimateReadinessIndicator
+          property={property}
+          onImproveData={handleImproveData}
+          compact={true}
+          showActions={true}
+        />
       </div>
       
       <div className="flex justify-end space-x-2 border-t border-border dark:border-border-dark pt-3 mt-3">

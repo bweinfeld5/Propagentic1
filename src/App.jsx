@@ -12,8 +12,22 @@ import DashboardSidebar from './components/layout/SidebarNav';
 import LocalStorageDebug from './components/shared/LocalStorageDebug';
 import UniversalLoadingSpinner from './components/shared/UniversalLoadingSpinner';
 import PreLaunchGuard from './components/guards/PreLaunchGuard';
+import TenantInviteGuard from './components/guards/TenantInviteGuard.tsx';
 import { Toaster } from 'react-hot-toast';
 import PitchDeckDemo from './pages/demo/PitchDeckDemo';
+import DemoPage from './pages/DemoPage';
+import AboutPage from './pages/AboutPage';
+import AIExamples from './pages/AIExamples';
+import AITutorial from './pages/AITutorial';
+import ComponentsShowcasePage from './pages/ComponentsShowcasePage';
+import TestUIComponents from './pages/TestUIComponents';
+import SimpleUIShowcase from './pages/SimpleUIShowcase';
+import MaintenanceSurvey from './components/maintenance/MaintenanceSurvey';
+import EnhancedMaintenancePage from './pages/tenant/EnhancedMaintenancePage';
+import PublicPropertyDashboardDemo from './pages/PublicPropertyDashboardDemo';
+import DemoShowcase from './pages/DemoShowcase';
+import TestPage from './pages/TestPage';
+import InviteAcceptancePage from './pages/InviteAcceptancePage';
 
 // Lazy load page components
 const LandingPage = lazy(() => import('./components/landing/LandingPage.jsx'));
@@ -36,18 +50,6 @@ const ContractorOnboardingPage = lazy(() => import('./pages/ContractorOnboarding
 const SVGTest = lazy(() => import('./components/branding/SVGTest'));
 const BlueprintTest = lazy(() => import('./components/testing/BlueprintTest'));
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
-const DemoPage = lazy(() => import('./pages/DemoPage.jsx'));
-const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
-const AIExamples = lazy(() => import('./pages/AIExamples.jsx'));
-const AITutorial = lazy(() => import('./pages/AITutorial.jsx'));
-const ComponentsShowcasePage = lazy(() => import('./pages/ComponentsShowcasePage.jsx'));
-const TestUIComponents = lazy(() => import('./pages/TestUIComponents.jsx'));
-const SimpleUIShowcase = lazy(() => import('./pages/SimpleUIShowcase.jsx'));
-const MaintenanceSurvey = lazy(() => import('./components/maintenance/MaintenanceSurvey.tsx'));
-const EnhancedMaintenancePage = lazy(() => import('./pages/tenant/EnhancedMaintenancePage'));
-const PublicPropertyDashboardDemo = lazy(() => import('./pages/PublicPropertyDashboardDemo.jsx'));
-const DemoShowcase = lazy(() => import('./pages/DemoShowcase.jsx'));
-const TestPage = lazy(() => import('./pages/TestPage.jsx'));
 
 // Route Guards
 const PrivateRoute = ({ children }) => {
@@ -59,7 +61,11 @@ const PrivateRoute = ({ children }) => {
      </div>;
   }
   
-  return currentUser ? children : <Navigate to="/propagentic/new" />;
+  return currentUser ? (
+    <TenantInviteGuard>
+      {children}
+    </TenantInviteGuard>
+  ) : <Navigate to="/propagentic/new" />;
 };
 
 // Role-specific redirect component
@@ -201,6 +207,7 @@ function App() {
                                 <Route path="/signup" element={<RegisterPage />} />
                                 <Route path="/forgot-password" element={<ForgotPassword />} />
                                 <Route path="/auth" element={<AuthPage />} />
+                                <Route path="/invite" element={<InviteAcceptancePage />} />
                                 <Route path="/dashboard" element={<PrivateRoute><RoleBasedRedirect /></PrivateRoute>} />
                                 <Route path="/tenant/dashboard" element={<PrivateRoute><EnhancedTenantDashboard /></PrivateRoute>} />
                                 <Route path="/tenant/dashboard/legacy" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />

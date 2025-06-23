@@ -17,6 +17,12 @@ interface TenantInviteFormProps {
   className?: string;
   showSkip?: boolean;
   onSkip?: () => void;
+  initialCode?: string;
+  propertyInfo?: {
+    propertyId: string;
+    propertyName: string;
+    unitId?: string | null;
+  } | null;
 }
 
 /**
@@ -27,15 +33,27 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
   email,
   className = '',
   showSkip = false,
-  onSkip
+  onSkip,
+  initialCode = '',
+  propertyInfo = null
 }) => {
   const { currentUser } = useAuth();
-  const [inviteCode, setInviteCode] = useState('');
+  const [inviteCode, setInviteCode] = useState(initialCode);
   const [isValidating, setIsValidating] = useState(false);
   const [validationMessage, setValidationMessage] = useState<{
     type: 'success' | 'error';
     message: string;
   } | null>(null);
+
+  // If we have propertyInfo, it means the code is already validated
+  useEffect(() => {
+    if (propertyInfo && initialCode) {
+      setValidationMessage({
+        type: 'success',
+        message: 'Invite code validated!'
+      });
+    }
+  }, [propertyInfo, initialCode]);
 
   // Auto-format invite code as user types (uppercase, no spaces)
   const handleInviteCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,6 +70,15 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
   const validateCode = async (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault();
+    }
+
+    // If already validated (from email link), skip to join
+    if (propertyInfo && initialCode) {
+      onInviteValidated({
+        ...propertyInfo,
+        inviteCode: initialCode
+      });
+      return;
     }
 
     if (!inviteCode.trim()) {
@@ -204,7 +231,7 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
             isLoading={isValidating}
             className="px-6 py-2"
           >
-            {isValidating ? 'Validating...' : 'Validate Code'}
+            {isValidating ? 'Validating...' : (propertyInfo ? 'Join Property' : 'Validate Code')}
           </Button>
         </div>
       </form>

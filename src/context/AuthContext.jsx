@@ -267,6 +267,25 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Refresh user data from Firestore
+  const refreshUserData = async () => {
+    if (currentUser) {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        if (userDoc.exists()) {
+          const updatedProfile = userDoc.data();
+          setUserProfile(updatedProfile);
+          console.log('User data refreshed successfully:', updatedProfile);
+          return updatedProfile;
+        }
+      } catch (error) {
+        console.error('Error refreshing user data:', error);
+        setProfileError(getAuthErrorMessage(error.code));
+        throw error;
+      }
+    }
+  };
+
   // Recover profile from localStorage
   const recoverProfile = async () => {
     try {
@@ -406,6 +425,7 @@ export function AuthProvider({ children }) {
     isPremiumContractor,
     completeOnboarding,
     updateUserProfile,
+    refreshUserData,
     updateLastValidRoute,
     signInWithGoogle
   };

@@ -436,6 +436,8 @@ export const redeemInviteCode = functions.https.onCall(async (data, context) => 
         // Only set these if not already set
         role: userData?.role || 'tenant',
         userType: userData?.userType || 'tenant',
+        propertyId: propertyId,           // ✅ CRITICAL FIX: Add propertyId
+        landlordId: inviteCodeData.landlordId, // ✅ CRITICAL FIX: Add landlordId
         updatedAt: now
       };
       

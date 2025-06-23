@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting... | PropAgentic</title>
+  <link rel="icon" href="/favicon.ico">
+  
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      text-align: center;
+      background-color: #f9fafb;
+      color: #111827;
+    }
+    
+    .container {
+      max-width: 600px;
+      padding: 2rem;
+    }
+    
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: #0d9488; /* teal-600 */
+    }
+    
+    p {
+      font-size: 1rem;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+      color: #4b5563; /* gray-600 */
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(13, 148, 136, 0.2); /* teal-600 with opacity */
+      border-radius: 50%;
+      border-top-color: #0d9488; /* teal-600 */
+      animation: spin 1s linear infinite;
+      margin-bottom: 1.5rem;
+    }
+    
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    
+    .cta {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      background-color: #0d9488; /* teal-600 */
+      color: white;
+      text-decoration: none;
+      border-radius: 0.25rem;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+    
+    .cta:hover {
+      background-color: #0f766e; /* teal-700 */
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #1f2937; /* gray-800 */
+        color: #f9fafb; /* gray-50 */
+      }
+      
+      p {
+        color: #d1d5db; /* gray-300 */
+      }
+    }
+  </style>
+  
+  <script>
+    // This script handles routing for Single Page Applications deployed to Firebase Hosting
+    // or other static hosts that don't natively support deep linking with SPAs.
+    
+    (function() {
+      // Get the current URL
+      const currentLocation = window.location;
+      const currentUrl = currentLocation.href;
+      const currentPath = currentLocation.pathname;
+      
+      // Skip redirect for asset files (like images, css, js)
+      const assetExtensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.json', '.woff', '.woff2', '.ttf', '.eot'];
+      const isAsset = assetExtensions.some(ext => currentPath.toLowerCase().endsWith(ext));
+      
+      if (isAsset) {
+        console.log('Asset file requested, skipping redirect');
+        return;
+      }
+      
+      // Get the base URL (origin)
+      const baseUrl = `${currentLocation.protocol}//${currentLocation.host}`;
+      
+      // Create a URL to redirect to
+      // This adds a special query parameter "redirect_url" that our index.html will look for
+      const redirectUrl = `${baseUrl}/?redirect_url=${encodeURIComponent(currentPath)}`;
+      
+      // Log the redirect for debugging
+      console.log('Redirecting deep link:', {
+        from: currentUrl,
+        to: redirectUrl,
+        path: currentPath
+      });
+      
+      // Redirect after a brief delay (to allow for the loading animation to show)
+      setTimeout(function() {
+        window.location.replace(redirectUrl);
+      }, 1000);
+      
+      // Update the status message after 3 seconds if the redirect hasn't completed
+      setTimeout(function() {
+        const status = document.getElementById('status');
+        if (status) {
+          status.textContent = 'Redirect is taking longer than expected. Click the button below if you are not redirected automatically.';
+        }
+        
+        const ctaContainer = document.getElementById('cta-container');
+        if (ctaContainer) {
+          ctaContainer.style.display = 'block';
+        }
+      }, 3000);
+    })();
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>Redirecting you to PropAgentic</h1>
+    <div class="spinner"></div>
+    <p id="status">Please wait while we redirect you to the right place...</p>
+    <div id="cta-container" style="display: none;">
+      <a href="/" class="cta">Go to Homepage</a>
+    </div>
+  </div>
+</body>
+</html>

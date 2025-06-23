@@ -1,0 +1,126 @@
+{
+  "agentCanUpdateSnapshot": true,
+  "agentCanCreateFiles": true,
+  "agentCanModifyFiles": true,
+  "agentCanDeleteFiles": false,
+  "agentCanRunCommands": true,
+  "agentCanAccessNetwork": true,
+  "agentCanCreatePullRequests": true,
+  "agentCanCommentOnPullRequests": true,
+  "agentCanMergeCode": false,
+  "agentWorkingDirectory": "/Users/benweinfeld/Propagentic1",
+  "agentConfigPath": ".cursor/intern-survey-agent.md",
+  "agentWorkflowsPath": ".cursor/agent-workflows.md",
+  "projectType": "react-typescript-firebase",
+  "buildCommand": "npm run build",
+  "startCommand": "npm run start:fix",
+  "testCommand": "npm test",
+  "lintCommand": "npm run lint",
+  "taskMasterEnabled": true,
+  "taskMasterProjectRoot": "/Users/benweinfeld/Propagentic1",
+  "currentBranch": "feature/intern-survey",
+  "primaryFeature": "intern-survey-system",
+  "allowedFilePatterns": [
+    "src/pages/InternSurveyPage.jsx",
+    "src/pages/admin/SurveyAdminPage.jsx", 
+    "src/services/surveyService.js",
+    "src/components/survey/**/*",
+    "src/components/admin/**/*",
+    "src/utils/survey/**/*",
+    "src/types/survey.ts",
+    "src/hooks/useSurvey*",
+    "src/tests/survey/**/*",
+    "__tests__/survey/**/*",
+    "cypress/integration/survey/**/*",
+    "README.md",
+    "CHANGELOG.md",
+    ".cursor/**/*"
+  ],
+  "restrictedFilePatterns": [
+    "src/firebase/config.js",
+    "package.json",
+    ".env*",
+    "firebase.json",
+    ".gitignore"
+  ],
+  "requiresApprovalForChanges": [
+    "package.json",
+    "src/firebase/config.js",
+    "firebase.json",
+    ".env*",
+    "src/App.js",
+    "src/index.js"
+  ],
+  "featureContext": {
+    "name": "Intern Survey System",
+    "description": "Comprehensive survey system for intern applications with admin management",
+    "keyComponents": [
+      "InternSurveyPage - Main survey form with validation",
+      "SurveyAdminPage - Admin dashboard for managing submissions", 
+      "surveyService - Firebase backend integration",
+      "Survey routes and navigation"
+    ],
+    "testingPriorities": [
+      "Form validation and submission",
+      "Admin dashboard functionality",
+      "Mobile responsiveness",
+      "Accessibility compliance",
+      "Firebase integration"
+    ],
+    "performanceTargets": {
+      "formLoadTime": "< 2 seconds",
+      "submissionTime": "< 5 seconds", 
+      "adminDashboardLoad": "< 3 seconds",
+      "mobilePerformance": "> 90 Lighthouse score"
+    }
+  },
+  "developmentGuidelines": {
+    "codeStyle": "PropAgentic standards with Tailwind CSS",
+    "testingRequired": true,
+    "accessibilityRequired": true,
+    "mobileFirstDesign": true,
+    "errorHandlingRequired": true,
+    "loadingStatesRequired": true,
+    "validationRequired": true
+  },
+  "integrationPoints": [
+    "Firebase Firestore for data storage",
+    "React Router for navigation", 
+    "React Hot Toast for notifications",
+    "Heroicons for UI icons",
+    "Tailwind CSS for styling"
+  ],
+  "deploymentChecklist": [
+    "All tests passing",
+    "Mobile responsive design verified",
+    "Accessibility audit completed",
+    "Firebase security rules updated",
+    "Error handling tested",
+    "Performance benchmarks met"
+  ],
+  "allowedFileExtensions": [
+    ".js",
+    ".jsx",
+    ".ts",
+    ".tsx",
+    ".json",
+    ".md",
+    ".css",
+    ".scss",
+    ".html"
+  ],
+  "restrictedDirectories": [
+    "node_modules",
+    ".git",
+    "build",
+    "dist"
+  ],
+  "requiredApprovals": {
+    "packageJsonChanges": true,
+    "configFileChanges": true,
+    "securitySensitiveChanges": true
+  },
+  "autoCommit": false,
+  "maxFilesPerOperation": 10,
+  "maxLinesPerFile": 1000
+}

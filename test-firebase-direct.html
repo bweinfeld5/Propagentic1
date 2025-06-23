@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Firebase Permissions Directly</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Firebase Permissions Test</h1>
+    <div id="results"></div>
+    
+    <button onclick="testWaitlist()">Test Waitlist Collection</button>
+    <button onclick="testMail()">Test Mail Collection</button>
+    <button onclick="testNewsletter()">Test Newsletter Collection</button>
+    <button onclick="testAll()">Test All Collections</button>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        // Your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBInjhlP96C6BrVJE7Ch5G_0w-YsFbnEHY",
+            authDomain: "propagentic.firebaseapp.com",
+            projectId: "propagentic",
+            storageBucket: "propagentic.appspot.com",
+            messagingSenderId: "138135792002",
+            appId: "1:138135792002:web:e491bbeb2e5f8c09c00d60"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        const resultsDiv = document.getElementById('results');
+        
+        function addResult(collection, success, message, error = null) {
+            const div = document.createElement('div');
+            div.className = `test ${success ? 'success' : 'error'}`;
+            div.innerHTML = `
+                <h3>${collection} Collection</h3>
+                <p>Status: ${success ? '✅ SUCCESS' : '❌ FAILED'}</p>
+                <p>${message}</p>
+                ${error ? `<details><summary>Error Details</summary><pre>${JSON.stringify(error, null, 2)}</pre></details>` : ''}
+            `;
+            resultsDiv.appendChild(div);
+        }
+        
+        window.testWaitlist = async function() {
+            resultsDiv.innerHTML = '';
+            try {
+                const data = {
+                    email: 'test-' + Date.now() + '@example.com',
+                    role: 'landlord',
+                    timestamp: new Date().toISOString(),
+                    source: 'test_html',
+                    userId: null,
+                    subscribed_to_newsletter: true,
+                    createdAt: serverTimestamp()
+                };
+                
+                const docRef = await addDoc(collection(db, 'waitlist'), data);
+                addResult('Waitlist', true, `Document added with ID: ${docRef.id}`);
+            } catch (error) {
+                addResult('Waitlist', false, error.message, error);
+            }
+        };
+        
+        window.testMail = async function() {
+            resultsDiv.innerHTML = '';
+            try {
+                const data = {
+                    to: 'test@example.com',
+                    message: {
+                        subject: 'Test Email',
+                        text: 'This is a test email',
+                        html: '<p>This is a test email</p>'
+                    },
+                    createdAt: serverTimestamp()
+                };
+                
+                const docRef = await addDoc(collection(db, 'mail'), data);
+                addResult('Mail', true, `Document added with ID: ${docRef.id}`);
+            } catch (error) {
+                addResult('Mail', false, error.message, error);
+            }
+        };
+        
+        window.testNewsletter = async function() {
+            resultsDiv.innerHTML = '';
+            try {
+                const data = {
+                    email: 'test-' + Date.now() + '@example.com',
+                    role: 'landlord',
+                    source: 'test',
+                    status: 'active',
+                    subscribedAt: serverTimestamp()
+                };
+                
+                const docRef = await addDoc(collection(db, 'newsletter_subscribers'), data);
+                addResult('Newsletter', true, `Document added with ID: ${docRef.id}`);
+            } catch (error) {
+                addResult('Newsletter', false, error.message, error);
+            }
+        };
+        
+        window.testAll = async function() {
+            resultsDiv.innerHTML = '<h2>Testing All Collections...</h2>';
+            await window.testWaitlist();
+            await window.testMail();
+            await window.testNewsletter();
+        };
+    </script>
+</body>
+</html> 

@@ -1,0 +1,107 @@
+{
+  "environment": "development",
+  "project": {
+    "name": "PropAgentic",
+    "type": "React TypeScript Application",
+    "framework": "React 18",
+    "buildTool": "Create React App (rewired)",
+    "packageManager": "npm"
+  },
+  "phase": {
+    "current": "Phase 1: Core Stability",
+    "branch": "feature/phase1-core-stability",
+    "priority": "critical",
+    "focus": ["data-persistence", "crud-operations", "error-handling", "loading-states"]
+  },
+  "development": {
+    "nodeVersion": "18+",
+    "startCommand": "npm run start:fix",
+    "buildCommand": "npm run build",
+    "testCommand": "npm test",
+    "lintCommand": "npm run lint",
+    "typecheckCommand": "npm run typecheck"
+  },
+  "dependencies": {
+    "runtime": {
+      "react": "^18.2.0",
+      "react-dom": "^18.2.0",
+      "typescript": "5.8.3",
+      "firebase": "^11.6.0",
+      "@sendgrid/mail": "^8.1.5"
+    },
+    "ui": {
+      "tailwindcss": "~3.3.0",
+      "@heroicons/react": "^2.2.0",
+      "framer-motion": "^6.5.1"
+    },
+    "development": {
+      "react-app-rewired": "^2.2.1",
+      "cross-env": "^7.0.3",
+      "eslint": "^9.26.0"
+    }
+  },
+  "firebase": {
+    "services": ["auth", "firestore", "functions"],
+    "region": "us-central1",
+    "emulator": false
+  },
+  "features": {
+    "sendgrid": {
+      "enabled": true,
+      "configured": true,
+      "testComponent": "src/components/testing/SendGridTester.jsx"
+    },
+    "authentication": {
+      "enabled": true,
+      "provider": "firebase-auth"
+    },
+    "dataService": {
+      "location": "src/services/dataService.js",
+      "issues": ["persistence", "subscriptions", "error-handling"]
+    }
+  },
+  "knownIssues": [
+    {
+      "type": "warning",
+      "description": "FAST_REFRESH conflicting values",
+      "impact": "build warnings",
+      "priority": "low"
+    },
+    {
+      "type": "critical",
+      "description": "Data persistence issues in debug panel",
+      "impact": "user experience",
+      "priority": "critical"
+    },
+    {
+      "type": "missing",
+      "description": "Property edit/delete functionality",
+      "impact": "core features",
+      "priority": "high"
+    },
+    {
+      "type": "missing",
+      "description": "Error boundaries and retry logic",
+      "impact": "stability",
+      "priority": "high"
+    }
+  ],
+  "paths": {
+    "components": "src/components/",
+    "pages": "src/pages/",
+    "services": "src/services/",
+    "hooks": "src/hooks/",
+    "context": "src/context/",
+    "utils": "src/utils/"
+  },
+  "testing": {
+    "framework": "Jest + React Testing Library",
+    "coverage": false,
+    "e2e": false
+  },
+  "deployment": {
+    "platform": "Firebase Hosting",
+    "buildDir": "build",
+    "publicDir": "public"
+  }
+} 

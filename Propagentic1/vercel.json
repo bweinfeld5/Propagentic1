@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "name": "propagentic",
+  "builds": [
+    {
+      "src": "build/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/build/$1"
+    }
+  ]
+} 

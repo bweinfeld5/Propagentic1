@@ -1,0 +1,275 @@
+/**
+ * Firebase Cloud Functions for Propagentic
+ * Using lazy loading and optimized initialization for all functions.
+ */
+
+const {onInit} = require("firebase-functions/v2/core");
+const logger = require("firebase-functions/logger");
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+
+// Initialize Firebase Admin SDK ONLY when needed, not at the top level
+let adminSDK; 
+function getAdmin() {
+  if (!adminSDK) {
+    adminSDK = require("firebase-admin");
+    if (!adminSDK.apps.length) {
+      adminSDK.initializeApp();
+      logger.info("Firebase Admin initialized.");
+    }
+  }
+  return adminSDK;
+}
+
+// Use onInit to load environment variables during cold start
+onInit(async () => {
+  try {
+    // Load environment variables during cold start, not during deployment
+    require("dotenv").config();
+    logger.info("Environment variables loaded via dotenv.");
+    
+    logger.info("Function initialization completed via onInit.");
+  } catch (error) {
+    logger.error("Error during onInit initialization:", error);
+  }
+});
+
+// Helper function for creating lazy-loaded exports
+function defineLazyLoadedFunction(exportName, filePath, functionName) {
+  let loadedFunction;
+  Object.defineProperty(exports, exportName, {
+    enumerable: true, // Make it show up during discovery
+    get: function() {
+      if (!loadedFunction) {
+        logger.info(`Lazy loading ${exportName} function from ${filePath}...`);
+        getAdmin(); // Ensure admin is initialized if needed by any function
+        loadedFunction = require(filePath)[functionName];
+        if (!loadedFunction) {
+            logger.error(`Failed to load function ${functionName} from ${filePath}. Check the file and export name.`);
+            // Optionally throw an error or return a dummy function
+            throw new Error(`Function ${functionName} not found in ${filePath}`);
+        }
+        logger.info(`${exportName} function loaded.`);
+      }
+      return loadedFunction;
+    }
+  });
+}
+
+// Define all your functions using the lazy loader helper with correct file paths
+defineLazyLoadedFunction('classifyMaintenanceRequest', './classifyMaintenanceRequest', 'classifyMaintenanceRequest');
+defineLazyLoadedFunction('matchContractorToTicket', './matchContractorToTicket', 'matchContractorToTicket');
+defineLazyLoadedFunction('notifyAssignedContractor', './notifyAssignedContractor', 'notifyAssignedContractor');
+
+// Functions from userRelationships.js
+defineLazyLoadedFunction('sendTenantInvitation', './userRelationships', 'sendTenantInvitation');
+defineLazyLoadedFunction('addContractorToRolodex', './userRelationships', 'addContractorToRolodex');
+
+// Functions from notificationTriggers.js
+defineLazyLoadedFunction('notifyNewMaintenanceRequest', './notificationTriggers', 'notifyNewMaintenanceRequest');
+defineLazyLoadedFunction('notifyTicketStatusChange', './notificationTriggers', 'notifyTicketStatusChange');
+
+// Function from cleanupNotifications.js
+defineLazyLoadedFunction('cleanupOldNotifications', './cleanupNotifications', 'cleanupOldNotifications');
+
+logger.info("Lazy function definitions complete in index.js.");
+
+const db = admin.firestore();
+
+/**
+ * Firebase Cloud Function: acceptPropertyInvite
+ * Updates relevant documents when a tenant accepts a property invitation.
+ *
+ * @param {object} data - Data passed to the function.
+ * @param {string} data.inviteId - The ID of the invite document.
+ * @param {functions.https.CallableContext} context - Context object with auth info.
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+exports.acceptPropertyInvite = functions.https.onCall(async (data, context) => {
+  // 1. Authentication Check: Ensure the user is authenticated.
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+        "unauthenticated", 
+        "The function must be called while authenticated."
+    );
+  }
+
+  const tenantUid = context.auth.uid;
+  const tenantEmail = context.auth.token.email;
+  const inviteId = data.inviteId;
+
+  if (!inviteId) {
+    throw new functions.https.HttpsError("invalid-argument", "Invite ID is required.");
+  }
+
+  console.log(`Tenant ${tenantUid} attempting to accept invite ${inviteId}`);
+
+  const inviteRef = db.collection("invites").doc(inviteId);
+  const tenantUserRef = db.collection("users").doc(tenantUid);
+
+  try {
+    // 2. Run as transaction for atomicity
+    await db.runTransaction(async (transaction) => {
+      // Read documents within the transaction
+      const inviteSnap = await transaction.get(inviteRef);
+      const tenantUserSnap = await transaction.get(tenantUserRef);
+
+      // 3. Validation
+      if (!inviteSnap.exists) {
+        throw new functions.https.HttpsError("not-found", "Invitation not found.");
+      }
+      if (!tenantUserSnap.exists) {
+        // Should not happen if user is authenticated, but good check
+        throw new functions.https.HttpsError("not-found", "Tenant user profile not found.");
+      }
+
+      const inviteData = inviteSnap.data();
+      const tenantUserData = tenantUserSnap.data();
+
+      // Verify tenant email matches the invite
+      if (inviteData.tenantEmail !== tenantEmail) {
+        throw new functions.https.HttpsError(
+            "permission-denied", 
+            "This invitation is not for you."
+        );
+      }
+      // Verify invite status is pending
+      if (inviteData.status !== "pending") {
+        throw new functions.https.HttpsError(
+            "failed-precondition", 
+            "This invitation has already been ${inviteData.status}."
+        );
+      }
+      // Verify tenant is not already linked to a property
+       if (tenantUserData.propertyId) {
+         throw new functions.https.HttpsError(
+             "failed-precondition", 
+             "You are already associated with a property."
+         );
+       }
+       
+       const propertyId = inviteData.propertyId;
+       const landlordId = inviteData.landlordId;
+       
+       if (!propertyId || !landlordId) {
+           throw new functions.https.HttpsError("internal", "Invite data is incomplete.");
+       }
+       
+       const propertyRef = db.collection("properties").doc(propertyId);
+       const landlordProfileRef = db.collection("landlordProfiles").doc(landlordId);
+
+      // 4. Perform Updates
+      // Update invite status
+      transaction.update(inviteRef, { 
+          status: "accepted", 
+          acceptedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Update tenant user profile
+      transaction.update(tenantUserRef, {
+        propertyId: propertyId,
+        landlordId: landlordId,
+        // Mark onboarding complete as they are now linked to a property
+        onboardingComplete: true, 
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Update property document (add tenant to list)
+      transaction.update(propertyRef, {
+          tenants: admin.firestore.FieldValue.arrayUnion(tenantUid) 
+          // Optionally update occupied status/count if needed
+      });
+      
+      // Optional: Update landlord profile (add tenant to list)
+      // Ensure landlord profile exists before attempting update
+      const landlordProfileSnap = await transaction.get(landlordProfileRef);
+      if(landlordProfileSnap.exists) {
+         transaction.update(landlordProfileRef, {
+            tenants: admin.firestore.FieldValue.arrayUnion(tenantUid)
+         });
+      }
+
+    });
+
+    console.log(`Invite ${inviteId} successfully accepted by tenant ${tenantUid}`);
+    return { success: true, message: "Invitation accepted successfully." };
+
+  } catch (error) {
+    console.error("Error accepting invitation:", error);
+    // Check for specific HttpsError codes vs internal errors
+    if (error.code) { // It's an HttpsError we threw
+      throw error;
+    } else { // It's an internal server error
+      throw new functions.https.HttpsError("internal", "An unexpected error occurred.", error.message);
+    }
+  }
+});
+
+/**
+ * Firebase Cloud Function: rejectPropertyInvite
+ * Updates invite status when a tenant rejects an invitation.
+ *
+ * @param {object} data - Data passed to the function.
+ * @param {string} data.inviteId - The ID of the invite document.
+ * @param {functions.https.CallableContext} context - Context object with auth info.
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+exports.rejectPropertyInvite = functions.https.onCall(async (data, context) => {
+  // 1. Authentication Check
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+        "unauthenticated", 
+        "The function must be called while authenticated."
+    );
+  }
+
+  const tenantUid = context.auth.uid;
+  const tenantEmail = context.auth.token.email;
+  const inviteId = data.inviteId;
+
+  if (!inviteId) {
+    throw new functions.https.HttpsError("invalid-argument", "Invite ID is required.");
+  }
+
+  console.log(`Tenant ${tenantUid} attempting to reject invite ${inviteId}`);
+
+  const inviteRef = db.collection("invites").doc(inviteId);
+
+  try {
+    // Use transaction for read-then-write safety
+    await db.runTransaction(async (transaction) => {
+        const inviteSnap = await transaction.get(inviteRef);
+
+        // 2. Validation
+        if (!inviteSnap.exists) {
+            throw new functions.https.HttpsError("not-found", "Invitation not found.");
+        }
+        const inviteData = inviteSnap.data();
+        if (inviteData.tenantEmail !== tenantEmail) {
+            throw new functions.https.HttpsError("permission-denied", "This invitation is not for you.");
+        }
+        if (inviteData.status !== "pending") {
+            throw new functions.https.HttpsError("failed-precondition", "This invitation is no longer pending.");
+        }
+
+        // 3. Perform Update
+        transaction.update(inviteRef, { 
+            status: "rejected",
+            rejectedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+    });
+
+    console.log(`Invite ${inviteId} successfully rejected by tenant ${tenantUid}`);
+    return { success: true, message: "Invitation rejected." };
+
+  } catch (error) {
+    console.error("Error rejecting invitation:", error);
+    if (error.code) {
+      throw error;
+    } else {
+      throw new functions.https.HttpsError("internal", "An unexpected error occurred.", error.message);
+    }
+  }
+});
+
+// TODO: Add other necessary functions (e.g., for maintenance ticket assignment if needed)

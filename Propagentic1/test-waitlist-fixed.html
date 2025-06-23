@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PropAgentic Waitlist Test - Fixed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-button {
+            background: #f97316;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .test-button:hover {
+            background: #ea580c;
+        }
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .info {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 PropAgentic Waitlist Test</h1>
+            <p>Testing updated Firestore rules with exact PreLaunchPage data structure</p>
+        </div>
+
+        <button id="testButton" class="test-button">
+            🚀 Run Waitlist Test
+        </button>
+
+        <div id="log" class="log">
+            Click the button above to test the waitlist functionality...
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDcsJWLoVoC_kPORoVJA_-mG3LIWfbU-rw",
+            authDomain: "propagentic.firebaseapp.com",
+            databaseURL: "https://propagentic-default-rtdb.firebaseio.com",
+            projectId: "propagentic",
+            storageBucket: "propagentic.firebasestorage.app",
+            messagingSenderId: "121286300748",
+            appId: "1:121286300748:web:0c69ea6ff643c8f75110e9",
+            measurementId: "G-7DTWZQH28H"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Log function
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            logElement.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+
+        // Test function - exact same data structure as PreLaunchPage
+        async function testWaitlistWithExactData() {
+            try {
+                log('🧪 Starting waitlist test with exact PreLaunchPage data structure...', 'info');
+
+                const testEmail = 'test-user-' + Date.now() + '@example.com';
+                const testRole = 'landlord';
+
+                log(`📧 Testing with email: ${testEmail}, role: ${testRole}`, 'info');
+
+                // Test 1: Waitlist - exact same structure as PreLaunchPage
+                log('📝 Testing waitlist collection...', 'info');
+                const waitlistData = {
+                    email: testEmail,
+                    role: testRole,
+                    timestamp: new Date().toISOString(),
+                    source: 'pre_launch_page',
+                    userId: null, // This was causing the permission issue
+                    subscribed_to_newsletter: true,
+                    marketing_consent: true,
+                    ip_address: window.location.hostname,
+                    user_agent: navigator.userAgent.substring(0, 200),
+                    createdAt: serverTimestamp()
+                };
+
+                const waitlistRef = await addDoc(collection(db, 'waitlist'), waitlistData);
+                log(`✅ Waitlist entry created successfully! ID: ${waitlistRef.id}`, 'success');
+
+                // Test 2: Email - exact same structure as PreLaunchPage
+                log('📬 Testing email collection...', 'info');
+                                 const emailData = {
+                     to: testEmail,
+                     message: {
+                         subject: '🏠 Test: You\'re on the PropAgentic Pre-Launch List!',
+                         text: `Test email for ${testRole} role. This confirms the email system is working.`,
+                         html: `
+                             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                                 <h2 style="color: #f97316;">🧪 PropAgentic Waitlist Test</h2>
+                                 <p>This is a test email to verify the waitlist functionality is working.</p>
+                                 <p><strong>Role:</strong> ${testRole}</p>
+                                 <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+                                 <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                                     <p style="margin: 0; color: #92400e;">
+                                         ✅ Test passed! Firestore rules are working correctly.
+                                     </p>
+                                 </div>
+                             </div>
+                         `
+                     },
+                     userRole: testRole,
+                     source: 'waitlist_signup',
+                     createdAt: serverTimestamp()
+                 };
+
+                const emailRef = await addDoc(collection(db, 'mail'), emailData);
+                log(`✅ Email queued successfully! ID: ${emailRef.id}`, 'success');
+
+                // Test 3: Newsletter - exact same structure as PreLaunchPage
+                log('📰 Testing newsletter collection...', 'info');
+                const newsletterData = {
+                    email: testEmail,
+                    role: testRole,
+                    source: 'pre_launch',
+                    subscribedAt: serverTimestamp(),
+                    status: 'active',
+                    preferences: {
+                        marketing: true,
+                        product_updates: true,
+                        newsletters: true
+                    }
+                };
+
+                const newsletterRef = await addDoc(collection(db, 'newsletter_subscribers'), newsletterData);
+                log(`✅ Newsletter subscription created successfully! ID: ${newsletterRef.id}`, 'success');
+
+                log('🎉 ALL TESTS PASSED! Waitlist functionality is working correctly.', 'success');
+                log('📧 Check Firebase Console and your email inbox for results.', 'info');
+                log('🌐 Firebase Console: https://console.firebase.google.com/project/propagentic/firestore', 'info');
+
+                return true;
+
+            } catch (error) {
+                log(`❌ Test failed: ${error.message}`, 'error');
+                log(`Error code: ${error.code}`, 'error');
+                console.error('Full error:', error);
+                return false;
+            }
+        }
+
+        // Event listener for test button
+        document.getElementById('testButton').addEventListener('click', async () => {
+            const button = document.getElementById('testButton');
+            const logElement = document.getElementById('log');
+            
+            button.disabled = true;
+            button.textContent = '🔄 Running Test...';
+            logElement.innerHTML = '';
+
+            const success = await testWaitlistWithExactData();
+
+            button.disabled = false;
+            button.textContent = success ? '✅ Test Completed' : '❌ Test Failed - Try Again';
+            
+            setTimeout(() => {
+                button.textContent = '🚀 Run Waitlist Test';
+            }, 3000);
+        });
+    </script>
+</body>
+</html> 

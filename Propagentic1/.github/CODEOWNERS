@@ -1,0 +1,11 @@
+# This is a basic CODEOWNERS file. 
+# Lines starting with '#' are comments.
+# Each line is a file pattern followed by one or more owners.
+
+# Wildcard to own all files in the repository.
+* @bweinfeld5
+
+# You can also specify owners for specific files or directories:
+# مثلاً:
+# src/components/ui/   @ui-team @another-user
+# src/services/api.ts  @backend-lead 

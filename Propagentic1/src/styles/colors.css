@@ -1,0 +1,120 @@
+/**
+ * PropAgentic Color System
+ * A comprehensive color palette for consistent styling across the application
+ */
+
+:root {
+  /* Base Brand Colors */
+  --color-primary: var(--color-propagentic-teal);
+  --color-primary-light: #14d2cb;
+  --color-primary-dark: #09908a;
+  
+  /* Secondary and accent colors */
+  --color-secondary: var(--color-propagentic-blue);
+  --color-secondary-light: #48a5fa;
+  --color-secondary-dark: #0e6fc7;
+  
+  --color-accent-1: #8b5cf6; /* violet-500 */
+  --color-accent-2: #f59e0b; /* amber-500 */
+  --color-accent-3: #ec4899; /* pink-500 */
+  
+  /* PropAgentic Color Variables (from theme.css) */
+  --color-propagentic-teal: #0AB3AC;
+  --color-propagentic-blue: #178CF9;
+  --color-propagentic-yellow: #FFB800;
+  --color-propagentic-error: #F42D2D;
+  --color-propagentic-success: #04B851;
+  
+  /* Status and feedback colors */
+  --color-success: var(--color-propagentic-success);
+  --color-success-light: #36cf76;
+  --color-success-dark: #039542;
+  
+  --color-warning: var(--color-propagentic-yellow);
+  --color-warning-light: #ffc933;
+  --color-warning-dark: #cc9400;
+  
+  --color-error: var(--color-propagentic-error);
+  --color-error-light: #f65858;
+  --color-error-dark: #c51f1f;
+  
+  --color-info: var(--color-propagentic-blue);
+  --color-info-light: #48a5fa;
+  --color-info-dark: #0e6fc7;
+  
+  /* Neutral Colors (from theme.css) */
+  --color-neutral-lightest: #FFFFFF;
+  --color-neutral-light: #F5F7FA;
+  --color-neutral-main: #E5E7EB;
+  --color-neutral-dark: #1F2937;
+  --color-neutral-darkest: #0F172A;
+  
+  /* Slate Colors (from theme.css) */
+  --color-slate-lightest: #F8FAFC;
+  --color-slate-light: #F1F5F9;
+  --color-slate-main: #94A3B8;
+  --color-slate-dark: #334155;
+  --color-slate-darkest: #0F172A;
+  
+  /* Status badge colors for different states */
+  --badge-new-bg: #dbeafe; /* blue-100 */
+  --badge-new-text: #1e40af; /* blue-800 */
+  
+  --badge-in-progress-bg: #fef3c7; /* amber-100 */
+  --badge-in-progress-text: #92400e; /* amber-800 */
+  
+  --badge-completed-bg: #d1fae5; /* emerald-100 */
+  --badge-completed-text: #065f46; /* emerald-800 */
+  
+  --badge-cancelled-bg: #f3f4f6; /* gray-100 */
+  --badge-cancelled-text: #1f2937; /* gray-800 */
+  
+  --badge-urgent-bg: #fee2e2; /* red-100 */
+  --badge-urgent-text: #991b1b; /* red-800 */
+  
+  /* Gradient color combinations */
+  --gradient-primary: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  --gradient-secondary: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-light) 100%);
+  --gradient-success: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-light) 100%);
+  --gradient-warning: linear-gradient(135deg, var(--color-warning) 0%, var(--color-warning-light) 100%);
+  --gradient-error: linear-gradient(135deg, var(--color-error) 0%, var(--color-error-light) 100%);
+  --gradient-accent-1: linear-gradient(135deg, var(--color-accent-1) 0%, #a78bfa 100%);
+  --gradient-accent-2: linear-gradient(135deg, var(--color-accent-2) 0%, #fbbf24 100%);
+  --gradient-accent-3: linear-gradient(135deg, var(--color-accent-3) 0%, #f472b6 100%);
+  
+  /* Chart colors for visualization */
+  --chart-color-1: var(--color-primary);
+  --chart-color-2: var(--color-secondary);
+  --chart-color-3: var(--color-accent-1);
+  --chart-color-4: var(--color-accent-2);
+  --chart-color-5: var(--color-accent-3);
+  --chart-color-6: var(--color-success);
+  --chart-color-7: var(--color-error);
+  --chart-color-8: var(--color-warning);
+}
+
+/* Dark mode color overrides */
+.dark {
+  /* Adjust color lightness for dark mode */
+  --color-primary-light: #0fc9c2;
+  --color-primary-dark: #077a76;
+  
+  --color-secondary-light: #3a99f0;
+  --color-secondary-dark: #0d5ea9;
+  
+  /* Status badge colors for dark mode */
+  --badge-new-bg: rgba(30, 64, 175, 0.3); /* blue-800 with opacity */
+  --badge-new-text: #93c5fd; /* blue-300 */
+  
+  --badge-in-progress-bg: rgba(146, 64, 14, 0.3); /* amber-800 with opacity */
+  --badge-in-progress-text: #fcd34d; /* amber-300 */
+  
+  --badge-completed-bg: rgba(6, 95, 70, 0.3); /* emerald-800 with opacity */
+  --badge-completed-text: #6ee7b7; /* emerald-300 */
+  
+  --badge-cancelled-bg: rgba(31, 41, 55, 0.3); /* gray-800 with opacity */
+  --badge-cancelled-text: #d1d5db; /* gray-300 */
+  
+  --badge-urgent-bg: rgba(153, 27, 27, 0.3); /* red-800 with opacity */
+  --badge-urgent-text: #fca5a5; /* red-300 */
+} 

@@ -1,0 +1,52 @@
+{
+  "users": {
+    "landlord1": {
+      "uid": "landlord1",
+      "email": "landlord@test.com",
+      "displayName": "Test Landlord",
+      "role": "landlord",
+      "properties": ["property1", "property2"],
+      "notificationPreferences": {
+        "email": true,
+        "push": true,
+        "categories": {
+          "maintenance": true,
+          "payments": true,
+          "tenants": true,
+          "contractors": true
+        }
+      }
+    },
+    "tenant1": {
+      "uid": "tenant1",
+      "email": "tenant@test.com",
+      "displayName": "Test Tenant",
+      "role": "tenant",
+      "properties": ["property1"],
+      "notificationPreferences": {
+        "email": true,
+        "push": true,
+        "categories": {
+          "maintenance": true,
+          "payments": true,
+          "property": true
+        }
+      }
+    },
+    "contractor1": {
+      "uid": "contractor1",
+      "email": "contractor@test.com",
+      "displayName": "Test Contractor",
+      "role": "contractor",
+      "specialties": ["plumbing", "electrical"],
+      "notificationPreferences": {
+        "email": true,
+        "push": true,
+        "categories": {
+          "jobs": true,
+          "payments": true
+        }
+      }
+    }
+  }
+}

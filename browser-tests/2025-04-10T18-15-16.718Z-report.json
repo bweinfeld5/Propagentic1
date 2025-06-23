@@ -1,0 +1,323 @@
+{
+  "total": 45,
+  "passed": 0,
+  "failed": 0,
+  "skipped": 45,
+  "details": [
+    {
+      "browser": "chromium",
+      "viewport": "desktop",
+      "component": "AnimatedDashboardStats",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/chromium_headless_shell-1161/chrome-mac/headless_shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "chromium",
+      "viewport": "desktop",
+      "component": "StatsChart",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/chromium_headless_shell-1161/chrome-mac/headless_shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "chromium",
+      "viewport": "desktop",
+      "component": "SortableTaskList",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/chromium_headless_shell-1161/chrome-mac/headless_shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "chromium",
+      "viewport": "desktop",
+      "component": "AnimatedDropzone",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/chromium_headless_shell-1161/chrome-mac/headless_shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "chromium",
+      "viewport": "desktop",
+      "component": "PropertyMapVisualization",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/chromium_headless_shell-1161/chrome-mac/headless_shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "chromium",
+      "viewport": "tablet",
+      "component": "AnimatedDashboardStats",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/chromium_headless_shell-1161/chrome-mac/headless_shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "chromium",
+      "viewport": "tablet",
+      "component": "StatsChart",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/chromium_headless_shell-1161/chrome-mac/headless_shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "chromium",
+      "viewport": "tablet",
+      "component": "SortableTaskList",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/chromium_headless_shell-1161/chrome-mac/headless_shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "chromium",
+      "viewport": "tablet",
+      "component": "AnimatedDropzone",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/chromium_headless_shell-1161/chrome-mac/headless_shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "chromium",
+      "viewport": "tablet",
+      "component": "PropertyMapVisualization",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/chromium_headless_shell-1161/chrome-mac/headless_shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "chromium",
+      "viewport": "mobile",
+      "component": "AnimatedDashboardStats",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/chromium_headless_shell-1161/chrome-mac/headless_shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "chromium",
+      "viewport": "mobile",
+      "component": "StatsChart",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/chromium_headless_shell-1161/chrome-mac/headless_shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "chromium",
+      "viewport": "mobile",
+      "component": "SortableTaskList",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/chromium_headless_shell-1161/chrome-mac/headless_shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "chromium",
+      "viewport": "mobile",
+      "component": "AnimatedDropzone",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/chromium_headless_shell-1161/chrome-mac/headless_shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "chromium",
+      "viewport": "mobile",
+      "component": "PropertyMapVisualization",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/chromium_headless_shell-1161/chrome-mac/headless_shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "firefox",
+      "viewport": "desktop",
+      "component": "AnimatedDashboardStats",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/firefox-1475/firefox/Nightly.app/Contents/MacOS/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "firefox",
+      "viewport": "desktop",
+      "component": "StatsChart",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/firefox-1475/firefox/Nightly.app/Contents/MacOS/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "firefox",
+      "viewport": "desktop",
+      "component": "SortableTaskList",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/firefox-1475/firefox/Nightly.app/Contents/MacOS/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "firefox",
+      "viewport": "desktop",
+      "component": "AnimatedDropzone",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/firefox-1475/firefox/Nightly.app/Contents/MacOS/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "firefox",
+      "viewport": "desktop",
+      "component": "PropertyMapVisualization",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/firefox-1475/firefox/Nightly.app/Contents/MacOS/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "firefox",
+      "viewport": "tablet",
+      "component": "AnimatedDashboardStats",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/firefox-1475/firefox/Nightly.app/Contents/MacOS/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "firefox",
+      "viewport": "tablet",
+      "component": "StatsChart",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/firefox-1475/firefox/Nightly.app/Contents/MacOS/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "firefox",
+      "viewport": "tablet",
+      "component": "SortableTaskList",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/firefox-1475/firefox/Nightly.app/Contents/MacOS/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "firefox",
+      "viewport": "tablet",
+      "component": "AnimatedDropzone",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/firefox-1475/firefox/Nightly.app/Contents/MacOS/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "firefox",
+      "viewport": "tablet",
+      "component": "PropertyMapVisualization",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/firefox-1475/firefox/Nightly.app/Contents/MacOS/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "firefox",
+      "viewport": "mobile",
+      "component": "AnimatedDashboardStats",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/firefox-1475/firefox/Nightly.app/Contents/MacOS/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "firefox",
+      "viewport": "mobile",
+      "component": "StatsChart",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/firefox-1475/firefox/Nightly.app/Contents/MacOS/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "firefox",
+      "viewport": "mobile",
+      "component": "SortableTaskList",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/firefox-1475/firefox/Nightly.app/Contents/MacOS/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "firefox",
+      "viewport": "mobile",
+      "component": "AnimatedDropzone",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/firefox-1475/firefox/Nightly.app/Contents/MacOS/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "firefox",
+      "viewport": "mobile",
+      "component": "PropertyMapVisualization",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/firefox-1475/firefox/Nightly.app/Contents/MacOS/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "safari",
+      "viewport": "desktop",
+      "component": "AnimatedDashboardStats",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/webkit-2140/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "safari",
+      "viewport": "desktop",
+      "component": "StatsChart",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/webkit-2140/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "safari",
+      "viewport": "desktop",
+      "component": "SortableTaskList",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/webkit-2140/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "safari",
+      "viewport": "desktop",
+      "component": "AnimatedDropzone",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/webkit-2140/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "safari",
+      "viewport": "desktop",
+      "component": "PropertyMapVisualization",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/webkit-2140/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "safari",
+      "viewport": "tablet",
+      "component": "AnimatedDashboardStats",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/webkit-2140/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "safari",
+      "viewport": "tablet",
+      "component": "StatsChart",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/webkit-2140/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "safari",
+      "viewport": "tablet",
+      "component": "SortableTaskList",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/webkit-2140/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "safari",
+      "viewport": "tablet",
+      "component": "AnimatedDropzone",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/webkit-2140/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "safari",
+      "viewport": "tablet",
+      "component": "PropertyMapVisualization",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/webkit-2140/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "safari",
+      "viewport": "mobile",
+      "component": "AnimatedDashboardStats",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/webkit-2140/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "safari",
+      "viewport": "mobile",
+      "component": "StatsChart",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/webkit-2140/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "safari",
+      "viewport": "mobile",
+      "component": "SortableTaskList",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/webkit-2140/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "safari",
+      "viewport": "mobile",
+      "component": "AnimatedDropzone",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/webkit-2140/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    },
+    {
+      "browser": "safari",
+      "viewport": "mobile",
+      "component": "PropertyMapVisualization",
+      "status": "skipped",
+      "error": "Browser failed to launch: browserType.launch: Executable doesn't exist at /Users/benweinfeld/Library/Caches/ms-playwright/webkit-2140/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+    }
+  ]
+}

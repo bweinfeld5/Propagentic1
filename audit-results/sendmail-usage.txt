@@ -1,0 +1,4 @@
+./functions/lib/invites.js:        const info = await mailTransport.sendMail(mailOptions);
+./functions/test.js:    const info = await mailTransport.sendMail(mailOptions);
+./src/inviteEmail.ts:export const sendMailOnCreate = functions
+./src/inviteEmail.ts:      const info = await transporter.sendMail({

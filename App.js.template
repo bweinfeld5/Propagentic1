@@ -1,0 +1,18 @@
+// Import the new consolidated landing page component
+import LandingPage from './components/landing/LandingPage';
+
+// Further down in the App component's Routes definition:
+
+<Routes>
+  {/* Root path now redirects to consolidated landing page */}
+  <Route path="/" element={<LandingPage />} />
+  
+  {/* Remove or comment out old landing page routes */}
+  {/* <Route path="/propagentic/new" element={<EnhancedLandingPage />} /> */}
+  {/* <Route path="/old-landing" element={<LandingPage />} /> */}
+  
+  {/* Rest of the routes stay the same */}
+  <Route path="/login" element={<LoginPage />} />
+  <Route path="/register" element={<RegisterPage />} />
+  {/* ... other routes ... */}
+</Routes> 

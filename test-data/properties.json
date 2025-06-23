@@ -1,0 +1,29 @@
+{
+  "properties": {
+    "property1": {
+      "id": "property1",
+      "address": {
+        "street": "123 Test Street",
+        "city": "Test City",
+        "state": "TS",
+        "zip": "12345"
+      },
+      "propertyName": "Test Property",
+      "owner": "landlord1",
+      "tenants": ["tenant1"],
+      "maintenanceRequests": ["request1"]
+    },
+    "property2": {
+      "id": "property2",
+      "address": {
+        "street": "456 Sample Avenue",
+        "city": "Test City",
+        "state": "TS",
+        "zip": "12345"
+      },
+      "propertyName": "Sample Property",
+      "owner": "landlord1",
+      "tenants": []
+    }
+  }
+}

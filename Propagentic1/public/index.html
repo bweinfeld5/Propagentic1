@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#008080" />
+
+    <!-- Primary Meta Tags -->
+    <title>Propagentic - Modern Property Management Platform</title>
+    <meta name="title" content="Propagentic - Modern Property Management Platform">
+    <meta name="description" content="Streamline property management with AI-powered maintenance dispatch, tenant communication, and contractor coordination.">
+    
+    <!-- Cache Control to prevent stale data -->
+    <meta name="version" content="2.0.1">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <!-- Favicon and PWA assets -->
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png">
+    <link rel="mask-icon" href="%PUBLIC_URL%/safari-pinned-tab.svg" color="#008080">
+    <meta name="msapplication-TileColor" content="#008080">
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://propagentic.com/">
+    <meta property="og:title" content="Propagentic - Modern Property Management Platform">
+    <meta property="og:description" content="Streamline property management with AI-powered maintenance dispatch, tenant communication, and contractor coordination.">
+    <meta property="og:image" content="%PUBLIC_URL%/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://propagentic.com/">
+    <meta property="twitter:title" content="Propagentic - Modern Property Management Platform">
+    <meta property="twitter:description" content="Streamline property management with AI-powered maintenance dispatch, tenant communication, and contractor coordination.">
+    <meta property="twitter:image" content="%PUBLIC_URL%/og-image.jpg">
+
+    <!-- Mobile web app configuration -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Propagentic">
+
+    <!-- Preconnect to Firebase services to improve performance -->
+    <link rel="preconnect" href="https://firestore.googleapis.com">
+    <link rel="preconnect" href="https://storage.googleapis.com">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Lottie Web Component Script -->
+    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.3.0/dist/dotlottie-wc.js" type="module"></script>
+    
+    <!-- Handle React Router URL fix for Firebase Hosting -->
+    <script type="text/javascript">
+      // Single Page Apps for Firebase Hosting
+      // Handle routing for deep linking and refreshes
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) { 
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+
+    <!-- SPA routing helper script for deep linking -->
+    <script type="text/javascript">
+      (function() {
+        // Capture redirect URLs from 404.html
+        const isRedirected = window.location.search.includes('redirect_url=');
+        
+        if (isRedirected) {
+          console.log('Handling redirect from 404 page...');
+          
+          // Parse the redirect URL from the query string
+          const urlParams = new URLSearchParams(window.location.search);
+          const redirectPath = urlParams.get('redirect_url');
+          
+          if (redirectPath) {
+            console.log(`Redirecting to: ${redirectPath}`);
+            
+            // Use History API to update the URL and avoid another page load
+            window.history.replaceState(null, null, redirectPath);
+          }
+        }
+        
+        // Handle Firebase hosting 404 redirects with path format /?/path
+        const queryString = window.location.search;
+        const hasRedirectionQuery = queryString.startsWith('?/') && !isRedirected; // Ensure this doesn't run if redirect_url was just handled
+        
+        if (hasRedirectionQuery) {
+          console.log('Handling Firebase 404 redirect format...');
+          
+          // Extract the path from the query
+          const path = queryString.replace('?/', '/').split('~and~').join('&');
+          
+          // Update URL using History API
+          window.history.replaceState(null, null, path);
+        }
+      })();
+    </script>
+
+    <!-- Fallback resources to ensure availability -->
+    <link rel="stylesheet" href="%PUBLIC_URL%/assets/css/resources-fallback.css" />
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <div id="portal-root"></div>
+    <!-- Error handler for resource loading -->
+    <script>
+      window.addEventListener('error', function(event) {
+        // Only handle resource loading errors
+        if (event.target && (event.target.tagName === 'LINK' || event.target.tagName === 'SCRIPT' || event.target.tagName === 'IMG')) {
+          console.warn('Resource failed to load:', event.target.src || event.target.href);
+          
+          // Create a custom event for the app to handle
+          const resourceErrorEvent = new CustomEvent('resourceLoadError', {
+            detail: {
+              element: event.target,
+              url: event.target.src || event.target.href,
+              type: event.target.tagName.toLowerCase()
+            }
+          });
+          document.dispatchEvent(resourceErrorEvent);
+        }
+      }, true);
+    </script>
+  </body>
+</html>

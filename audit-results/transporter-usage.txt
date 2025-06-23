@@ -1,0 +1,5 @@
+./functions/lib/invites.js:// Initialize nodemailer transporter.
+./functions/src/invites.ts:// Initialize nodemailer transporter.
+./src/inviteEmail.ts:// Create a reusable transporter object
+./src/inviteEmail.ts:const transporter = nodemailer.createTransport({
+./src/inviteEmail.ts:      const info = await transporter.sendMail({

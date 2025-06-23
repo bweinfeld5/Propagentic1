@@ -1,0 +1,329 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- UTILITY FUNCTIONS ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isUserRole(role) {
+      // Check both 'userType' and 'role' fields for broader compatibility
+      let userData = getUserData();
+      return isSignedIn() && (userData.userType == role || userData.role == role);
+    }
+
+    function isLandlord() { 
+      return isUserRole('landlord');
+    }
+    
+    function isTenant() { 
+      return isUserRole('tenant');
+    }
+
+    function isContractor() {
+      return isUserRole('contractor');
+    }
+
+    function isPropertyOwner(propertyId) {
+      let property = get(/databases/$(database)/documents/properties/$(propertyId)).data;
+      return isSignedIn() && request.auth.uid == property.landlordId;
+    }
+
+    function isPropertyManager(propertyId) {
+      let property = get(/databases/$(database)/documents/properties/$(propertyId)).data;
+      // Check if a 'managers' field exists and the user's UID is in it.
+      return isSignedIn() && property.keys().hasAny(['managers']) && request.auth.uid in property.managers;
+    }
+
+    function isPropertyTenant(propertyId) {
+      let userData = getUserData();
+      // Check both direct propertyId and properties array
+      return isTenant() && 
+             (userData.propertyId == propertyId || 
+              (userData.properties != null && propertyId in userData.properties));
+    }
+
+    function isAdmin() {
+      return isUserRole('admin');
+    }
+
+    // --- JOB-RELATED UTILITY FUNCTIONS ---
+    function isJobOwner(jobId) {
+      let job = get(/databases/$(database)/documents/jobs/$(jobId)).data;
+      return isSignedIn() && request.auth.uid == job.landlordId;
+    }
+
+    function isJobContractor(jobId) {
+      let job = get(/databases/$(database)/documents/jobs/$(jobId)).data;
+      return isSignedIn() && request.auth.uid == job.assignedContractorId;
+    }
+
+    function isBidOwner(bidId) {
+      let bid = get(/databases/$(database)/documents/bids/$(bidId)).data;
+      return isSignedIn() && request.auth.uid == bid.contractorId;
+    }
+
+    function isJobParticipant(jobId) {
+      let job = get(/databases/$(database)/documents/jobs/$(jobId)).data;
+      return isSignedIn() && 
+             (request.auth.uid == job.landlordId || 
+              request.auth.uid == job.assignedContractorId);
+    }
+
+    // --- DATA VALIDATION FUNCTIONS ---
+    function isValidEmail(email) {
+      return email is string && email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$');
+    }
+    
+    function isValidInviteCreate() {
+      let data = request.resource.data;
+      return isLandlord() &&
+             data.landlordId == request.auth.uid &&
+             isPropertyOwner(data.propertyId) &&
+             isValidEmail(data.tenantEmail) &&
+             data.status == 'pending' &&
+             data.createdAt == request.time &&
+             data.keys().hasAll(['landlordId', 'propertyId', 'tenantEmail', 'status', 'createdAt']);
+    }
+
+    function isValidInviteUpdate() {
+      let data = request.resource.data;
+      let existingData = resource.data;
+      // Tenant accepting the invite
+      return (isTenant() && 
+              data.status == 'accepted' && 
+              data.tenantId == request.auth.uid &&
+              existingData.tenantEmail == getUserData().email) ||
+             // Landlord revoking the invite
+             (isLandlord() &&
+              isPropertyOwner(existingData.propertyId) &&
+              data.status == 'revoked');
+    }
+
+    function isValidPropertyCreate() {
+      let data = request.resource.data;
+      return isLandlord() &&
+             data.landlordId == request.auth.uid &&
+             data.keys().hasAll(['landlordId', 'streetAddress', 'city', 'state', 'zipCode', 'propertyType']);
+    }
+    
+    function isValidTicketCreate() {
+      let data = request.resource.data;
+      return isTenant() &&
+             data.submittedBy == request.auth.uid &&
+             isPropertyTenant(data.propertyId) &&
+             data.keys().hasAll(['submittedBy', 'propertyId', 'category', 'description', 'priority']);
+    }
+
+    function isValidJobCreate() {
+      let data = request.resource.data;
+      return isLandlord() &&
+             data.landlordId == request.auth.uid &&
+             isPropertyOwner(data.propertyId) &&
+             data.keys().hasAll(['landlordId', 'propertyId', 'title', 'description', 'category', 'priority']);
+    }
+
+    function isValidBidCreate() {
+      let data = request.resource.data;
+      return isContractor() &&
+             data.contractorId == request.auth.uid &&
+             data.keys().hasAll(['jobId', 'contractorId', 'amount', 'description']);
+    }
+
+    // --- RULES ---
+
+    // Users Collection
+    match /users/{userId} {
+      allow read, update: if isOwner(userId) || isAdmin();
+      allow create: if isSignedIn();
+    }
+
+    // Tenant Profiles Collection
+    match /tenantProfiles/{tenantId} {
+      // Tenants can read/update their own profile, landlords can read their tenants' profiles, admins can access all
+      allow read: if isOwner(tenantId) || 
+                     (isLandlord() && resource.data.landlordId == request.auth.uid) ||
+                     isAdmin();
+      allow create: if isOwner(tenantId) && isTenant();
+      allow update: if isOwner(tenantId) || 
+                       (isLandlord() && resource.data.landlordId == request.auth.uid) ||
+                       isAdmin();
+      allow delete: if isOwner(tenantId) || isAdmin();
+    }
+
+    // Contractor Profiles Collection
+    match /contractorProfiles/{profileId} {
+      // Contractors can read/update their own profile
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isOwner(request.resource.data.userId) && isContractor();
+      allow update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // Properties Collection
+    match /properties/{propertyId} {
+      // Allow individual document reads for property owners, managers, tenants, and admins
+      allow get: if isSignedIn() && ((isLandlord() && resource.data.landlordId == request.auth.uid) || isPropertyManager(propertyId) || isPropertyTenant(propertyId) || isAdmin());
+      // Allow listing properties for landlords (they can query their own properties)
+      allow list: if isSignedIn() && (isLandlord() || isAdmin());
+      allow create: if isSignedIn() && (isLandlord() || isAdmin());
+      allow update: if isSignedIn() && (isPropertyOwner(propertyId) || isPropertyManager(propertyId) || isAdmin());
+      allow delete: if isSignedIn() && (isPropertyOwner(propertyId) || isAdmin());
+    }
+
+    // Jobs Collection
+    match /jobs/{jobId} {
+      // Landlords can read their own jobs, contractors can read available jobs and their assigned jobs
+      allow read: if isSignedIn() && 
+                     (isJobOwner(jobId) || 
+                      isJobContractor(jobId) || 
+                      (isContractor() && resource.data.status == 'open') ||
+                      isAdmin());
+      allow create: if isValidJobCreate();
+      allow update: if isJobOwner(jobId) || isJobContractor(jobId) || isAdmin();
+      allow delete: if isJobOwner(jobId) || isAdmin();
+    }
+
+    // Bids Collection
+    match /bids/{bidId} {
+      // Contractors can read their own bids, landlords can read bids for their jobs
+      allow read: if isSignedIn() && 
+                     (isBidOwner(bidId) || 
+                      isJobOwner(resource.data.jobId) ||
+                      isAdmin());
+      allow create: if isValidBidCreate();
+      allow update: if isBidOwner(bidId) || isAdmin();
+      allow delete: if isBidOwner(bidId) || isAdmin();
+    }
+
+    // Job Updates Collection
+    match /jobUpdates/{updateId} {
+      // Job participants can read/update job updates
+      allow read: if isSignedIn() && isJobParticipant(resource.data.jobId);
+      allow create: if isSignedIn() && isJobParticipant(request.resource.data.jobId);
+      allow update: if isSignedIn() && isJobParticipant(resource.data.jobId);
+      allow delete: if isAdmin();
+    }
+
+    // Job Notifications Collection
+    match /jobNotifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Only Cloud Functions can create notifications
+      allow create: if false;
+      // Users can update their own notifications (mark as read)
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Users can delete their own notifications
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Job Notification Preferences Collection
+    match /jobNotificationPreferences/{userId} {
+      // Users can read/update their own preferences
+      allow read, write: if isOwner(userId);
+    }
+
+    // General Notifications Collection (for compatibility)
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Only Cloud Functions can create notifications
+      allow create: if false;
+      // Users can update their own notifications (mark as read)
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Users can delete their own notifications
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Tickets Collection
+    match /tickets/{ticketId} {
+      // Submitted by user, or owner/manager of the property can read/update.
+      allow read, update: if isSignedIn() && (isOwner(resource.data.submittedBy) || isPropertyOwner(resource.data.propertyId) || isPropertyManager(resource.data.propertyId) || isAdmin());
+      // Any signed-in user can create a ticket.
+      allow create: if isSignedIn(); 
+    }
+
+    // Invites Collection
+    match /invites/{inviteId} {
+      // Landlords and admins can manage invites.
+      allow create: if isLandlord() || isAdmin();
+      allow read, update: if (isLandlord() && resource.data.landlordId == request.auth.uid) ||
+                             (isSignedIn() && resource.data.tenantEmail == request.auth.token.email) ||
+                             isAdmin();
+      allow delete: if (isLandlord() && resource.data.landlordId == request.auth.uid) || isAdmin();
+    }
+
+    // New rule for invite codes, allows any authenticated user to read (for validation)
+    match /inviteCodes/{code} {
+        allow read: if isSignedIn();
+        // Only cloud functions can create/write codes
+        allow write: if false;
+    }
+
+    // Generic mail collection for triggering emails
+    match /mail/{mailId} {
+      allow create: if isSignedIn(); // Allow any signed-in user to create an email document
+    }
+
+    // Conversations Collection - for real-time messaging
+    match /conversations/{conversationId} {
+      function isParticipant() {
+        return isSignedIn() && request.auth.uid in resource.data.participants[].id;
+      }
+
+      function isValidParticipant() {
+        return isSignedIn() && 
+               request.auth.uid in request.resource.data.participants[].id;
+      }
+
+      // Read conversations if user is a participant
+      allow read: if isParticipant();
+      
+      // Create conversations if user is one of the participants
+      allow create: if isValidParticipant();
+      
+      // Update conversations if user is a participant (for marking as read, etc.)
+      allow update: if isParticipant();
+      
+      // Delete conversations if user is a participant
+      allow delete: if isParticipant();
+    }
+
+    // Messages Collection - for individual messages
+    match /messages/{messageId} {
+      function isMessageParticipant() {
+        let conversation = get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data;
+        return isSignedIn() && request.auth.uid in conversation.participants[].id;
+      }
+
+      function canCreateMessage() {
+        let conversation = get(/databases/$(database)/documents/conversations/$(request.resource.data.conversationId)).data;
+        return isSignedIn() && 
+               request.auth.uid in conversation.participants[].id &&
+               request.resource.data.senderId == request.auth.uid;
+      }
+
+      // Read messages if user is participant of the conversation
+      allow read: if isMessageParticipant();
+      
+      // Create messages if user is participant and sender matches auth
+      allow create: if canCreateMessage();
+      
+      // Update messages if user is participant (for marking as read, editing)
+      allow update: if isMessageParticipant();
+      
+      // Delete messages if user is the sender
+      allow delete: if isSignedIn() && resource.data.senderId == request.auth.uid;
+    }
+  }
+}

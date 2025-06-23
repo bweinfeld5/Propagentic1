@@ -1,0 +1,113 @@
+// IMPORTANT: FOR DEBUGGING ONLY
+// These rules are intentionally more permissive to aid in troubleshooting
+// DO NOT DEPLOY TO PRODUCTION
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 🔐 Auth & Role Helpers (same as production)
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType;
+    }
+
+    function isLandlord() { 
+      return isSignedIn() && 
+        (getRole() == 'landlord' || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'landlord'); 
+    }
+    function isTenant() { 
+      return isSignedIn() && 
+        (getRole() == 'tenant' || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tenant'); 
+    }
+    function isContractor() { 
+      return isSignedIn() && 
+        (getRole() == 'contractor' || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'contractor'); 
+    }
+    function isAdmin() { return isSignedIn() && getRole() == 'admin'; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+
+    // DEBUGGING SECTION - More permissive access rules
+    
+    // For debugging only - Allow read access to all users collection if signed in
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+    }
+
+    // For debugging only - Allow read access to all landlord profiles if signed in
+    match /landlordProfiles/{landlordId} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(landlordId) && isLandlord();
+
+      match /contractors/{contractorId} {
+        allow read: if isSignedIn();
+        allow write: if isOwner(landlordId);
+      }
+    }
+
+    // For debugging only - Allow read access to all contractor profiles
+    match /contractorProfiles/{contractorId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(contractorId) && isContractor();
+      allow update: if isOwner(contractorId) || isAdmin();
+    }
+
+    // For debugging only - Allow read access to all tenant profiles
+    match /tenantProfiles/{tenantId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(tenantId) && isTenant() && request.resource.data.userId == request.auth.uid;
+      allow update: if isOwner(tenantId) || isAdmin();
+    }
+
+    // For debugging only - Allow read access to all properties
+    match /properties/{propertyId} {
+      allow read: if isSignedIn();
+      allow create: if isLandlord();
+      allow update, delete: if isSignedIn() && (
+        resource.data.landlordId == request.auth.uid || isAdmin()
+      );
+
+      match /tenants/{tenantId} {
+        allow read: if isSignedIn();
+        allow write: if isSignedIn() && (
+          get(/databases/$(database)/documents/properties/$(propertyId)).data.landlordId == request.auth.uid || 
+          isAdmin()
+        );
+      }
+    }
+
+    // For debugging only - Allow read access to all tickets
+    match /tickets/{ticketId} {
+      allow read: if isSignedIn();
+
+      allow create: if isTenant() && request.resource.data.tenantId == request.auth.uid;
+
+      allow update: if isSignedIn();
+
+      match /feedback/{userId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && request.resource.data.tenantId == request.auth.uid;
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    // For debugging only - Allow read/write to notifications
+    match /notifications/{notificationId} {
+      allow read, update, delete: if isSignedIn();
+      allow create: if isSignedIn();
+    }
+
+    // Default fallback - still protect unspecified collections
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+} 

@@ -1,0 +1,17 @@
+{
+  "tickets": {
+    "request1": {
+      "id": "request1",
+      "propertyId": "property1",
+      "unitNumber": "101",
+      "submittedBy": "tenant1",
+      "description": "The kitchen faucet has been leaking for two days",
+      "status": "new",
+      "priority": "medium",
+      "category": null,
+      "createdAt": "2023-07-15T10:30:00Z",
+      "assignedTo": null,
+      "notified": true
+    }
+  }
+}

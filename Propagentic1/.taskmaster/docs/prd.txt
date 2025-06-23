@@ -1,0 +1,781 @@
+# PropAgentic – Firestore Security Rules **Product Requirements Document (PRD)**
+
+---
+
+## 1. Overview
+
+PropAgentic **Firestore Security Rules** protect every document in our multi‑tenant database. The rules implement a strict role‑based access‑control (RBAC) layer for Landlords, Tenants, Contractors, Property Managers, and Admins. They prevent data‑leakage, enforce document ownership, and ensure all writes follow approved state‑machines (e.g. ticket status, escrow lifecycle).  
+
+This PRD clarifies why each guard exists and how the rules will evolve from MVP hardening to full enterprise‑grade compliance.
+
+---
+
+## 2. Core Features
+
+### 2.1 Role‑Based Access Control (RBAC)
+- **What**: Central helpers (`isLandlord`, `isTenant`, etc.) gate every read/write.
+- **Why**: Guarantees that each user sees only the data relevant to their role.
+- **How**: User's `userType` in `/users/{uid}` drives branching logic.
+
+### 2.2 Scoped Collection Queries
+- **What**: List operations require owner‑specific filters and sensible `limit` caps.
+- **Why**: Blocks wide scans that could enumerate sensitive data.
+- **How**: Security Rules verify that the query includes `landlordId == uid` (properties) or refuse.
+
+### 2.3 Document‑Shape Validation
+- **What**: Creation helpers (`isValidCreateTicketData`, etc.) strip system fields and check enums.
+- **Why**: Protects integrity, prevents clients from injecting `status`, timestamps, or role bumps.
+- **How**: Rules reject writes where forbidden keys appear or enums are out of range.
+
+### 2.4 State‑Machine Enforcement
+- **What**: Functions like `isValidEscrowStatusChange` constrain status transitions.
+- **Why**: Ensures tickets, escrows, and disputes follow immutable audit trails.
+- **How**: Update rules compare *current → proposed* status and allow only legal moves.
+
+---
+
+## 3. User Experience
+
+### 3.1 Personas
+
+**Persona A: Ben (Founder / Admin)**
+- Needs global visibility and hot‑fix ability without redeploying code.
+- Relies on well‑commented rules for quick audits.
+
+**Persona B: Jordan (Landlord)**
+- Wants assurance that contractors or other landlords can't peek at his data.
+- Expects ticket data to remain private to his portfolio.
+
+### 3.2 Key Flows
+
+1. Landlord Jordan queries `/properties` → Rules inject `landlordId == uid` guard → receives only his docs.
+2. Tenant Taylor creates `/tickets/{id}` → Validation removes `status` field → ticket saved with default `new`.
+3. Contractor Casey tries to read unrelated ticket → Rule denies (no `contractorId` match).
+4. Admin Ben updates rules via Firebase console → changes propagate instantly with zero downtime.
+
+### 3.3 UI / DX Considerations
+
+- Clear error codes (`permission‑denied`) mapped to friendly UI copy.
+- Emulator test harness ensures CI fails on rules regression.
+
+---
+
+## 4. Technical Architecture
+
+### 4.1 System Components
+- **Firestore Security Rules (rules_version = '2')** — declarative policy layer.  
+- **Role Helper Library** — reusable functions (`isAdmin`, `isPropertyOwner`, etc.).  
+- **Validation Helpers** — per‑collection data‑shape checks.  
+- **Emulator Test Suite** (Jest + `@firebase/rules-unit-testing`).
+
+### 4.2 Data Models (security‑relevant)
+
+1. **User**
+
+```typescript
+interface UserDoc {
+  uid: string;
+  userType: 'landlord' | 'tenant' | 'contractor' | 'admin' | 'manager';
+  /* profile fields */
+}
+```
+
+2. **Ticket** (excerpt)
+
+```typescript
+status: 'new' | 'pending_classification' | 'classified' | 'assigned' | 'in_progress' |
+        'pending_review' | 'completed' | 'rejected' | 'cancelled' | 'on_hold' | 'escalated';
+```
+
+3. **EscrowAccount**, **Dispute**, **InviteCode**, etc. follow analogous enum constraints.
+
+### 4.3 APIs & Integrations
+
+- **Firebase Auth** — supplies `request.auth.uid` + custom claims.
+- **CI Pipeline** — GitHub Action runs rules test suite on every PR.
+- **Admin SDK** — privileged server code (e.g. batch imports) bypasses client rules.
+
+### 4.4 Infrastructure Requirements
+
+- Firestore (production & emulator).
+- Firebase Functions (optional admin tasks).
+- GitHub / GitLab CI for automated rules tests.
+
+---
+
+## 5. Development Roadmap
+
+### 5.1 Phase 0 – Patch Critical Gaps (done)
+- Remove `isDevMode` catch‑all.
+- Block user role tampering (`userType`).
+- Close ticket read leak.
+
+### 5.2 Phase 1 – Harden & Document
+- Write exhaustive jest tests (happy‑ & sad‑paths).
+- Inline comments for every helper.
+- PRD review & sign‑off.
+
+### 5.3 Phase 2 – Compliance & Observability
+- Add Firestore Rules coverage metrics in CI.
+- Export audit logs to BigQuery for SOC 2 evidence.
+- Build rule‑change deploy checklist.
+
+---
+
+## 6. Logical Dependency Chain
+
+1. **Role helpers** must exist before per‑collection matches.
+2. **Validation helpers** referenced inside write rules.
+3. **Tests** compile & run after every rule change.
+
+---
+
+## 7. Risks & Mitigations
+
+| Risk                                      | Impact | Mitigation                                 |
+| ----------------------------------------- | ------ | ------------------------------------------ |
+| Privilege escalation via user doc updates | High   | Field‑level guard blocks `userType` edits. |
+| Collection scan DoS                       | Medium | Enforce `limit` ≤ 100, required filters.   |
+| Rule regression in future PRs             | High   | CI fails if new tests break.               |
+| Complex rules become unmaintainable       | Medium | Document helpers, consolidate role checks. |
+
+---
+
+## 8. Appendix
+
+- **Rule Coverage Goal**: ≥ 90% of helper paths executed in test suite.
+- **Code Style**: Kebab‑case match paths, camelCase helper names.
+- **Reference Docs**: Firebase Rules V2 spec, HIPAA‑aligned patterns.
+
+---
+
+*Version 1.0 – June 2024*
+
+# PropAgentic Property Creation & Invitation System Rebuild - PRD
+
+## Executive Summary
+
+Rebuild the property creation and tenant invitation system from the ground up to ensure reliable email delivery, clean user experience, and robust error handling. The current system has multiple architectural issues including unverified SendGrid senders, mixed email delivery approaches, and fragmented user flows.
+
+## Problem Statement
+
+### Current Issues
+1. **Email Delivery Failure**: SendGrid rejecting emails due to unverified sender identity
+2. **Architectural Inconsistency**: Mixed Firebase Extension and direct SendGrid approaches
+3. **Poor Error Handling**: Users receive generic "internal" errors without actionable feedback
+4. **Fragmented UX**: Property creation and tenant invitation flows are disconnected
+5. **Testing Gaps**: Limited end-to-end testing of the complete workflow
+
+### Impact
+- Landlords cannot successfully invite tenants
+- Poor user experience leads to abandonment
+- Support burden from failed invitations
+- Loss of user trust in the platform
+
+## Solution Overview
+
+### Core Objectives
+1. **Reliable Email Delivery**: Establish verified SendGrid infrastructure with fallback strategies
+2. **Unified Architecture**: Single, consistent approach to email sending and property management
+3. **Exceptional UX**: Seamless, intuitive property creation and invitation flow
+4. **Robust Error Handling**: Clear, actionable error messages and recovery paths
+5. **Comprehensive Testing**: Full test coverage for all workflows
+
+### Success Metrics
+- 99%+ email delivery success rate
+- <2 second property creation completion time
+- Zero "internal error" messages shown to users
+- 95%+ user completion rate for property setup flow
+- <1 minute average time for landlord to invite first tenant
+
+## Technical Requirements
+
+### Email Infrastructure
+- **SendGrid Setup**: Verify sender domains and email addresses
+- **Domain Authentication**: Implement SPF, DKIM, and DMARC records
+- **Fallback Strategy**: Multiple verified sender addresses for redundancy
+- **Delivery Monitoring**: Real-time tracking of email delivery status
+- **Template System**: Professional, branded email templates
+
+### Property Creation System
+- **Wizard Flow**: 6-step guided property creation process
+- **Data Validation**: Real-time validation with clear error messages
+- **Auto-save**: Prevent data loss during multi-step process
+- **Image Upload**: Property photos with automatic optimization
+- **Address Validation**: Integration with address validation service
+
+### Invitation System
+- **Bulk Invitations**: Support for multiple tenant emails per property
+- **Status Tracking**: Real-time invitation status (sent, delivered, opened, accepted)
+- **Retry Mechanism**: Automatic retry for failed deliveries
+- **Custom Messages**: Personalized invitation messages from landlords
+- **Expiration Handling**: Automatic invitation expiry and renewal
+
+### Integration Points
+- **Firebase Firestore**: Property and invitation data storage
+- **Firebase Auth**: User authentication and authorization
+- **SendGrid API**: Email delivery service
+- **Cloud Functions**: Server-side business logic
+- **React Frontend**: Modern, responsive user interface
+
+## User Experience Requirements
+
+### Landlord Property Creation Flow
+1. **Welcome Screen**: Clear value proposition and process overview
+2. **Property Details**: Address, type, units, rent information
+3. **Property Photos**: Drag-and-drop image upload with preview
+4. **Tenant Information**: Optional tenant details for immediate invitation
+5. **Invitation Settings**: Customize invitation message and timing
+6. **Confirmation**: Review all details before submission
+
+### Tenant Invitation Flow
+1. **Email Delivery**: Professional, branded invitation email
+2. **Landing Page**: Clean, mobile-responsive invitation acceptance page
+3. **Account Creation**: Streamlined tenant registration process
+4. **Property Access**: Immediate access to property information and maintenance requests
+5. **Confirmation**: Welcome message and next steps
+
+### Error Handling
+- **Clear Messages**: Specific, actionable error descriptions
+- **Recovery Options**: Multiple paths to resolve issues
+- **Support Integration**: Easy access to help and support
+- **Progress Preservation**: Maintain user progress during errors
+
+## Technical Architecture
+
+### Frontend Components
+- **PropertyCreationWizard**: Multi-step property creation component
+- **InvitationManager**: Bulk invitation management interface
+- **StatusDashboard**: Real-time invitation status tracking
+- **ErrorBoundary**: Comprehensive error handling and recovery
+
+### Backend Services
+- **PropertyService**: Property CRUD operations and validation
+- **InvitationService**: Invitation creation, sending, and tracking
+- **EmailService**: Unified email sending with multiple providers
+- **ValidationService**: Data validation and sanitization
+
+### Database Schema
+- **Properties**: Enhanced property data model with invitation tracking
+- **Invitations**: Comprehensive invitation status and metadata
+- **EmailLogs**: Detailed email delivery tracking and analytics
+- **UserProfiles**: Extended user profiles with preferences
+
+## Security Requirements
+
+### Data Protection
+- **Input Validation**: Comprehensive server-side validation
+- **SQL Injection Prevention**: Parameterized queries and ORM usage
+- **XSS Protection**: Input sanitization and output encoding
+- **CSRF Protection**: Token-based request validation
+
+### Email Security
+- **SPF Records**: Sender Policy Framework implementation
+- **DKIM Signing**: DomainKeys Identified Mail authentication
+- **DMARC Policy**: Domain-based Message Authentication
+- **Rate Limiting**: Prevent email abuse and spam
+
+### Access Control
+- **Role-Based Permissions**: Landlord/tenant role separation
+- **Property Access Control**: Secure property-tenant associations
+- **Invitation Validation**: Secure invitation token handling
+- **Session Management**: Secure user session handling
+
+## Performance Requirements
+
+### Response Times
+- **Property Creation**: <2 seconds for form submission
+- **Email Sending**: <5 seconds for invitation delivery
+- **Page Load**: <1 second for all user interfaces
+- **Database Queries**: <500ms for all data operations
+
+### Scalability
+- **Concurrent Users**: Support 1000+ simultaneous users
+- **Email Volume**: Handle 10,000+ emails per hour
+- **Database Load**: Efficient queries with proper indexing
+- **CDN Integration**: Global content delivery for assets
+
+### Reliability
+- **Uptime**: 99.9% system availability
+- **Error Rate**: <0.1% error rate for all operations
+- **Recovery Time**: <5 minutes for system recovery
+- **Data Backup**: Automated daily backups with point-in-time recovery
+
+## Testing Requirements
+
+### Unit Testing
+- **Component Tests**: 90%+ code coverage for React components
+- **Service Tests**: 95%+ coverage for backend services
+- **Utility Tests**: 100% coverage for utility functions
+- **Integration Tests**: API endpoint testing with mock data
+
+### End-to-End Testing
+- **User Workflows**: Complete property creation and invitation flows
+- **Email Delivery**: Automated email sending and delivery verification
+- **Error Scenarios**: Comprehensive error handling testing
+- **Performance Testing**: Load testing for peak usage scenarios
+
+### Manual Testing
+- **User Acceptance**: Real user testing with feedback collection
+- **Cross-Browser**: Testing across all major browsers and devices
+- **Accessibility**: WCAG 2.1 compliance testing
+- **Security Testing**: Penetration testing and vulnerability assessment
+
+## Deployment Requirements
+
+### Environment Setup
+- **Development**: Local development with Firebase emulators
+- **Staging**: Production-like environment for testing
+- **Production**: Scalable, monitored production deployment
+- **CI/CD Pipeline**: Automated testing and deployment
+
+### Monitoring
+- **Application Monitoring**: Real-time performance and error tracking
+- **Email Analytics**: Delivery rates, open rates, and engagement metrics
+- **User Analytics**: User behavior and conversion tracking
+- **Infrastructure Monitoring**: Server health and resource usage
+
+### Documentation
+- **API Documentation**: Comprehensive API reference
+- **User Guides**: Step-by-step user documentation
+- **Developer Docs**: Technical implementation guides
+- **Troubleshooting**: Common issues and resolution steps
+
+## Success Criteria
+
+### Technical Success
+- All email delivery tests pass with 99%+ success rate
+- Property creation flow completes in <2 seconds
+- Zero unhandled errors in production
+- 95%+ test coverage across all components
+
+### User Success
+- 90%+ user completion rate for property setup
+- <5% support tickets related to invitation issues
+- 4.5+ star average user rating for the feature
+- 80%+ tenant acceptance rate for invitations
+
+### Business Success
+- 25% increase in landlord onboarding completion
+- 40% reduction in support burden
+- 15% increase in tenant engagement
+- 20% improvement in user retention
+
+## Timeline
+
+### Phase 1: Foundation (Week 1-2)
+- SendGrid verification and domain authentication
+- Email infrastructure setup and testing
+- Basic property creation API development
+
+### Phase 2: Core Development (Week 3-4)
+- Property creation wizard implementation
+- Invitation system development
+- Database schema implementation
+
+### Phase 3: Integration (Week 5-6)
+- Frontend-backend integration
+- End-to-end testing implementation
+- Error handling and validation
+
+### Phase 4: Polish & Launch (Week 7-8)
+- User experience refinement
+- Performance optimization
+- Production deployment and monitoring
+
+## Risk Mitigation
+
+### Technical Risks
+- **Email Delivery Issues**: Multiple verified senders and fallback providers
+- **Performance Bottlenecks**: Load testing and optimization
+- **Security Vulnerabilities**: Regular security audits and updates
+- **Integration Failures**: Comprehensive testing and rollback procedures
+
+### Business Risks
+- **User Adoption**: User testing and feedback integration
+- **Support Burden**: Comprehensive documentation and self-service options
+- **Competitive Pressure**: Rapid development and feature differentiation
+- **Regulatory Compliance**: Legal review and compliance verification
+
+## Conclusion
+
+This comprehensive rebuild will establish PropAgentic as the leading property management platform with reliable, user-friendly property creation and tenant invitation capabilities. The systematic approach ensures all current issues are addressed while building a foundation for future growth and feature expansion. 
+
+# PropAgentic Phase 2: Maintenance Management System - PRD
+
+## Project Overview
+
+**Project Name**: PropAgentic Phase 2 Essential Features - Maintenance Management System
+**Phase**: Phase 2: Essential Features  
+**Priority**: High (Core business functionality)
+**Timeline**: 4-5 weeks (58-75 hours)
+**Target Users**: Property Managers (Landlords), Tenants, Contractors
+
+## Project Context
+
+PropAgentic is an AI-powered property management SaaS platform. Phase 1 (Core Stability) has been completed with authentication, basic UI components, and foundational infrastructure. Phase 2 focuses on implementing essential business features, specifically the maintenance management system that enables property managers to handle maintenance requests efficiently across multiple user roles.
+
+## Business Objectives
+
+1. **Enable Complete Maintenance Workflow**: From tenant request submission to contractor completion with full tracking
+2. **Improve Operational Efficiency**: Reduce manual coordination through automated status tracking and bulk operations
+3. **Enhance User Experience**: Provide role-specific interfaces optimized for each user type (landlord, tenant, contractor)
+4. **Ensure Real-time Communication**: Enable instant status updates and notifications across all stakeholders
+5. **Support Mobile Users**: Provide fully responsive, mobile-first experience for field workers and tenants
+
+## Missing Components to Implement
+
+The following 4 critical components are missing from the maintenance system and must be built:
+
+### 1. RequestStatusTracker.tsx (Universal Status Component)
+**Purpose**: Foundation component providing real-time status tracking for all user roles
+**Priority**: High (Foundation for all other components)
+**Estimated Time**: 6-8 hours
+
+**Requirements**:
+- Real-time status updates using Firestore listeners
+- Visual progress indicator with detailed timeline showing (submitted → assigned → in-progress → completed)
+- Role-based status information display (different information for landlord vs tenant vs contractor)
+- Notification system for status changes with email integration
+- Historical status change log with timestamps and user actions
+- Estimated completion time calculations based on category and priority
+- Automatic status transitions based on user actions
+- Color-coded status indicators (urgent=red, high=orange, medium=yellow, low=green)
+- Mobile-responsive design with touch interactions
+- WCAG 2.1 AA accessibility compliance with screen reader support
+
+**Technical Specifications**:
+- TypeScript interfaces for MaintenanceRequest, StatusChange, Communication
+- Real-time Firestore listeners with proper cleanup to prevent memory leaks
+- Status change event logging for audit trail
+- Cross-component state synchronization
+- Integration with existing ActionFeedback.jsx and toastService.ts
+
+### 2. MaintenanceDashboard.tsx (Landlord/Property Manager View)
+**Purpose**: Comprehensive dashboard for property managers to oversee all maintenance operations
+**Priority**: High (Core business functionality)
+**Estimated Time**: 8-10 hours
+
+**Requirements**:
+- Real-time overview of all maintenance requests across multiple properties
+- Advanced filtering system (property, status, priority, contractor, date range, category)
+- Bulk operations integration for efficiency (assign contractors to multiple requests, update status in bulk, close multiple requests)
+- Interactive status cards with progress indicators and cost information
+- Cost tracking and budget management with spend analysis
+- Performance metrics dashboard (response time, completion rate, contractor performance)
+- Calendar view for scheduled maintenance with drag-and-drop rescheduling
+- Export functionality for reports (PDF, CSV, Excel)
+- Search functionality across all request details
+- Drag-and-drop interface for status changes
+- Real-time notification badges for urgent requests
+- Expandable request details with full communication history
+
+**Technical Specifications**:
+- Integration with existing BulkOperations.jsx component
+- Real-time Firestore listeners for live updates across multiple properties
+- Aggregate data calculations from multiple properties
+- Cost calculation and budget tracking algorithms
+- Performance analytics calculations
+- Efficient pagination for large data sets (25 requests per page)
+- Role-based access control ensuring only landlords can access
+- Mobile responsive with touch-friendly interactions
+
+### 3. TenantRequestHistory.tsx (Tenant View)
+**Purpose**: Tenant-focused interface for submitting and tracking personal maintenance requests
+**Priority**: High (User-facing core feature)
+**Estimated Time**: 6-8 hours
+
+**Requirements**:
+- Personal request history with detailed status tracking for current tenant only
+- Photo upload capability for new requests with automatic compression
+- Communication thread with property manager/contractor (chat-like interface)
+- Request categorization system (plumbing, electrical, HVAC, general, emergency)
+- Priority selection with clear guidelines and examples
+- Estimated completion time display based on category and current workload
+- Rating system for completed work (5-star system with comments)
+- Request templates for common issues (leaky faucet, broken appliance, etc.)
+- Emergency request handling with immediate priority routing and notifications
+- Timeline view of request progress with clear status explanations
+- Photo gallery showing before/during/after photos
+- Quick request submission form with smart defaults
+
+**Technical Specifications**:
+- Filter all requests by current tenant user ID
+- Firebase Storage integration for photo uploads with compression
+- Real-time status updates with push notifications
+- Communication logging and threading system
+- Rating and feedback storage system
+- Request template management and selection
+- Emergency request priority routing and escalation
+- Mobile-first responsive design optimized for phone usage
+
+### 4. ContractorJobBoard.tsx (Contractor View)
+**Purpose**: Contractor-focused dashboard for managing job assignments and work progress
+**Priority**: Medium (Business efficiency feature)
+**Estimated Time**: 8-10 hours
+
+**Requirements**:
+- Available job listings with full details, photos, and location information
+- Job acceptance/decline functionality with reasons for declining
+- Current assignments view with progress tracking and time estimation
+- Photo upload for work progress and completion documentation with annotations
+- Time tracking tools with start/stop timers and break tracking
+- Cost estimation tools with material and labor breakdown
+- Communication center with tenants and property managers
+- Job history and performance metrics (completion rate, average time, ratings)
+- Route optimization for multiple properties using Google Maps integration
+- Material and cost reporting with receipt upload capability
+- Kanban board view (available jobs, in-progress, completed)
+- Map integration showing job locations and optimal routing
+
+**Technical Specifications**:
+- Filter jobs by contractor assignment and availability
+- Job acceptance/status update functionality with transaction handling
+- Time tracking data storage and calculations
+- Cost and material logging system with receipt attachment
+- Photo documentation with annotation capabilities
+- Communication thread management
+- Performance metrics calculation and display
+- Google Maps API integration for route optimization
+- Geolocation for check-in/check-out functionality
+
+## Technical Infrastructure Requirements
+
+### TypeScript Interfaces and Data Models
+**Priority**: High | **Time**: 2-3 hours
+
+Required interfaces:
+```typescript
+interface MaintenanceRequest {
+  id: string;
+  propertyId: string;
+  tenantId: string;
+  contractorId: string | null;
+  title: string;
+  description: string;
+  category: 'plumbing' | 'electrical' | 'hvac' | 'general' | 'emergency';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'submitted' | 'assigned' | 'in-progress' | 'completed' | 'cancelled';
+  photos: string[];
+  estimatedCost: number | null;
+  actualCost: number | null;
+  scheduledDate: Date | null;
+  completedDate: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  statusHistory: StatusChange[];
+  communications: Communication[];
+}
+
+interface StatusChange {
+  status: string;
+  timestamp: Date;
+  userId: string;
+  userRole: 'landlord' | 'tenant' | 'contractor';
+  notes: string | null;
+}
+
+interface Communication {
+  id: string;
+  userId: string;
+  userRole: 'landlord' | 'tenant' | 'contractor';
+  message: string;
+  timestamp: Date;
+  attachments: string[];
+}
+```
+
+### Firebase Integration Setup
+**Priority**: High | **Time**: 3-4 hours
+
+Required configurations:
+- Update Firestore security rules for maintenance collections with role-based access
+- Create Firestore indexes for efficient queries (property + status + priority + date)
+- Configure Firebase Storage rules for photo uploads with file type validation
+- Set up Cloud Functions for automated notifications and status transitions
+
+### Enhanced maintenanceService.ts
+**Priority**: High | **Time**: 4-5 hours
+
+Required functionality:
+- Real-time listener management with proper cleanup
+- Bulk operations support with transaction handling
+- Photo upload and management with compression
+- Status change tracking with audit trail
+- Communication threading system
+- Performance analytics calculations
+
+## Integration Points
+
+### Existing Components to Leverage
+- BulkOperations.jsx - For bulk maintenance actions
+- ActionFeedback.jsx - For user notifications and feedback
+- MobileTable.jsx - For responsive data display
+- SwipeableCard.jsx - For mobile maintenance card interactions
+- ContextualHelp.jsx - For feature guidance and onboarding
+- ConfirmationDialog.jsx - For critical actions requiring confirmation
+
+### Existing Services to Use
+- maintenanceService.ts - Core maintenance data operations (to be enhanced)
+- authHelpers.js - User role and permission management
+- toastService.ts - Notification management system
+
+### Existing Hooks to Utilize
+- useActionFeedback.js - For user feedback and loading states
+- useKeyboardShortcuts.js - For keyboard navigation and power user features
+- useSwipeGestures.js - For mobile interactions and gesture support
+
+## User Experience Requirements
+
+### Mobile Responsiveness
+- Mobile-first design approach
+- Touch target size minimum 44px
+- Swipe gestures for status changes and navigation
+- Pull-to-refresh for real-time updates
+- Optimized photo upload flow for mobile cameras
+- Offline capability for basic operations
+
+### Accessibility Requirements
+- WCAG 2.1 AA compliance
+- Color contrast ratio 4.5:1 minimum
+- Full keyboard navigation support
+- Screen reader compatibility with proper ARIA labels
+- Focus indicators for all interactive elements
+- High contrast mode support
+
+### Performance Requirements
+- Component load time < 2 seconds
+- Real-time updates appear within 1 second
+- Photo uploads complete in < 30 seconds for 10MB files
+- Large maintenance lists scroll smoothly at 60fps
+- Efficient memory management for real-time listeners
+
+## Success Metrics
+
+### Functionality Metrics
+- All maintenance workflows operate end-to-end without errors
+- Real-time status updates work correctly across all user roles
+- Photo upload and management functions properly with compression
+- Bulk operations integrate seamlessly with existing systems
+- Communication features enable clear coordination between all parties
+
+### Performance Metrics
+- 95% of components load in under 2 seconds
+- Real-time updates appear within 1 second of status changes
+- Photo uploads complete successfully 99% of the time
+- Large maintenance lists (500+ items) scroll smoothly
+- Mobile interactions are responsive with < 100ms touch response
+
+### User Experience Metrics
+- Intuitive navigation requiring minimal training for all user roles
+- Clear visual status indicators reducing support requests
+- Efficient bulk management reducing time spent on administrative tasks
+- Seamless mobile experience with 95% feature parity to desktop
+- Comprehensive accessibility support meeting WCAG 2.1 AA standards
+
+## Technical Constraints
+
+### Technology Stack
+- Frontend: React 18 + TypeScript + Tailwind CSS
+- Backend: Firebase (Firestore, Auth, Storage, Functions)
+- Email: SendGrid API (already configured from Phase 1)
+- File Handling: Firebase Storage with automatic compression
+- Testing: Jest, React Testing Library, Cypress
+
+### Security Requirements
+- Role-based access control for all operations
+- Input validation and sanitization for all user inputs
+- Secure file upload with type and size validation
+- PII protection in communications
+- Comprehensive Firestore security rules
+- API key management and environment variable security
+
+### Performance Constraints
+- Bundle size increase < 500KB for all new components
+- Database query limits: < 500ms for single queries
+- Image compression: < 5 seconds for 5MB images
+- Real-time listener limits: Maximum 10 active listeners per component
+- Memory usage: < 100MB additional for all components
+
+## Testing Requirements
+
+### Unit Testing (90%+ coverage required)
+- Component rendering with different props and user roles
+- User interaction handlers (status updates, photo uploads, form submissions)
+- Data filtering and sorting logic validation
+- Real-time listener management and cleanup
+- Error state handling and recovery
+
+### Integration Testing
+- Firebase Firestore operations and real-time synchronization
+- Photo upload workflows with compression and error handling
+- Role-based access control verification
+- Cross-component communication testing
+- Bulk operations functionality and transaction handling
+
+### End-to-End Testing (Critical paths required)
+- Complete maintenance request workflow from submission to completion
+- Contractor job acceptance and progress tracking
+- Landlord dashboard management and bulk operations
+- Tenant request submission and tracking
+- Real-time updates across multiple user roles simultaneously
+
+## Implementation Timeline
+
+### Week 1: Foundation (16-20 hours)
+- Set up TypeScript interfaces and data models
+- Implement RequestStatusTracker.tsx as foundation component
+- Configure Firebase integration and security rules
+- Create enhanced maintenanceService.ts
+
+### Week 2: Core Components (20-24 hours)
+- Build MaintenanceDashboard.tsx with landlord functionality
+- Create TenantRequestHistory.tsx with tenant features
+- Implement photo upload and communication systems
+
+### Week 3: Advanced Features (16-20 hours)
+- Develop ContractorJobBoard.tsx with contractor workflow
+- Integrate Google Maps for route optimization
+- Add time tracking and cost calculation features
+
+### Week 4: Testing and Polish (16-20 hours)
+- Comprehensive unit and integration testing
+- Accessibility improvements and mobile optimization
+- Performance optimization and caching
+- Documentation and deployment preparation
+
+## Deployment Requirements
+
+### Pre-deployment Checklist
+- All components pass unit tests with 90%+ coverage
+- Integration tests cover all critical workflows
+- Performance metrics meet specified targets
+- Accessibility audit completed and WCAG 2.1 AA compliant
+- Security review passed for all components
+
+### Production Configuration
+- Firebase security rules updated and deployed
+- Firestore indexes created for optimal performance
+- Environment variables configured for production
+- Monitoring and error tracking configured
+- SendGrid templates updated for maintenance notifications
+
+## Risk Mitigation
+
+### Technical Risks
+- Real-time listener performance: Implement debouncing and connection management
+- Photo upload reliability: Add retry logic and progress indicators
+- Mobile performance: Implement lazy loading and image optimization
+- Firebase quota limits: Monitor usage and implement caching strategies
+
+### User Experience Risks
+- Complex interface overwhelming users: Implement progressive disclosure and contextual help
+- Mobile usability issues: Extensive mobile testing and touch optimization
+- Accessibility compliance: Regular accessibility audits and testing
+
+### Business Risks
+- Feature creep: Stick to defined MVP and defer additional features to future phases
+- Timeline pressure: Focus on core functionality first, polish later
+- Integration complexity: Start with simple integrations and enhance iteratively
+
+This PRD defines the complete scope for implementing the missing maintenance management components in PropAgentic's Phase 2, ensuring a comprehensive, user-friendly, and technically robust solution for all stakeholders in the property management workflow. 

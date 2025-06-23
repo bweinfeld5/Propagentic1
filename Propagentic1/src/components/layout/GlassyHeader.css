@@ -1,0 +1,122 @@
+/* GlassyHeader.css - Unified styling for all header variations */
+
+/* Base styles for public transparent header */
+.transparent-header {
+  background-color: rgba(249, 115, 22, 0.8) !important;
+  backdrop-filter: blur(8px) !important;
+  border-bottom: 1px solid rgba(251, 146, 60, 0.2) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  width: 100%;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Scrolled state for public header */
+.header-scrolled {
+  background-color: rgba(249, 115, 22, 0.8) !important;
+  backdrop-filter: blur(8px) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  border-bottom: 1px solid rgba(251, 146, 60, 0.2) !important;
+}
+
+/* Container sizing for all headers */
+.transparent-header .container,
+.dashboard-header .container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* Dashboard header specific styles */
+.dashboard-header {
+  background-color: white;
+  border-bottom: 1px solid rgb(226, 232, 240);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+}
+
+/* Navigation links transitions */
+.nav-link {
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  opacity: 0.8;
+}
+
+/* Button transitions */
+.header-button {
+  transition: all 0.3s ease;
+}
+
+/* Mobile menu transitions */
+.mobile-menu {
+  transition: all 0.3s ease;
+}
+
+/* Notification bell animation */
+@keyframes notification-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.notification-active {
+  animation: notification-pulse 1s infinite;
+}
+
+/* Smooth transitions for all header elements */
+.transparent-header,
+.transparent-header *,
+.dashboard-header,
+.dashboard-header * {
+  transition: all 0.3s ease;
+}
+
+/* Profile dropdown animation */
+@keyframes dropdown-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-menu {
+  animation: dropdown-fade 0.2s ease forwards;
+}
+
+/* Demo mode toggle transitions */
+.demo-toggle {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .transparent-header .container,
+  .dashboard-header .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Smaller text on mobile */
+  .transparent-header .brand-text,
+  .dashboard-header .brand-text {
+    font-size: 1rem;
+  }
+  
+  /* Smaller icons on mobile */
+  .header-icon {
+    transform: scale(0.9);
+  }
+} 

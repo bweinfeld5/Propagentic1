@@ -1,0 +1,51 @@
+{
+  "notifications": {
+    "notification1": {
+      "id": "notification1",
+      "userId": "landlord1",
+      "userRole": "landlord",
+      "type": "maintenance_request",
+      "title": "New Maintenance Request",
+      "message": "A tenant has submitted a new maintenance request for 123 Test Street",
+      "data": {
+        "ticketId": "request1",
+        "propertyId": "property1",
+        "unitNumber": "101"
+      },
+      "read": false,
+      "createdAt": "2023-07-15T10:35:00Z"
+    },
+    "notification2": {
+      "id": "notification2",
+      "userId": "tenant1",
+      "userRole": "tenant",
+      "type": "maintenance_status",
+      "title": "Maintenance Request Update",
+      "message": "Your request for 'Leaking Faucet' has been received and is being processed",
+      "data": {
+        "ticketId": "request1",
+        "propertyId": "property1",
+        "unitNumber": "101",
+        "status": "new"
+      },
+      "read": true,
+      "createdAt": "2023-07-15T10:40:00Z"
+    },
+    "notification3": {
+      "id": "notification3",
+      "userId": "contractor1",
+      "userRole": "contractor",
+      "type": "job_match",
+      "title": "New Job Match",
+      "message": "You have been matched to a new plumbing job at 123 Test Street",
+      "data": {
+        "ticketId": "request1",
+        "propertyId": "property1",
+        "unitNumber": "101",
+        "category": "plumbing"
+      },
+      "read": false,
+      "createdAt": "2023-07-15T11:00:00Z"
+    }
+  }
+}

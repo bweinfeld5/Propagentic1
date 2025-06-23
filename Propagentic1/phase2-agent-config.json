@@ -1,0 +1,351 @@
+{
+  "project": {
+    "name": "PropAgentic Phase 2: Essential Features",
+    "description": "Implement core property management features including maintenance workflow, lease management, rent tracking, and file uploads",
+    "version": "2.0.0",
+    "branch": "feature/phase2-essential-features",
+    "previousPhase": "feature/phase1-core-stability"
+  },
+  "agent": {
+    "role": "Senior Full-Stack Developer",
+    "focus": "Property Management Systems, React/TypeScript, Firebase, File Management",
+    "guidelines": [
+      "Build upon Phase 1 core stability improvements",
+      "Implement comprehensive error handling and loading states",
+      "Follow existing code patterns and UI/UX conventions",
+      "Ensure proper TypeScript type safety throughout",
+      "Implement real-time updates using Firebase subscriptions",
+      "Add comprehensive testing for all new features",
+      "Optimize file upload performance and storage costs"
+    ]
+  },
+  "timeline": {
+    "duration": "2-3 weeks",
+    "totalHours": "80-120 hours",
+    "startDate": "TBD",
+    "milestones": [
+      {
+        "week": 1,
+        "focus": "Maintenance workflow and lease management foundation",
+        "deliverables": ["Enhanced maintenance request system", "Basic lease management"]
+      },
+      {
+        "week": 2,
+        "focus": "Rent tracking and file upload systems",
+        "deliverables": ["Rent collection system", "File upload infrastructure"]
+      },
+      {
+        "week": 3,
+        "focus": "Integration, testing, and polish",
+        "deliverables": ["End-to-end testing", "Performance optimization", "Documentation"]
+      }
+    ]
+  },
+  "tasks": [
+    {
+      "id": "task-1",
+      "title": "Complete Maintenance Request Workflow",
+      "priority": "high",
+      "estimatedHours": "25-30",
+      "dependencies": ["Phase 1 completion"],
+      "subtasks": [
+        {
+          "id": "1.1",
+          "title": "Enhanced Maintenance Request Creation",
+          "hours": 8,
+          "files": [
+            "src/components/maintenance/MaintenanceRequestForm.tsx",
+            "src/components/maintenance/MaintenanceWizard.tsx",
+            "src/pages/maintenance/CreateRequest.tsx"
+          ],
+          "description": "Create comprehensive maintenance request form with photo upload, categorization, and time preferences"
+        },
+        {
+          "id": "1.2", 
+          "title": "Contractor Assignment System",
+          "hours": 10,
+          "files": [
+            "src/components/maintenance/ContractorAssignment.tsx",
+            "src/services/contractorService.ts",
+            "src/components/maintenance/ContractorSearch.tsx"
+          ],
+          "description": "Build contractor database, matching algorithm, and assignment interface"
+        },
+        {
+          "id": "1.3",
+          "title": "Status Tracking & Updates",
+          "hours": 7,
+          "files": [
+            "src/components/maintenance/RequestStatusTracker.tsx",
+            "src/components/maintenance/StatusUpdateModal.tsx",
+            "src/services/maintenanceService.ts"
+          ],
+          "description": "Implement real-time status tracking with notifications and progress photos"
+        }
+      ]
+    },
+    {
+      "id": "task-2",
+      "title": "Lease Management Basics",
+      "priority": "high",
+      "estimatedHours": "20-25",
+      "dependencies": ["task-1"],
+      "subtasks": [
+        {
+          "id": "2.1",
+          "title": "Lease Document Management",
+          "hours": 10,
+          "files": [
+            "src/components/leases/LeaseManager.tsx",
+            "src/components/leases/LeaseUpload.tsx",
+            "src/components/leases/LeaseViewer.tsx",
+            "src/services/leaseService.ts"
+          ],
+          "description": "Create lease document upload, storage, and viewing system"
+        },
+        {
+          "id": "2.2",
+          "title": "Lease Renewal Workflow", 
+          "hours": 8,
+          "files": [
+            "src/components/leases/RenewalNotification.tsx",
+            "src/components/leases/RenewalWizard.tsx",
+            "src/services/renewalService.ts"
+          ],
+          "description": "Implement automated renewal reminders and renewal process"
+        },
+        {
+          "id": "2.3",
+          "title": "Lease Analytics Dashboard",
+          "hours": 7,
+          "files": [
+            "src/components/leases/LeaseAnalytics.tsx",
+            "src/components/charts/LeaseExpirationChart.tsx"
+          ],
+          "description": "Build analytics dashboard for lease tracking and insights"
+        }
+      ]
+    },
+    {
+      "id": "task-3",
+      "title": "Rent Tracking Implementation",
+      "priority": "high", 
+      "estimatedHours": "15-20",
+      "dependencies": ["task-2"],
+      "subtasks": [
+        {
+          "id": "3.1",
+          "title": "Rent Collection System",
+          "hours": 12,
+          "files": [
+            "src/components/rent/RentTracker.tsx",
+            "src/components/rent/PaymentHistory.tsx", 
+            "src/components/rent/LatePaymentManager.tsx",
+            "src/services/rentService.ts"
+          ],
+          "description": "Create comprehensive rent tracking and payment management system"
+        },
+        {
+          "id": "3.2",
+          "title": "Automated Rent Reminders",
+          "hours": 5,
+          "files": [
+            "src/services/rentReminderService.ts",
+            "src/components/rent/ReminderSettings.tsx"
+          ],
+          "description": "Implement automated rent reminder system with SendGrid integration"
+        },
+        {
+          "id": "3.3",
+          "title": "Financial Reporting",
+          "hours": 8,
+          "files": [
+            "src/components/reports/RentReport.tsx",
+            "src/components/reports/FinancialDashboard.tsx",
+            "src/services/reportingService.ts"
+          ],
+          "description": "Build financial reporting and analytics for rent collection"
+        }
+      ]
+    },
+    {
+      "id": "task-4",
+      "title": "File Upload Capabilities",
+      "priority": "medium",
+      "estimatedHours": "20-25",
+      "dependencies": ["task-1"],
+      "subtasks": [
+        {
+          "id": "4.1",
+          "title": "Firebase Storage Integration",
+          "hours": 8,
+          "files": [
+            "src/services/fileUploadService.ts",
+            "src/components/upload/FileUploader.tsx",
+            "src/components/upload/ImageUploader.tsx"
+          ],
+          "description": "Implement robust file upload service with Firebase Storage"
+        },
+        {
+          "id": "4.2",
+          "title": "Document Management System",
+          "hours": 10,
+          "files": [
+            "src/components/documents/DocumentManager.tsx",
+            "src/components/documents/DocumentViewer.tsx",
+            "src/components/documents/DocumentCategories.tsx"
+          ],
+          "description": "Create organized document management with categories and permissions"
+        },
+        {
+          "id": "4.3",
+          "title": "Photo Management for Maintenance",
+          "hours": 7,
+          "files": [
+            "src/components/maintenance/PhotoUpload.tsx",
+            "src/components/maintenance/PhotoGallery.tsx"
+          ],
+          "description": "Enhance maintenance requests with advanced photo management"
+        }
+      ]
+    }
+  ],
+  "technicalRequirements": {
+    "frontend": {
+      "framework": "React 18 with TypeScript",
+      "styling": "Tailwind CSS",
+      "stateManagement": "React Context + Custom Hooks",
+      "routing": "React Router v6",
+      "formHandling": "React Hook Form with Zod validation"
+    },
+    "backend": {
+      "database": "Firebase Firestore",
+      "authentication": "Firebase Auth",
+      "storage": "Firebase Storage",
+      "functions": "Firebase Cloud Functions",
+      "email": "SendGrid API"
+    },
+    "fileHandling": {
+      "maxFileSize": "10MB per file",
+      "allowedTypes": ["image/*", "application/pdf", "text/*"],
+      "imageCompression": "Automatic for photos > 1MB",
+      "thumbnailGeneration": "For images and PDFs"
+    }
+  },
+  "databaseSchema": {
+    "collections": [
+      {
+        "name": "maintenanceRequests",
+        "fields": {
+          "id": "string",
+          "propertyId": "string",
+          "tenantId": "string", 
+          "title": "string",
+          "description": "string",
+          "category": "enum",
+          "priority": "enum",
+          "status": "enum",
+          "photos": "array<string>",
+          "contractorId": "string?",
+          "estimatedCost": "number?",
+          "actualCost": "number?",
+          "createdAt": "timestamp",
+          "updatedAt": "timestamp"
+        }
+      },
+      {
+        "name": "leases",
+        "fields": {
+          "id": "string",
+          "propertyId": "string",
+          "tenantId": "string",
+          "startDate": "timestamp",
+          "endDate": "timestamp", 
+          "monthlyRent": "number",
+          "securityDeposit": "number",
+          "documentUrl": "string?",
+          "status": "enum",
+          "createdAt": "timestamp",
+          "updatedAt": "timestamp"
+        }
+      },
+      {
+        "name": "rentPayments",
+        "fields": {
+          "id": "string",
+          "leaseId": "string",
+          "amount": "number",
+          "dueDate": "timestamp",
+          "paidDate": "timestamp?",
+          "status": "enum",
+          "paymentMethod": "enum?",
+          "lateFees": "number",
+          "receiptUrl": "string?",
+          "createdAt": "timestamp"
+        }
+      },
+      {
+        "name": "documents",
+        "fields": {
+          "id": "string",
+          "propertyId": "string",
+          "category": "enum",
+          "title": "string",
+          "fileUrl": "string",
+          "fileType": "string",
+          "fileSize": "number",
+          "uploadedBy": "string",
+          "accessLevel": "enum",
+          "createdAt": "timestamp"
+        }
+      }
+    ]
+  },
+  "testingStrategy": {
+    "unitTests": {
+      "coverage": "90%+",
+      "focus": ["Services", "Utilities", "Custom Hooks"],
+      "tools": ["Jest", "React Testing Library"]
+    },
+    "integrationTests": {
+      "focus": ["Firebase operations", "File uploads", "Email sending"],
+      "tools": ["Firebase Emulator", "MSW"]
+    },
+    "e2eTests": {
+      "criticalPaths": [
+        "Maintenance request submission",
+        "Lease document upload",
+        "Rent payment recording",
+        "File upload and management"
+      ],
+      "tools": ["Cypress", "Playwright"]
+    }
+  },
+  "performanceTargets": {
+    "fileUpload": "< 30 seconds for 10MB files",
+    "pageLoad": "< 2 seconds for all pages",
+    "databaseQueries": "< 500ms for complex queries",
+    "imageCompression": "< 5 seconds for 5MB images"
+  },
+  "securityConsiderations": [
+    "Implement proper file type validation",
+    "Scan uploaded files for malware",
+    "Enforce file size limits",
+    "Implement proper access controls for documents",
+    "Sanitize all user inputs",
+    "Use Firebase Security Rules for data access",
+    "Implement rate limiting for file uploads"
+  ],
+  "deploymentPlan": {
+    "staging": {
+      "branch": "feature/phase2-essential-features",
+      "testing": "Full regression testing",
+      "dataSeeding": "Test data for all new features"
+    },
+    "production": {
+      "strategy": "Blue-green deployment",
+      "rollback": "Automated rollback on error rate > 5%",
+      "monitoring": "Enhanced logging for new features"
+    }
+  }
+} 

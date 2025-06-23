@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug React App</title>
+</head>
+<body>
+  <h1>Debug React App</h1>
+  <p>If you can see this page at <a href="http://localhost:3000/debug.html">http://localhost:3000/debug.html</a>, the server is working.</p>
+  
+  <h2>Test Main App</h2>
+  <p>Now try the main React app at <a href="http://localhost:3000">http://localhost:3000</a></p>
+  
+  <h2>Console Check</h2>
+  <p>Open browser developer tools (F12) and check the Console tab for any errors.</p>
+  
+  <script>
+    console.log('Debug page loaded successfully');
+    
+    // Test fetch to see if we can reach the main app
+    fetch('/')
+      .then(response => {
+        console.log('Main app status:', response.status);
+        if (response.ok) {
+          console.log('✅ Main app is responding');
+        } else {
+          console.log('❌ Main app returned status:', response.status);
+        }
+      })
+      .catch(error => {
+        console.log('❌ Error reaching main app:', error);
+      });
+  </script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+functions/src/emailSequences.js:  // Add your email service configuration here
+functions/src/emailSequences.js:  apiKey: functions.config().email?.api_key,
+functions/src/emailSequences.js: * Welcome email sequences for different user roles
+functions/src/emailSequences.js:          <p>If you have any questions, just reply to this email or contact our support team.</p>
+functions/src/emailSequences.js:      If you have any questions, just reply to this email or contact our support team.
+functions/src/emailSequences.js: * Cloud Function: Trigger welcome email sequence when user completes registration
+functions/src/emailSequences.js:      // Get the appropriate email sequence for the user role
+functions/src/emailSequences.js:        console.log(`No email sequence found for role: ${userRole}`);
+functions/src/emailSequences.js:      // Schedule all emails in the sequence
+functions/src/emailSequences.js:      sequence.forEach((email, index) => {
+functions/src/emailSequences.js:          now.seconds + Math.floor(email.delay / 1000),
+functions/src/emailSequences.js:        const emailDoc = db.collection('scheduled_emails').doc();
+functions/src/emailSequences.js:        batch.set(emailDoc, {
+functions/src/emailSequences.js:          userEmail: userData.email,
+functions/src/emailSequences.js:          templateId: email.templateId,
+functions/src/emailSequences.js:          subject: email.subject,
+functions/src/emailSequences.js:          type: email.type,
+functions/src/emailSequences.js:      console.log(`Scheduled ${sequence.length} emails for user ${userId} (${userRole})`);
+functions/src/emailSequences.js:        emailCount: sequence.length,
+functions/src/emailSequences.js: * Cloud Function: Process scheduled emails
+functions/src/emailSequences.js:      // Get emails that are ready to be sent
+functions/src/emailSequences.js:        .collection('scheduled_emails')
+functions/src/emailSequences.js:        console.log('No emails to process');
+functions/src/emailSequences.js:      const emailPromises = query.docs.map(async (doc) => {
+functions/src/emailSequences.js:        const emailData = doc.data();
+functions/src/emailSequences.js:          // Send the email
+functions/src/emailSequences.js:          await sendEmail(emailData);
+functions/src/emailSequences.js:          console.log(`Email sent: ${emailData.templateId} to ${emailData.userEmail}`);
+functions/src/emailSequences.js:            event: 'welcome_email_sent',
+functions/src/emailSequences.js:            userId: emailData.userId,
+functions/src/emailSequences.js:            templateId: emailData.templateId,
+functions/src/emailSequences.js:            userRole: emailData.userRole,
+functions/src/emailSequences.js:          console.error(`Error sending email ${doc.id}:`, error);
+functions/src/emailSequences.js:      await Promise.all(emailPromises);
+functions/src/emailSequences.js:      console.log(`Processed ${query.docs.length} emails`);
+functions/src/emailSequences.js:      console.error('Error processing scheduled emails:', error);
+functions/src/emailSequences.js: * Helper function to send email
+functions/src/emailSequences.js:async function sendEmail(emailData) {
+functions/src/emailSequences.js:  const template = EMAIL_TEMPLATES[emailData.templateId];
+functions/src/emailSequences.js:    throw new Error(`Template not found: ${emailData.templateId}`);
+functions/src/emailSequences.js:    firstName: emailData.firstName,
+functions/src/emailSequences.js:    dashboardUrl: `https://app.propagentic.com/${emailData.userRole}/dashboard`
+functions/src/emailSequences.js:  // Use Firebase Extension to send email
+functions/src/emailSequences.js:      to: emailData.userEmail,
+functions/src/emailSequences.js:        subject: emailData.subject,
+functions/src/emailSequences.js:        userId: emailData.userId,
+functions/src/emailSequences.js:        templateId: emailData.templateId,
+functions/src/emailSequences.js:        userRole: emailData.userRole,
+functions/src/emailSequences.js:        sequenceIndex: emailData.sequenceIndex,
+functions/src/emailSequences.js:        type: emailData.type
+functions/src/emailSequences.js:    console.log(`Email queued successfully: ${emailData.templateId} to ${emailData.userEmail}`);
+functions/src/emailSequences.js:    console.error(`Error queueing email: ${error.message}`);
+functions/src/emailSequences.js: * Cloud Function: Manual email sequence management
+functions/src/emailSequences.js:        // Pause remaining emails for a user
+functions/src/emailSequences.js:        await db.collection('scheduled_emails')
+functions/src/emailSequences.js:        // Resume paused emails for a user
+functions/src/emailSequences.js:        await db.collection('scheduled_emails')
+functions/src/emailSequences.js:        // Skip a specific email
+functions/src/emailSequences.js:          await db.collection('scheduled_emails')
+functions/src/emailSequences.js:    console.error('Error managing email sequence:', error);
+functions/src/emailSequences.js:    throw new functions.https.HttpsError('internal', 'Failed to manage email sequence');
+functions/src/emailSequences.js: * Cloud Function: Get email sequence status for a user
+functions/src/emailSequences.js:    const snapshot = await db.collection('scheduled_emails')
+functions/src/emailSequences.js:    const emails = snapshot.docs.map(doc => ({
+functions/src/emailSequences.js:    return { emails };
+functions/src/emailSequences.js:    console.error('Error getting email sequence status:', error);
+functions/src/emailSequences.js:    throw new functions.https.HttpsError('internal', 'Failed to get email sequence status');
+functions/src/index.ts:// Import and export email invite function
+functions/src/index.ts:console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications).");
+functions/src/inviteCode.js: * This function allows tenants to use invite codes as an alternative to email invitations
+functions/src/inviteCode.ts:  email?: string;
+functions/src/inviteCode.ts:  const { propertyId, unitId, email, expirationDays = 7 } = data;
+functions/src/inviteCode.ts:      email: email || undefined,
+functions/src/inviteCode.ts:      restrictedEmail: inviteCodeData.email || null
+functions/src/inviteCode.ts:      // Check if email restriction applies and matches user's email
+functions/src/inviteCode.ts:      if (inviteCodeData.email) {
+functions/src/inviteCode.ts:        if (userRecord.email?.toLowerCase() !== inviteCodeData.email.toLowerCase()) {
+functions/src/inviteCode.ts:            `This invite code is restricted to ${inviteCodeData.email}.`
+functions/src/inviteTriggers.ts:      // Optional: Update invite status to 'error_missing_email'?
+functions/src/inviteTriggers.ts:      // await snapshot.ref.update({ status: 'error_missing_email', errorDetails: 'Tenant email missing.' });
+functions/src/inviteTriggers.ts:      const userQuery = usersRef.where('email', '==', tenantEmail).limit(1);
+functions/src/inviteTriggers.ts:        console.warn(`Invite ${inviteId}: No user found with email ${tenantEmail}. Notification not created.`);
+functions/src/inviteTriggers.ts:        // await snapshot.ref.update({ status: 'error_user_not_found', errorDetails: 'Tenant email not registered.'});
+functions/src/inviteTriggers.ts:      console.log(`Invite ${inviteId}: Found user UID ${tenantUid} for email ${tenantEmail}`);
+functions/src/inviteTriggers.ts:      console.error(`Invite ${inviteId}: Error querying users collection for email ${tenantEmail}:`, error);
+functions/src/invites.ts:import * as nodemailer from 'nodemailer';
+functions/src/invites.ts:// Initialize nodemailer transporter.
+functions/src/invites.ts:// IMPORTANT: Replace with your actual email service configuration.
+functions/src/invites.ts:// const mailTransport = nodemailer.createTransport({
+functions/src/invites.ts://     user: functions.config().gmail?.email || 'YOUR_GMAIL_EMAIL',
+functions/src/invites.ts:      console.error('Invalid invite data or missing email:', inviteData);
+functions/src/invites.ts:        emailSentAt: admin.firestore.FieldValue.serverTimestamp(),
+functions/src/invites.ts:    // 3. Send the invitation email via Firebase Extension
+functions/src/invites.ts:    // Create email document for Firebase Extension
+functions/src/invites.ts:    const emailData = {
+functions/src/invites.ts:              <p>This is an automated message from PropAgentic. Please do not reply to this email.</p>
+functions/src/invites.ts:      // Add email to the mail collection for Firebase Extension to process
+functions/src/invites.ts:      await db.collection('mail').add(emailData);
+functions/src/invites.ts:      console.log('Invitation email queued via Firebase Extension for:', tenantEmail, 'with invite ID:', inviteId);
+functions/src/invites.ts:      console.error('Error queuing email via Firebase Extension:', error);
+functions/src/invites.ts:      // Update the document to reflect the email failure
+functions/src/invites.ts:        error: 'Failed to queue email.',
+functions/src/notifyAssignedContractor.ts: * This function sends emails and optional push notifications to the assigned contractor
+functions/src/notifyAssignedContractor.ts:  email?: string;
+functions/src/notifyAssignedContractor.ts:    // Check if we should send an email notification
+functions/src/notifyAssignedContractor.ts:    if (contractorData.email) {
+functions/src/notifyAssignedContractor.ts:        contractorData.email,
+functions/src/notifyAssignedContractor.ts: * Send an email notification to the assigned contractor
+functions/src/notifyAssignedContractor.ts:async function sendEmailNotification(email: string, name: string, data: Record<string, any>): Promise<void> {
+functions/src/notifyAssignedContractor.ts:    logger.info(`Attempting to send email to ${email} for ${name} about ticket ${data.ticketId}`);
+functions/src/notifyAssignedContractor.ts:    // Using Firebase Extensions for email
+functions/src/notifyAssignedContractor.ts:      to: email,
+functions/src/notifyAssignedContractor.ts:    logger.info(`Email queued successfully for ${email}`);
+functions/src/notifyAssignedContractor.ts:    logger.error(`Error sending email notification to ${email}:`, error?.message || error);
+functions/src/notifyAssignedContractor.ts:    // Don't rethrow, just log the error for email sending
+functions/src/stripe/index.ts:    email: userEmail,
+functions/src/stripe/index.ts:    const accountId = await getOrCreateStripeAccount(userId, userData?.email || context.auth.token.email);
+functions/src/userRelationships.ts:  // Basic email format check (can be improved)
+functions/src/userRelationships.ts:      logger.error("sendPropertyInvite: Invalid tenant email format.", { email: tenantEmail });
+functions/src/userRelationships.ts:      throw new HttpsError("invalid-argument", "Invalid tenant email format provided.");
+functions/src/userRelationships.ts:      tenantEmail: tenantEmail.toLowerCase(), // Store email in lowercase for consistency
+functions/src/userRelationships.ts:  const tenantEmail = request.auth.token.email;
+functions/src/userRelationships.ts:      // Verify tenant email matches the invite
+functions/src/userRelationships.ts:        logger.warn(`Permission Denied: Invite email (${inviteData.tenantEmail}) != Auth email (${tenantEmail}) for invite ${inviteId}`);
+functions/src/userRelationships.ts:  const tenantEmail = request.auth.token.email;
+functions/src/userRelationships.ts:            logger.warn(`Permission Denied: Invite email (${inviteData.tenantEmail}) != Auth email (${tenantEmail}) for invite ${inviteId}`);

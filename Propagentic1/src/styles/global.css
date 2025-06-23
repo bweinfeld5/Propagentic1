@@ -1,0 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Display:wght@400;600;700&display=swap');
+
+html {
+  font-family: 'Noto Sans Display', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+} 

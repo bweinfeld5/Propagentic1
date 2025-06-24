@@ -27,7 +27,7 @@ import EnhancedMaintenancePage from './pages/tenant/EnhancedMaintenancePage';
 import PublicPropertyDashboardDemo from './pages/PublicPropertyDashboardDemo';
 import DemoShowcase from './pages/DemoShowcase';
 import TestPage from './pages/TestPage';
-import InviteAcceptancePage from './pages/InviteAcceptancePage';
+import InviteAcceptancePage from './pages/tenant/InviteAcceptancePage';
 
 // Lazy load page components
 const LandingPage = lazy(() => import('./components/landing/LandingPage.jsx'));
@@ -51,6 +51,7 @@ const SVGTest = lazy(() => import('./components/branding/SVGTest'));
 const BlueprintTest = lazy(() => import('./components/testing/BlueprintTest'));
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
 const ContractorEstimateReadinessDemo = lazy(() => import('./components/landlord/ContractorEstimateReadinessDemo.jsx'));
+const TenantDataTest = lazy(() => import('./components/test/TenantDataTest.jsx'));
 
 // Route Guards
 const PrivateRoute = ({ children }) => {
@@ -203,12 +204,13 @@ function App() {
                                 <Route path="/svg-test" element={<SVGTest />} />
                                 <Route path="/blueprint-test" element={<BlueprintTest />} />
                                 <Route path="/test" element={<PrivateRoute><TestPage /></PrivateRoute>} />
+                                <Route path="/test/tenant-data" element={<PrivateRoute><TenantDataTest /></PrivateRoute>} />
                                 <Route path="/login" element={<LoginPage />} />
                                 <Route path="/register" element={<RegisterPage />} />
                                 <Route path="/signup" element={<RegisterPage />} />
                                 <Route path="/forgot-password" element={<ForgotPassword />} />
                                 <Route path="/auth" element={<AuthPage />} />
-                                <Route path="/invite" element={<InviteAcceptancePage />} />
+                                <Route path="/invite/:code" element={<InviteAcceptancePage />} />
                                 <Route path="/dashboard" element={<PrivateRoute><RoleBasedRedirect /></PrivateRoute>} />
                                 <Route path="/tenant/dashboard" element={<PrivateRoute><EnhancedTenantDashboard /></PrivateRoute>} />
                                 <Route path="/tenant/dashboard/legacy" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />

@@ -110,4 +110,4 @@ poetry.lock
 
 # Backup files
 *.bak
-*.backup 
+*.backup agents/serviceAccountKey.json

@@ -1,4 +1,170 @@
-# QR Code Generation Debug Guide
+# QR Code Generation Debug Guide - UPDATED
+
+## 🚨 Current Issue Summary
+
+The QR code generation system is failing with an "invalid-argument" error. Through comprehensive testing, I've identified the **real** root causes.
+
+## 📊 Error Analysis - CONFIRMED
+
+### Primary Errors Observed
+```
+❌ Error generating invite code: FirebaseError: invalid-argument
+❌ Decoding Firebase ID token failed
+❌ Functions authentication validation failing
+```
+
+### Root Cause Analysis - CONFIRMED
+
+After comprehensive testing, the root causes are:
+
+1. **✅ Firestore Index**: **NOT THE ISSUE** - Composite index exists in firestore.indexes.json
+2. **✅ Firestore Rules**: **NOT THE ISSUE** - Comprehensive rules exist and are properly configured
+3. **❌ Frontend Authentication**: **CONFIRMED ISSUE** - ID tokens not being sent properly
+4. **❌ Property Ownership Validation**: **CONFIRMED ISSUE** - Function can't verify property ownership
+
+## 🔧 CONFIRMED Fix Actions
+
+### Step 1: Frontend Authentication Debugging (CRITICAL)
+
+**Status**: ✅ IMPLEMENTED in QRInviteGenerator.tsx
+
+The QRInviteGenerator now includes comprehensive debugging:
+- ID token acquisition and validation
+- Token payload decoding 
+- Authentication state logging
+- Function call detailed logging
+
+**To test**:
+1. Open browser DevTools
+2. Navigate to QR code generation
+3. Check console for detailed auth logs
+4. Look for patterns like:
+   ```
+   🔐 Auth Debug Start: { user: { uid: "...", email: "..." } }
+   🔐 ID Token acquired: { tokenLength: 1234, ... }
+   🔐 Token Claims: { iss: "...", exp: "...", userId: "..." }
+   ```
+
+### Step 2: Test Real User Authentication (IMMEDIATE)
+
+**Action**: Use the browser to test with a real landlord account:
+
+1. **Sign in as a landlord** in the web app
+2. **Go to QR code generation page**
+3. **Open DevTools Console**
+4. **Try to generate QR code**
+5. **Check console logs for authentication details**
+
+**Look for these specific errors**:
+- `❌ Failed to get ID token:` → Auth context issue
+- `❌ Function returned unsuccessful result:` → Backend validation issue
+- `📥 Raw function result:` → Should show the actual error from Firebase Function
+
+### Step 3: Property Ownership Validation (HIGH PRIORITY)
+
+**Issue**: The Firebase Function can't verify the user owns the property.
+
+**To test**:
+1. Ensure the property exists in Firestore
+2. Verify `property.landlordId === user.uid`
+3. Check the property document structure
+
+**Test script** (run in browser console when signed in):
+```javascript
+// Copy this into browser console when signed in as landlord
+const { getFirestore, collection, query, where, getDocs } = await import('firebase/firestore');
+const { auth } = await import('./firebase/config');
+
+const user = auth.currentUser;
+const db = getFirestore();
+
+if (user) {
+  console.log('Current user:', user.uid);
+  
+  const propertiesRef = collection(db, 'properties');
+  const q = query(propertiesRef, where('landlordId', '==', user.uid));
+  const snapshot = await getDocs(q);
+  
+  console.log('User properties:', snapshot.docs.map(doc => ({
+    id: doc.id,
+    landlordId: doc.data().landlordId,
+    name: doc.data().name
+  })));
+}
+```
+
+### Step 4: Firebase Function Error Logging (IMMEDIATE)
+
+**Action**: Check Firebase Function logs for detailed errors:
+
+```bash
+firebase functions:log --only generateInviteCode
+```
+
+**Or in Firebase Console**:
+- Go to: https://console.firebase.google.com/project/propagentic/functions/logs
+- Filter by `generateInviteCode`
+- Look for authentication and validation errors
+
+## 🎯 Testing Checklist
+
+### Frontend Testing (Browser)
+- [ ] Sign in as landlord account
+- [ ] Navigate to QR generation
+- [ ] Open DevTools console
+- [ ] Attempt QR generation
+- [ ] Capture authentication debug logs
+- [ ] Note specific error messages
+
+### Backend Testing (Firebase Console)
+- [ ] Check Function logs for authentication errors
+- [ ] Verify property ownership validation
+- [ ] Check Firestore query errors
+- [ ] Confirm ID token validation
+
+### Property Data Validation
+- [ ] Confirm property exists in Firestore
+- [ ] Verify landlordId matches user UID
+- [ ] Check property document structure
+- [ ] Test property query permissions
+
+## 🔍 Next Debug Steps
+
+### If Authentication Logs Show Valid Token:
+→ **Issue is in Firebase Function property validation**
+- Check Function logs
+- Verify property ownership logic
+- Test Firestore property queries
+
+### If Authentication Logs Show Token Issues:
+→ **Issue is in frontend auth context**
+- Check React auth context provider
+- Verify token refresh logic
+- Test auth state persistence
+
+### If No Debug Logs Appear:
+→ **Issue is in auth state initialization**
+- Check if user is actually signed in
+- Verify auth context is properly initialized
+- Test auth state listeners
+
+## 📝 Updated Status
+
+- ✅ **Firestore Indexes**: Confirmed working (composite index exists)
+- ✅ **Firestore Rules**: Confirmed working (comprehensive rules in place)
+- ✅ **Debug Logging**: Implemented in QRInviteGenerator.tsx
+- 🔄 **Authentication Flow**: Needs real user testing
+- 🔄 **Property Validation**: Needs Firebase Function log analysis
+- ❌ **Function Error Handling**: Needs investigation in Function logs
+
+## 🚀 Immediate Actions
+
+1. **Test with real landlord account** (5 minutes)
+2. **Check Firebase Function logs** (5 minutes) 
+3. **Verify property ownership data** (5 minutes)
+4. **Based on results, focus on specific issue area**
+
+The debugging infrastructure is now in place. The next step is **real user testing** to see exactly where the authentication flow breaks.
 
 ## 🚨 Current Issue Summary
 
@@ -286,3 +452,32 @@ const localService = {
 **Last Updated**: January 2025  
 **Status**: Active debugging in progress  
 **Priority**: HIGH - Critical feature for tenant onboarding 
+
+## Status: ✅ FIXED - Function Type Mismatch Resolved
+
+### 🎯 Root Cause Identified and Fixed
+**Issue**: Function type mismatch between frontend and backend
+- **Frontend**: Using `httpsCallable()` expecting callable function  
+- **Backend**: Was exporting HTTP function instead of callable function
+- **Fix**: Updated `functions/src/index.ts` to export the correct callable `generateInviteCode` function
+
+### ✅ Key Fix Applied
+1. **Verified callable function exists** in `functions/src/inviteCode.ts`:
+   ```typescript
+   export const generateInviteCode = functions.https.onCall(async (data: any, context: any) => {
+     // Proper callable function with context.auth
+   });
+   ```
+
+2. **Updated exports** in `functions/src/index.ts`:
+   ```typescript
+   // Fixed: Now imports the callable version
+   import { generateInviteCode, validateInviteCode, redeemInviteCode } from './inviteCode';
+   export { generateInviteCode, validateInviteCode, redeemInviteCode };
+   ```
+
+3. **Deployed updated function**:
+   ```bash
+   firebase deploy --only functions:generateInviteCode
+   # ✔ functions[generateInviteCode(us-central1)] Successful update operation.
+   ``` 

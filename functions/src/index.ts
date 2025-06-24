@@ -60,7 +60,7 @@ import { sendPropertyInvitationEmail, sendPropertyInvitationEmailManual } from '
 export { sendPropertyInvitationEmail, sendPropertyInvitationEmailManual };
 
 // Import and export invite code functions
-import { generateInviteCodeHttp, validateInviteCode, redeemInviteCode } from './inviteCode';
-export { generateInviteCodeHttp as generateInviteCode, validateInviteCode, redeemInviteCode };
+import { generateInviteCode, validateInviteCode, redeemInviteCode } from './inviteCode';
+export { generateInviteCode, validateInviteCode, redeemInviteCode };
 
 logger.info("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tenant service, property invitation notifications, invite codes, tests).");

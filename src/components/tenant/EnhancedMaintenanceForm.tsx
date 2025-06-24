@@ -14,8 +14,6 @@ import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, callFunction } from '../../firebase/config';
 import dataService from '../../services/dataService';
-import { createMaintenanceRequest } from '../../services/firestore/maintenanceService';
-import { MaintenanceCategory, MaintenancePriority } from '../../models/MaintenanceRequest';
 
 interface EnhancedMaintenanceFormProps {
   propertyId?: string;
@@ -252,26 +250,10 @@ const EnhancedMaintenanceForm: React.FC<EnhancedMaintenanceFormProps> = ({
     setError('');
 
     try {
-      // Handle test mode submissions
+      // Log test mode but don't skip Firebase submission unless explicitly in demo mode
       if (isTestMode) {
-        console.warn('Test mode: Maintenance request submission simulated');
-        toast.success('Test maintenance request submitted successfully! (No actual data saved)');
-        
-        // Simulate a delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Call onSuccess callback or navigate
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          navigate('/tenant/dashboard', { 
-            state: { 
-              showSuccessMessage: true,
-              message: 'Test maintenance request submitted successfully!'
-            }
-          });
-        }
-        return;
+        console.warn('Test mode detected but proceeding with real Firebase submission');
+        console.log('demoMode=false - submitting real data to Firebase');
       }
 
       // Upload photos to Firebase Storage
@@ -284,40 +266,45 @@ const EnhancedMaintenanceForm: React.FC<EnhancedMaintenanceFormProps> = ({
         photoUrls.push(downloadUrl);
       }
 
-      // Create maintenance request using the proper service
-      const requestData = {
-        propertyId: selectedProperty.id,
-        propertyName: selectedProperty.name || selectedProperty.nickname || 'Property',
-        propertyAddress: `${selectedProperty.streetAddress || ''} ${selectedProperty.city || ''} ${selectedProperty.state || ''}`.trim() || 'Address not available',
+      // Create maintenance ticket - save to 'tickets' collection
+      const ticketData = {
         tenantId: currentUser.uid,
         tenantName: currentUser.displayName || 'Unknown Tenant',
         tenantEmail: currentUser.email || '',
-        title: formData.issueTitle.trim(),
+        propertyId: selectedProperty.id,
+        propertyName: selectedProperty.name || selectedProperty.nickname || 'Property',
+        propertyAddress: `${selectedProperty.streetAddress || ''} ${selectedProperty.city || ''} ${selectedProperty.state || ''}`.trim() || 'Address not available',
+        unitNumber: selectedProperty.unitNumber || '',
+        issueTitle: formData.issueTitle.trim(),
         description: formData.description.trim(),
-        category: (formData.category || 'other') as MaintenanceCategory,
-        priority: (formData.urgency === 'emergency' ? 'urgent' : formData.urgency) as MaintenancePriority,
-        unitNumber: selectedProperty.unitNumber,
-        specificLocation: formData.location.trim() || undefined,
+        category: formData.category || 'other',
+        urgency: formData.urgency,
+        priority: formData.urgency === 'emergency' ? 'urgent' : formData.urgency,
+        location: formData.location.trim() || '',
+        photos: photoUrls,
+        availabilityNotes: formData.availabilityNotes.trim() || '',
         isEmergency: formData.urgency === 'emergency',
-        photos: photoUrls
+        status: 'pending_classification',
+        submittedBy: currentUser.uid,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       };
 
-      console.log('🔄 Submitting maintenance request to Firebase:', requestData);
-      console.log('📍 Using maintenanceService.createMaintenanceRequest');
+      console.log('🔄 Submitting to "tickets" collection:', ticketData);
       console.log('👤 Current user:', currentUser.uid);
       console.log('🏠 Property:', selectedProperty);
 
-      const newRequest = await createMaintenanceRequest(requestData);
+      const docRef = await addDoc(collection(db, 'tickets'), ticketData);
       
-      console.log('✅ Maintenance request submitted successfully with ID:', newRequest.id);
+      console.log('✅ Document written with ID:', docRef.id);
 
       // Trigger AI classification if available
       try {
-        console.log('🤖 Attempting to trigger AI classification for request:', newRequest.id);
-        await callFunction('classifyMaintenanceRequest', { ticketId: newRequest.id });
+        console.log('🤖 Attempting to trigger AI classification for ticket:', docRef.id);
+        await callFunction('classifyMaintenanceRequest', { ticketId: docRef.id });
         console.log('✅ AI classification triggered successfully');
       } catch (classificationError) {
-        console.warn('⚠️ AI classification failed, but request was created:', classificationError);
+        console.warn('⚠️ AI classification failed, but ticket was created:', classificationError);
       }
 
       toast.success('Maintenance request submitted successfully!');

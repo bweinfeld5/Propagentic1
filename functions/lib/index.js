@@ -33,18 +33,17 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.redeemInviteCode = exports.validateInviteCode = exports.generateInviteCode = exports.sendPropertyInvitationEmailManual = exports.sendPropertyInvitationEmail = exports.searchTenants = exports.getAllTenants = exports.simpleTest = exports.testPing = exports.testSendGrid = exports.sendEmail = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
+exports.simpleTest = exports.testPing = exports.testSendGrid = exports.sendEmail = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
+const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
-const https_1 = require("firebase-functions/v2/https");
-const logger = __importStar(require("firebase-functions/logger"));
 // Initialize Firebase Admin SDK
 if (!admin.apps.length) {
     admin.initializeApp();
 }
-logger.info("🔥 Loading essential functions...");
+console.log("🔥 Loading essential functions...");
 // Basic Ping Function
-exports.ping = (0, https_1.onCall)(async () => {
-    logger.info("Ping function invoked.");
+exports.ping = functions.https.onCall(async () => {
+    console.log("Ping function invoked.");
     return { message: "pong", timestamp: Date.now() };
 });
 // Import and export user relationship functions (property invites)
@@ -71,18 +70,5 @@ Object.defineProperty(exports, "testSendGrid", { enumerable: true, get: function
 Object.defineProperty(exports, "testPing", { enumerable: true, get: function () { return testSendGrid_1.testPing; } });
 const simpleTest_1 = require("./simpleTest");
 Object.defineProperty(exports, "simpleTest", { enumerable: true, get: function () { return simpleTest_1.simpleTest; } });
-// Import and export tenant service functions
-const tenantService_1 = require("./tenantService");
-Object.defineProperty(exports, "getAllTenants", { enumerable: true, get: function () { return tenantService_1.getAllTenants; } });
-Object.defineProperty(exports, "searchTenants", { enumerable: true, get: function () { return tenantService_1.searchTenants; } });
-// Import and export property invitation notification functions
-const propertyInvitationNotifications_1 = require("./propertyInvitationNotifications");
-Object.defineProperty(exports, "sendPropertyInvitationEmail", { enumerable: true, get: function () { return propertyInvitationNotifications_1.sendPropertyInvitationEmail; } });
-Object.defineProperty(exports, "sendPropertyInvitationEmailManual", { enumerable: true, get: function () { return propertyInvitationNotifications_1.sendPropertyInvitationEmailManual; } });
-// Import and export invite code functions
-const inviteCode_1 = require("./inviteCode");
-Object.defineProperty(exports, "generateInviteCode", { enumerable: true, get: function () { return inviteCode_1.generateInviteCode; } });
-Object.defineProperty(exports, "validateInviteCode", { enumerable: true, get: function () { return inviteCode_1.validateInviteCode; } });
-Object.defineProperty(exports, "redeemInviteCode", { enumerable: true, get: function () { return inviteCode_1.redeemInviteCode; } });
-logger.info("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tenant service, property invitation notifications, invite codes, tests).");
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests).");
 //# sourceMappingURL=index.js.map

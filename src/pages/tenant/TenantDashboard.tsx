@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast, Toaster } from 'react-hot-toast';
-import { Bell, Menu, Home, User, BellIcon, AlertTriangle } from 'lucide-react';
+import { Bell, Menu, Home, User, BellIcon, AlertTriangle, QrCodeIcon } from 'lucide-react';
 import { db } from '../../firebase/config';
 import { collection, query, where, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
 import { PropAgenticMark } from '../../components/brand/PropAgenticMark';
@@ -20,6 +20,8 @@ import inviteService from '../../services/firestore/inviteService';
 import propertyInvitationService from '../../services/firestore/propertyInvitationService';
 import dataService from '../../services/dataService';
 import { getDemoProperty, getDemoMaintenanceTickets, isDemoProperty } from '../../services/demoDataService';
+import { QRScanner } from '../../components/tenant/QRScanner';
+import { redeemInviteCode } from '../../services/inviteCodeService';
 
 interface Ticket {
   id: string;
@@ -58,6 +60,10 @@ const TenantDashboard: React.FC = () => {
   
   // Notification states
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+  
+  // QR Scanner state
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [processingQR, setProcessingQR] = useState(false);
 
   // Redirect if not authenticated or not a tenant
   useEffect(() => {
@@ -259,6 +265,36 @@ const TenantDashboard: React.FC = () => {
     ? tickets 
     : tickets.filter(ticket => ticket.status === filter);
 
+  const handleQRScan = async (scannedCode: string) => {
+    setProcessingQR(true);
+    
+    try {
+      // Extract invite code from QR data
+      let inviteCode = scannedCode;
+      
+      // If it's a URL, extract the code parameter
+      if (scannedCode.includes('/invite/')) {
+        const url = new URL(scannedCode);
+        const pathParts = url.pathname.split('/');
+        inviteCode = pathParts[pathParts.length - 1];
+      } else if (scannedCode.includes('code=')) {
+        const url = new URL(scannedCode);
+        inviteCode = url.searchParams.get('code') || scannedCode;
+      }
+      
+      // Navigate to invite acceptance page with QR source parameter
+      navigate(`/invite/${inviteCode}?source=qr`);
+      
+      setShowQRScanner(false);
+      
+    } catch (error: any) {
+      console.error('Error processing QR code:', error);
+      toast.error('Invalid QR code. Please try scanning again.');
+    } finally {
+      setProcessingQR(false);
+    }
+  };
+
   if (!currentUser || !userProfile) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -428,11 +464,38 @@ const TenantDashboard: React.FC = () => {
                   )}
                 </>
               )}
+
+              {/* Enhanced Action Buttons */}
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  {/* Existing buttons */}
+                  
+                  {/* QR Code Scanner Button */}
+                  <Button
+                    onClick={() => setShowQRScanner(true)}
+                    variant="outline"
+                    className="flex items-center justify-center gap-2 p-4 h-auto"
+                  >
+                    <QrCodeIcon className="w-6 h-6 text-orange-600" />
+                    <div className="text-left">
+                      <div className="font-semibold text-gray-900">Scan QR Code</div>
+                      <div className="text-sm text-gray-600">Join a new property</div>
+                    </div>
+                  </Button>
+                </div>
+              </div>
             </>
           )}
         </div>
       </main>
 
+      {/* QR Scanner Modal */}
+      <QRScanner
+        isOpen={showQRScanner}
+        onClose={() => setShowQRScanner(false)}
+        onScan={handleQRScan}
+        isLoading={processingQR}
+      />
     </div>
   );
 };

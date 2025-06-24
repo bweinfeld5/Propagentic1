@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendPropertyInvitationEmailManual = exports.sendPropertyInvitationEmail = exports.searchTenants = exports.getAllTenants = exports.simpleTest = exports.testPing = exports.testSendGrid = exports.sendPropertyInviteEmail = exports.sendEmail = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
+exports.redeemInviteCode = exports.validateInviteCode = exports.generateInviteCode = exports.sendPropertyInvitationEmailManual = exports.sendPropertyInvitationEmail = exports.searchTenants = exports.getAllTenants = exports.simpleTest = exports.testPing = exports.testSendGrid = exports.sendPropertyInviteEmail = exports.sendEmail = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
 const admin = __importStar(require("firebase-admin"));
 const https_1 = require("firebase-functions/v2/https");
 const logger = __importStar(require("firebase-functions/logger"));
@@ -80,5 +80,10 @@ Object.defineProperty(exports, "searchTenants", { enumerable: true, get: functio
 const propertyInvitationNotifications_1 = require("./propertyInvitationNotifications");
 Object.defineProperty(exports, "sendPropertyInvitationEmail", { enumerable: true, get: function () { return propertyInvitationNotifications_1.sendPropertyInvitationEmail; } });
 Object.defineProperty(exports, "sendPropertyInvitationEmailManual", { enumerable: true, get: function () { return propertyInvitationNotifications_1.sendPropertyInvitationEmailManual; } });
-logger.info("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tenant service, property invitation notifications, tests).");
+// Import and export invite code functions
+const inviteCode_1 = require("./inviteCode");
+Object.defineProperty(exports, "generateInviteCode", { enumerable: true, get: function () { return inviteCode_1.generateInviteCodeHttp; } });
+Object.defineProperty(exports, "validateInviteCode", { enumerable: true, get: function () { return inviteCode_1.validateInviteCode; } });
+Object.defineProperty(exports, "redeemInviteCode", { enumerable: true, get: function () { return inviteCode_1.redeemInviteCode; } });
+logger.info("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tenant service, property invitation notifications, invite codes, tests).");
 //# sourceMappingURL=index.js.map

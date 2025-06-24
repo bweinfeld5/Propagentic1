@@ -59,4 +59,8 @@ export { getAllTenants, searchTenants };
 import { sendPropertyInvitationEmail, sendPropertyInvitationEmailManual } from './propertyInvitationNotifications';
 export { sendPropertyInvitationEmail, sendPropertyInvitationEmailManual };
 
-logger.info("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tenant service, property invitation notifications, tests).");
+// Import and export invite code functions
+import { generateInviteCodeHttp, validateInviteCode, redeemInviteCode } from './inviteCode';
+export { generateInviteCodeHttp as generateInviteCode, validateInviteCode, redeemInviteCode };
+
+logger.info("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tenant service, property invitation notifications, invite codes, tests).");

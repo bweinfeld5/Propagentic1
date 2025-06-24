@@ -27,7 +27,7 @@ import EnhancedMaintenancePage from './pages/tenant/EnhancedMaintenancePage';
 import PublicPropertyDashboardDemo from './pages/PublicPropertyDashboardDemo';
 import DemoShowcase from './pages/DemoShowcase';
 import TestPage from './pages/TestPage';
-import InviteAcceptancePage from './pages/InviteAcceptancePage';
+import InviteAcceptancePage from './pages/tenant/InviteAcceptancePage';
 
 // Lazy load page components
 const LandingPage = lazy(() => import('./components/landing/LandingPage.jsx'));
@@ -210,7 +210,7 @@ function App() {
                                 <Route path="/signup" element={<RegisterPage />} />
                                 <Route path="/forgot-password" element={<ForgotPassword />} />
                                 <Route path="/auth" element={<AuthPage />} />
-                                <Route path="/invite" element={<InviteAcceptancePage />} />
+                                <Route path="/invite/:code" element={<InviteAcceptancePage />} />
                                 <Route path="/dashboard" element={<PrivateRoute><RoleBasedRedirect /></PrivateRoute>} />
                                 <Route path="/tenant/dashboard" element={<PrivateRoute><EnhancedTenantDashboard /></PrivateRoute>} />
                                 <Route path="/tenant/dashboard/legacy" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />

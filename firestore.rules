@@ -338,5 +338,17 @@ service cloud.firestore {
       // Delete messages if user is the sender
       allow delete: if isSignedIn() && resource.data.senderId == request.auth.uid;
     }
+
+    // Property Tenant Relationships Collection - for associating tenants with properties
+    match /propertyTenantRelationships/{relationshipId} {
+      // Property owners and tenants involved in the relationship can read/access
+      allow read: if isSignedIn() && (
+        isPropertyOwner(resource.data.propertyId) ||
+        resource.data.tenantId == request.auth.uid ||
+        isAdmin()
+      );
+      // Only cloud functions should create/update relationships (via invite redemption)
+      allow write: if false;
+    }
   }
 }

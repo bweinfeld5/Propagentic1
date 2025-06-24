@@ -1143,15 +1143,14 @@ const LandlordDashboard: React.FC = () => {
       )}
 
               {/* Edit Property Modal */}
-        {showEditPropertyModal && (
+        {showEditPropertyModal && editingProperty && (
           <EditPropertyModal
             isOpen={showEditPropertyModal}
             onClose={() => {
               setShowEditPropertyModal(false);
               setEditingProperty(null);
             }}
-            // @ts-ignore - EditPropertyModal is JSX component, type inference issue
-            property={editingProperty}
+            property={editingProperty as any}
             onSuccess={handlePropertyUpdated}
           />
         )}

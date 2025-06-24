@@ -1,42 +1,47 @@
 declare module 'qr-code-styling' {
-  export interface QRCodeStylingOptions {
+  interface QRCodeStylingOptions {
     width?: number;
     height?: number;
-    type?: 'canvas' | 'svg';
     data?: string;
     image?: string;
-    dotsOptions?: {
-      color?: string;
-      type?: 'rounded' | 'dots' | 'classy' | 'classy-rounded' | 'square' | 'extra-rounded';
-    };
-    backgroundOptions?: {
-      color?: string;
-    };
-    imageOptions?: {
-      crossOrigin?: string;
-      margin?: number;
-    };
     margin?: number;
     qrOptions?: {
       typeNumber?: number;
-      mode?: 'Numeric' | 'Alphanumeric' | 'Byte' | 'Kanji';
-      errorCorrectionLevel?: 'L' | 'M' | 'Q' | 'H';
+      mode?: string;
+      errorCorrectionLevel?: string;
+    };
+    imageOptions?: {
+      hideBackgroundDots?: boolean;
+      imageSize?: number;
+      crossOrigin?: string;
+      margin?: number;
+    };
+    dotsOptions?: {
+      color?: string;
+      gradient?: any;
+      type?: string;
+    };
+    backgroundOptions?: {
+      color?: string;
+      gradient?: any;
     };
     cornersSquareOptions?: {
       color?: string;
-      type?: 'dot' | 'square' | 'extra-rounded';
+      gradient?: any;
+      type?: string;
     };
     cornersDotOptions?: {
       color?: string;
-      type?: 'dot' | 'square';
+      gradient?: any;
+      type?: string;
     };
   }
 
   export default class QRCodeStyling {
     constructor(options?: QRCodeStylingOptions);
-    append(container: HTMLElement): void;
-    getRawData(extension?: string): Promise<Blob | null>;
-    download(options?: { name?: string; extension?: string }): Promise<void>;
+    append(element: HTMLElement): void;
     update(options: QRCodeStylingOptions): void;
+    download(options?: { name?: string; extension?: string }): void;
+    getRawData(extension?: string): Promise<Blob>;
   }
 } 

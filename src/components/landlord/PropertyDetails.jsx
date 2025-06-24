@@ -44,6 +44,8 @@ import {
   getPropertyStatusColor,
   getPropertyTypeLabel
 } from '../../models/Property';
+import ContractorEstimateReadinessIndicator from './ContractorEstimateReadinessIndicator';
+import PropertyDataCompletenessIndicator from './PropertyDataCompletenessIndicator';
 
 const PropertyDetails = ({
   property,
@@ -57,6 +59,18 @@ const PropertyDetails = ({
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   
   const { showConfirmation } = useConfirmationDialog();
+
+  // Handle improving contractor estimate data
+  const handleImproveData = useCallback((property, tradeType = 'all') => {
+    if (tradeType === 'request-estimates') {
+      // Future: Open contractor request flow
+      console.log('Opening contractor estimate request for:', property.id);
+      return;
+    }
+    
+    // Open property edit modal with focus on the specific trade
+    onEdit(property.id, { focusSection: tradeType });
+  }, [onEdit]);
 
   // Handle delete with confirmation
   const handleDelete = useCallback(async () => {
@@ -290,6 +304,8 @@ const PropertyDetails = ({
                 <Tabs>
                   <TabList>
                     <Tab>Details</Tab>
+                    <Tab>Data Quality</Tab>
+                    <Tab>Estimates</Tab>
                     <Tab>Financial</Tab>
                     <Tab>Documents</Tab>
                     <Tab>Notes</Tab>
@@ -468,6 +484,30 @@ const PropertyDetails = ({
                       </div>
                     </TabPanel>
                     
+                    {/* Data Quality Tab */}
+                    <TabPanel>
+                      <div className="p-2">
+                        <PropertyDataCompletenessIndicator
+                          property={property}
+                          onImproveData={() => onEdit?.(property.id)}
+                          compact={false}
+                          showActions={true}
+                        />
+                      </div>
+                    </TabPanel>
+                    
+                    {/* Contractor Estimates Tab */}
+                    <TabPanel>
+                      <div className="p-2">
+                        <ContractorEstimateReadinessIndicator
+                          property={property}
+                          onImproveData={handleImproveData}
+                          compact={false}
+                          showActions={true}
+                        />
+                      </div>
+                    </TabPanel>
+                    
                     {/* Financial Tab */}
                     <TabPanel>
                       <div className="space-y-6 p-2">
@@ -625,8 +665,28 @@ const PropertyDetails = ({
           
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Quick Info */}
+            {/* Data Completeness Indicator */}
             <SlideUp delay={0.3}>
+              <PropertyDataCompletenessIndicator
+                property={property}
+                onImproveData={() => onEdit?.(property.id)}
+                compact={true}
+                showActions={true}
+              />
+            </SlideUp>
+            
+            {/* Contractor Estimate Readiness */}
+            <SlideUp delay={0.4}>
+              <ContractorEstimateReadinessIndicator
+                property={property}
+                onImproveData={handleImproveData}
+                compact={true}
+                showActions={true}
+              />
+            </SlideUp>
+
+            {/* Quick Info */}
+            <SlideUp delay={0.4}>
               <Card>
                 <div className="p-6">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
@@ -679,7 +739,7 @@ const PropertyDetails = ({
             </SlideUp>
             
             {/* Map Placeholder */}
-            <SlideUp delay={0.4}>
+            <SlideUp delay={0.5}>
               <Card>
                 <div className="p-6">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">

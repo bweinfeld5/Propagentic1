@@ -15,7 +15,10 @@ import {
   ArrowTrendingUpIcon,
   UserGroupIcon,
   ChatBubbleLeftRightIcon,
-  CloudArrowUpIcon
+  CloudArrowUpIcon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useDemoMode } from '../../context/DemoModeContext';
@@ -23,6 +26,7 @@ import dataService from '../../services/dataService';
 import CommunicationCenter from '../../components/communication/CommunicationCenter';
 import InviteTenantModal from '../../components/landlord/InviteTenantModal';
 import AddPropertyModal from '../../components/landlord/AddPropertyModal';
+import EditPropertyModal from '../../components/landlord/EditPropertyModal';
 
 // Phase 1.2 Components
 import GlobalSearch from '../../components/search/GlobalSearch';
@@ -133,6 +137,8 @@ const LandlordDashboard: React.FC = () => {
   // Add state for modals
   const [showInviteTenantModal, setShowInviteTenantModal] = useState<boolean>(false);
   const [showAddPropertyModal, setShowAddPropertyModal] = useState<boolean>(false);
+  const [showEditPropertyModal, setShowEditPropertyModal] = useState<boolean>(false);
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
 
   const loadDashboardData = async (): Promise<void> => {
     if (!currentUser) return;
@@ -197,6 +203,38 @@ const LandlordDashboard: React.FC = () => {
   useEffect(() => {
     loadDashboardData();
   }, [currentUser, isDemoMode]);
+
+  // Handle property edit
+  const handleEditProperty = (property: Property): void => {
+    setEditingProperty(property);
+    setShowEditPropertyModal(true);
+  };
+
+  // Handle property delete with confirmation
+  const handleDeleteProperty = async (property: Property): Promise<void> => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${getPropertyName(property)}"? This action cannot be undone.`
+    );
+    
+    if (confirmDelete) {
+      try {
+        await dataService.deleteProperty(property.id);
+        setProperties(prev => prev.filter(p => p.id !== property.id));
+        // Remove from selected items if it was selected
+        setSelectedItems(prev => prev.filter(id => id !== property.id));
+      } catch (error) {
+        console.error('Error deleting property:', error);
+        alert('Failed to delete property. Please try again.');
+      }
+    }
+  };
+
+  // Handle property update after edit
+  const handlePropertyUpdated = (updatedProperty: Property): void => {
+    setProperties(prev => prev.map(p => p.id === updatedProperty.id ? updatedProperty : p));
+    setShowEditPropertyModal(false);
+    setEditingProperty(null);
+  };
 
   // Handle bulk operations
   const handleBulkAction = (action: string, items: any[], values?: any): void => {
@@ -716,28 +754,27 @@ const LandlordDashboard: React.FC = () => {
                 return (
                   <div
                     key={property.id}
-                    className={`p-4 border rounded-lg transition-all cursor-pointer ${
+                    className={`p-4 border rounded-lg transition-all ${
                       selectedItems.includes(property.id)
                         ? 'border-orange-300 bg-gradient-to-r from-orange-100 to-orange-50 shadow-md'
                         : 'border-orange-200 hover:border-orange-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-white'
                     }`}
-                    onClick={() => {
-                      if (selectedItems.includes(property.id)) {
-                        setSelectedItems(prev => prev.filter(id => id !== property.id));
-                      } else {
-                        setSelectedItems(prev => [...prev, property.id]);
-                      }
-                    }}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <input
                           type="checkbox"
                           checked={selectedItems.includes(property.id)}
-                          onChange={() => {}}
+                          onChange={() => {
+                            if (selectedItems.includes(property.id)) {
+                              setSelectedItems(prev => prev.filter(id => id !== property.id));
+                            } else {
+                              setSelectedItems(prev => [...prev, property.id]);
+                            }
+                          }}
                           className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
                         />
-                        <div>
+                        <div className="flex-1">
                           <h4 className="font-semibold text-gray-900">{getPropertyName(property)}</h4>
                           <p className="text-sm text-gray-600">{formatAddress(property)}</p>
                           {property.propertyType && (
@@ -745,15 +782,39 @@ const LandlordDashboard: React.FC = () => {
                           )}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold text-gray-900">
-                          {occupiedUnits}/{units} units
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <div className="font-semibold text-gray-900">
+                            {occupiedUnits}/{units} units
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            ${monthlyRevenue.toLocaleString()}/month
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {units > 0 ? Math.round((occupiedUnits / units) * 100) : 0}% occupied
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-600">
-                          ${monthlyRevenue.toLocaleString()}/month
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {units > 0 ? Math.round((occupiedUnits / units) * 100) : 0}% occupied
+                        <div className="flex items-center gap-2 ml-4">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditProperty(property);
+                            }}
+                            className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit Property"
+                          >
+                            <PencilIcon className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteProperty(property);
+                            }}
+                            className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete Property"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1074,6 +1135,19 @@ const LandlordDashboard: React.FC = () => {
           }}
         />
       )}
+
+              {/* Edit Property Modal */}
+        {showEditPropertyModal && editingProperty && (
+          <EditPropertyModal
+            isOpen={showEditPropertyModal}
+            onClose={() => {
+              setShowEditPropertyModal(false);
+              setEditingProperty(null);
+            }}
+            property={editingProperty}
+            onSuccess={handlePropertyUpdated}
+          />
+        )}
 
       {/* Debug: Data Persistence Diagnostic Panel */}
       {process.env.NODE_ENV === 'development' && (

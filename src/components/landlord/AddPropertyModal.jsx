@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useDemoMode } from '../../context/DemoModeContext';
 import dataService from '../../services/dataService';
+import { getClimateZoneByZip } from '../../services/climateZoneService';
 
 /**
  * Manual Property Addition Modal with Glassmorphism Design
@@ -65,7 +66,52 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
     notes: '',
     availability: 'available',
     
-    // Step 6: Tenant Invitations
+    // Step 6: HVAC Data
+    hvacData: {
+      currentSystems: [],
+      buildingConstruction: '',
+      ceilingHeight: '',
+      windowCount: '',
+      windowType: '',
+      insulationQuality: '',
+      ductworkAccess: '',
+      currentUtilityCosts: '',
+      hvacMaintenanceHistory: [],
+      thermostatType: '',
+      thermostatLocations: []
+    },
+    
+    // Step 7: Plumbing Data
+    plumbingData: {
+      fullBathrooms: '',
+      halfBathrooms: '',
+      kitchens: 1,
+      kitchenettes: '',
+      waterPressureIssues: false,
+      basementAccess: false,
+      crawlSpaceAccess: false,
+      existingPipeMaterial: '',
+      waterHeaterType: '',
+      waterHeaterAge: '',
+      washerDryerHookups: false,
+      plumbingIssueHistory: [],
+      waterQualityIssues: [],
+      fixtureQuality: ''
+    },
+    
+    // Step 8: Electrical Data
+    electricalData: {
+      electricalPanelCapacity: '',
+      electricalPanelAge: '',
+      majorAppliances: [],
+      outdoorElectricalNeeds: [],
+      highDemandFacilities: [],
+      smartHomeFeatures: [],
+      electricalIssueHistory: [],
+      specialElectricalNeeds: []
+    },
+
+    // Step 9: Tenant Invitations
     tenantEmails: [''],
     skipInvites: false
   });
@@ -108,6 +154,24 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
     },
     {
       id: 6,
+      title: 'HVAC Systems',
+      description: 'Heating & cooling details',
+      icon: HomeIcon
+    },
+    {
+      id: 7,
+      title: 'Plumbing Info',
+      description: 'Water & plumbing systems',
+      icon: HomeIcon
+    },
+    {
+      id: 8,
+      title: 'Electrical Details',
+      description: 'Electrical systems',
+      icon: HomeIcon
+    },
+    {
+      id: 9,
       title: 'Invite Tenants',
       description: 'Send invitations (optional)',
       icon: UsersIcon
@@ -200,7 +264,7 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
     if (!validateStep(currentStep)) return;
     
     // If we're on the last step and there are invites to send
-    if (currentStep === 6) {
+    if (currentStep === 9) {
       return handleSendInvites();
     }
     
@@ -209,11 +273,21 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
       return await createPropertyAndFinish();
     }
     
-    // If we're on step 5 and moving to invites
+    // If we're on step 5 and moving to enhanced steps
     if (currentStep === 5 && !formData.skipInvites) {
-      await createPropertyAndContinue();
       setCurrentStep(6);
       return;
+    }
+    
+    // If we're on step 8 and need to proceed to invites or finish
+    if (currentStep === 8) {
+      if (formData.skipInvites) {
+        return await createPropertyAndFinish();
+      } else {
+        await createPropertyAndContinue();
+        setCurrentStep(9);
+        return;
+      }
     }
     
     setIsSubmitting(true);
@@ -232,7 +306,7 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
     setIsSubmitting(true);
     
     try {
-      const propertyData = buildPropertyData();
+      const propertyData = await buildPropertyData();
       const newProperty = await dataService.createProperty(propertyData);
       setCreatedProperty(newProperty);
       console.log('Property created successfully:', newProperty);
@@ -251,7 +325,7 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
     try {
       let property = createdProperty;
       if (!property) {
-        const propertyData = buildPropertyData();
+        const propertyData = await buildPropertyData();
         property = await dataService.createProperty(propertyData);
       }
       
@@ -275,7 +349,17 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
     }
   };
 
-  const buildPropertyData = () => {
+  const buildPropertyData = async () => {
+    // Get climate zone from ZIP code
+    let climateZone = null;
+    try {
+      if (formData.zipCode) {
+        climateZone = await getClimateZoneByZip(formData.zipCode);
+      }
+    } catch (error) {
+      console.warn('Could not determine climate zone:', error);
+    }
+
     // Prepare property data for Firebase
     return {
       // Basic information
@@ -318,6 +402,15 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
       furnished: formData.furnished,
       notes: formData.notes,
       availability: formData.availability,
+      
+      // Enhanced property data for contractor estimates
+      hvacData: {
+        ...formData.hvacData,
+        climateZone: climateZone?.zone || null,
+        climateZoneDescription: climateZone?.description || null
+      },
+      plumbingData: formData.plumbingData,
+      electricalData: formData.electricalData,
       
       // System fields
       status: 'active',
@@ -438,7 +531,52 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
         notes: '',
         availability: 'available',
         
-        // Step 6: Tenant Invitations
+        // Step 6: HVAC Data
+        hvacData: {
+          currentSystems: [],
+          buildingConstruction: '',
+          ceilingHeight: '',
+          windowCount: '',
+          windowType: '',
+          insulationQuality: '',
+          ductworkAccess: '',
+          currentUtilityCosts: '',
+          hvacMaintenanceHistory: [],
+          thermostatType: '',
+          thermostatLocations: []
+        },
+        
+        // Step 7: Plumbing Data
+        plumbingData: {
+          fullBathrooms: '',
+          halfBathrooms: '',
+          kitchens: 1,
+          kitchenettes: '',
+          waterPressureIssues: false,
+          basementAccess: false,
+          crawlSpaceAccess: false,
+          existingPipeMaterial: '',
+          waterHeaterType: '',
+          waterHeaterAge: '',
+          washerDryerHookups: false,
+          plumbingIssueHistory: [],
+          waterQualityIssues: [],
+          fixtureQuality: ''
+        },
+        
+        // Step 8: Electrical Data
+        electricalData: {
+          electricalPanelCapacity: '',
+          electricalPanelAge: '',
+          majorAppliances: [],
+          outdoorElectricalNeeds: [],
+          highDemandFacilities: [],
+          smartHomeFeatures: [],
+          electricalIssueHistory: [],
+          specialElectricalNeeds: []
+        },
+
+        // Step 9: Tenant Invitations
         tenantEmails: [''],
         skipInvites: false
       });
@@ -614,6 +752,12 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
       case 5:
         return renderAdditionalDetails();
       case 6:
+        return renderHVACDetails();
+      case 7:
+        return renderPlumbingDetails();
+      case 8:
+        return renderElectricalDetails();
+      case 9:
         return renderInviteTenants();
       default:
         return null;
@@ -1094,6 +1238,692 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
               : "You can always invite tenants later from your property dashboard."
             }
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  function renderHVACDetails() {
+    const currentSystems = [
+      'Central Air Conditioning',
+      'Central Heating (Gas)',
+      'Central Heating (Electric)',
+      'Heat Pump',
+      'Window AC Units',
+      'Space Heaters',
+      'No Current Systems'
+    ];
+
+    const constructionTypes = [
+      { value: 'frame', label: 'Wood Frame' },
+      { value: 'masonry', label: 'Masonry/Brick' },
+      { value: 'concrete', label: 'Concrete' },
+      { value: 'mixed', label: 'Mixed Construction' }
+    ];
+
+    const windowTypes = [
+      { value: 'single_pane', label: 'Single Pane' },
+      { value: 'double_pane', label: 'Double Pane' },
+      { value: 'energy_efficient', label: 'Energy Efficient' }
+    ];
+
+    const insulationQualities = [
+      { value: 'poor', label: 'Poor' },
+      { value: 'average', label: 'Average' },
+      { value: 'good', label: 'Good' },
+      { value: 'excellent', label: 'Excellent' }
+    ];
+
+    const ductworkAccess = [
+      { value: 'basement', label: 'Basement' },
+      { value: 'crawl_space', label: 'Crawl Space' },
+      { value: 'attic', label: 'Attic' },
+      { value: 'no_access', label: 'No Access' }
+    ];
+
+    return (
+      <div className="space-y-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <h4 className="text-sm font-medium text-blue-800 mb-2">
+            🌡️ HVAC System Information
+          </h4>
+          <p className="text-sm text-blue-700">
+            This information helps contractors provide accurate heating/cooling estimates. All fields are optional but more details = better estimates.
+          </p>
+        </div>
+
+        {/* Current Systems - CRITICAL */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Current Heating/Cooling Systems *
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {currentSystems.map(system => (
+              <label key={system} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.hvacData?.currentSystems?.includes(system) || false}
+                  onChange={(e) => {
+                    const currentSystems = formData.hvacData?.currentSystems || [];
+                    if (e.target.checked) {
+                      updateFormData('hvacData', {
+                        ...formData.hvacData,
+                        currentSystems: [...currentSystems, system]
+                      });
+                    } else {
+                      updateFormData('hvacData', {
+                        ...formData.hvacData,
+                        currentSystems: currentSystems.filter(s => s !== system)
+                      });
+                    }
+                  }}
+                  className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                />
+                <span className="text-sm text-gray-700">{system}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Building Construction - IMPORTANT */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Building Construction Type
+            </label>
+            <select
+              value={formData.hvacData?.buildingConstruction || ''}
+              onChange={(e) => updateFormData('hvacData', {
+                ...formData.hvacData,
+                buildingConstruction: e.target.value
+              })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            >
+              <option value="">Select construction type</option>
+              {constructionTypes.map(type => (
+                <option key={type.value} value={type.value}>{type.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Ceiling Height (feet)
+            </label>
+            <input
+              type="number"
+              min="7"
+              max="20"
+              step="0.5"
+              value={formData.hvacData?.ceilingHeight || ''}
+              onChange={(e) => updateFormData('hvacData', {
+                ...formData.hvacData,
+                ceilingHeight: e.target.value
+              })}
+              placeholder="9"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            />
+          </div>
+        </div>
+
+        {/* Window Information */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Number of Windows
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={formData.hvacData?.windowCount || ''}
+              onChange={(e) => updateFormData('hvacData', {
+                ...formData.hvacData,
+                windowCount: e.target.value
+              })}
+              placeholder="12"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Window Type
+            </label>
+            <select
+              value={formData.hvacData?.windowType || ''}
+              onChange={(e) => updateFormData('hvacData', {
+                ...formData.hvacData,
+                windowType: e.target.value
+              })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            >
+              <option value="">Select window type</option>
+              {windowTypes.map(type => (
+                <option key={type.value} value={type.value}>{type.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Insulation and Access */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Insulation Quality
+            </label>
+            <select
+              value={formData.hvacData?.insulationQuality || ''}
+              onChange={(e) => updateFormData('hvacData', {
+                ...formData.hvacData,
+                insulationQuality: e.target.value
+              })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            >
+              <option value="">Select insulation quality</option>
+              {insulationQualities.map(quality => (
+                <option key={quality.value} value={quality.value}>{quality.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Ductwork Access
+            </label>
+            <select
+              value={formData.hvacData?.ductworkAccess || ''}
+              onChange={(e) => updateFormData('hvacData', {
+                ...formData.hvacData,
+                ductworkAccess: e.target.value
+              })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            >
+              <option value="">Select access type</option>
+              {ductworkAccess.map(access => (
+                <option key={access.value} value={access.value}>{access.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Optional: Current Utility Costs */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Monthly Utility Costs (Optional)
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-3 text-gray-500">$</span>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.hvacData?.currentUtilityCosts || ''}
+              onChange={(e) => updateFormData('hvacData', {
+                ...formData.hvacData,
+                currentUtilityCosts: e.target.value
+              })}
+              placeholder="150"
+              className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            />
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Average monthly heating/cooling costs help contractors understand system efficiency
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  function renderPlumbingDetails() {
+    const pipeMaterials = [
+      { value: 'copper', label: 'Copper' },
+      { value: 'pvc', label: 'PVC' },
+      { value: 'galvanized', label: 'Galvanized Steel' },
+      { value: 'mixed', label: 'Mixed Materials' },
+      { value: 'unknown', label: 'Unknown' }
+    ];
+
+    const waterHeaterTypes = [
+      { value: 'gas', label: 'Gas' },
+      { value: 'electric', label: 'Electric' },
+      { value: 'tankless_gas', label: 'Tankless Gas' },
+      { value: 'tankless_electric', label: 'Tankless Electric' },
+      { value: 'solar', label: 'Solar' },
+      { value: 'heat_pump', label: 'Heat Pump' }
+    ];
+
+    const fixtureQualities = [
+      { value: 'basic', label: 'Basic/Builder Grade' },
+      { value: 'standard', label: 'Standard' },
+      { value: 'premium', label: 'Premium/High-End' }
+    ];
+
+    return (
+      <div className="space-y-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <h4 className="text-sm font-medium text-blue-800 mb-2">
+            🚿 Plumbing System Information
+          </h4>
+          <p className="text-sm text-blue-700">
+            Help contractors understand your plumbing setup for accurate repair and replacement estimates.
+          </p>
+        </div>
+
+        {/* Bathroom Details - CRITICAL */}
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Full Bathrooms *
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={formData.plumbingData?.fullBathrooms || ''}
+              onChange={(e) => updateFormData('plumbingData', {
+                ...formData.plumbingData,
+                fullBathrooms: e.target.value
+              })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            />
+            <p className="text-xs text-gray-500 mt-1">Toilet + sink + shower/tub</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Half Bathrooms
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={formData.plumbingData?.halfBathrooms || ''}
+              onChange={(e) => updateFormData('plumbingData', {
+                ...formData.plumbingData,
+                halfBathrooms: e.target.value
+              })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            />
+            <p className="text-xs text-gray-500 mt-1">Toilet + sink only</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Kitchens *
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={formData.plumbingData?.kitchens || 1}
+              onChange={(e) => updateFormData('plumbingData', {
+                ...formData.plumbingData,
+                kitchens: e.target.value
+              })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            />
+          </div>
+        </div>
+
+        {/* Water System Details */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Existing Pipe Material
+            </label>
+            <select
+              value={formData.plumbingData?.existingPipeMaterial || ''}
+              onChange={(e) => updateFormData('plumbingData', {
+                ...formData.plumbingData,
+                existingPipeMaterial: e.target.value
+              })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            >
+              <option value="">Select pipe material</option>
+              {pipeMaterials.map(material => (
+                <option key={material.value} value={material.value}>{material.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Water Heater Type
+            </label>
+            <select
+              value={formData.plumbingData?.waterHeaterType || ''}
+              onChange={(e) => updateFormData('plumbingData', {
+                ...formData.plumbingData,
+                waterHeaterType: e.target.value
+              })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            >
+              <option value="">Select water heater type</option>
+              {waterHeaterTypes.map(type => (
+                <option key={type.value} value={type.value}>{type.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Water Heater Age and Access */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Water Heater Age (Years)
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="50"
+              value={formData.plumbingData?.waterHeaterAge || ''}
+              onChange={(e) => updateFormData('plumbingData', {
+                ...formData.plumbingData,
+                waterHeaterAge: e.target.value
+              })}
+              placeholder="5"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Fixture Quality
+            </label>
+            <select
+              value={formData.plumbingData?.fixtureQuality || ''}
+              onChange={(e) => updateFormData('plumbingData', {
+                ...formData.plumbingData,
+                fixtureQuality: e.target.value
+              })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            >
+              <option value="">Select fixture quality</option>
+              {fixtureQualities.map(quality => (
+                <option key={quality.value} value={quality.value}>{quality.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Access and Issues */}
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={formData.plumbingData?.basementAccess || false}
+                onChange={(e) => updateFormData('plumbingData', {
+                  ...formData.plumbingData,
+                  basementAccess: e.target.checked
+                })}
+                className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+              />
+              <span className="text-sm font-medium text-gray-700">Basement Access</span>
+            </label>
+
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={formData.plumbingData?.crawlSpaceAccess || false}
+                onChange={(e) => updateFormData('plumbingData', {
+                  ...formData.plumbingData,
+                  crawlSpaceAccess: e.target.checked
+                })}
+                className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+              />
+              <span className="text-sm font-medium text-gray-700">Crawl Space Access</span>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={formData.plumbingData?.waterPressureIssues || false}
+                onChange={(e) => updateFormData('plumbingData', {
+                  ...formData.plumbingData,
+                  waterPressureIssues: e.target.checked
+                })}
+                className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+              />
+              <span className="text-sm font-medium text-gray-700">Known Water Pressure Issues</span>
+            </label>
+
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={formData.plumbingData?.washerDryerHookups || false}
+                onChange={(e) => updateFormData('plumbingData', {
+                  ...formData.plumbingData,
+                  washerDryerHookups: e.target.checked
+                })}
+                className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+              />
+              <span className="text-sm font-medium text-gray-700">Washer/Dryer Hookups</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function renderElectricalDetails() {
+    const panelCapacities = [
+      { value: '60', label: '60 Amps' },
+      { value: '100', label: '100 Amps' },
+      { value: '150', label: '150 Amps' },
+      { value: '200', label: '200 Amps' },
+      { value: '400', label: '400 Amps' }
+    ];
+
+    const majorAppliances = [
+      'Electric Range/Oven',
+      'Electric Dryer',
+      'Central Air Conditioning',
+      'Electric Water Heater',
+      'Garbage Disposal',
+      'Dishwasher',
+      'Hot Tub/Spa',
+      'Electric Vehicle Charger'
+    ];
+
+    const outdoorNeeds = [
+      'Parking Lot Lighting',
+      'Security Lighting',
+      'Outdoor Outlets',
+      'Landscape Lighting',
+      'Pool Equipment',
+      'Gate Motors'
+    ];
+
+    const smartFeatures = [
+      'Smart Thermostat',
+      'Smart Lighting',
+      'Smart Outlets',
+      'Security System',
+      'Smart Locks',
+      'Home Automation Hub'
+    ];
+
+    return (
+      <div className="space-y-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <h4 className="text-sm font-medium text-blue-800 mb-2">
+            ⚡ Electrical System Information
+          </h4>
+          <p className="text-sm text-blue-700">
+            Electrical system details help contractors provide accurate estimates for upgrades, repairs, and installations.
+          </p>
+        </div>
+
+        {/* Electrical Panel - IMPORTANT */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Electrical Panel Capacity
+            </label>
+            <select
+              value={formData.electricalData?.electricalPanelCapacity || ''}
+              onChange={(e) => updateFormData('electricalData', {
+                ...formData.electricalData,
+                electricalPanelCapacity: e.target.value
+              })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            >
+              <option value="">Select panel capacity</option>
+              {panelCapacities.map(capacity => (
+                <option key={capacity.value} value={capacity.value}>{capacity.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Panel Age (Years)
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={formData.electricalData?.electricalPanelAge || ''}
+              onChange={(e) => updateFormData('electricalData', {
+                ...formData.electricalData,
+                electricalPanelAge: e.target.value
+              })}
+              placeholder="15"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            />
+          </div>
+        </div>
+
+        {/* Major Appliances */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Major Electrical Appliances
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {majorAppliances.map(appliance => (
+              <label key={appliance} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.electricalData?.majorAppliances?.includes(appliance) || false}
+                  onChange={(e) => {
+                    const currentAppliances = formData.electricalData?.majorAppliances || [];
+                    if (e.target.checked) {
+                      updateFormData('electricalData', {
+                        ...formData.electricalData,
+                        majorAppliances: [...currentAppliances, appliance]
+                      });
+                    } else {
+                      updateFormData('electricalData', {
+                        ...formData.electricalData,
+                        majorAppliances: currentAppliances.filter(a => a !== appliance)
+                      });
+                    }
+                  }}
+                  className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                />
+                <span className="text-sm text-gray-700">{appliance}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Outdoor Electrical Needs */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Outdoor Electrical Needs
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {outdoorNeeds.map(need => (
+              <label key={need} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.electricalData?.outdoorElectricalNeeds?.includes(need) || false}
+                  onChange={(e) => {
+                    const currentNeeds = formData.electricalData?.outdoorElectricalNeeds || [];
+                    if (e.target.checked) {
+                      updateFormData('electricalData', {
+                        ...formData.electricalData,
+                        outdoorElectricalNeeds: [...currentNeeds, need]
+                      });
+                    } else {
+                      updateFormData('electricalData', {
+                        ...formData.electricalData,
+                        outdoorElectricalNeeds: currentNeeds.filter(n => n !== need)
+                      });
+                    }
+                  }}
+                  className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                />
+                <span className="text-sm text-gray-700">{need}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Smart Home Features */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Smart Home Features (Optional)
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {smartFeatures.map(feature => (
+              <label key={feature} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.electricalData?.smartHomeFeatures?.includes(feature) || false}
+                  onChange={(e) => {
+                    const currentFeatures = formData.electricalData?.smartHomeFeatures || [];
+                    if (e.target.checked) {
+                      updateFormData('electricalData', {
+                        ...formData.electricalData,
+                        smartHomeFeatures: [...currentFeatures, feature]
+                      });
+                    } else {
+                      updateFormData('electricalData', {
+                        ...formData.electricalData,
+                        smartHomeFeatures: currentFeatures.filter(f => f !== feature)
+                      });
+                    }
+                  }}
+                  className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                />
+                <span className="text-sm text-gray-700">{feature}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* High Demand Facilities */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            High Electrical Demand Facilities
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {['Pool', 'Gym', 'Commercial Kitchen', 'Workshop', 'Server Room', 'Laundry Facility'].map(facility => (
+              <label key={facility} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.electricalData?.highDemandFacilities?.includes(facility) || false}
+                  onChange={(e) => {
+                    const currentFacilities = formData.electricalData?.highDemandFacilities || [];
+                    if (e.target.checked) {
+                      updateFormData('electricalData', {
+                        ...formData.electricalData,
+                        highDemandFacilities: [...currentFacilities, facility]
+                      });
+                    } else {
+                      updateFormData('electricalData', {
+                        ...formData.electricalData,
+                        highDemandFacilities: currentFacilities.filter(f => f !== facility)
+                      });
+                    }
+                  }}
+                  className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                />
+                <span className="text-sm text-gray-700">{facility}</span>
+              </label>
+            ))}
+          </div>
         </div>
       </div>
     );

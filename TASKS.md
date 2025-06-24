@@ -3814,3 +3814,329 @@ Prepare components for production deployment.
 **Priority Order**: Foundation components first, then role-specific dashboards, followed by testing and optimization
 
 ---
+
+# PropAgentic Property Data Enhancement - 4-Phase Implementation Plan
+
+## 📋 Project Overview
+
+**Goal**: Enhance PropAgentic's property data collection system to capture detailed HVAC, Plumbing, and Electrical information needed for accurate contractor estimates.
+
+**Current Status**: AddPropertyModal has a robust 9-step wizard with basic HVAC (step 6), Plumbing (step 7), and Electrical (step 8) data collection. Missing critical fields identified in handoff AI requirements.
+
+**Timeline**: 4 weeks, 4 phases
+- **Phase 1 (Week 1)**: Core data enhancement - Add critical missing fields
+- **Phase 2 (Week 2)**: Feature completion and validation  
+- **Phase 3 (Week 3)**: Testing and deployment
+- **Phase 4 (Week 4)**: UX improvements and analytics
+
+---
+
+## 🎯 Phase 1 (Week 1): Core Data Enhancement
+
+**Deliverable**: Enhanced AddPropertyModal with all critical missing fields for trade estimates
+
+### **1.1 HVAC Data Enhancement** ⭐ Critical
+**Priority**: P0 | **Effort**: 2 days | **Owner**: Frontend Dev
+
+**Current State Analysis**:
+- ✅ Has: HVAC system types, age, last maintenance
+- ❌ Missing: Climate zone, construction type, ceiling heights, insulation details
+
+**Tasks**:
+- [ ] **Add Climate Zone Detection**
+  - Integrate with existing `climateZoneService.ts` 
+  - Auto-populate based on ZIP code in step 2 (address)
+  - Add manual override dropdown with ASHRAE climate zones
+  - Store as `property.hvac.climateZone`
+
+- [ ] **Add Construction Type Fields**
+  - Radio buttons: Wood Frame, Steel Frame, Concrete Block, Brick
+  - Year built validation (if < 1980, flag for asbestos considerations)
+  - Store as `property.hvac.constructionType`
+
+- [ ] **Add Ceiling Height Tracking**
+  - Number input with unit selector (feet/meters)
+  - Separate fields for: Main living areas, bedrooms, basements
+  - Store as `property.hvac.ceilingHeights`
+
+- [ ] **Add Insulation Details**
+  - Checkboxes: Attic insulation, Wall insulation, Basement insulation
+  - R-value inputs (optional but helpful)
+  - Store as `property.hvac.insulation`
+
+**Files Modified**:
+- `src/components/landlord/AddPropertyModal.jsx` (lines 1246-1500)
+- `src/services/dataService.js` (update property creation)
+
+### **1.2 Plumbing Data Enhancement** ⭐ Critical  
+**Priority**: P0 | **Effort**: 1.5 days | **Owner**: Frontend Dev
+
+**Current State Analysis**:
+- ✅ Has: Bathroom count, kitchen count, water heater type
+- ❌ Missing: Water pressure issues, pipe materials, access points
+
+**Tasks**:
+- [ ] **Add Water System Details**
+  - Water pressure issues checkbox with severity scale
+  - Main water line material dropdown (Copper, PEX, Galvanized, Unknown)
+  - Well/city water radio selection
+  - Store as `property.plumbing.waterSystem`
+
+- [ ] **Add Access Information**
+  - Basement/crawl space access checkboxes
+  - Meter location dropdown
+  - Emergency shut-off location
+  - Store as `property.plumbing.access`
+
+- [ ] **Add Problem History**
+  - Previous plumbing issues checkbox list
+  - Recurring problems notes
+  - Store as `property.plumbing.history`
+
+**Files Modified**:
+- `src/components/landlord/AddPropertyModal.jsx` (lines 1500-1750)
+
+### **1.3 Electrical Data Enhancement** ⭐ Critical
+**Priority**: P0 | **Effort**: 1.5 days | **Owner**: Frontend Dev
+
+**Current State Analysis**:
+- ✅ Has: Panel capacity, electrical updates, major appliances  
+- ❌ Missing: Panel type details, outlet counts, electrical vehicle charging
+
+**Tasks**:
+- [ ] **Add Panel Details**
+  - Panel type dropdown: Circuit Breaker, Fuse Box, Mixed
+  - Panel brand/model (optional text input)
+  - Available slots counter
+  - Store as `property.electrical.panelDetails`
+
+- [ ] **Add Modern Requirements**
+  - EV charging capability/interest checkbox
+  - Smart home device count estimate
+  - Outdoor electrical needs (pool, garage, etc.)
+  - Store as `property.electrical.modernNeeds`
+
+- [ ] **Add Safety Information**
+  - GFCI outlets count/location
+  - Recent electrical work checkbox with date
+  - Known electrical issues
+  - Store as `property.electrical.safety`
+
+**Files Modified**:
+- `src/components/landlord/AddPropertyModal.jsx` (lines 1750-2000)
+
+---
+
+## 🔧 Phase 2 (Week 2): Feature Completion and Validation
+
+**Deliverable**: Complete data validation, backend integration, and property completeness tracking
+
+### **2.1 Data Validation System** ⭐ Critical
+**Priority**: P0 | **Effort**: 2 days | **Owner**: Frontend Dev
+
+**Tasks**:
+- [ ] **Implement PropertyFormValidation Component**
+  - Create `src/components/landlord/PropertyFormValidation.jsx`
+  - Real-time validation for each enhanced field
+  - Required vs. optional field indicators
+  - Cross-field validation (e.g., construction year vs. system age)
+
+- [ ] **Create Validation Rules**
+  - HVAC: Climate zone required, construction type required
+  - Plumbing: Bathroom/kitchen count validation
+  - Electrical: Panel capacity vs. property size logic
+  - Store validation rules in `src/schemas/propertyValidation.js`
+
+### **2.2 Data Completeness Tracking** 🎯 Important  
+**Priority**: P1 | **Effort**: 1.5 days | **Owner**: Frontend Dev
+
+**Tasks**:
+- [ ] **Implement PropertyDataCompletenessIndicator Component**
+  - Create `src/components/landlord/PropertyDataCompletenessIndicator.jsx`
+  - Calculate completeness percentage for trade estimates
+  - Visual progress indicators (HVAC: 85%, Plumbing: 90%, etc.)
+  - Highlight missing critical fields
+
+- [ ] **Add Completeness Logic**
+  - Weight critical fields higher than optional
+  - Trade-specific completeness scores
+  - Overall property estimate readiness score
+
+### **2.3 Backend Integration** ⭐ Critical
+**Priority**: P0 | **Effort**: 1.5 days | **Owner**: Backend Dev
+
+**Tasks**:
+- [ ] **Update dataService.js**
+  - Modify `createProperty` method to handle new fields
+  - Add property update methods for enhanced data
+  - Implement data migration for existing properties
+
+- [ ] **Firebase Schema Updates**
+  - Update Firestore security rules for new fields
+  - Create property data migration script
+  - Add indexes for estimate-relevant queries
+
+---
+
+## 🧪 Phase 3 (Week 3): Testing and Deployment
+
+**Deliverable**: Fully tested system ready for production with comprehensive test coverage
+
+### **3.1 Unit Testing** ⭐ Critical
+**Priority**: P0 | **Effort**: 2 days | **Owner**: QA/Dev
+
+**Tasks**:
+- [ ] **Component Testing**
+  - Test enhanced AddPropertyModal steps 6-8
+  - Test PropertyFormValidation component
+  - Test PropertyDataCompletenessIndicator
+  - Target: 90%+ test coverage on new components
+
+- [ ] **Service Testing**  
+  - Test dataService property creation with enhanced data
+  - Test climate zone service integration
+  - Test validation logic
+  - Mock Firebase interactions
+
+**Files Created**:
+- `__tests__/components/landlord/AddPropertyModalEnhanced.test.jsx`
+- `__tests__/components/landlord/PropertyFormValidation.test.jsx`
+- `__tests__/services/propertyValidation.test.js`
+
+### **3.2 Integration Testing** 🎯 Important
+**Priority**: P1 | **Effort**: 2 days | **Owner**: QA
+
+**Tasks**:
+- [ ] **End-to-End Property Creation**
+  - Test complete 9-step wizard with enhanced data
+  - Test data persistence to Firebase
+  - Test property editing with new fields
+  - Test demo mode compatibility
+
+- [ ] **Cross-Browser Testing**
+  - Test on Chrome, Firefox, Safari, Edge
+  - Test responsive design on mobile/tablet
+  - Test accessibility compliance
+
+### **3.3 Demo Data Updates** 🔄 Maintenance
+**Priority**: P2 | **Effort**: 1 day | **Owner**: Frontend Dev
+
+**Tasks**:
+- [ ] **Update Demo Data Generator**
+  - Add realistic HVAC/Plumbing/Electrical data to `demoDataGenerator.js`
+  - Ensure demo properties have high completeness scores
+  - Update demo mode to showcase new features
+
+---
+
+## 🎨 Phase 4 (Week 4): UX Improvements and Analytics  
+
+**Deliverable**: Polished user experience with analytics tracking and performance optimization
+
+### **4.1 UX Enhancement** 🎯 Important
+**Priority**: P1 | **Effort**: 2 days | **Owner**: Frontend Dev
+
+**Tasks**:
+- [ ] **Smart Form Assistance**
+  - Add contextual help tooltips for technical fields
+  - Implement field auto-suggestions based on property type
+  - Add "Why we need this" explanations for estimate accuracy
+
+- [ ] **Progressive Disclosure**
+  - Implement collapsible sections for advanced fields
+  - Show/hide fields based on previous selections
+  - Add "Quick Entry" vs "Detailed Entry" modes
+
+### **4.2 Analytics Integration** 📊 Nice-to-Have
+**Priority**: P2 | **Effort**: 1.5 days | **Owner**: Analytics Dev
+
+**Tasks**:
+- [ ] **Data Collection Tracking**
+  - Track field completion rates
+  - Monitor which fields are most/least completed
+  - Track time spent on each step
+  - Integrate with existing `analyticsService.ts`
+
+- [ ] **Estimate Accuracy Tracking**
+  - Track correlation between data completeness and estimate accuracy
+  - Monitor contractor feedback on data quality
+  - Create data quality dashboard for landlords
+
+### **4.3 Performance Optimization** ⚡ Important
+**Priority**: P1 | **Effort**: 1.5 days | **Owner**: Frontend Dev
+
+**Tasks**:
+- [ ] **Form Performance**
+  - Implement field-level auto-save
+  - Add loading states for climate zone detection
+  - Optimize re-renders in multi-step form
+
+- [ ] **Data Loading Optimization**
+  - Implement progressive data loading
+  - Cache climate zone and validation data
+  - Optimize Firebase queries for enhanced property data
+
+---
+
+## 📋 Success Metrics
+
+### **Data Completeness Targets**:
+- **Week 1**: 60% of critical fields added
+- **Week 2**: 85% data completeness tracking implemented  
+- **Week 3**: 95% test coverage achieved
+- **Week 4**: 90% user satisfaction in UX testing
+
+### **Technical Metrics**:
+- Zero breaking changes to existing functionality
+- < 500ms additional load time for enhanced form
+- 95%+ uptime during deployment
+- Mobile responsiveness maintained
+
+### **Business Impact**:
+- Improve contractor estimate accuracy by 25%
+- Reduce estimate revision requests by 40%  
+- Increase landlord property completion rate to 80%+
+
+---
+
+## 🔄 Risk Mitigation
+
+### **Technical Risks**:
+- **Form complexity**: Implement progressive disclosure and smart defaults
+- **Performance**: Use React.memo and field-level optimization
+- **Data migration**: Implement backwards compatibility and gradual rollout
+
+### **User Experience Risks**:
+- **Form abandonment**: Add auto-save and progress indicators
+- **Field confusion**: Provide contextual help and examples
+- **Mobile usability**: Prioritize responsive design testing
+
+### **Business Risks**:
+- **Adoption resistance**: Phase rollout with existing power users first
+- **Data quality**: Implement validation and provide clear examples
+- **Integration complexity**: Use existing service patterns and APIs
+
+---
+
+## 📝 Notes
+
+**Dependencies**:
+- Climate zone service already exists (`climateZoneService.ts`)
+- Firebase configuration is established
+- Existing AddPropertyModal provides solid foundation
+
+**Future Enhancements** (Post-Phase 4):
+- Photo upload for system components
+- Integration with contractor estimate APIs
+- Property maintenance history tracking
+- Energy efficiency scoring
+
+**Key Files to Monitor**:
+- `src/components/landlord/AddPropertyModal.jsx` (main implementation)
+- `src/services/dataService.js` (backend integration)
+- `src/services/climateZoneService.ts` (existing integration)
+- `__tests__/` (comprehensive test coverage)
+
+This implementation plan builds upon the existing robust foundation while adding the critical missing fields identified in the handoff AI requirements, ensuring accurate contractor estimates for HVAC, Plumbing, and Electrical work.
+
+---

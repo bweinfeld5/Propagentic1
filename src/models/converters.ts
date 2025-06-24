@@ -19,20 +19,34 @@ import {
   ContractorProfile
 } from './schema';
 
-import { Invite } from '../types/invite';
+import { Invite } from './Invite';
 import { 
   MaintenanceRequest,
-  StatusChange,
-  Communication,
+  StatusChange
+} from './MaintenanceRequest';
+import {
   ContractorMaintenanceProfile,
   BulkOperation,
   RequestTemplate,
   ContractorRating,
-  NotificationSettings,
   PhotoDocumentation,
   TimeTracking
-} from '../types/maintenance';
+} from './Maintenance';
+import {
+  CommunicationMessage,
+  CommunicationRole,
+  MessageType,
+  Conversation,
+  Message,
+  NotificationPreference
+} from './Communication';
 import { createTypedConverter, safeCast } from '../utils/TypeUtils';
+import {
+  NotificationSettings
+} from './User';
+
+// Type alias for backward compatibility
+type Communication = CommunicationMessage;
 
 /**
  * Helper function to create a Firestore converter for any model type
@@ -150,6 +164,21 @@ export const photoDocumentationConverter = createConverter<PhotoDocumentation>('
  * Converter for TimeTracking document (subcollection)
  */
 export const timeTrackingConverter = createConverter<TimeTracking>('sessionId');
+
+/**
+ * Converter for Conversation document
+ */
+export const conversationConverter = createConverter<Conversation>('id');
+
+/**
+ * Converter for Message document (subcollection)
+ */
+export const messageConverter = createConverter<Message>('id');
+
+/**
+ * Converter for NotificationPreference document
+ */
+export const notificationPreferenceConverter = createConverter<NotificationPreference>('userId');
 
 /**
  * Helper functions for creating new documents with default values
@@ -390,8 +419,6 @@ export function createNewMaintenanceRequest(
     tenantPhone: undefined,
     contractorId: undefined,
     contractorName: undefined,
-    contractorEmail: undefined,
-    contractorPhone: undefined,
     
     title: requestData.title,
     description: requestData.description,
@@ -403,43 +430,35 @@ export function createNewMaintenanceRequest(
     specificLocation: undefined,
     accessInstructions: undefined,
     
-    preferredTimeSlots: undefined,
     scheduledDate: undefined,
     estimatedDuration: undefined,
+    actualDuration: undefined,
     
     photos: [],
     
     estimatedCost: undefined,
     actualCost: undefined,
-    costBreakdown: undefined,
-    budgetApprovalRequired: false,
-    budgetApproved: undefined,
     
     createdAt: now,
     updatedAt: now,
     completedDate: undefined,
-    lastStatusChange: now,
+    lastStatusChange: new Date(),
     
     statusHistory: [],
     communications: [],
-    timeTracking: [],
     
     isEmergency: requestData.isEmergency || false,
     emergencyContact: undefined,
     
     rating: undefined,
-    tenantSatisfaction: undefined,
+    tenantFeedback: undefined,
     
     templateUsed: undefined,
-    aiClassification: undefined,
-    
-    permitRequired: undefined,
-    permitNumber: undefined,
-    warrantyWork: undefined,
-    insuranceClaim: undefined,
-    
-    isRecurring: undefined,
-    recurringSchedule: undefined
+    workOrderNumber: undefined,
+    internalNotes: undefined,
+    tags: [],
+    recurringSchedule: undefined,
+    assignedDate: undefined
   };
 }
 
@@ -449,17 +468,16 @@ export function createNewMaintenanceRequest(
 export function createNewStatusChange(
   status: StatusChange['status'],
   userId: string,
-  userRole: StatusChange['userRole'],
+  userRole: string,
   notes?: string,
-  automaticChange: boolean = false
+  reason?: string
 ): StatusChange {
   return {
     status,
-    timestamp: serverTimestamp() as Timestamp,
-    userId,
-    userRole,
-    notes,
-    automaticChange
+    timestamp: new Date(),
+    updatedBy: userId,
+    reason,
+    notes
   };
 }
 
@@ -468,25 +486,31 @@ export function createNewStatusChange(
  */
 export function createNewCommunication(
   id: string,
+  requestId: string,
   userId: string,
-  userRole: Communication['userRole'],
+  userRole: CommunicationRole,
   userName: string,
   message: string,
-  messageType: Communication['messageType'] = 'message',
+  messageType: MessageType = 'message',
   attachments: string[] = [],
   isUrgent: boolean = false
-): Communication {
+): CommunicationMessage {
+  const now = serverTimestamp() as Timestamp;
   return {
     id,
-    userId,
-    userRole,
-    userName,
-    message,
-    timestamp: serverTimestamp() as Timestamp,
+    requestId,
+    senderId: userId,
+    senderName: userName,
+    senderRole: userRole,
+    content: message,
+    timestamp: now,
+    type: messageType,
+    isRead: false,
     attachments,
-    readBy: [userId], // Creator has read it
-    messageType,
-    isUrgent
+    isUrgent,
+    metadata: {},
+    createdAt: now,
+    updatedAt: now
   };
 }
 
@@ -524,44 +548,28 @@ export function createNewContractorMaintenanceProfile(
       serviceRadius: 25, // 25 miles
       baseLocation: {
         latitude: 0,
-        longitude: 0,
-        address: ''
+        longitude: 0
       }
     },
     
-    performance: {
-      totalJobs: 0,
-      completedJobs: 0,
-      averageRating: 0,
-      onTimePercentage: 0,
-      responseTime: 0,
-      completionRate: 0
-    },
-    
-    rates: {
+    pricing: {
       hourlyRate,
       emergencyRate: hourlyRate * 1.5,
       minimumCharge: hourlyRate,
-      travelCharge: 0
+      mileageRate: 0
     },
     
-    preferredProperties: [],
-    blacklistedProperties: [],
-    preferredCategories: [],
+    equipment: [],
+    serviceAreas: [],
     
-    businessInfo: {
-      companyName: undefined,
-      licenseNumber: undefined,
-      insuranceInfo: undefined,
-      bondedInfo: undefined
+    ratings: {
+      averageRating: 0,
+      totalRatings: 0,
+      categories: {}
     },
     
     createdAt: now,
-    updatedAt: now,
-    isVerified: false,
-    verificationDate: undefined,
-    isActive: true,
-    lastActiveDate: now
+    updatedAt: now
   };
 }
 
@@ -572,24 +580,15 @@ export function createNewRequestTemplate(
   id: string,
   title: string,
   description: string,
-  category: RequestTemplate['category'],
-  suggestedPriority: RequestTemplate['suggestedPriority'],
-  estimatedDuration: number,
-  createdBy: string
+  category: string,
+  suggestedPriority: 'low' | 'medium' | 'high'
 ): RequestTemplate {
   return {
     id,
-    title,
-    description,
+    name: title,
     category,
-    suggestedPriority,
-    estimatedDuration,
-    commonSolutions: [],
-    requiredPhotos: [],
-    isActive: true,
-    createdBy,
-    createdAt: serverTimestamp() as Timestamp,
-    usageCount: 0
+    description,
+    priority: suggestedPriority
   };
 }
 
@@ -601,23 +600,17 @@ export function createNewContractorRating(
   requestId: string,
   contractorId: string,
   ratedBy: string,
-  raterRole: ContractorRating['raterRole'],
-  rating: number,
-  categories: ContractorRating['categories'],
-  wouldRecommend: boolean,
-  feedback?: string
+  rating: 1 | 2 | 3 | 4 | 5,
+  comment?: string
 ): ContractorRating {
   return {
     id,
     requestId,
     contractorId,
-    ratedBy,
-    raterRole,
+    tenantId: ratedBy,
     rating,
-    feedback,
-    categories,
-    timestamp: serverTimestamp() as Timestamp,
-    wouldRecommend
+    comment,
+    createdAt: serverTimestamp() as Timestamp
   };
 }
 
@@ -628,65 +621,39 @@ export function createDefaultNotificationSettings(
   userId: string,
   userRole: NotificationSettings['userRole']
 ): NotificationSettings {
-  // Different default settings based on role
-  const baseSettings = {
+  return {
     userId,
     userRole,
     
-    email: {
-      enabled: true,
+    emailNotifications: {
       newRequests: true,
       statusUpdates: true,
-      assignments: true,
-      completions: true,
+      messages: true,
       emergencies: true,
-      ratings: true,
       reminders: true
     },
     
-    push: {
-      enabled: false, // Future feature, default disabled
+    pushNotifications: {
       newRequests: false,
       statusUpdates: false,
-      assignments: false,
-      completions: false,
+      messages: false,
       emergencies: false,
-      ratings: false,
       reminders: false
     },
     
-    sms: {
-      enabled: false, // Future feature, default disabled
-      emergencyOnly: true,
-      phone: undefined
+    smsNotifications: {
+      emergencies: false,
+      reminders: false
     },
     
     quietHours: {
       enabled: false,
-      start: '22:00',
-      end: '08:00',
-      timezone: 'America/New_York'
+      startTime: '22:00',
+      endTime: '08:00'
     },
     
-    updatedAt: serverTimestamp() as Timestamp
+    frequency: 'immediate'
   };
-
-  // Role-specific adjustments
-  if (userRole === 'contractor') {
-    baseSettings.email.newRequests = true; // Contractors want to know about new jobs
-    baseSettings.email.assignments = true;
-  } else if (userRole === 'tenant') {
-    baseSettings.email.assignments = false; // Tenants don't care about assignments to contractors
-    baseSettings.email.statusUpdates = true; // But they want status updates
-  } else if (userRole === 'landlord') {
-    // Landlords want all notifications by default
-    baseSettings.email.newRequests = true;
-    baseSettings.email.statusUpdates = true;
-    baseSettings.email.assignments = true;
-    baseSettings.email.completions = true;
-  }
-
-  return baseSettings;
 }
 
 /**
@@ -696,20 +663,14 @@ export function createNewPhotoDocumentation(
   id: string,
   url: string,
   uploadedBy: string,
-  photoType: PhotoDocumentation['photoType'],
-  description?: string,
-  thumbnailUrl?: string
+  caption?: string
 ): PhotoDocumentation {
   return {
     id,
     url,
-    thumbnailUrl,
     uploadedBy,
     uploadedAt: serverTimestamp() as Timestamp,
-    description,
-    photoType,
-    location: undefined,
-    metadata: undefined
+    caption
   };
 }
 
@@ -718,19 +679,14 @@ export function createNewPhotoDocumentation(
  */
 export function createNewTimeTracking(
   sessionId: string,
-  contractorId: string,
-  description: string,
+  notes?: string,
   startTime?: Timestamp
 ): TimeTracking {
   return {
     sessionId,
     startTime: startTime || serverTimestamp() as Timestamp,
     endTime: undefined,
-    totalMinutes: undefined,
-    breakMinutes: 0,
-    description,
-    contractorId,
-    location: undefined,
-    photos: []
+    durationMinutes: undefined,
+    notes
   };
 } 

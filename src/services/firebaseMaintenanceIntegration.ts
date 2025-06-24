@@ -23,18 +23,26 @@ import {
   enableIndexedDbPersistence
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { 
+import {
   MaintenanceRequest,
   MaintenanceStatus,
   MaintenancePriority,
   MaintenanceCategory,
+  StatusChange
+} from '../models/MaintenanceRequest';
+import {
   UserRole,
-  Communication,
+  NotificationSettings
+} from '../models/User';
+import {
   MaintenanceMetrics,
   BulkOperation,
-  ContractorMaintenanceProfile,
-  NotificationSettings
-} from '../types/maintenance';
+  ContractorMaintenanceProfile
+} from '../models/Maintenance';
+import {
+  CommunicationMessage as Communication,
+  CommunicationRole
+} from '../models/Communication';
 
 // Import specific service functions
 import {
@@ -47,6 +55,9 @@ import {
   getMaintenanceMetrics
 } from './firestore/maintenanceService';
 
+// Note: These functions don't exist in communicationService yet
+// They need to be implemented or we need to use the existing communicationService methods
+/*
 import {
   sendMaintenanceMessage,
   getMaintenanceRequestCommunications,
@@ -58,6 +69,9 @@ import {
   updateUserNotificationSettings,
   getCommunicationStats
 } from './firestore/communicationService';
+*/
+
+import { communicationService } from './firestore/communicationService';
 
 /**
  * Configuration options for the Firebase integration
@@ -272,12 +286,12 @@ export class FirebaseMaintenanceIntegration {
    */
   async executeBulkOperation(
     requestIds: string[],
-    operation: BulkOperation['operationType'],
-    parameters: BulkOperation['parameters'],
+    operation: 'assign_contractor' | 'change_priority' | 'change_status' | 'archive' | 'mark_completed',
+    parameters: any = {},
     initiatedBy: string
   ): Promise<BulkOperation> {
     return this.withRetry('executeBulkOperation', () => 
-      executeBulkOperation(requestIds, operation, parameters, initiatedBy)
+      executeBulkOperation(requestIds, operation as any, parameters, initiatedBy)
     );
   }
 
@@ -309,9 +323,34 @@ export class FirebaseMaintenanceIntegration {
     attachments: string[] = [],
     isUrgent: boolean = false
   ): Promise<Communication> {
-    return this.withRetry('sendMessage', () => 
-      sendMaintenanceMessage(requestId, userId, userRole, userName, message, attachments, isUrgent)
-    );
+    return this.withRetry('sendMessage', async () => {
+      await communicationService.addMessage(requestId, {
+        senderId: userId,
+        senderName: userName,
+        senderRole: userRole as CommunicationRole,
+        content: message,
+        attachments,
+        isUrgent
+      });
+      
+      // Return a Communication object for compatibility
+      return {
+        id: Date.now().toString(),
+        requestId,
+        senderId: userId,
+        senderName: userName,
+        senderRole: userRole as CommunicationRole,
+        content: message,
+        timestamp: Timestamp.now(),
+        type: 'message',
+        isRead: false,
+        attachments,
+        isUrgent,
+        metadata: {},
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      } as Communication;
+    });
   }
 
   /**
@@ -322,7 +361,7 @@ export class FirebaseMaintenanceIntegration {
     limitCount: number = 50
   ): Promise<Communication[]> {
     return this.withRetry('getRequestCommunications', () => 
-      getMaintenanceRequestCommunications(requestId, limitCount)
+      communicationService.getRequestCommunications(requestId, limitCount)
     );
   }
 
@@ -336,7 +375,7 @@ export class FirebaseMaintenanceIntegration {
   ): () => void {
     const listenerId = `communications_${requestId}`;
     
-    const unsubscribe = subscribeToMaintenanceRequestCommunications(
+    const unsubscribe = communicationService.subscribeToRequestCommunications(
       requestId,
       callback,
       (error) => {
@@ -372,18 +411,18 @@ export class FirebaseMaintenanceIntegration {
     userId: string,
     messageIds: string[]
   ): Promise<void> {
-    await this.withRetry('markAsRead', () => 
-      markMessagesAsRead(requestId, userId, messageIds)
-    );
+    // TODO: Implement this method in communicationService
+    console.warn('markMessagesAsRead not implemented yet');
+    return Promise.resolve();
   }
 
   /**
    * Get unread message count for a user
    */
   async getUnreadCount(userId: string, userRole: UserRole): Promise<number> {
-    return this.withRetry('getUnreadCount', () => 
-      getUnreadMessageCount(userId, userRole)
-    );
+    // TODO: Implement this method in communicationService
+    console.warn('getUnreadMessageCount not implemented yet');
+    return 0;
   }
 
   /**
@@ -392,10 +431,10 @@ export class FirebaseMaintenanceIntegration {
   async getCommunicationStats(
     propertyIds?: string[],
     timeRange?: { start: Date; end: Date }
-  ): Promise<ReturnType<typeof getCommunicationStats>> {
-    return this.withRetry('getCommunicationStats', () => 
-      getCommunicationStats(propertyIds, timeRange)
-    );
+  ): Promise<any> {
+    // TODO: Implement this method in communicationService
+    console.warn('getCommunicationStats not implemented yet');
+    return { total: 0, unread: 0, urgent: 0 };
   }
 
   // =============================================
@@ -406,9 +445,36 @@ export class FirebaseMaintenanceIntegration {
    * Get user notification settings
    */
   async getNotificationSettings(userId: string, userRole: UserRole): Promise<NotificationSettings> {
-    return this.withRetry('getNotificationSettings', () => 
-      getUserNotificationSettings(userId, userRole)
-    );
+    // TODO: Implement this method in communicationService
+    console.warn('getUserNotificationSettings not implemented yet');
+    return {
+      userId,
+      userRole: userRole as 'tenant' | 'landlord' | 'contractor',
+      emailNotifications: {
+        newRequests: true,
+        statusUpdates: true,
+        messages: true,
+        emergencies: true,
+        reminders: true
+      },
+      pushNotifications: {
+        newRequests: false,
+        statusUpdates: false,
+        messages: false,
+        emergencies: false,
+        reminders: false
+      },
+      smsNotifications: {
+        emergencies: false,
+        reminders: false
+      },
+      quietHours: {
+        enabled: false,
+        startTime: '22:00',
+        endTime: '08:00'
+      },
+      frequency: 'immediate'
+    };
   }
 
   /**
@@ -418,9 +484,9 @@ export class FirebaseMaintenanceIntegration {
     userId: string,
     updates: Partial<NotificationSettings>
   ): Promise<void> {
-    await this.withRetry('updateNotificationSettings', () => 
-      updateUserNotificationSettings(userId, updates)
-    );
+    // TODO: Implement this method in communicationService
+    console.warn('updateUserNotificationSettings not implemented yet');
+    return Promise.resolve();
   }
 
   // =============================================
@@ -505,7 +571,10 @@ export class FirebaseMaintenanceIntegration {
     userId: string,
     userRole: UserRole
   ): Promise<{ successful: string[]; failed: { requestId: string; error: string }[] }> {
-    const results = { successful: [], failed: [] };
+    const results: { successful: string[]; failed: { requestId: string; error: string }[] } = { 
+      successful: [], 
+      failed: [] 
+    };
 
     // Process updates in chunks to avoid overwhelming Firestore
     const chunkSize = 10;
@@ -611,21 +680,23 @@ export class FirebaseMaintenanceIntegration {
       }
 
       // Create status change message
-      const statusMessages = {
+      const statusMessages: Record<MaintenanceStatus, string> = {
         'submitted': 'Maintenance request submitted',
+        'pending': 'Maintenance request pending review',
         'assigned': 'Contractor assigned to maintenance request',
         'in-progress': 'Work has started on maintenance request',
         'completed': 'Maintenance request completed',
         'cancelled': 'Maintenance request cancelled',
         'pending_approval': 'Maintenance request pending approval',
         'scheduled': 'Maintenance request scheduled',
-        'on_hold': 'Maintenance request put on hold',
+        'on-hold': 'Maintenance request put on hold',
         'requires_parts': 'Maintenance request waiting for parts'
       };
 
       const message = `${statusMessages[newStatus] || 'Status updated'} for "${request.title}"${notes ? `. Note: ${notes}` : ''}`;
 
-      await sendSystemNotification(requestId, message, affectedUsers);
+      // TODO: Implement sendSystemNotification in communicationService
+      console.warn('sendSystemNotification not implemented yet');
     } catch (error) {
       console.error('Failed to send status change notification:', error);
       // Don't throw error as this is a secondary operation
@@ -638,7 +709,6 @@ export const firebaseMaintenanceIntegration = new FirebaseMaintenanceIntegration
 
 // Export additional types and interfaces
 export type {
-  FirebaseMaintenanceConfig,
   MaintenanceRequest,
   MaintenanceStatus,
   MaintenancePriority,
@@ -658,16 +728,7 @@ export {
   searchMaintenanceRequests,
   updateMaintenanceRequestStatus,
   executeBulkOperation,
-  getMaintenanceMetrics,
-  sendMaintenanceMessage,
-  getMaintenanceRequestCommunications,
-  subscribeToMaintenanceRequestCommunications,
-  markMessagesAsRead,
-  getUnreadMessageCount,
-  sendSystemNotification,
-  getUserNotificationSettings,
-  updateUserNotificationSettings,
-  getCommunicationStats
+  getMaintenanceMetrics
 };
 
 export default firebaseMaintenanceIntegration; 

@@ -16,9 +16,9 @@ import {
   MaintenanceRequest, 
   MaintenanceStatus, 
   MaintenancePriority,
-  UserRole,
-  StatusChange 
-} from '../../types/maintenance';
+  StatusChange,
+  UserRole
+} from '../../models';
 import { maintenanceRequestConverter } from '../../models/converters';
 import StatusPill from '../ui/StatusPill';
 import ActionFeedback from '../ui/ActionFeedback';
@@ -94,44 +94,16 @@ const RequestStatusTracker: React.FC<RequestStatusTrackerProps> = ({
     return 'tenant'; // Default fallback
   }, [isLandlord, isTenant, isContractor]);
 
-  // Status color mapping
-  const getStatusColor = useCallback((status: MaintenanceStatus, priority: MaintenancePriority): string => {
-    // Emergency always shows red regardless of status
-    if (priority === 'urgent') {
-      return 'text-red-600 bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400';
-    }
-
-    switch (status) {
-      case 'submitted':
-        return 'text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400';
-      case 'assigned':
-        return 'text-amber-600 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400';
-      case 'in-progress':
-        return 'text-orange-600 bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800 dark:text-orange-400';
-      case 'completed':
-        return 'text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400';
-      case 'cancelled':
-        return 'text-gray-600 bg-gray-50 border-gray-200 dark:bg-gray-900/20 dark:border-gray-800 dark:text-gray-400';
-      case 'scheduled':
-        return 'text-purple-600 bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-400';
-      case 'on_hold':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-400';
-      case 'requires_parts':
-        return 'text-indigo-600 bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-400';
-      default:
-        return 'text-gray-600 bg-gray-50 border-gray-200 dark:bg-gray-900/20 dark:border-gray-800 dark:text-gray-400';
-    }
-  }, []);
-
   // Progress calculation
   const calculateProgress = useCallback((status: MaintenanceStatus): number => {
     const progressMap: Record<MaintenanceStatus, number> = {
       'submitted': 10,
+      'pending': 20,
       'assigned': 30,
       'scheduled': 40,
       'in-progress': 70,
       'requires_parts': 60,
-      'on_hold': 50,
+      'on-hold': 50,
       'pending_approval': 80,
       'completed': 100,
       'cancelled': 0
@@ -192,7 +164,7 @@ const RequestStatusTracker: React.FC<RequestStatusTrackerProps> = ({
             : 'Request has been marked as completed';
           showNotification('success', notificationTitle, notificationMessage);
           break;
-        case 'on_hold':
+        case 'on-hold':
           notificationTitle = 'Request On Hold';
           notificationMessage = 'The request has been temporarily paused';
           showNotification('info', notificationTitle, notificationMessage);
@@ -251,281 +223,230 @@ const RequestStatusTracker: React.FC<RequestStatusTrackerProps> = ({
   const setupStatusHistoryListener = useCallback(() => {
     if (!requestId || !showTimeline) return;
 
-    const statusHistoryRef = collection(db, 'maintenanceRequests', requestId, 'statusHistory');
-    const statusHistoryQuery = query(statusHistoryRef, orderBy('timestamp', 'desc'));
-
-    const unsubscribe = onSnapshot(
-      statusHistoryQuery,
-      (snapshot) => {
-        // Status history updates are handled within the main request document
-        // This listener ensures we get real-time updates for the timeline
-        console.log('Status history updated');
-      },
-      (err) => {
-        console.error('Error in status history listener:', err);
-      }
-    );
-
-    statusChangeUnsubscribeRef.current = unsubscribe;
+    // This part is for listening to a subcollection for status changes, if you have one.
+    // If status history is an array on the main request, this is not needed.
+    // Assuming statusHistory is an array on MaintenanceRequest for this example.
   }, [requestId, showTimeline]);
 
-  // Setup listeners on mount
+  // Effects
   useEffect(() => {
-    if (initialRequest) {
-      previousStatusRef.current = initialRequest.status;
+    if (requestId) {
+      setupRequestListener();
+    } else if (initialRequest) {
       setRequest(initialRequest);
       setLoading(false);
     }
 
-    if (requestId) {
-      setupRequestListener();
-      setupStatusHistoryListener();
-    }
-
     return () => {
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-      }
-      if (statusChangeUnsubscribeRef.current) {
-        statusChangeUnsubscribeRef.current();
-      }
+      unsubscribeRef.current?.();
+      statusChangeUnsubscribeRef.current?.();
     };
-  }, [requestId, initialRequest, setupRequestListener, setupStatusHistoryListener]);
+  }, [requestId, initialRequest, setupRequestListener]);
 
-  // Get status icon
-  const getStatusIcon = useCallback((status: MaintenanceStatus) => {
-    const iconClass = "w-5 h-5";
-    
-    switch (status) {
-      case 'submitted':
-        return <InformationCircleIcon className={iconClass} />;
-      case 'assigned':
-        return <UserIcon className={iconClass} />;
-      case 'in-progress':
-        return <WrenchScrewdriverIcon className={iconClass} />;
-      case 'completed':
-        return <CheckCircleSolid className={iconClass} />;
-      case 'cancelled':
-        return <ExclamationTriangleIcon className={iconClass} />;
-      case 'scheduled':
-        return <ClockIcon className={iconClass} />;
-      default:
-        return <InformationCircleIcon className={iconClass} />;
-    }
-  }, []);
 
-  // Format status for display
-  const formatStatus = useCallback((status: MaintenanceStatus): string => {
-    return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-  }, []);
+  // Helper function to format date
+  const formatDate = (date: Date | Timestamp | undefined): string => {
+    if (!date) return 'N/A';
+    const d = date instanceof Timestamp ? date.toDate() : date;
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    }).format(d);
+  };
 
-  // Get role-specific information
-  const getRoleSpecificInfo = useCallback((): React.ReactNode => {
-    if (!request) return null;
-    
-    const userRole = getUserRole();
+  // UI Components
+  const ProgressBar = () => {
+    if (!showProgress || !request) return null;
+    const progress = calculateProgress(request.status);
 
-    switch (userRole) {
-      case 'tenant':
-        return (
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            {request.contractorName && (
-              <p>Assigned to: {request.contractorName}</p>
-            )}
-            {request.scheduledDate && (
-              <p>Scheduled: {request.scheduledDate.toDate().toLocaleDateString()}</p>
-            )}
-          </div>
-        );
-      
-      case 'contractor':
-        return (
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            <p>Property: {request.propertyName}</p>
-            <p>Unit: {request.unitNumber || 'N/A'}</p>
-            <p>Tenant: {request.tenantName}</p>
-            {request.estimatedCost && (
-              <p>Est. Cost: ${request.estimatedCost}</p>
-            )}
-          </div>
-        );
-      
-      case 'landlord':
-        return (
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            <p>Property: {request.propertyName}</p>
-            <p>Tenant: {request.tenantName}</p>
-            {request.contractorName && (
-              <p>Contractor: {request.contractorName}</p>
-            )}
-            {request.estimatedCost && (
-              <p>Est. Cost: ${request.estimatedCost}</p>
-            )}
-            {request.actualCost && (
-              <p>Actual Cost: ${request.actualCost}</p>
-            )}
-          </div>
-        );
-      
-      default:
-        return null;
-    }
-  }, [request, getUserRole]);
-
-  // Render loading state
-  if (loading) {
     return (
-      <div className={`p-4 bg-white dark:bg-gray-800 rounded-lg shadow ${className}`}>
-        <div className="animate-pulse">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-            <div className="flex-1">
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-            </div>
-          </div>
-        </div>
+      <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 my-4">
+        <motion.div
+          className="bg-blue-600 h-2.5 rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          role="progressbar"
+          aria-valuenow={progress}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`Request progress: ${progress}% complete`}
+        />
       </div>
     );
-  }
-
-  // Render error state
-  if (error || !request) {
-    return (
-      <div className={`p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg ${className}`}>
-        <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
-          <ExclamationTriangleIcon className="w-5 h-5" />
-          <span className="text-sm font-medium">{error || 'Request not found'}</span>
-        </div>
+  };
+  
+  const TimelineEvent = ({ statusChange, isLast }: { statusChange: StatusChange, isLast: boolean }) => (
+    <li className={`relative flex items-baseline gap-6 pb-5 ${isLast ? '' : 'before:absolute before:left-[5.5px] before:top-[1.2rem] before:h-full before:w-[1px] before:bg-gray-300 dark:before:bg-gray-600'}`}>
+      <div className="relative z-10">
+        <div className="h-3 w-3 rounded-full bg-blue-500 ring-4 ring-white dark:ring-gray-900"></div>
       </div>
-    );
-  }
+      <div className="flex-grow">
+        <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{statusChange.status}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          by {statusChange.updatedBy} on {formatDate(statusChange.timestamp)}
+        </p>
+        {statusChange.notes && (
+          <p className="mt-1 text-xs text-gray-600 dark:text-gray-300 italic">"{statusChange.notes}"</p>
+        )}
+      </div>
+    </li>
+  );
 
-  const progress = calculateProgress(request.status);
-  const statusColor = getStatusColor(request.status, request.priority);
+  const Timeline = () => {
+    if (!showTimeline || !request || !request.statusHistory || request.statusHistory.length === 0) return null;
+    
+    // Create a mutable copy and sort it
+    const sortedHistory = [...request.statusHistory].sort((a, b) => {
+        const dateA = a.timestamp instanceof Date ? a.timestamp.getTime() : new Date(a.timestamp).getTime();
+        const dateB = b.timestamp instanceof Date ? b.timestamp.getTime() : new Date(b.timestamp).getTime();
+        return dateB - dateA; // Sort descending
+    });
+
+    return (
+      <section className="mt-6" aria-labelledby="request-timeline-title">
+        <h3 id="request-timeline-title" className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Request History
+        </h3>
+        <ol role="list" aria-label="Status change timeline">
+          {sortedHistory.map((change, index) => (
+            <TimelineEvent 
+              key={index} 
+              statusChange={change} 
+              isLast={index === sortedHistory.length - 1} 
+            />
+          ))}
+        </ol>
+      </section>
+    );
+  };
+
+  if (loading) return (
+    <div className={`p-4 rounded-lg bg-white dark:bg-gray-800 shadow-md ${className}`}>
+      <div className="flex items-center justify-center">
+        <ArrowPathIcon className="h-6 w-6 animate-spin text-blue-500" />
+        <span className="ml-2 text-gray-600 dark:text-gray-300">Loading status...</span>
+      </div>
+    </div>
+  );
+  if (error) return (
+    <div className={`p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 ${className}`}>
+      <div className="flex items-center text-red-600 dark:text-red-400">
+        <ExclamationTriangleIcon className="h-6 w-6" aria-hidden="true" />
+        <span className="ml-2 font-semibold">{error}</span>
+      </div>
+      { !isRealtimeConnected && (
+        <button 
+          onClick={setupRequestListener}
+          onKeyDown={(e) => e.key === 'Enter' && setupRequestListener()}
+          className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+          aria-label="Reconnect to real-time status updates"
+        >
+          Attempt to reconnect
+        </button>
+      )}
+    </div>
+  );
+  if (!request) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow border ${statusColor} ${className}`}
-    >
-      {/* Connection status indicator */}
-      {!isRealtimeConnected && (
-        <div className="px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800">
-          <div className="flex items-center space-x-2 text-yellow-600 dark:text-yellow-400">
-            <ArrowPathIcon className="w-4 h-4 animate-spin" />
-            <span className="text-xs">Reconnecting...</span>
-          </div>
-        </div>
-      )}
-
-      <div className="p-4">
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0 }}
+        className={`p-4 rounded-lg bg-white dark:bg-gray-800 shadow-md ${className}`}
+        role="region"
+        aria-labelledby="request-status-title"
+        aria-describedby="request-status-description"
+      >
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className={`p-2 rounded-full ${statusColor}`}>
-              {getStatusIcon(request.status)}
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {request.title}
-              </h3>
-              <div className="flex items-center space-x-2 mt-1">
-                <StatusPill status={formatStatus(request.status)} className="" />
-                {request.priority === 'urgent' && (
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">
-                    <ExclamationTriangleIcon className="w-3 h-3 mr-1" />
-                    Urgent
-                  </span>
-                )}
-                {lastStatusUpdate && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    Updated {lastStatusUpdate.toLocaleTimeString()}
-                  </span>
-                )}
-              </div>
-            </div>
+        <header className="flex justify-between items-start">
+          <div>
+            <h2 
+              id="request-status-title"
+              className="text-xl font-bold text-gray-900 dark:text-white"
+            >
+              {request.title}
+            </h2>
+            <p 
+              id="request-status-description"
+              className="text-sm text-gray-500 dark:text-gray-400"
+            >
+              <span className="sr-only">Request number </span>#{request.id.slice(0, 6)}
+              <span className="sr-only"> - Status tracking and history</span>
+            </p>
           </div>
-          
-          {/* Real-time indicator */}
-          <div className="flex items-center space-x-2">
-            {isRealtimeConnected && (
-              <div className="flex items-center space-x-1 text-green-600 dark:text-green-400">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-xs">Live</span>
+          <StatusPill 
+            status={request.status} 
+            aria-label={`Current request status: ${request.status}`}
+          />
+        </header>
+
+        {/* Progress Bar */}
+        <ProgressBar />
+
+        {/* Core Details */}
+        <section aria-labelledby="request-details-title">
+          <h3 id="request-details-title" className="sr-only">Request Details</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 text-sm">
+            <div className="flex items-center text-gray-600 dark:text-gray-300">
+              <InformationCircleIcon className="h-5 w-5 mr-2 text-gray-400" aria-hidden="true" />
+              <span>Category: <span className="font-semibold">{request.category}</span></span>
+            </div>
+            <div className="flex items-center text-gray-600 dark:text-gray-300">
+              <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-gray-400" aria-hidden="true" />
+              <span>Priority: <span className="font-semibold">{request.priority}</span></span>
+            </div>
+            <div className="flex items-center text-gray-600 dark:text-gray-300">
+              <UserIcon className="h-5 w-5 mr-2 text-gray-400" aria-hidden="true" />
+              <span>Submitted by: <span className="font-semibold">{request.tenantName}</span></span>
+            </div>
+            {request.contractorName && (
+              <div className="flex items-center text-gray-600 dark:text-gray-300">
+                <WrenchScrewdriverIcon className="h-5 w-5 mr-2 text-gray-400" aria-hidden="true" />
+                <span>Assigned to: <span className="font-semibold">{request.contractorName}</span></span>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        {showProgress && (
-          <div className="mb-4">
-            <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
-              <span>Progress</span>
-              <span>{progress}%</span>
+            <div className="flex items-center text-gray-600 dark:text-gray-300">
+              <ClockIcon className="h-5 w-5 mr-2 text-gray-400" aria-hidden="true" />
+              <span>Last Updated: <span className="font-semibold">{formatDate(lastStatusUpdate || request.updatedAt)}</span></span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <motion.div
-                className={`h-2 rounded-full ${
-                  request.status === 'completed' 
-                    ? 'bg-green-500' 
-                    : request.priority === 'urgent'
-                    ? 'bg-red-500'
-                    : 'bg-blue-500'
-                }`}
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
+          </div>
+        </section>
+        
+        {/* Timeline */}
+        <Timeline />
+
+        {/* Action Feedback Notification */}
+        <AnimatePresence>
+          {notification.isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              role="alert"
+              aria-live="polite"
+            >
+              <ActionFeedback
+                isOpen={notification.isOpen}
+                type={notification.type}
+                title={notification.title}
+                message={notification.message}
+                progress={notification.progress}
+                onUndo={() => {}}
+                onRetry={() => {}}
+                onClose={() => setNotification(prev => ({ ...prev, isOpen: false }))}
               />
-            </div>
-          </div>
-        )}
-
-        {/* Role-specific information */}
-        {getRoleSpecificInfo()}
-
-        {/* Timeline (if enabled and not compact) */}
-        {showTimeline && !compact && request.statusHistory && request.statusHistory.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Status History</h4>
-            <div className="space-y-2">
-              {request.statusHistory.slice(0, 3).map((statusChange, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex items-center space-x-3 text-sm"
-                >
-                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                  <span className="text-gray-600 dark:text-gray-400">
-                    {formatStatus(statusChange.status)}
-                  </span>
-                  <span className="text-gray-500 dark:text-gray-500 text-xs">
-                    {statusChange.timestamp.toDate().toLocaleString()}
-                  </span>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Notification system */}
-      <ActionFeedback
-        isOpen={notification.isOpen}
-        type={notification.type}
-        title={notification.title}
-        message={notification.message}
-        progress={notification.progress}
-        onClose={() => setNotification(prev => ({ ...prev, isOpen: false }))}
-        onUndo={undefined}
-        onRetry={undefined}
-        position="bottom"
-      />
-    </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

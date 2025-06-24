@@ -2,7 +2,7 @@ import React from 'react';
 import { Building, Check, X } from 'lucide-react';
 import Button from './ui/Button';
 import { toast } from 'react-hot-toast';
-import { Invite } from '../types/invite';
+import { InviteCode as Invite } from '../models';
 
 // Updated interface to be compatible with the Invite type
 interface InvitationBannerProps {
@@ -58,8 +58,7 @@ const InvitationBanner: React.FC<InvitationBannerProps> = ({
           
           <div className="mt-2 space-y-1 text-gray-700">
             <p><span className="font-medium">Property:</span> {invite.propertyName || 'Unknown Property'}</p>
-            {invite.unitNumber && <p><span className="font-medium">Unit:</span> {invite.unitNumber}</p>}
-            {invite.managerName && <p><span className="font-medium">From:</span> {invite.managerName}</p>}
+            {invite.unitId && <p><span className="font-medium">Unit:</span> {invite.unitId}</p>}
           </div>
           
           <div className="mt-4 flex gap-3">

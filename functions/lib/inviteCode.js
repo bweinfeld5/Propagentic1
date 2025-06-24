@@ -301,6 +301,8 @@ exports.redeemInviteCode = functions.https.onCall(async (data, context) => {
                 // Only set these if not already set
                 role: (userData === null || userData === void 0 ? void 0 : userData.role) || 'tenant',
                 userType: (userData === null || userData === void 0 ? void 0 : userData.userType) || 'tenant',
+                propertyId: propertyId,           // ✅ CRITICAL FIX: Add propertyId
+                landlordId: inviteCodeData.landlordId, // ✅ CRITICAL FIX: Add landlordId
                 updatedAt: now
             };
             // If the user doesn't have properties array, create it

@@ -14,6 +14,8 @@ import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, callFunction } from '../../firebase/config';
 import dataService from '../../services/dataService';
+import { createMaintenanceRequest } from '../../services/firestore/maintenanceService';
+import { MaintenanceCategory, MaintenancePriority } from '../../models/MaintenanceRequest';
 
 interface EnhancedMaintenanceFormProps {
   propertyId?: string;
@@ -282,33 +284,40 @@ const EnhancedMaintenanceForm: React.FC<EnhancedMaintenanceFormProps> = ({
         photoUrls.push(downloadUrl);
       }
 
-      // Create maintenance ticket
-      const ticketData = {
-        tenantId: currentUser.uid,
-        tenantName: currentUser.displayName || 'Unknown Tenant',
-        tenantEmail: currentUser.email,
+      // Create maintenance request using the proper service
+      const requestData = {
         propertyId: selectedProperty.id,
         propertyName: selectedProperty.name || selectedProperty.nickname || 'Property',
-        issueTitle: formData.issueTitle.trim(),
+        propertyAddress: `${selectedProperty.streetAddress || ''} ${selectedProperty.city || ''} ${selectedProperty.state || ''}`.trim() || 'Address not available',
+        tenantId: currentUser.uid,
+        tenantName: currentUser.displayName || 'Unknown Tenant',
+        tenantEmail: currentUser.email || '',
+        title: formData.issueTitle.trim(),
         description: formData.description.trim(),
-        category: formData.category || 'other',
-        urgency: formData.urgency,
-        location: formData.location.trim(),
-        photos: photoUrls,
-        availabilityNotes: formData.availabilityNotes.trim(),
-        status: 'pending_classification',
-        submittedBy: currentUser.uid,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        category: (formData.category || 'other') as MaintenanceCategory,
+        priority: (formData.urgency === 'emergency' ? 'urgent' : formData.urgency) as MaintenancePriority,
+        unitNumber: selectedProperty.unitNumber,
+        specificLocation: formData.location.trim() || undefined,
+        isEmergency: formData.urgency === 'emergency',
+        photos: photoUrls
       };
 
-      const docRef = await addDoc(collection(db, 'tickets'), ticketData);
+      console.log('🔄 Submitting maintenance request to Firebase:', requestData);
+      console.log('📍 Using maintenanceService.createMaintenanceRequest');
+      console.log('👤 Current user:', currentUser.uid);
+      console.log('🏠 Property:', selectedProperty);
+
+      const newRequest = await createMaintenanceRequest(requestData);
+      
+      console.log('✅ Maintenance request submitted successfully with ID:', newRequest.id);
 
       // Trigger AI classification if available
       try {
-        await callFunction('classifyMaintenanceRequest', { ticketId: docRef.id });
+        console.log('🤖 Attempting to trigger AI classification for request:', newRequest.id);
+        await callFunction('classifyMaintenanceRequest', { ticketId: newRequest.id });
+        console.log('✅ AI classification triggered successfully');
       } catch (classificationError) {
-        console.warn('AI classification failed, but ticket was created:', classificationError);
+        console.warn('⚠️ AI classification failed, but request was created:', classificationError);
       }
 
       toast.success('Maintenance request submitted successfully!');
@@ -322,9 +331,35 @@ const EnhancedMaintenanceForm: React.FC<EnhancedMaintenanceFormProps> = ({
         });
       }
 
-    } catch (err) {
-      console.error('Error submitting maintenance request:', err);
-      setError('Failed to submit request. Please try again.');
+    } catch (err: any) {
+      console.error('❌ Error submitting maintenance request:', err);
+      console.error('Error details:', {
+        message: err?.message,
+        code: err?.code,
+        stack: err?.stack
+      });
+      
+      let errorMessage = 'Failed to submit request. Please try again.';
+      
+      // Provide more specific error messages based on Firebase error codes
+      if (err?.code) {
+        switch (err.code) {
+          case 'permission-denied':
+            errorMessage = 'Permission denied. You may not have access to submit requests.';
+            break;
+          case 'unavailable':
+            errorMessage = 'Firebase is temporarily unavailable. Please try again later.';
+            break;
+          case 'unauthenticated':
+            errorMessage = 'Authentication required. Please log in again.';
+            break;
+          default:
+            errorMessage = `Firebase error: ${err.message || 'Unknown error'}`;
+        }
+      }
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -45,15 +45,62 @@ async function sendTestEmail() {
     console.log('Creating email document...');
     
     const testEmail = {
-      to: email, // Send to the same email used for authentication
-      subject: 'Test Email from PropAgentic CLI',
-      text: 'This is a plain text test email sent from the PropAgentic CLI tool.',
+      to: 'ben@propagenticai.com', // Send to Ben's email as requested
+      subject: 'PropAgentic Test Email - Security Rules Updated',
+      text: `PropAgentic Test Email - Security Rules Updated
+
+Hi Ben,
+
+Great news! The email system is working after the security rules update.
+
+✅ What's Working:
+- Tenant Data Access: 34 tenant accounts accessible via Cloud Functions
+- Email Sending: Firebase Extension integration successful
+- Security Rules: Updated to allow proper mail collection access  
+- Property Invitations: New collection rules added for tenant invitations
+
+🔧 Recent Updates:
+- Added read permissions for mail collection testing
+- Created propertyInvitations collection security rules
+- Enhanced email system with Firebase Extension
+- Fixed tenant invitation flow for existing users
+
+The system is ready for tenant property invitations!
+
+Sent at: ${new Date().toLocaleString()}
+From: PropAgentic Email System`,
       html: `
-        <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #176B5D;">PropAgentic Email Test</h2>
-          <p>This is a test email sent from the PropAgentic CLI tool.</p>
-          <p>If you're seeing this, the email sending system is working properly!</p>
-          <p>Timestamp: ${new Date().toLocaleString()}</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #f97316;">🎉 PropAgentic Email System Working!</h2>
+          <p>Hi Ben,</p>
+          <p>Great news! The email system is working after the security rules update.</p>
+          
+          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #374151; margin-top: 0;">✅ What's Working:</h3>
+            <ul style="color: #6b7280;">
+              <li><strong>Tenant Data Access:</strong> 34 tenant accounts accessible via Cloud Functions</li>
+              <li><strong>Email Sending:</strong> Firebase Extension integration successful</li>
+              <li><strong>Security Rules:</strong> Updated to allow proper mail collection access</li>
+              <li><strong>Property Invitations:</strong> New collection rules added for tenant invitations</li>
+            </ul>
+          </div>
+          
+          <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #92400e; margin-top: 0;">🔧 Recent Updates:</h3>
+            <ul style="color: #78350f;">
+              <li>Added read permissions for mail collection testing</li>
+              <li>Created propertyInvitations collection security rules</li>
+              <li>Enhanced email system with Firebase Extension</li>
+              <li>Fixed tenant invitation flow for existing users</li>
+            </ul>
+          </div>
+          
+          <p>The system is ready for tenant property invitations! 🏠</p>
+          
+          <p style="color: #6b7280; font-size: 14px;">
+            Sent at: ${new Date().toLocaleString()}<br>
+            From: PropAgentic Email System
+          </p>
         </div>
       `
     };

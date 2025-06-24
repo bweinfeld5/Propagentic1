@@ -221,363 +221,220 @@ const PreLaunchPage = () => {
 
   // Enhanced pre-launch email template function with name personalization
   const getPreLaunchEmailTemplate = (role, userName) => {
-    const baseContent = {
-      landlord: {
-        subject: "🏠 You're on the PropAgentic Pre-Launch List!",
-        preview: "Get ready to revolutionize your property management",
-        greeting: "property owner",
-        benefits: [
-          "Streamlined tenant communication and maintenance requests",
-          "AI-powered rent optimization and market analysis", 
-          "Automated contractor vetting and job management",
-          "Real-time property performance analytics"
-        ],
-        cta: "We'll notify you the moment PropAgentic launches for landlords."
-      },
-      tenant: {
-        subject: "🏠 You're on the PropAgentic Pre-Launch List!",
-        preview: "Maintenance requests are about to get much easier",
-        greeting: "tenant",
-        benefits: [
-          "Submit maintenance requests instantly with photos",
-          "Track repair status in real-time",
-          "Direct communication with your landlord and contractors",
-          "Rate and review completed work"
-        ],
-        cta: "We'll notify you when your landlord can invite you to PropAgentic."
-      },
-      contractor: {
-        subject: "🔧 You're on the PropAgentic Pre-Launch List!",
-        preview: "Get ready to access quality maintenance jobs",
-        greeting: "contractor",
-        benefits: [
-          "Access to pre-screened maintenance jobs in your area",
-          "Secure escrow payments for peace of mind",
-          "Build your reputation with verified reviews",
-          "Streamlined communication with property managers"
-        ],
-        cta: "We'll notify you when PropAgentic launches in your service area."
-      },
-      supporter: {
-        subject: "🌟 Thank you for supporting PropAgentic!",
-        preview: "Your support means everything to us",
-        greeting: "supporter",
-        benefits: [
-          "Exclusive updates on our development progress",
-          "Early access to beta features and testing",
-          "Direct input on product features and roadmap",
-          "Special recognition in our community"
-        ],
-        cta: "We'll keep you updated on our journey and invite you to be part of our story."
-      }
-    };
-
-    const content = baseContent[role] || baseContent.landlord;
+    // NOTE: This function will be migrated to unified service in future update
+    const subject = `Welcome to PropAgentic, ${userName}! 🏠`;
     
     const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${content.subject}</title>
-      </head>
-      <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f1eb;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: white;">
-          <!-- Header -->
-          <div style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); padding: 40px 20px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Welcome to the Future!</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">${content.preview}</p>
-          </div>
-          
-          <!-- Main Content -->
-          <div style="padding: 40px 30px;">
-            <h2 style="color: #1f2937; margin-bottom: 20px;">Hello ${userName}! 👋</h2>
-            
-            <p style="color: #4b5563; line-height: 1.6; margin-bottom: 25px;">
-              Thank you for joining the PropAgentic pre-launch waitlist! As a ${content.greeting}, you're among the first to experience the next generation of property management technology.
-            </p>
-            
-            <div style="background: #fef3c7; padding: 25px; border-radius: 12px; margin: 30px 0; border-left: 4px solid #f59e0b;">
-              <h3 style="color: #92400e; margin-top: 0; margin-bottom: 15px;">What's coming your way:</h3>
-              <ul style="color: #92400e; margin: 0; padding-left: 20px;">
-                ${content.benefits.map(benefit => `<li style="margin-bottom: 8px;">${benefit}</li>`).join('')}
-              </ul>
-            </div>
-            
-            <p style="color: #4b5563; line-height: 1.6; margin-bottom: 25px;">
-              ${content.cta}
-            </p>
-            
-            <div style="text-align: center; margin: 35px 0;">
-              <div style="background: #f97316; color: white; padding: 15px 30px; border-radius: 8px; display: inline-block; font-weight: bold;">
-                🚀 Early Access Reserved
-              </div>
-            </div>
-          </div>
-          
-          <!-- Footer -->
-          <div style="background: #f9fafb; padding: 20px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-              © ${new Date().getFullYear()} PropAgentic. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </body>
-      </html>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #ee963c;">Welcome to PropAgentic!</h2>
+        <p>Hi ${userName},</p>
+        <p>Thank you for joining our waitlist as a ${role}! We're excited to have you on board.</p>
+        <p>We'll keep you updated on our launch progress and let you know as soon as PropAgentic is ready for you.</p>
+        <p>Best regards,<br>The PropAgentic Team</p>
+      </div>
     `;
-
-    const text = `
-      Welcome to PropAgentic Pre-Launch!
-      
-      Hello ${userName}!
-      
-      Thank you for joining the PropAgentic pre-launch waitlist! As a ${content.greeting}, you're among the first to experience the next generation of property management technology.
-      
-      What's coming your way:
-      ${content.benefits.map(benefit => `• ${benefit}`).join('\n')}
-      
-      ${content.cta}
-      
-      Best regards,
-      The PropAgentic Team
-    `;
-
-    return {
-      subject: content.subject,
-      html: html,
-      text: text
-    };
+    
+    const text = `Welcome to PropAgentic!\n\nHi ${userName},\n\nThank you for joining our waitlist as a ${role}! We're excited to have you on board.\n\nWe'll keep you updated on our launch progress and let you know as soon as PropAgentic is ready for you.\n\nBest regards,\nThe PropAgentic Team`;
+    
+    return { subject, html, text };
   };
 
-  // Enhanced dynamic background with multiple gradients and effects
-  const dynamicBackgroundStyle = {
-    background: `
-      radial-gradient(circle at ${20 + gradientShift/2}% ${30 + gradientShift/3}%, rgba(249, 115, 22, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at ${80 - gradientShift/2}% ${70 - gradientShift/3}%, rgba(234, 88, 12, 0.1) 0%, transparent 50%),
-      linear-gradient(${backgroundOffset}deg, #f5f1eb 0%, #f0ede6 25%, #ebe8e1 50%, #f5f1eb 75%, #f0ede6 100%)
-    `,
-    transition: 'background 0.5s ease',
-    minHeight: '100vh',
-    position: 'relative'
-  };
-
-  // Floating particles effect
-  const FloatingParticle = ({ delay, duration, x, y }) => (
-    <motion.div
-      className="absolute w-2 h-2 bg-orange-200 rounded-full opacity-30"
-      animate={{
-        y: [y, y - 100, y],
-        x: [x, x + 20, x - 20, x],
-        opacity: [0.3, 0.6, 0.3]
+  return (
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+      style={{
+        background: `
+          linear-gradient(
+            ${45 + backgroundOffset}deg, 
+            #ee963c ${gradientShift}%, 
+            #f59e0b ${20 + gradientShift}%, 
+            #ea580c ${40 + gradientShift}%, 
+            #dc2626 ${60 + gradientShift}%, 
+            #c2410c ${80 + gradientShift}%
+          )
+        `
       }}
-      transition={{
-        duration: duration,
-        delay: delay,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }}
-      style={{ left: `${x}%`, top: `${y}%` }}
-    />
-  );
-
-  if (isSubmitted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={dynamicBackgroundStyle}>
-        {/* Floating Particles */}
-        {[...Array(12)].map((_, i) => (
-          <FloatingParticle 
+    >
+      {/* Animated background elements */}
+      <div className="absolute inset-0 opacity-10">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
             key={i}
-                          delay={(i || 0) * 0.8}
-            duration={8 + i * 0.5}
-            x={Math.random() * 100}
-            y={Math.random() * 100}
+            className="absolute bg-white rounded-full"
+            style={{
+              width: Math.random() * 100 + 50,
+              height: Math.random() * 100 + 50,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              x: [0, Math.random() * 200 - 100],
+              y: [0, Math.random() * 200 - 100],
+              scale: [1, Math.random() * 0.5 + 0.8],
+              opacity: [0.1, Math.random() * 0.3 + 0.1],
+            }}
+            transition={{
+              duration: Math.random() * 10 + 10,
+              repeat: Infinity,
+              repeatType: "reverse",
+              ease: "easeInOut",
+            }}
           />
         ))}
-        
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-center relative z-10"
-        >
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 max-w-md mx-auto border border-orange-100">
+      </div>
+
+      <motion.div 
+        className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 w-full max-w-md relative z-10"
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+          >
+            <PropAgenticLogo className="h-16 w-auto mx-auto mb-4" />
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+          >
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Coming Soon
+            </h1>
+            <p className="text-gray-600">
+              Join the waitlist to be the first to know when PropAgentic launches!
+            </p>
+          </motion.div>
+        </div>
+
+        {!isSubmitted ? (
+          <motion.form 
+            onSubmit={handleSubmit} 
+            className="space-y-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.6 }}
+          >
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                I am a:
+              </label>
+              <div className="grid grid-cols-1 gap-3">
+                {[
+                  { value: 'landlord', label: 'Landlord', icon: '🏠' },
+                  { value: 'tenant', label: 'Tenant', icon: '🏡' },
+                  { value: 'contractor', label: 'Contractor', icon: '🔧' }
+                ].map((role) => (
+                  <motion.button
+                    key={role.value}
+                    type="button"
+                    onClick={() => setSelectedRole(role.value)}
+                    className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                      selectedRole === role.value
+                        ? 'border-orange-500 bg-orange-50 text-orange-900'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                    }`}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <span className="text-2xl">{role.icon}</span>
+                      <span className="font-medium">{role.label}</span>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                placeholder="Enter your full name"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+
+            {error && (
+              <motion.div 
+                className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                {error}
+              </motion.div>
+            )}
+
+            <motion.button
+              type="submit"
+              disabled={isSubmitting || !selectedRole || !name.trim() || !email}
+              className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
+                isSubmitting || !selectedRole || !name.trim() || !email
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 shadow-lg hover:shadow-xl'
+              }`}
+              whileHover={!isSubmitting && selectedRole && name.trim() && email ? { scale: 1.02 } : {}}
+              whileTap={!isSubmitting && selectedRole && name.trim() && email ? { scale: 0.98 } : {}}
+            >
+              {isSubmitting ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Joining Waitlist...</span>
+                </div>
+              ) : (
+                'Join Waitlist'
+              )}
+            </motion.button>
+          </motion.form>
+        ) : (
+          <motion.div 
+            className="text-center space-y-4"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          >
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome, {name}!</h2>
-            <p className="text-gray-600 mb-4">
-              You're officially on our waitlist! We'll notify you when PropAgentic is ready for {selectedRole === 'landlord' ? 'landlords' : selectedRole === 'tenant' ? 'tenants' : selectedRole === 'contractor' ? 'contractors' : 'supporters'}.
+            <h2 className="text-2xl font-bold text-gray-900">You're on the list!</h2>
+            <p className="text-gray-600">
+              Thank you for joining our waitlist. We'll notify you as soon as PropAgentic is ready!
             </p>
-            <p className="text-sm text-gray-500">
-              Keep an eye on your inbox at <strong>{email}</strong>
-            </p>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4" style={dynamicBackgroundStyle}>
-      {/* Floating Particles */}
-      {[...Array(15)].map((_, i) => (
-        <FloatingParticle 
-          key={i}
-                        delay={(i || 0) * 0.6}
-          duration={10 + i * 0.3}
-          x={Math.random() * 100}
-          y={Math.random() * 100}
-        />
-      ))}
-
-      {/* Logo */}
-      <motion.div 
-        initial={{ y: -30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="mb-16 relative z-10"
-      >
-        <div className="flex items-center justify-center">
-          <PropAgenticLogo className="h-20 w-auto" />
-        </div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          className="text-center mt-4"
-        >
-          <h1 className="text-2xl font-bold text-gray-800">PropAgentic</h1>
-          <p className="text-gray-600 text-sm">The Future of Property Management</p>
-        </motion.div>
-      </motion.div>
-
-      {/* Main Card */}
-      <motion.div
-        initial={{ y: 30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-        className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 w-full max-w-lg relative z-10 border border-orange-100"
-      >
-        {/* Header */}
-        <div className="text-center mb-6">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <LockClosedIcon className="w-5 h-5 text-orange-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Early Access</h2>
-          </div>
-          <p className="text-gray-600 text-sm">Join the revolution in property management</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Name Input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Your name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your full name"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 text-gray-900 placeholder-gray-500 bg-white"
-              required
-            />
-          </div>
-
-          {/* Role Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Select your role:
-            </label>
-            <div className="space-y-3">
-              {[
-                { value: 'landlord', label: 'Landlord / Property Owner', icon: '🏠' },
-                { value: 'tenant', label: 'Tenant', icon: '🏡' },
-                { value: 'contractor', label: 'Contractor / Service Provider', icon: '🔧' },
-                { value: 'supporter', label: 'Supporter / Interested Party', icon: '🌟' }
-              ].map((role) => (
-                <label key={role.value} className="flex items-center p-3 rounded-xl border border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition-all duration-200 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="role"
-                    value={role.value}
-                    checked={selectedRole === role.value}
-                    onChange={(e) => setSelectedRole(e.target.value)}
-                    className="w-4 h-4 text-orange-600 border-gray-300 focus:ring-orange-500"
-                  />
-                  <span className="ml-3 text-xl">{role.icon}</span>
-                  <span className="ml-2 text-gray-700 font-medium">{role.label}</span>
-                </label>
-              ))}
+            <div className="pt-4">
+              <p className="text-sm text-gray-500">
+                Keep an eye on your inbox for updates and exclusive early access.
+              </p>
             </div>
-          </div>
-
-          {/* Email Input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email address
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 text-gray-900 placeholder-gray-500 bg-white"
-              required
-            />
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-red-50 border border-red-200 rounded-xl p-3"
-            >
-              <p className="text-sm text-red-600">{error}</p>
-            </motion.div>
-          )}
-
-          {/* Submit Button */}
-          <motion.button
-            type="submit"
-            disabled={isSubmitting}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-orange-300 disabled:to-orange-400 text-white font-semibold py-4 px-4 rounded-xl transition-all duration-200 flex items-center justify-center shadow-lg"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
-                Joining...
-              </>
-            ) : (
-              <>
-                <span>Join the Waitlist</span>
-                <span className="ml-2">🚀</span>
-              </>
-            )}
-          </motion.button>
-
-          {/* Description */}
-          <p className="text-xs text-gray-500 text-center leading-relaxed">
-            We'll notify you when PropAgentic is ready for your role. 
-            <br />No spam, unsubscribe anytime.
-          </p>
-        </form>
-      </motion.div>
-
-      {/* Footer */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.6 }}
-        className="mt-16 relative z-10"
-      >
-        <p className="text-sm text-gray-600 text-center">
-          © 2025 PropAgentic. All rights reserved.
-        </p>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );

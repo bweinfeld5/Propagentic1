@@ -75,6 +75,7 @@ const EnhancedMaintenanceForm: React.FC<EnhancedMaintenanceFormProps> = ({
 
   // Get property ID from props or route state
   const propertyId = propPropertyId || (location.state as { propertyId?: string } | null)?.propertyId;
+  const isTestMode = (location.state as { testMode?: boolean } | null)?.testMode || propertyId === 'test-property-id';
 
   // Fetch properties on mount
   useEffect(() => {
@@ -85,6 +86,22 @@ const EnhancedMaintenanceForm: React.FC<EnhancedMaintenanceFormProps> = ({
         dataService.configure({ isDemoMode: false, currentUser });
         
         if (propertyId) {
+          // Handle test mode with mock property
+          if (isTestMode && propertyId === 'test-property-id') {
+            const mockProperty = {
+              id: 'test-property-id',
+              name: 'Test Property',
+              nickname: 'Test Property for Development',
+              streetAddress: '123 Test Street',
+              city: 'Test City',
+              state: 'TS',
+              zipCode: '12345'
+            };
+            setProperties([mockProperty]);
+            setSelectedProperty(mockProperty);
+            return;
+          }
+          
           // If we have a specific property ID, just fetch that one
           const property = await dataService.getPropertyById(propertyId);
           if (property) {
@@ -113,7 +130,7 @@ const EnhancedMaintenanceForm: React.FC<EnhancedMaintenanceFormProps> = ({
     };
 
     fetchProperties();
-  }, [currentUser, userProfile, propertyId]);
+  }, [currentUser, userProfile, propertyId, isTestMode]);
 
   // AI-powered category suggestion
   const suggestCategory = async (description: string, title: string) => {
@@ -233,6 +250,28 @@ const EnhancedMaintenanceForm: React.FC<EnhancedMaintenanceFormProps> = ({
     setError('');
 
     try {
+      // Handle test mode submissions
+      if (isTestMode) {
+        console.warn('Test mode: Maintenance request submission simulated');
+        toast.success('Test maintenance request submitted successfully! (No actual data saved)');
+        
+        // Simulate a delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Call onSuccess callback or navigate
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          navigate('/tenant/dashboard', { 
+            state: { 
+              showSuccessMessage: true,
+              message: 'Test maintenance request submitted successfully!'
+            }
+          });
+        }
+        return;
+      }
+
       // Upload photos to Firebase Storage
       const photoUrls: string[] = [];
       
@@ -303,13 +342,25 @@ const EnhancedMaintenanceForm: React.FC<EnhancedMaintenanceFormProps> = ({
   return (
     <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+      <div className={`bg-gradient-to-r px-6 py-4 ${
+        isTestMode ? 'from-yellow-500 to-yellow-600' : 'from-blue-500 to-blue-600'
+      }`}>
         <h2 className="text-xl font-semibold text-white flex items-center">
           <WrenchScrewdriverIcon className="w-6 h-6 mr-2" />
           Submit Maintenance Request
+          {isTestMode && (
+            <span className="ml-2 px-2 py-1 bg-yellow-800 text-yellow-100 text-xs rounded-full">
+              TEST MODE
+            </span>
+          )}
         </h2>
-        <p className="text-blue-100 text-sm mt-1">
-          Describe your issue and we'll get it resolved quickly
+        <p className={`text-sm mt-1 ${
+          isTestMode ? 'text-yellow-100' : 'text-blue-100'
+        }`}>
+          {isTestMode 
+            ? 'This is a test environment for development purposes' 
+            : 'Describe your issue and we\'ll get it resolved quickly'
+          }
         </p>
       </div>
 

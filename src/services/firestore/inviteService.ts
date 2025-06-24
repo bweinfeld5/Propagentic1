@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { CreateInviteSchema } from '../../schemas/CreateInviteSchema';
+import { unifiedEmailService } from '../unifiedEmailService';
 
 export type InviteStatus = 'pending' | 'accepted' | 'declined' | 'expired' | 'deleted';
 export type EmailStatus = 'pending' | 'sent' | 'failed';
@@ -40,7 +41,7 @@ export interface InviteDocument extends InviteData {
 }
 
 /**
- * Create a new invite
+ * Create a new invite and send unified email
  */
 export const createInvite = async (inviteData: InviteData): Promise<string> => {
   try {
@@ -67,6 +68,39 @@ export const createInvite = async (inviteData: InviteData): Promise<string> => {
     });
     
     console.log(`Invite created successfully with ID: ${docRef.id}`);
+
+    // Send unified invitation email
+    if (validatedData.landlordName && validatedData.propertyName) {
+      try {
+        console.log('Sending unified invitation email...');
+        const emailData = unifiedEmailService.generateEmailData({
+          tenantEmail: validatedData.tenantEmail,
+          inviteCode: docRef.id,
+          landlordName: validatedData.landlordName,
+          propertyName: validatedData.propertyName,
+          unitInfo: validatedData.unitNumber ? `Unit ${validatedData.unitNumber}` : undefined
+        });
+
+        // Add to mail collection for Firebase extension
+        await addDoc(collection(db, 'mail'), emailData);
+        
+        // Update invite status to sent
+        await updateDoc(doc(db, 'invites', docRef.id), {
+          emailSentStatus: 'sent' as EmailStatus,
+          updatedAt: serverTimestamp()
+        });
+        
+        console.log('Unified invitation email sent successfully');
+      } catch (emailError) {
+        console.error('Error sending unified invitation email:', emailError);
+        // Update invite status to failed but don't throw - invite was created successfully
+        await updateDoc(doc(db, 'invites', docRef.id), {
+          emailSentStatus: 'failed' as EmailStatus,
+          updatedAt: serverTimestamp()
+        });
+      }
+    }
+    
     return docRef.id;
   } catch (error) {
     console.error('Error creating invite:', error);

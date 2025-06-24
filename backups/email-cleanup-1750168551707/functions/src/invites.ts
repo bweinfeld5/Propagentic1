@@ -1,7 +1,7 @@
-// NOTE: Email sending migrated to unified service in src/services/unifiedEmailService.ts
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
+import { sendPropertyInviteEmail } from './sendgridEmailService';
 
 // Helper to generate a random code
 const generateInviteCode = (length = 8): string => {
@@ -18,21 +18,21 @@ if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-// Lazy initialization for APP_DOMAIN (temporarily unused - migrated to unified service)
-// let APP_DOMAIN: string;
-// const getAppDomain = (): string => {
-//   if (!APP_DOMAIN) {
-//     try {
-//       APP_DOMAIN = process.env.APP_DOMAIN || 
-//         (functions.config().app && functions.config().app.domain) || 
-//         'https://propagentic.com';
-//     } catch (error) {
-//       logger.warn('Failed to get app domain from config, using default');
-//       APP_DOMAIN = 'https://propagentic.com';
-//     }
-//   }
-//   return APP_DOMAIN;
-// };
+// Lazy initialization for APP_DOMAIN
+let APP_DOMAIN: string;
+const getAppDomain = (): string => {
+  if (!APP_DOMAIN) {
+    try {
+      APP_DOMAIN = process.env.APP_DOMAIN || 
+        (functions.config().app && functions.config().app.domain) || 
+        'https://propagentic.com';
+    } catch (error) {
+      logger.warn('Failed to get app domain from config, using default');
+      APP_DOMAIN = 'https://propagentic.com';
+    }
+  }
+  return APP_DOMAIN;
+};
 
 /**
  * Firestore trigger: Send invite email when invite document is created
@@ -72,26 +72,34 @@ export const sendInviteEmail = functions.firestore
       return; // Stop if we can't save the code
     }
 
-    // 3. Send the invitation email via SendGrid (temporarily disabled - migrated to unified service)
-    // const landlordName = inviteData.landlordName || 'A property manager';
-    // const propertyName = inviteData.propertyName || 'a property';
+    // 3. Send the invitation email via SendGrid
+    const landlordName = inviteData.landlordName || 'A property manager';
+    const propertyName = inviteData.propertyName || 'a property';
     const tenantEmail = inviteData.tenantEmail;
 
     try {
-      logger.info(`Sending invite email to: ${tenantEmail} - NOTE: Email sending migrated to unified service`);
+      logger.info(`Sending invite email via SendGrid to: ${tenantEmail}`);
       
-      // TODO: Integrate with unified email service from src/services/unifiedEmailService.ts
-      // For now, mark as sent to avoid breaking the flow
-      logger.warn('Email sending temporarily disabled - migrated to unified service');
-      
-      // Update document with success status (temporary)
-      await snap.ref.update({
-        status: 'sent',
-        emailDeliveredAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+      const emailSent = await sendPropertyInviteEmail(
+        tenantEmail,
+        inviteCode,
+        landlordName,
+        propertyName,
+        getAppDomain()
+      );
 
-      logger.info(`Invitation marked as sent (unified service integration pending): ${tenantEmail}, invite ID: ${inviteId}`);
+      if (emailSent) {
+        // Update document with success status
+        await snap.ref.update({
+          status: 'sent',
+          emailDeliveredAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        logger.info(`Invitation email sent successfully via SendGrid to: ${tenantEmail}, invite ID: ${inviteId}`);
+      } else {
+        throw new Error('SendGrid email sending failed');
+      }
     } catch (error: any) {
       logger.error('Error sending email via SendGrid:', {
         error: error.message,

@@ -1,17 +1,16 @@
+import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { onCall } from "firebase-functions/v2/https";
-import * as logger from "firebase-functions/logger";
 
 // Initialize Firebase Admin SDK
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-logger.info("🔥 Loading essential functions...");
+console.log("🔥 Loading essential functions...");
 
 // Basic Ping Function
-export const ping = onCall(async () => {
-  logger.info("Ping function invoked.");
+export const ping = functions.https.onCall(async () => {
+  console.log("Ping function invoked.");
   return { message: "pong", timestamp: Date.now() };
 });
 
@@ -43,24 +42,12 @@ import { createNotificationOnInvite } from './inviteTriggers';
 export { createNotificationOnInvite };
 
 // Import and export SendGrid email functions
-import { sendEmail } from './sendgridEmailService';
-export { sendEmail };
+import { sendEmail, sendPropertyInviteEmail } from './sendgridEmailService';
+export { sendEmail, sendPropertyInviteEmail };
 
 // Import and export test functions
 import { testSendGrid, testPing } from './testSendGrid';
 import { simpleTest } from './simpleTest';
 export { testSendGrid, testPing, simpleTest };
 
-// Import and export tenant service functions
-import { getAllTenants, searchTenants } from './tenantService';
-export { getAllTenants, searchTenants };
-
-// Import and export property invitation notification functions
-import { sendPropertyInvitationEmail, sendPropertyInvitationEmailManual } from './propertyInvitationNotifications';
-export { sendPropertyInvitationEmail, sendPropertyInvitationEmailManual };
-
-// Import and export invite code functions
-import { generateInviteCodeHttp, validateInviteCode, redeemInviteCode } from './inviteCode';
-export { generateInviteCodeHttp as generateInviteCode, validateInviteCode, redeemInviteCode };
-
-logger.info("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tenant service, property invitation notifications, invite codes, tests).");
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests).");

@@ -1,5 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import { HttpsError } from 'firebase-functions/v1/auth';
 
 // Interfaces for data types
@@ -40,103 +41,87 @@ const isValidInviteCode = (code: string): boolean => {
 };
 
 /**
- * Generate an invite code for a property (Callable function for Frontend)
- * This is the correct function for use with httpsCallable()
+ * Generate an invite code for a property
+ * This function allows landlords to create codes that tenants can use to register
  */
-export const generateInviteCode = functions.https.onCall(async (data: any, context: any) => {
-  // Ensure user is authenticated
+export const generateInviteCode = functions.https.onCall(async (data, context) => {
+  // Ensure user is authenticated and has a landlord role
   if (!context.auth) {
     throw new functions.https.HttpsError(
       'unauthenticated',
-      'You must be logged in to generate invite codes.'
+      'You must be logged in to create an invite code.'
     );
   }
 
-  const userId = context.auth.uid;
-  functions.logger.info(`🔧 Generating invite code for user: ${userId}`);
+  // Get the user data to check role
+  const db = admin.firestore();
+  const userDoc = await db.collection('users').doc(context.auth.uid).get();
+  
+  if (!userDoc.exists) {
+    throw new functions.https.HttpsError(
+      'not-found',
+      'User profile not found.'
+    );
+  }
+  
+  const userData = userDoc.data();
+  
+  // Verify user is a landlord or property manager
+  if (userData?.role !== 'landlord' && userData?.role !== 'admin' && userData?.role !== 'property_manager') {
+    throw new functions.https.HttpsError(
+      'permission-denied',
+      'Only landlords and property managers can create invite codes.'
+    );
+  }
+
+  // Get parameters from request
+  const { propertyId, unitId, email, expirationDays = 7 } = data;
+
+  // Validate required parameters
+  if (!propertyId) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Property ID is required.'
+    );
+  }
+
+  // Check if the property exists and the user has access to it
+  const propertyDoc = await db.collection('properties').doc(propertyId).get();
+  if (!propertyDoc.exists) {
+    throw new functions.https.HttpsError(
+      'not-found',
+      'Property not found.'
+    );
+  }
+
+  const propertyData = propertyDoc.data();
+  
+  // Check if the user has access to this property
+  const hasAccess = propertyData?.ownerId === context.auth.uid ||
+                   (propertyData?.managers && propertyData.managers.includes(context.auth.uid)) ||
+                   userData?.role === 'admin';
+  
+  if (!hasAccess) {
+    throw new functions.https.HttpsError(
+      'permission-denied',
+      'You do not have permission to create invite codes for this property.'
+    );
+  }
+
+  // Verify unit exists if specified
+  if (unitId && propertyData?.units) {
+    const unitExists = propertyData.units.some((unit: any) => unit.id === unitId || unit.unitNumber === unitId);
+    if (!unitExists) {
+      throw new functions.https.HttpsError(
+        'not-found',
+        'The specified unit could not be found in this property.'
+      );
+    }
+  }
 
   try {
-    // Get the user data to check role
-    const db = admin.firestore();
-    const userDoc = await db.collection('users').doc(userId).get();
-    
-    if (!userDoc.exists) {
-      functions.logger.error(`❌ User profile not found: ${userId}`);
-      throw new functions.https.HttpsError(
-        'not-found',
-        'User profile not found'
-      );
-    }
-    
-    const userData = userDoc.data();
-    functions.logger.info(`🔧 User role: ${userData?.role || userData?.userType}`);
-    
-    // Verify user is a landlord or property manager
-    const userRole = userData?.role || userData?.userType;
-    if (userRole !== 'landlord' && userRole !== 'admin' && userRole !== 'property_manager') {
-      functions.logger.error(`❌ User not authorized. Role: ${userRole}`);
-      throw new functions.https.HttpsError(
-        'permission-denied',
-        'Only landlords and property managers can create invite codes'
-      );
-    }
-
-    // Get parameters from request
-    const { propertyId, unitId, email, expirationDays = 7 } = data;
-    functions.logger.info(`🔧 Request params:`, { propertyId, unitId, email, expirationDays });
-
-    // Validate required parameters
-    if (!propertyId) {
-      throw new functions.https.HttpsError(
-        'invalid-argument',
-        'Property ID is required'
-      );
-    }
-
-    // Check if the property exists and the user has access to it
-    const propertyDoc = await db.collection('properties').doc(propertyId).get();
-    if (!propertyDoc.exists) {
-      functions.logger.error(`❌ Property not found: ${propertyId}`);
-      throw new functions.https.HttpsError(
-        'not-found',
-        'Property not found'
-      );
-    }
-
-    const propertyData = propertyDoc.data();
-    functions.logger.info(`🔧 Property data:`, { 
-      landlordId: propertyData?.landlordId, 
-      ownerId: propertyData?.ownerId, 
-      requestUserId: userId 
-    });
-    
-    // Check if the user has access to this property
-    const hasAccess = propertyData?.ownerId === userId ||
-                     propertyData?.landlordId === userId ||
-                     (propertyData?.managers && propertyData.managers.includes(userId)) ||
-                     userRole === 'admin';
-    
-    if (!hasAccess) {
-      functions.logger.error(`❌ User ${userId} does not have access to property ${propertyId}`);
-      throw new functions.https.HttpsError(
-        'permission-denied',
-        'You do not have permission to create invite codes for this property'
-      );
-    }
-
-    // Verify unit exists if specified
-    if (unitId && propertyData?.units) {
-      const unitExists = propertyData.units.some((unit: any) => unit.id === unitId || unit.unitNumber === unitId);
-      if (!unitExists) {
-        throw new functions.https.HttpsError(
-          'not-found',
-          'The specified unit could not be found in this property'
-        );
-      }
-    }
-
     // Generate a unique code
-    let generatedCode: string = '';
+    let code;
     let isUnique = false;
     
     // Define character set for codes excluding similar-looking characters
@@ -145,14 +130,14 @@ export const generateInviteCode = functions.https.onCall(async (data: any, conte
     // Try to generate a unique code
     while (!isUnique) {
       // Generate an 8-character code
-      generatedCode = '';
+      code = '';
       for (let i = 0; i < 8; i++) {
-        generatedCode += chars.charAt(Math.floor(Math.random() * chars.length));
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
       }
       
       // Check if the code already exists
       const codeQuery = await db.collection(INVITE_CODES_COLLECTION)
-        .where('code', '==', generatedCode)
+        .where('code', '==', code)
         .limit(1)
         .get();
       
@@ -168,8 +153,8 @@ export const generateInviteCode = functions.https.onCall(async (data: any, conte
     
     // Create the invite code record
     const inviteCodeData: InviteCode = {
-      code: generatedCode,
-      landlordId: userId,
+      code,
+      landlordId: context.auth.uid,
       propertyId,
       unitId: unitId || undefined,
       email: email || undefined,
@@ -180,34 +165,21 @@ export const generateInviteCode = functions.https.onCall(async (data: any, conte
     
     const inviteCodeRef = await db.collection(INVITE_CODES_COLLECTION).add(inviteCodeData);
     
-    functions.logger.info(`✅ Invite code created successfully: ${generatedCode}`);
-    
     // Return the created invite code
     return {
       success: true,
       inviteCode: {
         id: inviteCodeRef.id,
-        code: generatedCode,
-        propertyId,
-        landlordId: userId,
-        unitId: unitId || null,
-        email: email || null,
-        status: 'active',
+        ...inviteCodeData,
         createdAt: inviteCodeData.createdAt.toMillis(),
         expiresAt: inviteCodeData.expiresAt.toMillis()
       }
     };
-
   } catch (error) {
-    // Forward HttpsError errors
-    if (error instanceof functions.https.HttpsError) {
-      throw error;
-    }
-    
     functions.logger.error('Error creating invite code:', error);
     throw new functions.https.HttpsError(
       'internal',
-      'An error occurred while creating the invite code'
+      'An error occurred while creating the invite code. Please try again later.'
     );
   }
 });
@@ -216,7 +188,7 @@ export const generateInviteCode = functions.https.onCall(async (data: any, conte
  * Validate an invite code without redeeming it
  * This helps check if a code is valid during registration process
  */
-export const validateInviteCode = functions.https.onCall(async (data: any, context: any) => {
+export const validateInviteCode = functions.https.onCall(async (data, context) => {
   // Get the code from the request
   const { code } = data;
   
@@ -317,7 +289,7 @@ export const validateInviteCode = functions.https.onCall(async (data: any, conte
  * Redeem an invite code to associate a tenant with a property
  * This function allows tenants to use invite codes during or after registration
  */
-export const redeemInviteCode = functions.https.onCall(async (data: any, context: any) => {
+export const redeemInviteCode = functions.https.onCall(async (data, context) => {
   // Ensure user is authenticated
   if (!context.auth) {
     throw new functions.https.HttpsError(

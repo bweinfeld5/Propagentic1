@@ -131,7 +131,7 @@ export const QRCodeInviteTest: React.FC = () => {
         updateTest('validation', 'running', 'Testing invite code validation...');
         try {
           const validationResult = await unifiedInviteCodeService.validateInviteCode(generatedCode);
-          if (validationResult.valid) {
+          if (validationResult.isValid) {
             updateTest('validation', 'success', 'Code validation successful', validationResult);
           } else {
             updateTest('validation', 'error', `Validation failed: ${validationResult.message}`);

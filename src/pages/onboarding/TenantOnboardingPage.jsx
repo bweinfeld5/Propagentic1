@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import HomeNavLink from '../layout/HomeNavLink';
+import HomeNavLink from '../../components/layout/HomeNavLink';
 
 const TenantOnboardingPage = () => {
   const { currentUser, userProfile, fetchUserProfile } = useAuth();

@@ -81,7 +81,7 @@ Object.defineProperty(exports, "sendPropertyInvitationEmail", { enumerable: true
 Object.defineProperty(exports, "sendPropertyInvitationEmailManual", { enumerable: true, get: function () { return propertyInvitationNotifications_1.sendPropertyInvitationEmailManual; } });
 // Import and export invite code functions
 const inviteCode_1 = require("./inviteCode");
-Object.defineProperty(exports, "generateInviteCode", { enumerable: true, get: function () { return inviteCode_1.generateInviteCodeHttp; } });
+Object.defineProperty(exports, "generateInviteCode", { enumerable: true, get: function () { return inviteCode_1.generateInviteCode; } });
 Object.defineProperty(exports, "validateInviteCode", { enumerable: true, get: function () { return inviteCode_1.validateInviteCode; } });
 Object.defineProperty(exports, "redeemInviteCode", { enumerable: true, get: function () { return inviteCode_1.redeemInviteCode; } });
 logger.info("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tenant service, property invitation notifications, invite codes, tests).");

@@ -1,0 +1,11 @@
+# Task ID: 6
+# Title: Consolidate Tenant Dashboard Components
+# Status: pending
+# Dependencies: 5
+# Priority: medium
+# Description: Merge TenantDashboard.tsx and EnhancedTenantDashboard.tsx into single component
+# Details:
+Choose the best features from both dashboards, implement unified design, ensure proper property association handling, and create seamless 'No Properties' state
+
+# Test Strategy:
+Test dashboard with no properties, one property, multiple properties, and pending invitations

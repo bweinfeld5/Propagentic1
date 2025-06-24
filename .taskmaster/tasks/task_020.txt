@@ -1,0 +1,11 @@
+# Task ID: 20
+# Title: Optimize Performance and Loading States
+# Status: pending
+# Dependencies: 10
+# Priority: medium
+# Description: Improve performance and add proper loading states throughout tenant flow
+# Details:
+Add skeleton loaders, optimize API calls, implement lazy loading where appropriate, and ensure fast user experience
+
+# Test Strategy:
+Test performance metrics and loading states across different network conditions

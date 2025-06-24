@@ -1,0 +1,11 @@
+# Task ID: 11
+# Title: Update App Routing for Unified Flow
+# Status: pending
+# Dependencies: 6, 8
+# Priority: medium
+# Description: Modify App.jsx routing to support the unified tenant flow
+# Details:
+Update routes to use consolidated components, ensure proper redirects for different tenant states, and handle onboarding completion checks
+
+# Test Strategy:
+Test all routing scenarios for new tenants, existing tenants, and tenants with incomplete onboarding

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { validateInviteCode, redeemInviteCode } from '../../services/inviteCodeService';
+import { unifiedInviteService } from '../../services/unifiedInviteService';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { ExclamationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
@@ -66,7 +66,7 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
     }
   };
 
-  // Validate the invite code
+  // Validate the invite code using unified service
   const validateCode = async (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault();
@@ -93,12 +93,12 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
     setValidationMessage(null);
 
     try {
-      console.log('🔍 Starting invite code validation for:', inviteCode.trim());
+      console.log('🔍 Starting unified invite code validation for:', inviteCode.trim());
       console.log('🔍 Current user:', currentUser?.uid, currentUser?.email);
       
-      const validationResult = await validateInviteCode(inviteCode.trim());
+      const validationResult = await unifiedInviteService.validateInviteCode(inviteCode.trim());
       
-      console.log('🔍 Validation result:', validationResult);
+      console.log('🔍 Unified validation result:', validationResult);
       
       if (validationResult.isValid) {
         console.log('✅ Code is valid!');
@@ -106,8 +106,6 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
           type: 'success',
           message: 'Valid invite code!'
         });
-        
-        // Note: Email restrictions are no longer enforced since demo properties are universal
         
         console.log('🚀 Notifying parent component with property info');
         // Notify parent component that we have a valid invite code

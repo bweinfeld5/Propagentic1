@@ -27,6 +27,7 @@ import EnhancedMaintenancePage from './pages/tenant/EnhancedMaintenancePage';
 import PublicPropertyDashboardDemo from './pages/PublicPropertyDashboardDemo';
 import DemoShowcase from './pages/DemoShowcase';
 import TestPage from './pages/TestPage';
+import TenantDemo from './pages/TenantDemo';
 import InviteAcceptancePage from './pages/tenant/InviteAcceptancePage';
 
 // Lazy load page components
@@ -44,7 +45,7 @@ const ContractorDashboardDemo = lazy(() => import('./pages/ContractorDashboardDe
 const OriginalContractorDashboard = lazy(() => import('./components/contractor/ContractorDashboard.jsx'));
 const ContractorMessagesPage = lazy(() => import('./pages/contractor/ContractorMessagesPage.tsx'));
 const PricingPage = lazy(() => import('./pages/PricingPage.jsx'));
-const OnboardingSurvey = lazy(() => import('./components/onboarding/OnboardingSurvey.jsx'));
+const TenantOnboardingPage = lazy(() => import('./pages/onboarding/TenantOnboardingPage.jsx'));
 const LandlordOnboarding = lazy(() => import('./components/onboarding/LandlordOnboarding.jsx'));
 const ContractorOnboardingPage = lazy(() => import('./pages/ContractorOnboardingPage.jsx'));
 const SVGTest = lazy(() => import('./components/branding/SVGTest'));
@@ -221,7 +222,7 @@ function App() {
                                 <Route path="/contractor/dashboard/original" element={<PrivateRoute><OriginalContractorDashboard /></PrivateRoute>} />
                                 <Route path="/maintenance/new" element={<PrivateRoute><MaintenanceSurvey /></PrivateRoute>} />
                                 <Route path="/maintenance/enhanced" element={<PrivateRoute><EnhancedMaintenancePage /></PrivateRoute>} />
-                                <Route path="/onboarding" element={<PrivateRoute><OnboardingSurvey /></PrivateRoute>} />
+                                <Route path="/onboarding" element={<PrivateRoute><TenantOnboardingPage /></PrivateRoute>} />
                                 <Route path="/landlord-onboarding" element={<PrivateRoute><LandlordOnboarding /></PrivateRoute>} />
                                 <Route path="/contractor-onboarding" element={<PrivateRoute><ContractorOnboardingPage /></PrivateRoute>} />
                                 <Route path="/ai-examples" element={<AIExamples />} />
@@ -232,6 +233,7 @@ function App() {
                                 <Route path="/landlord/dashboard/demo" element={<LandlordDashboardDemo />} />
                                 <Route path="/demo/pitchdeck" element={<PitchDeckDemo />} />
                                 <Route path="/demo/contractor-readiness" element={<ContractorEstimateReadinessDemo />} />
+                                <Route path="/tenant/demo" element={<TenantDemo />} />
                                 {/* Fallback/Not Found - Redirect to login or a dedicated 404 page */}
                                 <Route path="*" element={<Navigate to="/login" />} />
                               </Routes>

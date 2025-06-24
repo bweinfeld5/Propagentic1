@@ -17,26 +17,123 @@ interface InviteCode {
   usedBy?: string;
 }
 
-interface PropertyTenantRelationship {
-  id?: string;
+// Note: PropertyTenantRelationship interface removed as we no longer use separate relationship documents.
+// All tenant-property relationships are now stored in the user's propertyAssociations array.
+
+// This should match the PropertyAssociation in `tenantSchema.ts`
+interface PropertyAssociation {
   propertyId: string;
-  tenantId: string;
   unitId?: string;
-  status: 'active' | 'pending' | 'archived';
-  inviteCodeId: string;
+  status: 'active' | 'pending' | 'terminated' | 'invited';
   startDate: FirebaseFirestore.Timestamp;
   endDate?: FirebaseFirestore.Timestamp;
+  inviteId?: string;
+  inviteCodeId?: string;
 }
 
 // Collection names
 const INVITE_CODES_COLLECTION = 'inviteCodes';
-const PROPERTY_TENANT_RELATIONSHIPS_COLLECTION = 'propertyTenantRelationships';
+const USERS_COLLECTION = 'users';
+const PROPERTIES_COLLECTION = 'properties';
+const FUNCTION_CALL_LOGS_COLLECTION = 'functionCallLogs';
+
+// Rate limiting configuration - different limits for different functions
+const RATE_LIMIT_PERIOD_MINUTES = 60;
+const MAX_GENERATE_CALLS_PER_PERIOD = 50;  // Lower limit for code generation
+const MAX_REDEEM_CALLS_PER_PERIOD = 100;   // Moderate limit for redemption
+const MAX_VALIDATE_CALLS_PER_PERIOD = 200; // Higher limit for validation (real-time checks)
 
 // Validate invite code format
 const isValidInviteCode = (code: string): boolean => {
   // Alphanumeric code, 6-12 characters, case-insensitive
   const regex = /^[a-zA-Z0-9]{6,12}$/;
   return regex.test(code);
+};
+
+/**
+ * Helper function to safely log function calls for rate limiting
+ */
+const logFunctionCall = async (
+  db: FirebaseFirestore.Firestore,
+  functionName: string,
+  userId?: string,
+  identifier?: string
+): Promise<void> => {
+  try {
+    const logData: any = {
+      function: functionName,
+      timestamp: admin.firestore.Timestamp.now(),
+    };
+
+    if (userId) {
+      logData.userId = userId;
+    }
+    if (identifier) {
+      logData.identifier = identifier;
+    }
+
+    await db.collection(FUNCTION_CALL_LOGS_COLLECTION).add(logData);
+  } catch (error) {
+    // Log the error but don't let it break the main function
+    functions.logger.warn(`Failed to log function call for rate limiting: ${error}`);
+  }
+};
+
+/**
+ * Helper function to check rate limits for authenticated users
+ */
+const checkAuthenticatedUserRateLimit = async (
+  db: FirebaseFirestore.Firestore,
+  userId: string,
+  functionName: string,
+  maxCalls: number
+): Promise<void> => {
+  const now = admin.firestore.Timestamp.now();
+  const cutoff = new admin.firestore.Timestamp(now.seconds - (RATE_LIMIT_PERIOD_MINUTES * 60), now.nanoseconds);
+  
+  const recentCalls = await db.collection(FUNCTION_CALL_LOGS_COLLECTION)
+    .where('userId', '==', userId)
+    .where('function', '==', functionName)
+    .where('timestamp', '>', cutoff)
+    .get();
+
+  if (recentCalls.size >= maxCalls) {
+    throw new functions.https.HttpsError(
+      'resource-exhausted',
+      `You have exceeded the limit for ${functionName}. Please try again later.`
+    );
+  }
+};
+
+/**
+ * Helper function to check rate limits for anonymous users (by IP)
+ */
+const checkAnonymousUserRateLimit = async (
+  db: FirebaseFirestore.Firestore,
+  identifier: string,
+  functionName: string,
+  maxCalls: number
+): Promise<void> => {
+  // Validate IP address format to prevent injection
+  if (!identifier || identifier.length > 45) { // IPv6 max length is 45 chars
+    throw new functions.https.HttpsError('invalid-argument', 'Invalid client identifier');
+  }
+
+  const now = admin.firestore.Timestamp.now();
+  const cutoff = new admin.firestore.Timestamp(now.seconds - (RATE_LIMIT_PERIOD_MINUTES * 60), now.nanoseconds);
+  
+  const recentCalls = await db.collection(FUNCTION_CALL_LOGS_COLLECTION)
+    .where('identifier', '==', identifier)
+    .where('function', '==', functionName)
+    .where('timestamp', '>', cutoff)
+    .get();
+
+  if (recentCalls.size >= maxCalls) {
+    throw new functions.https.HttpsError(
+      'resource-exhausted',
+      'Rate limit exceeded. Please try again later.'
+    );
+  }
 };
 
 /**
@@ -53,11 +150,14 @@ export const generateInviteCode = functions.https.onCall(async (data: any, conte
   }
 
   const userId = context.auth.uid;
+  const db = admin.firestore();
   functions.logger.info(`🔧 Generating invite code for user: ${userId}`);
+
+  // Rate Limiting Check
+  await checkAuthenticatedUserRateLimit(db, userId, 'generateInviteCode', MAX_GENERATE_CALLS_PER_PERIOD);
 
   try {
     // Get the user data to check role
-    const db = admin.firestore();
     const userDoc = await db.collection('users').doc(userId).get();
     
     if (!userDoc.exists) {
@@ -81,17 +181,39 @@ export const generateInviteCode = functions.https.onCall(async (data: any, conte
       );
     }
 
-    // Get parameters from request
-    const { propertyId, unitId, email, expirationDays = 7 } = data;
-    functions.logger.info(`🔧 Request params:`, { propertyId, unitId, email, expirationDays });
+      // Get parameters from request
+  const { propertyId, unitId, email, expirationDays = 7 } = data;
+  functions.logger.info(`🔧 Request params:`, { propertyId, unitId, email, expirationDays });
 
-    // Validate required parameters
-    if (!propertyId) {
-      throw new functions.https.HttpsError(
-        'invalid-argument',
-        'Property ID is required'
-      );
-    }
+  // Validate required parameters
+  if (!propertyId || typeof propertyId !== 'string' || propertyId.length > 100) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Valid property ID is required'
+    );
+  }
+
+  // Validate optional parameters
+  if (unitId && (typeof unitId !== 'string' || unitId.length > 50)) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Invalid unit ID format'
+    );
+  }
+
+  if (email && (typeof email !== 'string' || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Invalid email format'
+    );
+  }
+
+  if (typeof expirationDays !== 'number' || expirationDays < 1 || expirationDays > 365) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Expiration days must be between 1 and 365'
+    );
+  }
 
     // Check if the property exists and the user has access to it
     const propertyDoc = await db.collection('properties').doc(propertyId).get();
@@ -182,6 +304,9 @@ export const generateInviteCode = functions.https.onCall(async (data: any, conte
     
     functions.logger.info(`✅ Invite code created successfully: ${generatedCode}`);
     
+    // Log the successful function call for rate limiting
+    await logFunctionCall(db, 'generateInviteCode', userId);
+    
     // Return the created invite code
     return {
       success: true,
@@ -217,11 +342,29 @@ export const generateInviteCode = functions.https.onCall(async (data: any, conte
  * This helps check if a code is valid during registration process
  */
 export const validateInviteCode = functions.https.onCall(async (data: any, context: any) => {
+  const db = admin.firestore();
+  
+  // Rate limiting for both authenticated and anonymous users
+  const functionName = 'validateInviteCode';
+  if (context.auth?.uid) {
+    // Authenticated user - use userId for rate limiting
+    await checkAuthenticatedUserRateLimit(db, context.auth.uid, functionName, MAX_VALIDATE_CALLS_PER_PERIOD);
+  } else {
+    // Anonymous user - use IP for rate limiting
+    const clientIP = context.rawRequest.ip;
+    await checkAnonymousUserRateLimit(db, clientIP, functionName, MAX_VALIDATE_CALLS_PER_PERIOD);
+  }
+
   // Get the code from the request
   const { code } = data;
   
+  // Validate input parameters
+  if (!data || typeof data !== 'object') {
+    throw new functions.https.HttpsError('invalid-argument', 'Invalid request data');
+  }
+
   // Validate code format
-  if (!code || !isValidInviteCode(code)) {
+  if (!code || typeof code !== 'string' || !isValidInviteCode(code)) {
     throw new functions.https.HttpsError(
       'invalid-argument',
       'Invalid invite code format. Codes must be 6-12 alphanumeric characters.'
@@ -229,7 +372,6 @@ export const validateInviteCode = functions.https.onCall(async (data: any, conte
   }
   
   const normalizedCode = code.toUpperCase();
-  const db = admin.firestore();
   
   try {
     // Look up the invite code
@@ -290,6 +432,13 @@ export const validateInviteCode = functions.https.onCall(async (data: any, conte
     
     const propertyData = propertyDoc.data();
     
+    // Log the call
+    if (context.auth?.uid) {
+      await logFunctionCall(db, functionName, context.auth.uid);
+    } else {
+      await logFunctionCall(db, functionName, undefined, context.rawRequest.ip);
+    }
+
     // Return validation success with limited property information
     return {
       isValid: true,
@@ -326,43 +475,45 @@ export const redeemInviteCode = functions.https.onCall(async (data: any, context
     );
   }
   
+  const tenantId = context.auth.uid;
+  const db = admin.firestore();
+  
+  // Rate Limiting
+  const functionName = 'redeemInviteCode';
+  await checkAuthenticatedUserRateLimit(db, tenantId, functionName, MAX_REDEEM_CALLS_PER_PERIOD);
+
   // Get parameters from request
   const { code } = data;
-  const tenantId = context.auth.uid;
   
-  // Validate code
-  if (!code || !isValidInviteCode(code)) {
+  // Validate input parameters
+  if (!data || typeof data !== 'object') {
+    throw new functions.https.HttpsError('invalid-argument', 'Invalid request data');
+  }
+
+  if (!code || typeof code !== 'string' || !isValidInviteCode(code)) {
     throw new functions.https.HttpsError(
       'invalid-argument',
       'Invalid invite code format. Codes must be 6-12 alphanumeric characters.'
     );
   }
   
-  // Standardize code format
   const normalizedCode = code.toUpperCase();
-  const db = admin.firestore();
   
   try {
-    // Transaction to ensure atomicity of the redemption process
     return await db.runTransaction(async (transaction) => {
-      // Get the invite code
+      // 1. Get and validate the invite code
       const inviteCodeQuery = await transaction.get(
-        db.collection(INVITE_CODES_COLLECTION)
-          .where('code', '==', normalizedCode)
-          .limit(1)
+        db.collection(INVITE_CODES_COLLECTION).where('code', '==', normalizedCode).limit(1)
       );
-      
+
       if (inviteCodeQuery.empty) {
-        throw new functions.https.HttpsError(
-          'not-found',
-          'Invalid invite code. Please check the code and try again.'
-        );
+        throw new functions.https.HttpsError('not-found', 'Invalid invite code.');
       }
       
       const inviteCodeDoc = inviteCodeQuery.docs[0];
       const inviteCodeData = inviteCodeDoc.data() as InviteCode;
       const inviteCodeId = inviteCodeDoc.id;
-      
+
       // Validate the code status
       if (inviteCodeData.status === 'used') {
         throw new functions.https.HttpsError(
@@ -397,163 +548,88 @@ export const redeemInviteCode = functions.https.onCall(async (data: any, context
         }
       }
       
-      // Get the property information
+      // 2. Get user and property documents
       const propertyId = inviteCodeData.propertyId;
       const unitId = inviteCodeData.unitId;
-      
-      const propertyDoc = await transaction.get(db.collection('properties').doc(propertyId));
-      if (!propertyDoc.exists) {
-        throw new functions.https.HttpsError(
-          'not-found',
-          'The property associated with this invite code could not be found.'
-        );
+      const userDocRef = db.collection(USERS_COLLECTION).doc(tenantId);
+      const propertyDocRef = db.collection(PROPERTIES_COLLECTION).doc(propertyId);
+
+      const [userSnapshot, propertySnapshot] = await transaction.getAll(userDocRef, propertyDocRef);
+
+      if (!propertySnapshot.exists) {
+        throw new functions.https.HttpsError('not-found', 'Associated property not found.');
+      }
+      if (!userSnapshot.exists) {
+        throw new functions.https.HttpsError('not-found', 'User profile not found.');
       }
       
-      const propertyData = propertyDoc.data();
-      
-      // Get the user profile
-      const userDoc = await transaction.get(db.collection('users').doc(tenantId));
-      if (!userDoc.exists) {
-        throw new functions.https.HttpsError(
-          'not-found',
-          'User profile not found. Please complete your profile before redeeming an invite code.'
-        );
-      }
-      
-      // Check if the tenant is already associated with this property
-      const existingRelationshipQuery = await transaction.get(
-        db.collection(PROPERTY_TENANT_RELATIONSHIPS_COLLECTION)
-          .where('tenantId', '==', tenantId)
-          .where('propertyId', '==', propertyId)
-          .where('status', '==', 'active')
-          .limit(1)
-      );
-      
-      if (!existingRelationshipQuery.empty) {
-        throw new functions.https.HttpsError(
-          'already-exists',
-          'You are already associated with this property.'
-        );
-      }
-      
-      const now = admin.firestore.Timestamp.now();
-      
-      // Create the property-tenant relationship
-      const relationshipData: PropertyTenantRelationship = {
-        propertyId,
-        tenantId,
+      const userData = userSnapshot.data() || {};
+      const propertyData = propertySnapshot.data() || {};
+
+      // 3. Create and add the new property association to the user
+      const newAssociation: PropertyAssociation = {
+        propertyId: propertyId,
         unitId: unitId || undefined,
         status: 'active',
-        inviteCodeId,
-        startDate: now
+        startDate: admin.firestore.Timestamp.now(),
+        inviteCodeId: inviteCodeId,
       };
+
+      const existingAssociations = userData.propertyAssociations || [];
+      const associationExists = existingAssociations.some(
+        (assoc: PropertyAssociation) => assoc.propertyId === propertyId && assoc.status === 'active'
+      );
+
+      if (associationExists) {
+        throw new functions.https.HttpsError('already-exists', 'You are already associated with this property.');
+      }
       
-      const relationshipRef = db.collection(PROPERTY_TENANT_RELATIONSHIPS_COLLECTION).doc();
-      transaction.set(relationshipRef, relationshipData);
-      
-      // Update the invite code to mark as used
-      transaction.update(db.collection(INVITE_CODES_COLLECTION).doc(inviteCodeId), {
-        status: 'used',
-        usedBy: tenantId,
-        usedAt: now
+      transaction.update(userDocRef, {
+        propertyAssociations: [...existingAssociations, newAssociation],
+        updatedAt: admin.firestore.Timestamp.now(),
       });
       
-      // Update the user's profile
-      const userData = userDoc.data();
-      const userUpdateData: Record<string, any> = {
-        // Only set these if not already set
-        role: userData?.role || 'tenant',
-        userType: userData?.userType || 'tenant',
-        propertyId: propertyId,           // ✅ CRITICAL FIX: Add propertyId
-        landlordId: inviteCodeData.landlordId, // ✅ CRITICAL FIX: Add landlordId
-        updatedAt: now
-      };
-      
-      // If the user doesn't have properties array, create it
-      if (!userData?.properties || !Array.isArray(userData.properties)) {
-        userUpdateData.properties = [{ id: propertyId, role: 'tenant' }];
-      } else {
-        // Check if property is already in user's properties
-        const existingPropertyIndex = userData.properties.findIndex((p: any) => p.id === propertyId);
-        if (existingPropertyIndex === -1) {
-          // Add property to user's properties
-          userUpdateData.properties = [
-            ...userData.properties,
-            { id: propertyId, role: 'tenant' }
-          ];
-        }
-      }
-      
-      transaction.update(db.collection('users').doc(tenantId), userUpdateData);
-      
-      // Update the property record if needed to include the tenant
-      const updatedPropertyData: Record<string, any> = {
-        updatedAt: now
-      };
-      
-      // Handle unit-specific or general property assignment
-      if (unitId && propertyData?.units) {
-        const units = propertyData.units || [];
+      // 4. Update the invite code to mark it as used
+      transaction.update(inviteCodeDoc.ref, {
+        status: 'used',
+        usedBy: tenantId,
+        usedAt: admin.firestore.Timestamp.now(),
+      });
+
+      // 5. Update the property document to add the tenant
+      if (unitId && propertyData.units) {
+        const units = [...propertyData.units];
         const unitIndex = units.findIndex((u: any) => u.id === unitId || u.unitNumber === unitId);
-        
         if (unitIndex !== -1) {
-          // Unit exists, add tenant to it
-          const updatedUnits = [...units];
-          const unit = updatedUnits[unitIndex];
-          
-          // If unit has tenants array, add to it; otherwise create it
-          if (!unit.tenants || !Array.isArray(unit.tenants)) {
-            unit.tenants = [tenantId];
-          } else if (!unit.tenants.includes(tenantId)) {
-            unit.tenants.push(tenantId);
+          const unitTenants = units[unitIndex].tenants || [];
+          if (!unitTenants.includes(tenantId)) {
+            units[unitIndex].tenants.push(tenantId);
+            transaction.update(propertyDocRef, { units: units, updatedAt: admin.firestore.Timestamp.now() });
           }
-          
-          updatedUnits[unitIndex] = unit;
-          updatedPropertyData.units = updatedUnits;
-        } else {
-          // Unit doesn't exist, add it to property
-          const newUnit = {
-            id: unitId,
-            unitNumber: unitId,
-            tenants: [tenantId]
-          };
-          updatedPropertyData.units = [...units, newUnit];
         }
       } else {
-        // No specific unit, add tenant to overall property tenants list
-        let tenants = propertyData?.tenants || [];
-        if (!Array.isArray(tenants)) {
-          tenants = [];
-        }
-        
-        if (!tenants.includes(tenantId)) {
-          tenants.push(tenantId);
-          updatedPropertyData.tenants = tenants;
+        const propertyTenants = propertyData.tenants || [];
+        if (!propertyTenants.includes(tenantId)) {
+          transaction.update(propertyDocRef, { tenants: [...propertyTenants, tenantId], updatedAt: admin.firestore.Timestamp.now() });
         }
       }
-      
-      transaction.update(db.collection('properties').doc(propertyId), updatedPropertyData);
-      
-      // Return success response with property details
+
+      // Log successful call
+      await logFunctionCall(db, functionName, tenantId);
+
       return {
         success: true,
         message: 'Invite code redeemed successfully',
         propertyId,
-        propertyName: propertyData?.name || 'Property',
+        propertyName: propertyData.name || 'Property',
         unitId: unitId || null,
-        relationshipId: relationshipRef.id
       };
     });
   } catch (error) {
-    // Forward HttpsError errors
     if (error instanceof HttpsError) {
       throw error;
     }
-    
     functions.logger.error('Error redeeming invite code:', error);
-    throw new functions.https.HttpsError(
-      'internal',
-      'An error occurred while redeeming the invite code. Please try again later.'
-    );
+    throw new functions.https.HttpsError('internal', 'An internal error occurred.');
   }
 }); 

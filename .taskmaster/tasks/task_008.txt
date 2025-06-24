@@ -1,0 +1,11 @@
+# Task ID: 8
+# Title: Create Unified Tenant Onboarding Component
+# Status: pending
+# Dependencies: 5
+# Priority: medium
+# Description: Replace competing onboarding components with single, comprehensive tenant onboarding flow
+# Details:
+Create TenantOnboarding.tsx that handles post-registration profile completion, emergency contacts, preferences, and property association confirmation
+
+# Test Strategy:
+Test complete onboarding flow from registration through dashboard access

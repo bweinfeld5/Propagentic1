@@ -39,7 +39,7 @@ alwaysApply: true
     where: { status: 'ACTIVE' }
   });
   
-  // Consider adding to [prisma.md](mdc:.roo/rules/prisma.md):
+  // Consider adding to [prisma.md](.roo/rules/prisma.md):
   // - Standard select fields
   // - Common where conditions
   // - Performance optimization patterns
@@ -69,4 +69,4 @@ alwaysApply: true
   - Update references to external docs
   - Maintain links between related rules
   - Document breaking changes
-Follow [cursor_rules.md](mdc:.roo/rules/cursor_rules.md) for proper rule formatting and structure.
+Follow [roo_rules.md](.roo/rules/roo_rules.md) for proper rule formatting and structure.

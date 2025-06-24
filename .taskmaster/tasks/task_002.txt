@@ -1,0 +1,11 @@
+# Task ID: 2
+# Title: Fix UnifiedInviteService Authentication Issues
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Resolve Firebase Functions authentication problems in the unified invite service
+# Details:
+Fix authentication token refresh issues, implement proper error handling, and ensure reliable fallback to Firestore direct access when Firebase Functions fail
+
+# Test Strategy:
+Test invite code generation and validation in all scenarios: Firebase Functions working, Functions failing, and direct Firestore fallback

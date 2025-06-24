@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon, QrCodeIcon, KeyIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { getAuthErrorMessage } from '../utils/authHelpers';
 import GoogleSignInButton from '../components/auth/GoogleSignInButton';
+import TenantInviteForm from '../components/tenant/TenantInviteForm';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +15,9 @@ const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [showInviteSection, setShowInviteSection] = useState(false);
+  const [inviteSuccess, setInviteSuccess] = useState(false);
+  const [validatedProperty, setValidatedProperty] = useState(null);
   const { login, fetchUserProfile } = useAuth();
   const navigate = useNavigate();
 
@@ -52,6 +56,18 @@ const LoginPage = () => {
     if (hasInteracted) {
       const error = validateField(field, value);
       setValidationErrors(prev => ({ ...prev, [field]: error }));
+    }
+  };
+
+  // Handle invite code validation success
+  const handleInviteValidated = (propertyInfo) => {
+    setValidatedProperty(propertyInfo);
+    setInviteSuccess(true);
+    setError('');
+    
+    // Optional: Auto-fill email if not already set
+    if (!email && propertyInfo.email) {
+      setEmail(propertyInfo.email);
     }
   };
 
@@ -193,9 +209,100 @@ const LoginPage = () => {
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-xl shadow-2xl p-8 backdrop-blur-sm border border-white/20">
+            
+            {/* Header */}
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Sign in to your account</h1>
               <p className="text-gray-600">Welcome back to PropAgentic</p>
+            </div>
+
+            {/* Tenant Invite Code Section */}
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={() => setShowInviteSection(!showInviteSection)}
+                className="w-full flex items-center justify-between p-4 rounded-lg border-2 border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 hover:from-orange-100 hover:to-amber-100 transition-all duration-200 group"
+              >
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg flex items-center justify-center">
+                    <KeyIcon className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="ml-3 text-left">
+                    <p className="text-sm font-semibold text-orange-900">
+                      {inviteSuccess ? '✅ Invite Code Validated!' : 'Have an invite code?'}
+                    </p>
+                    <p className="text-xs text-orange-700">
+                      {inviteSuccess 
+                        ? `Ready to join ${validatedProperty?.propertyName}`
+                        : 'Click here to enter your property invitation code'
+                      }
+                    </p>
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  {showInviteSection ? (
+                    <ChevronUpIcon className="w-5 h-5 text-orange-600 group-hover:text-orange-700" />
+                  ) : (
+                    <ChevronDownIcon className="w-5 h-5 text-orange-600 group-hover:text-orange-700" />
+                  )}
+                </div>
+              </button>
+
+              {/* Collapsible Invite Code Form */}
+              {showInviteSection && (
+                                 <div className="mt-4 p-4 border border-orange-200 rounded-lg bg-gradient-to-br from-orange-50 to-amber-50 animate-in slide-in-from-top duration-300">
+                  {inviteSuccess ? (
+                    <div className="text-center">
+                      <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mx-auto mb-3">
+                        <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-semibold text-green-900 mb-2">Code Validated!</h3>
+                      <p className="text-sm text-green-700 mb-4">
+                        You're ready to join <strong>{validatedProperty?.propertyName}</strong>. 
+                        Complete your login to access your tenant dashboard.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setInviteSuccess(false);
+                          setValidatedProperty(null);
+                          setShowInviteSection(false);
+                        }}
+                        className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                      >
+                        Enter a different code
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex items-center mb-4">
+                        <QrCodeIcon className="w-5 h-5 text-orange-600 mr-2" />
+                        <h3 className="text-sm font-semibold text-orange-900">
+                          Enter Your Invite Code
+                        </h3>
+                      </div>
+                      
+                      <TenantInviteForm
+                        onInviteValidated={handleInviteValidated}
+                        email={email}
+                        className="space-y-3"
+                        showSkip={false}
+                      />
+                      
+                      <div className="mt-4 pt-3 border-t border-orange-200">
+                        <p className="text-xs text-orange-700 flex items-start">
+                          <svg className="w-4 h-4 text-orange-500 mr-1.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Your landlord or property manager should have provided you with an 8-character invite code via email or QR code.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             
             {error && (
@@ -322,7 +429,7 @@ const LoginPage = () => {
               </div>
 
               {/* Social authentication */}
-                              <div className="space-y-3">
+              <div className="space-y-3">
                 <GoogleSignInButton 
                   isSignup={false}
                   disabled={loading}

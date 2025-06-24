@@ -1,0 +1,11 @@
+# Task ID: 16
+# Title: Implement Tenant Role Validation
+# Status: pending
+# Dependencies: 5
+# Priority: medium
+# Description: Add proper role validation throughout the tenant flow
+# Details:
+Ensure proper userType/role validation, implement guards for tenant-only features, and handle role mismatches gracefully
+
+# Test Strategy:
+Test role validation for tenants, landlords trying to access tenant features, and undefined roles

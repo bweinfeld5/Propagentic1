@@ -5,7 +5,7 @@ import Button from '../ui/Button';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
-import { redeemInviteCode } from '../../services/inviteCodeService';
+import { unifiedInviteCodeService } from '../../services/unifiedInviteCodeService';
 import toast from 'react-hot-toast';
 
 interface InviteCodeWallProps {
@@ -44,7 +44,7 @@ const InviteCodeWall: React.FC<InviteCodeWallProps> = ({ onInviteValidated }) =>
       console.log('🔄 Redeeming invite code for user:', currentUser.uid);
       
       // Redeem the invite code
-      const result = await redeemInviteCode(propertyInfo.inviteCode, currentUser.uid);
+      const result = await unifiedInviteCodeService.redeemInviteCode(propertyInfo.inviteCode);
       
       if (result.success) {
         console.log('✅ Invite code redeemed successfully');

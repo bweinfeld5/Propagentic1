@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast, Toaster } from 'react-hot-toast';
-import { Bell, Menu, Home, User, BellIcon, AlertTriangle, QrCodeIcon } from 'lucide-react';
+import { Bell, Menu, Home, User, BellIcon, AlertTriangle, QrCodeIcon, KeyIcon } from 'lucide-react';
 import { db } from '../../firebase/config';
 import { collection, query, where, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
 import { PropAgenticMark } from '../../components/brand/PropAgenticMark';
@@ -12,6 +12,7 @@ import PropertyInvitationBanner from '../../components/PropertyInvitationBanner'
 import PropertyList from '../../components/PropertyList';
 import { Skeleton } from '../../components/ui/Skeleton';
 import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
 import RequestForm from '../../components/tenant/RequestForm';
 import RequestHistory from '../../components/tenant/RequestHistory';
 import HeaderBar from '../../components/layout/HeaderBar';
@@ -21,7 +22,7 @@ import propertyInvitationService from '../../services/firestore/propertyInvitati
 import dataService from '../../services/dataService';
 import { getDemoProperty, getDemoMaintenanceTickets, isDemoProperty } from '../../services/demoDataService';
 import { QRScanner } from '../../components/tenant/QRScanner';
-import { redeemInviteCode } from '../../services/inviteCodeService';
+import { unifiedInviteService } from '../../services/unifiedInviteService';
 
 interface Ticket {
   id: string;
@@ -64,6 +65,19 @@ const TenantDashboard: React.FC = () => {
   // QR Scanner state
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [processingQR, setProcessingQR] = useState(false);
+  
+  // Temporary bypass state - for testing tenant view without data
+  const [showBypassTenantView, setShowBypassTenantView] = useState(false);
+
+  // Mock property for bypass mode
+  const mockBypassProperty = {
+    id: 'bypass-property-demo',
+    name: 'Demo Property - Empty State',
+    nickname: 'Demo Property',
+    streetAddress: '123 Demo St',
+    landlordName: 'Demo Landlord',
+    landlordEmail: 'demo@landlord.com'
+  };
 
   // Redirect if not authenticated or not a tenant
   useEffect(() => {
@@ -295,6 +309,163 @@ const TenantDashboard: React.FC = () => {
     }
   };
 
+  // Component for the No Properties state with invite code functionality
+  const NoPropertiesInviteCard: React.FC<{
+    onInviteValidated: (propertyInfo: any) => void;
+  }> = ({ onInviteValidated }) => {
+    const [inviteCode, setInviteCode] = useState('');
+    const [isValidating, setIsValidating] = useState(false);
+    const [validationMessage, setValidationMessage] = useState<{
+      type: 'success' | 'error';
+      message: string;
+    } | null>(null);
+    const [showInviteSection, setShowInviteSection] = useState(false);
+
+    const handleInviteCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value.toUpperCase().replace(/\s/g, '');
+      setInviteCode(value);
+      if (validationMessage) {
+        setValidationMessage(null);
+      }
+    };
+
+    const validateCode = async (e?: React.FormEvent) => {
+      if (e) {
+        e.preventDefault();
+      }
+
+      if (!inviteCode.trim()) {
+        setValidationMessage({
+          type: 'error',
+          message: 'Please enter an invite code'
+        });
+        return;
+      }
+
+      setIsValidating(true);
+      setValidationMessage(null);
+
+      try {
+        const validationResult = await unifiedInviteService.validateInviteCode(inviteCode.trim());
+        
+        if (validationResult.isValid) {
+          setValidationMessage({
+            type: 'success',
+            message: 'Valid invite code!'
+          });
+          
+          onInviteValidated({
+            propertyId: validationResult.propertyId!,
+            propertyName: validationResult.propertyName || 'Property',
+            unitId: validationResult.unitId,
+            inviteCode: inviteCode.trim()
+          });
+        } else {
+          setValidationMessage({
+            type: 'error',
+            message: validationResult.message
+          });
+        }
+      } catch (error: any) {
+        setValidationMessage({
+          type: 'error',
+          message: error.message || 'Error validating invite code. Please try again.'
+        });
+      } finally {
+        setIsValidating(false);
+      }
+    };
+
+    return (
+      <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border border-orange-200 p-8 text-center">
+        <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Home className="w-8 h-8 text-orange-600" />
+        </div>
+        
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">No Properties Found</h3>
+        <p className="text-gray-600 mb-6 max-w-md mx-auto">
+          You're not currently associated with any properties. Contact your landlord to get an invitation code to join a property.
+        </p>
+
+        {/* Invite Code Section */}
+        <div className="max-w-md mx-auto mb-6">
+          <button
+            onClick={() => setShowInviteSection(!showInviteSection)}
+            className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+          >
+            <KeyIcon className="w-5 h-5" />
+            {showInviteSection ? 'Hide Invite Code Entry' : 'Enter Invite Code'}
+          </button>
+          
+          {showInviteSection && (
+            <div className="mt-4 p-4 bg-white rounded-lg border border-orange-200 text-left">
+              <form onSubmit={validateCode} className="space-y-4">
+                <div>
+                  <label htmlFor="invite-code" className="block text-sm font-medium text-gray-700 mb-2">
+                    Property Invite Code
+                  </label>
+                  <Input
+                    id="invite-code"
+                    type="text"
+                    value={inviteCode}
+                    onChange={handleInviteCodeChange}
+                    placeholder="Enter code (e.g., BWNR3QPR)"
+                    maxLength={12}
+                    autoComplete="off"
+                    disabled={isValidating}
+                    className={`w-full font-mono ${
+                      validationMessage?.type === 'error'
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                        : validationMessage?.type === 'success'
+                        ? 'border-green-500 focus:border-green-500 focus:ring-green-500'
+                        : 'border-orange-300 focus:border-orange-500 focus:ring-orange-500'
+                    }`}
+                  />
+                  
+                  {validationMessage && (
+                    <p className={`text-sm mt-2 ${
+                      validationMessage.type === 'success' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {validationMessage.message}
+                    </p>
+                  )}
+                </div>
+                
+                <Button
+                  type="submit"
+                  disabled={isValidating || !inviteCode.trim()}
+                  className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                >
+                  {isValidating ? 'Validating...' : 'Join Property'}
+                </Button>
+              </form>
+            </div>
+          )}
+        </div>
+
+        {/* What can you do section */}
+        <div className="bg-white rounded-lg p-4 border border-orange-200 text-left max-w-sm mx-auto">
+          <h4 className="font-medium text-gray-900 mb-2">What can you do?</h4>
+          <ul className="text-sm text-gray-600 space-y-1">
+            <li>• Ask your landlord for an invitation code</li>
+            <li>• Check your email for pending invitations</li>
+            <li>• Contact PropAgentic support if you need help</li>
+          </ul>
+          
+          <div className="mt-4 pt-3 border-t border-gray-200">
+            <Button
+              onClick={() => window.location.reload()}
+              variant="outline"
+              className="w-full text-orange-600 border-orange-300 hover:bg-orange-50"
+            >
+              Refresh Page
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (!currentUser || !userProfile) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -378,24 +549,11 @@ const TenantDashboard: React.FC = () => {
               {tenantProperties.length === 0 ? (
                 <div className="mb-8">
                   {pendingPropertyInvitations.length === 0 && pendingInvites.length === 0 ? (
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-8 text-center">
-                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Home className="w-8 h-8 text-blue-600" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">Welcome to PropAgentic!</h3>
-                      <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                        You're all set up! You'll see property invitations here when landlords invite you to their properties.
-                      </p>
-                      <div className="bg-white rounded-lg p-4 border border-blue-200 text-left max-w-sm mx-auto">
-                        <h4 className="font-medium text-gray-900 mb-2">How it works:</h4>
-                        <ul className="text-sm text-gray-600 space-y-1">
-                          <li>• Landlords can send you property invitations</li>
-                          <li>• Invitations will appear on this dashboard</li>
-                          <li>• Accept invitations to access property features</li>
-                          <li>• Submit maintenance requests and communicate with landlords</li>
-                        </ul>
-                      </div>
-                    </div>
+                    <NoPropertiesInviteCard onInviteValidated={(propertyInfo) => {
+                      // Handle the validated property info
+                      console.log('Validated property info:', propertyInfo);
+                      toast.success(`Found property: ${propertyInfo.propertyName}`);
+                    }} />
                   ) : (
                     <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-6 text-center">
                       <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">

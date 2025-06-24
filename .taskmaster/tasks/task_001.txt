@@ -1,0 +1,11 @@
+# Task ID: 1
+# Title: Audit Current Tenant Flow Components
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Comprehensively audit all existing tenant-related components to identify gaps and inconsistencies
+# Details:
+Analyze OnboardingSurvey.jsx, TenantForm.jsx, OnboardingModal.jsx, RegisterPage.jsx, TenantDashboard.tsx, EnhancedTenantDashboard.tsx, and all invite code services to map current flow and identify gaps
+
+# Test Strategy:
+Create flow diagram and gap analysis document showing current vs desired state

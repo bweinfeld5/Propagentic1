@@ -237,6 +237,21 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
       case 6:
         // Optional step, no required fields
         break;
+      case 7:
+        // Optional step, no required fields
+        break;
+      case 8:
+        // Optional step, no required fields
+        break;
+      case 9:
+        // Validate tenant invitations only if not skipping
+        if (!formData.skipInvites) {
+          const validEmails = formData.tenantEmails.filter(email => 
+            email.trim() && /\S+@\S+\.\S+/.test(email.trim())
+          );
+          // Note: We don't require emails because user can still choose to skip at this point
+        }
+        break;
     }
     
     setErrors(newErrors);
@@ -263,9 +278,20 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
   const handleSubmit = async () => {
     if (!validateStep(currentStep)) return;
     
-    // If we're on the last step and there are invites to send
+    // If we're on the last step (step 9)
     if (currentStep === 9) {
-      return handleSendInvites();
+      // Check if user wants to skip invites or has no valid emails
+      const validEmails = formData.tenantEmails.filter(email => 
+        email.trim() && /\S+@\S+\.\S+/.test(email.trim())
+      );
+      
+      if (formData.skipInvites || validEmails.length === 0) {
+        // Skip invites and finish property creation
+        return await createPropertyAndFinish();
+      } else {
+        // Send invites
+        return handleSendInvites();
+      }
     }
     
     // If we're on step 5 and user wants to skip invites
@@ -337,8 +363,12 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
       // Close modal
       onClose();
       
-      // Show success message
-      alert('Property added successfully!');
+      // Show success message based on whether invites were skipped
+      if (formData.skipInvites) {
+        alert('🏠 Property created successfully! You can invite tenants at any time from the property dashboard.');
+      } else {
+        alert('🏠 Property added successfully!');
+      }
       
     } catch (error) {
       console.error('Error creating property:', error);
@@ -424,9 +454,19 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
   };
 
   const handleSendInvites = async () => {
-    if (!createdProperty) {
-      setErrors({ submit: 'Property must be created before sending invites.' });
-      return;
+    // Ensure property is created first
+    let property = createdProperty;
+    if (!property) {
+      try {
+        await createPropertyAndContinue();
+        property = createdProperty; // createPropertyAndContinue sets createdProperty
+        if (!property) {
+          throw new Error('Property creation failed - no property returned');
+        }
+      } catch (error) {
+        setErrors({ submit: 'Failed to create property before sending invites.' });
+        return;
+      }
     }
 
     const validEmails = formData.tenantEmails.filter(email => 
@@ -441,21 +481,24 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
     setIsSubmitting(true);
 
     try {
-      const { getFunctions, httpsCallable } = await import('firebase/functions');
-      const functions = getFunctions();
-      const sendPropertyInvite = httpsCallable(functions, 'sendPropertyInvite');
-
+      // Import the working inviteService
+      const { default: inviteService } = await import('../../services/firestore/inviteService');
+      
       const invitePromises = validEmails.map(async (email) => {
         try {
           setInviteStatus(prev => ({ ...prev, [email]: 'sending' }));
           
-          const result = await sendPropertyInvite({
-            propertyId: createdProperty.id,
-            tenantEmail: email.trim()
+          // Use WORKING inviteService.ts (same as working browser tests)
+          const inviteId = await inviteService.createInvite({
+            tenantEmail: email.trim(),
+            propertyId: property.id,
+            landlordId: currentUser.uid,
+            propertyName: property.name || property.streetAddress || 'Your Property',
+            landlordName: currentUser.displayName || currentUser.email || 'Property Manager'
           });
 
           setInviteStatus(prev => ({ ...prev, [email]: 'sent' }));
-          return { email, success: true, result };
+          return { email, success: true, inviteId };
         } catch (error) {
           console.error(`Failed to send invite to ${email}:`, error);
           setInviteStatus(prev => ({ ...prev, [email]: 'failed' }));

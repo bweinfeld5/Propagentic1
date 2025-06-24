@@ -30,6 +30,7 @@ const InviteCodeWall: React.FC<InviteCodeWallProps> = ({ onInviteValidated }) =>
   };
 
   const handleBypassForTesting = () => {
+    console.log('Bypass button clicked - Test mode activated');
     console.warn('Bypassing invite code (dev only)');
     toast.success('Bypassing to maintenance request for testing');
     navigate('/maintenance/enhanced', { 

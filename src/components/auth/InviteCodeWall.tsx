@@ -7,6 +7,7 @@ import { auth } from '../../firebase/config';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { redeemInviteCode } from '../../services/inviteCodeService';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface InviteCodeWallProps {
   onInviteValidated: () => void;
@@ -17,6 +18,7 @@ interface InviteCodeWallProps {
  */
 const InviteCodeWall: React.FC<InviteCodeWallProps> = ({ onInviteValidated }) => {
   const { currentUser, userProfile, refreshUserData } = useAuth();
+  const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleSignOut = async () => {
@@ -25,6 +27,17 @@ const InviteCodeWall: React.FC<InviteCodeWallProps> = ({ onInviteValidated }) =>
     } catch (error) {
       console.error('Error signing out:', error);
     }
+  };
+
+  const handleBypassForTesting = () => {
+    console.warn('Bypassing invite code (dev only)');
+    toast.success('Bypassing to maintenance request for testing');
+    navigate('/maintenance/enhanced', { 
+      state: { 
+        propertyId: 'test-property-id',
+        testMode: true 
+      } 
+    });
   };
 
   const handleInviteValidated = async (propertyInfo: {
@@ -106,6 +119,20 @@ const InviteCodeWall: React.FC<InviteCodeWallProps> = ({ onInviteValidated }) =>
             email={userProfile?.email}
             className="space-y-4"
           />
+          
+          {/* Developer Bypass Button - Only visible in development */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-4">
+              <Button
+                variant="secondary"
+                onClick={handleBypassForTesting}
+                className="w-full bg-yellow-100 hover:bg-yellow-200 text-yellow-800 border-yellow-300"
+                disabled={isProcessing}
+              >
+                🛠️ Bypass and Test Maintenance Request (Dev Only)
+              </Button>
+            </div>
+          )}
           
           {isProcessing && (
             <div className="mt-4 text-center">

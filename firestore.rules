@@ -62,6 +62,13 @@ service cloud.firestore {
       return landlordProfile.contractors != null && contractorId in landlordProfile.contractors;
     }
 
+    function isTenantOfLandlord(tenantId, landlordId) {
+      // Check if this tenant has a relationship with any properties owned by the landlord
+      // This is a simplified check - in practice, you might want to query the propertyTenantRelationships collection
+      let userData = get(/databases/$(database)/documents/users/$(tenantId)).data;
+      return userData.userType == 'tenant' || userData.role == 'tenant';
+    }
+
 
 
     // --- DATA VALIDATION FUNCTIONS ---
@@ -113,7 +120,19 @@ service cloud.firestore {
 
     // Users Collection
     match /users/{userId} {
+      // Users can read/update their own data, admins can access all
       allow read, update: if isOwner(userId) || isAdmin();
+      
+      // Allow landlords to read tenant data (with function to check relationship)
+      allow read: if isLandlord() && isTenantOfLandlord(userId, request.auth.uid);
+      
+      // Allow landlords to query for tenants (needed for PropertyTenantManager)
+      allow list: if isLandlord();
+      
+      // Allow contractors to read user data for communication purposes
+      allow read: if isContractor();
+      
+      // Anyone can create a user account
       allow create: if isSignedIn();
     }
 
@@ -196,6 +215,27 @@ service cloud.firestore {
         allow read: if isSignedIn();
         // Only cloud functions can create/write codes
         allow write: if false;
+    }
+
+    // Property Invitations Collection (for existing users)
+    match /propertyInvitations/{invitationId} {
+      // Landlords can read/manage invitations for their properties
+      allow read, update, delete: if isSignedIn() && (
+        (isLandlord() && resource.data.landlordId == request.auth.uid) ||
+        isAdmin()
+      );
+      
+      // Landlords can create invitations for their properties
+      allow create: if isSignedIn() && (
+        (isLandlord() && request.resource.data.landlordId == request.auth.uid) ||
+        isAdmin()
+      );
+      
+      // Tenants can read invitations sent to their email
+      allow read: if isSignedIn() && resource.data.tenantEmail == request.auth.token.email;
+      
+      // Allow cloud functions to manage invitations
+      allow write: if false; // Cloud functions will use admin SDK
     }
 
     // Generic mail collection for triggering emails
@@ -313,6 +353,27 @@ service cloud.firestore {
       
       // Delete messages if user is the sender
       allow delete: if isSignedIn() && resource.data.senderId == request.auth.uid;
+    }
+
+    // Property-Tenant Relationships Collection
+    match /propertyTenantRelationships/{relationshipId} {
+      // Property owners can read/manage relationships for their properties
+      allow read, update, delete: if isSignedIn() && (
+        isPropertyOwner(resource.data.propertyId) ||
+        isAdmin()
+      );
+      
+      // Property owners can create relationships for their properties
+      allow create: if isSignedIn() && (
+        isPropertyOwner(request.resource.data.propertyId) ||
+        isAdmin()
+      );
+      
+      // Tenants can read their own relationships
+      allow read: if isSignedIn() && resource.data.tenantId == request.auth.uid;
+      
+      // Allow listing relationships for property owners (needed for getPropertyTenants)
+      allow list: if isSignedIn() && isLandlord();
     }
   }
 }

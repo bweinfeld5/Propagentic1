@@ -20,8 +20,16 @@ const isValidInviteCode = (code) => {
  * This function allows tenants to use invite codes as an alternative to email invitations
  */
 exports.redeemInviteCode = functions.https.onCall(async (data, context) => {
+  // Debug logging
+  logger.info('redeemInviteCode called', {
+    hasAuth: !!context.auth,
+    authUid: context.auth?.uid,
+    data: data
+  });
+  
   // Ensure user is authenticated
   if (!context.auth) {
+    logger.error('No authentication context provided');
     throw new functions.https.HttpsError(
       'unauthenticated',
       'You must be logged in to redeem an invite code.'

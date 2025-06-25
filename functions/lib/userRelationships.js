@@ -38,6 +38,7 @@ exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.addContrac
 const https_1 = require("firebase-functions/v2/https");
 const admin = __importStar(require("firebase-admin"));
 const logger = __importStar(require("firebase-functions/logger"));
+const unifiedEmailService_1 = require("./unifiedEmailService");
 // Ensure admin is initialized if needed (though index.ts should handle it)
 if (!admin.apps.length) {
     admin.initializeApp();
@@ -86,22 +87,62 @@ exports.sendPropertyInvite = (0, https_1.onCall)(async (request) => {
         catch (fetchError) { // Catch errors during optional data fetch but proceed
             logger.warn("sendPropertyInvite: Could not fetch landlord/property name, using defaults.", { error: fetchError.message });
         }
-        // 4. Create Invite Document
+        // 4. Send Email Using Unified Service (Same Logic as Working Browser Tests)
+        logger.info(`Sending invitation email using unified service for ${tenantEmail}`);
+        let propertyAddress = '';
+        try {
+            const propertySnap = await db.collection("properties").doc(propertyId).get();
+            if (propertySnap.exists) {
+                const propertyData = propertySnap.data();
+                if (propertyData === null || propertyData === void 0 ? void 0 : propertyData.streetAddress) {
+                    propertyAddress = `${propertyData.streetAddress}`;
+                    if (propertyData.city)
+                        propertyAddress += `, ${propertyData.city}`;
+                    if (propertyData.state)
+                        propertyAddress += `, ${propertyData.state}`;
+                }
+            }
+        }
+        catch (error) {
+            logger.warn("Could not fetch property address:", error.message);
+        }
+        const emailResult = await (0, unifiedEmailService_1.sendPropertyInvitationEmailUnified)({
+            tenantEmail: tenantEmail.toLowerCase(),
+            landlordName: landlordName,
+            propertyName: propertyName,
+            propertyAddress: propertyAddress || undefined
+        });
+        // 5. Create Invite Document with Email Info
         const inviteData = {
             landlordId: landlordUid,
             landlordName: landlordName,
             propertyId: propertyId,
             propertyName: propertyName,
-            tenantEmail: tenantEmail.toLowerCase(), // Store email in lowercase for consistency
-            status: "pending",
+            propertyAddress: propertyAddress,
+            tenantEmail: tenantEmail.toLowerCase(),
+            status: "sent", // Changed from "pending" to "sent" since email is sent
+            emailSent: true,
+            emailSentAt: admin.firestore.FieldValue.serverTimestamp(),
+            mailDocId: emailResult.mailDocId,
+            inviteCode: emailResult.inviteCode,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            method: "unified_service", // Track that this used the unified service
         };
         const inviteRef = await db.collection("invites").add(inviteData);
-        logger.info(`Successfully created invite document ${inviteRef.id} for ${tenantEmail}`);
-        // 5. Return Success
-        // Note: The actual notification to the tenant is handled by the
-        // 'createNotificationOnInvite' trigger listening to the 'invites' collection.
-        return { success: true, message: "Invitation sent successfully.", inviteId: inviteRef.id };
+        logger.info(`Successfully created invite document ${inviteRef.id} and sent email to ${tenantEmail} via unified service`, {
+            inviteId: inviteRef.id,
+            mailDocId: emailResult.mailDocId,
+            inviteCode: emailResult.inviteCode
+        });
+        // 6. Return Success with Details
+        return {
+            success: true,
+            message: "Invitation sent successfully via unified email service.",
+            inviteId: inviteRef.id,
+            mailDocId: emailResult.mailDocId,
+            inviteCode: emailResult.inviteCode,
+            method: "unified_service"
+        };
     }
     catch (error) {
         logger.error("sendPropertyInvite: Failed to send invitation.", {

@@ -3,6 +3,11 @@ const admin = require('firebase-admin');
 const { Timestamp } = require('firebase-admin/firestore');
 const { logger } = require('firebase-functions');
 
+// Initialize admin if not already initialized
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
 // Validate invite code format
 const isValidInviteCode = (code) => {
   // Alphanumeric code, 6-12 characters, case-insensitive

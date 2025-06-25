@@ -9,6 +9,7 @@ import Button from '../ui/Button';
 import { auth } from '../../firebase/config';
 import inviteService from '../../services/firestore/inviteService';
 import { QRCodeDisplay } from '../qr/QRCodeDisplay';
+import inviteCodeService from '../../services/inviteCodeService';
 
 interface Property {
   id: string;
@@ -98,11 +99,11 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
     
     if (!selectedPropertyId || !email) {
       toast.error('Please fill in all required fields');
-      return;
+        return;
     }
-    
-    setLoading(true);
 
+    setLoading(true);
+    
     try {
       // Create the invite using the working inviteService
       const inviteData = {
@@ -119,14 +120,14 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
       const shortCode = await inviteService.createInvite(inviteData);
       
       console.log('✅ Invite created successfully with short code:', shortCode);
-      setInviteSuccess(true);
+        setInviteSuccess(true);
       setInviteCode(shortCode);
       
       toast.success(`Invitation sent successfully! Tenant can use code: ${shortCode}`);
-      
-      if (onInviteSuccess) {
-        onInviteSuccess();
-      }
+        
+        if (onInviteSuccess) {
+          onInviteSuccess();
+        }
       
     } catch (error: any) {
       console.error('Error creating invite:', error);
@@ -232,37 +233,37 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
 
                       {activeTab === 'info' ? (
                         <>
-                          {/* Next Steps */}
-                          <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                            <h4 className="text-sm font-semibold text-blue-800 mb-3 flex items-center">
-                              <InformationCircleIcon className="h-5 w-5 mr-2" />
-                              What happens next?
-                            </h4>
-                            <ul className="text-sm text-blue-700 space-y-2">
-                              <li className="flex items-start">
-                                <span className="text-blue-500 mr-2">•</span>
-                                The tenant will receive an email invitation
-                              </li>
-                              <li className="flex items-start">
-                                <span className="text-blue-500 mr-2">•</span>
-                                They'll create an account (if they don't have one)
-                              </li>
-                              <li className="flex items-start">
-                                <span className="text-blue-500 mr-2">•</span>
-                                They'll get access to submit maintenance requests
-                              </li>
-                              <li className="flex items-start">
-                                <span className="text-blue-500 mr-2">•</span>
-                                You'll be able to communicate directly through the platform
-                              </li>
-                            </ul>
-                          </div>
+                      {/* Next Steps */}
+                      <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                        <h4 className="text-sm font-semibold text-blue-800 mb-3 flex items-center">
+                          <InformationCircleIcon className="h-5 w-5 mr-2" />
+                          What happens next?
+                        </h4>
+                        <ul className="text-sm text-blue-700 space-y-2">
+                          <li className="flex items-start">
+                            <span className="text-blue-500 mr-2">•</span>
+                            The tenant will receive an email invitation
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-blue-500 mr-2">•</span>
+                            They'll create an account (if they don't have one)
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-blue-500 mr-2">•</span>
+                            They'll get access to submit maintenance requests
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-blue-500 mr-2">•</span>
+                            You'll be able to communicate directly through the platform
+                          </li>
+                        </ul>
+                      </div>
 
-                          {/* Show invite ID if available */}
+                      {/* Show invite ID if available */}
                           {inviteCode && (
-                            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                               <p className="text-sm font-medium text-gray-700 mb-2">Invitation Code:</p>
-                              <div className="bg-white rounded-lg px-3 py-2 font-mono text-sm text-center border border-gray-300">
+                          <div className="bg-white rounded-lg px-3 py-2 font-mono text-sm text-center border border-gray-300">
                                 {inviteCode}
                               </div>
                               <p className="text-xs text-gray-500 mt-2 text-center">

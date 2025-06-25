@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import inviteService from '../services/firestore/inviteService';
+import FirestoreDataInspector from '../components/debug/FirestoreDataInspector';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const InviteValidationTest: React.FC = () => {
@@ -109,6 +110,9 @@ const InviteValidationTest: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Firestore Data Inspector */}
+      <FirestoreDataInspector />
     </div>
   );
 };

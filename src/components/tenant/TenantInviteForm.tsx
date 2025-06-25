@@ -24,6 +24,7 @@ interface TenantInviteFormProps {
     propertyName: string;
     unitId?: string | null;
   } | null;
+  isProcessing?: boolean;
 }
 
 /**
@@ -36,7 +37,8 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
   showSkip = false,
   onSkip,
   initialCode = '',
-  propertyInfo = null
+  propertyInfo = null,
+  isProcessing = false
 }) => {
   const { currentUser } = useAuth();
   const [inviteCode, setInviteCode] = useState(initialCode);
@@ -169,7 +171,7 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
               placeholder="Enter the 8-character code (e.g., ABCD1234)"
               maxLength={12}
               autoComplete="off"
-              disabled={isValidating}
+              disabled={isValidating || isProcessing}
               className={`w-full px-4 py-3 font-mono ${
                 validationMessage?.type === 'error'
                   ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
@@ -219,7 +221,7 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
               type="button"
               onClick={handleSkip}
               variant="secondary"
-              disabled={isValidating}
+              disabled={isValidating || isProcessing}
               className="px-4 py-2 text-sm"
             >
               Skip for now
@@ -229,10 +231,10 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
           <Button
             type="submit"
             variant="primary"
-            isLoading={isValidating}
+            isLoading={isValidating || isProcessing}
             className="px-6 py-2"
           >
-            {isValidating ? 'Validating...' : (propertyInfo ? 'Join Property' : 'Validate Code')}
+            {(isValidating || isProcessing) ? 'Processing...' : (propertyInfo ? 'Join Property' : 'Validate Code')}
           </Button>
         </div>
       </form>

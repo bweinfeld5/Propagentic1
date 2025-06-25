@@ -28,6 +28,7 @@ import PublicPropertyDashboardDemo from './pages/PublicPropertyDashboardDemo';
 import DemoShowcase from './pages/DemoShowcase';
 import TestPage from './pages/TestPage';
 import InviteAcceptancePage from './pages/InviteAcceptancePage';
+import InviteCodeBrowserTest from './pages/InviteCodeBrowserTest';
 
 // Lazy load page components
 const LandingPage = lazy(() => import('./components/landing/LandingPage.jsx'));
@@ -209,6 +210,7 @@ function App() {
                                 <Route path="/forgot-password" element={<ForgotPassword />} />
                                 <Route path="/auth" element={<AuthPage />} />
                                 <Route path="/invite" element={<InviteAcceptancePage />} />
+                                <Route path="/invite-test" element={<PrivateRoute><InviteCodeBrowserTest /></PrivateRoute>} />
                                 <Route path="/dashboard" element={<PrivateRoute><RoleBasedRedirect /></PrivateRoute>} />
                                 <Route path="/tenant/dashboard" element={<PrivateRoute><EnhancedTenantDashboard /></PrivateRoute>} />
                                 <Route path="/tenant/dashboard/legacy" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />

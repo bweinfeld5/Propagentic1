@@ -5,7 +5,7 @@ import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { ExclamationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import toastService from '../../services/toastService';
-import InviteCodeValidationTest from '../debug/InviteCodeValidationTest';
+// import InviteCodeValidationTest from '../debug/InviteCodeValidationTest';
 
 interface TenantInviteFormProps {
   onInviteValidated: (propertyInfo: {
@@ -238,7 +238,7 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
       </form>
       
       {/* Debug tool - only show in development */}
-      {process.env.NODE_ENV === 'development' && <InviteCodeValidationTest />}
+                {/* {process.env.NODE_ENV === 'development' && <InviteCodeValidationTest />} */}
     </div>
   );
 };

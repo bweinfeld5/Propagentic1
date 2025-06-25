@@ -263,36 +263,72 @@ export const deleteInvite = async (inviteId: string): Promise<void> => {
 };
 
 /**
- * Resolve 8-digit short code to 20-character document ID
+ * Resolve both 8-digit short codes and 20-character codes to document ID
  */
-export const resolveShortCode = async (shortCode: string): Promise<string | null> => {
+export const resolveShortCode = async (code: string): Promise<string | null> => {
   try {
-    if (!shortCode) return null;
+    if (!code) return null;
     
-    // Normalize the short code to uppercase
-    const normalizedShortCode = shortCode.trim().toUpperCase();
+    // Normalize the code to uppercase
+    const normalizedCode = code.trim().toUpperCase();
     
-    // If it's already a 20-character code, return it as-is
-    if (normalizedShortCode.length === 20) {
-      return normalizedShortCode;
+    // For 8-digit codes, query by shortCode field
+    if (normalizedCode.length === 8) {
+      const invitesRef = collection(db, 'invites');
+      const q = query(invitesRef, where('shortCode', '==', normalizedCode));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        console.log('No invite found for short code:', normalizedCode);
+        return null;
+      }
+      
+      // Return the document ID
+      const doc = querySnapshot.docs[0];
+      console.log(`Resolved short code ${normalizedCode} to document ID: ${doc.id}`);
+      return doc.id;
     }
     
-    // Query for the invite document with this short code
-    const invitesRef = collection(db, 'invites');
-    const q = query(invitesRef, where('shortCode', '==', normalizedShortCode));
-    const querySnapshot = await getDocs(q);
-    
-    if (querySnapshot.empty) {
-      console.log('No invite found for short code:', normalizedShortCode);
+    // For longer codes (like 20-character), check if it's a valid document ID
+    if (normalizedCode.length === 20) {
+      // First check if this is a valid document ID
+      const directDoc = await getDoc(doc(db, 'invites', normalizedCode));
+      if (directDoc.exists()) {
+        console.log(`Found document with ID: ${normalizedCode}`);
+        return normalizedCode;
+      }
+      
+      // If not found as document ID, check if it might be stored as a shortCode
+      const invitesRef = collection(db, 'invites');
+      const q = query(invitesRef, where('shortCode', '==', normalizedCode));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        console.log(`Found ${normalizedCode} as shortCode, resolved to document ID: ${doc.id}`);
+        return doc.id;
+      }
+      
+      console.log('No invite found for 20-character code:', normalizedCode);
       return null;
     }
     
-    // Return the document ID (20-character code)
-    const doc = querySnapshot.docs[0];
-    console.log(`Resolved short code ${normalizedShortCode} to document ID: ${doc.id}`);
-    return doc.id;
+    // For other lengths, treat as shortCode
+    const invitesRef = collection(db, 'invites');
+    const q = query(invitesRef, where('shortCode', '==', normalizedCode));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      console.log('No invite found for code:', normalizedCode);
+      return null;
+    }
+    
+    // Return the document ID
+    const docRef = querySnapshot.docs[0];
+    console.log(`Resolved code ${normalizedCode} to document ID: ${docRef.id}`);
+    return docRef.id;
   } catch (error) {
-    console.error('Error resolving short code:', error);
+    console.error('Error resolving code:', error);
     return null;
   }
 };

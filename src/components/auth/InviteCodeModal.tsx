@@ -35,8 +35,12 @@ const InviteCodeModal: React.FC<InviteCodeModalProps> = ({
 
     setIsProcessing(true);
     console.log('🔄 Redeeming invite code for user:', currentUser.uid);
+    console.log('🔄 Current user auth token:', await currentUser.getIdToken());
 
     try {
+      // Ensure we have a fresh auth token
+      await currentUser.getIdToken(true);
+      
       const redeemInviteCode = httpsCallable(functions, 'redeemInviteCode');
       const result = await redeemInviteCode({
         code: propertyInfo.inviteCode,
@@ -46,7 +50,7 @@ const InviteCodeModal: React.FC<InviteCodeModalProps> = ({
       const data = result.data as any;
       
       if (data.success) {
-        toast.success(`Successfully joined ${data.propertyName || 'property'}!`);
+        toast.success(`Successfully joined ${data.propertyName || data.property?.name || 'property'}!`);
         onInviteValidated();
         onClose();
       } else {
@@ -54,7 +58,17 @@ const InviteCodeModal: React.FC<InviteCodeModalProps> = ({
       }
     } catch (error: any) {
       console.error('💥 Error redeeming invite code:', error);
-      toast.error(error.message || 'An error occurred while redeeming the invite code');
+      console.error('💥 Error code:', error.code);
+      console.error('💥 Error details:', error.details);
+      
+      let errorMessage = 'An error occurred while redeeming the invite code';
+      if (error.code === 'unauthenticated') {
+        errorMessage = 'Authentication failed. Please sign out and sign back in.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsProcessing(false);
     }

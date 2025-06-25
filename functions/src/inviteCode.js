@@ -49,11 +49,21 @@ exports.redeemInviteCode = functions.https.onCall(async (data, context) => {
     const db = admin.firestore();
     
     // Check if the invite code exists in the database
-    const inviteCodeQuery = await db
-      .collection('inviteCodes')
-      .where('code', '==', normalizedCode)
+    // First try shortCode field (8-digit codes), then try document ID (20-char codes)
+    let inviteCodeQuery = await db
+      .collection('invites')
+      .where('shortCode', '==', normalizedCode)
       .limit(1)
       .get();
+    
+    // If not found by shortCode, try by document ID
+    if (inviteCodeQuery.empty) {
+      const inviteDocRef = db.collection('invites').doc(normalizedCode);
+      const inviteDoc = await inviteDocRef.get();
+      if (inviteDoc.exists) {
+        inviteCodeQuery = { docs: [inviteDoc], empty: false };
+      }
+    }
 
     if (inviteCodeQuery.empty) {
       throw new functions.https.HttpsError(
@@ -65,8 +75,8 @@ exports.redeemInviteCode = functions.https.onCall(async (data, context) => {
     const inviteCodeDoc = inviteCodeQuery.docs[0];
     const inviteCodeData = inviteCodeDoc.data();
 
-    // Check if the invite code has already been used
-    if (inviteCodeData.used) {
+    // Check if the invite code has already been used (check status field)
+    if (inviteCodeData.status === 'accepted' || inviteCodeData.status === 'used') {
       throw new functions.https.HttpsError(
         'already-exists',
         'This invite code has already been used.'
@@ -196,8 +206,8 @@ exports.redeemInviteCode = functions.https.onCall(async (data, context) => {
       }
 
       // Mark the invite code as used
-      transaction.update(db.collection('inviteCodes').doc(inviteCodeDoc.id), {
-        used: true,
+      transaction.update(db.collection('invites').doc(inviteCodeDoc.id), {
+        status: 'accepted',
         usedBy: tenantId,
         usedAt: now
       });

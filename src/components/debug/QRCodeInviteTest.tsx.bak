@@ -66,15 +66,13 @@ export const QRCodeInviteTest: React.FC = () => {
       // Test 2: Test Local Invite Code Service
       updateTest('localService', 'running', 'Testing local invite code service...');
       try {
-        // Local service disabled - commenting out for now
-        // const localResult = await inviteCodeServiceLocal.generateInviteCode('test-property-local', 7);
-        // if (localResult.success) {
-        //   updateTest('localService', 'success', `Local service works: ${localResult.code}`, localResult);
-        //   setGeneratedCode(localResult.code);
-        // } else {
-        //   updateTest('localService', 'error', 'Local service returned failure');
-        // }
-        updateTest('localService', 'error', 'Local service temporarily disabled');
+        const localResult = // await inviteCodeServiceLocal.generateInviteCode('test-property-local', 7);
+        if (localResult.success) {
+          updateTest('localService', 'success', `Local service works: ${localResult.code}`, localResult);
+          setGeneratedCode(localResult.code);
+        } else {
+          updateTest('localService', 'error', 'Local service returned failure');
+        }
       } catch (error: any) {
         updateTest('localService', 'error', `Local service error: ${error.message}`);
       }
@@ -122,14 +120,12 @@ export const QRCodeInviteTest: React.FC = () => {
       if (generatedCode) {
         updateTest('validation', 'running', 'Testing invite code validation...');
         try {
-          // Local validation disabled - commenting out for now
-          // const validationResult = await inviteCodeServiceLocal.validateInviteCode(generatedCode);
-          // if (validationResult.valid) {
-          //   updateTest('validation', 'success', 'Code validation successful', validationResult);
-          // } else {
-          //   updateTest('validation', 'error', `Validation failed: ${validationResult.message}`);
-          // }
-          updateTest('validation', 'error', 'Local validation temporarily disabled');
+          const validationResult = // await inviteCodeServiceLocal.validateInviteCode(generatedCode);
+          if (validationResult.valid) {
+            updateTest('validation', 'success', 'Code validation successful', validationResult);
+          } else {
+            updateTest('validation', 'error', `Validation failed: ${validationResult.message}`);
+          }
         } catch (error: any) {
           updateTest('validation', 'error', `Validation error: ${error.message}`);
         }
@@ -144,7 +140,7 @@ export const QRCodeInviteTest: React.FC = () => {
   };
 
   const clearLocalCodes = () => {
-    // inviteCodeServiceLocal.clearAllCodes();
+    inviteCodeServiceLocal.clearAllCodes();
     toast.success('Local invite codes cleared');
     setGeneratedCode(null);
     setTestResults([]);

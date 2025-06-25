@@ -13,6 +13,9 @@ import LocalStorageDebug from './components/shared/LocalStorageDebug';
 import UniversalLoadingSpinner from './components/shared/UniversalLoadingSpinner';
 import PreLaunchGuard from './components/guards/PreLaunchGuard';
 import TenantInviteGuard from './components/guards/TenantInviteGuard.tsx';
+import ProfileCompletionGuard from './components/guards/ProfileCompletionGuard';
+import ErrorBoundary from './components/error/ErrorBoundary';
+import ErrorMonitoringDashboard from './components/admin/ErrorMonitoringDashboard';
 import { Toaster } from 'react-hot-toast';
 import PitchDeckDemo from './pages/demo/PitchDeckDemo';
 import DemoPage from './pages/DemoPage';
@@ -43,6 +46,8 @@ const ContractorDashboard = lazy(() => import('./components/contractor/EnhancedC
 const ContractorDashboardDemo = lazy(() => import('./pages/ContractorDashboardDemo.jsx'));
 const OriginalContractorDashboard = lazy(() => import('./components/contractor/ContractorDashboard.jsx'));
 const ContractorMessagesPage = lazy(() => import('./pages/contractor/ContractorMessagesPage.tsx'));
+const ContractorProfilePage = lazy(() => import('./pages/ContractorProfilePage.jsx'));
+const JobHistoryPage = lazy(() => import('./pages/JobHistoryPage.jsx'));
 const PricingPage = lazy(() => import('./pages/PricingPage.jsx'));
 const OnboardingSurvey = lazy(() => import('./components/onboarding/OnboardingSurvey.jsx'));
 const LandlordOnboarding = lazy(() => import('./components/onboarding/LandlordOnboarding.jsx'));
@@ -182,9 +187,14 @@ function App() {
                 <DemoModeProvider>
                   <DataServiceProvider>
                     <NotificationProvider>
-                      <Router>
-                        <Suspense fallback={<UniversalLoadingSpinner message="Loading page..." />}>
-                        <Routes>
+                      <ErrorBoundary 
+                        level="page"
+                        userId={null}
+                        userRole={null}
+                      >
+                        <Router>
+                          <Suspense fallback={<UniversalLoadingSpinner message="Loading page..." />}>
+                          <Routes>
                         {/* Public routes */}
                         <Route path="/" element={<Navigate to="/propagentic/new" replace />} />
                         <Route path="/propagentic/new" element={<LandingPage />} />
@@ -212,11 +222,13 @@ function App() {
                                 <Route path="/auth" element={<AuthPage />} />
                                 <Route path="/invite/:code" element={<InviteAcceptancePage />} />
                                 <Route path="/dashboard" element={<PrivateRoute><RoleBasedRedirect /></PrivateRoute>} />
-                                <Route path="/tenant/dashboard" element={<PrivateRoute><EnhancedTenantDashboard /></PrivateRoute>} />
-                                <Route path="/tenant/dashboard/legacy" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />
-                                <Route path="/landlord/dashboard" element={<PrivateRoute><LandlordDashboard /></PrivateRoute>} />
-                                <Route path="/contractor/dashboard" element={<PrivateRoute><ContractorDashboard /></PrivateRoute>} />
+                                <Route path="/tenant/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={85}><EnhancedTenantDashboard /></ProfileCompletionGuard></PrivateRoute>} />
+                                <Route path="/tenant/dashboard/legacy" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={85}><TenantDashboard /></ProfileCompletionGuard></PrivateRoute>} />
+                                <Route path="/landlord/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={90}><LandlordDashboard /></ProfileCompletionGuard></PrivateRoute>} />
+                                <Route path="/contractor/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={95}><ContractorDashboard /></ProfileCompletionGuard></PrivateRoute>} />
                                 <Route path="/contractor/messages" element={<PrivateRoute><ContractorMessagesPage /></PrivateRoute>} />
+                                <Route path="/contractor/profile" element={<PrivateRoute><ContractorProfilePage /></PrivateRoute>} />
+                                <Route path="/contractor/history" element={<PrivateRoute><JobHistoryPage /></PrivateRoute>} />
                                 <Route path="/contractor/dashboard/enhanced" element={<ContractorDashboardDemo />} />
                                 <Route path="/contractor/dashboard/original" element={<PrivateRoute><OriginalContractorDashboard /></PrivateRoute>} />
                                 <Route path="/maintenance/new" element={<PrivateRoute><MaintenanceSurvey /></PrivateRoute>} />
@@ -271,6 +283,7 @@ function App() {
                       </div>
                       <LocalStorageDebug />
                     </Router>
+                      </ErrorBoundary>
                   </NotificationProvider>
                 </DataServiceProvider>
               </DemoModeProvider>

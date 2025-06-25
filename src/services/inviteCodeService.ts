@@ -21,6 +21,7 @@ import {
 } from 'firebase/firestore';
 import { getFunctions, httpsCallable, HttpsCallableResult } from 'firebase/functions';
 import { InviteCode, inviteCodeConverter, createInviteCode as createInviteCodeModel } from '../models/InviteCode';
+import { getAuth } from 'firebase/auth';
 
 // Collection reference
 const COLLECTION_NAME = 'inviteCodes';
@@ -277,44 +278,42 @@ export const createInviteCode = async (
   const { unitId, email, expirationDays = 7 } = options;
   
   try {
-    // Generate a unique code
-    let code: string;
-    let isUnique = false;
+    const auth = getAuth();
+    const token = await auth.currentUser?.getIdToken();
     
-    // Try to generate a unique code
-    do {
-      code = generateRandomCode();
-      
-      // Check if the code already exists
-      const codesRef = collection(db, COLLECTION_NAME);
-      const q = query(codesRef, where('code', '==', code));
-      const querySnapshot = await getDocs(q);
-      
-      isUnique = querySnapshot.empty;
-    } while (!isUnique);
+    if (!token) {
+      throw new Error('User must be authenticated');
+    }
+
+    const response = await fetch('https://us-central1-propagentic.cloudfunctions.net/generateInviteCodeHttp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        propertyId,
+        unitId,
+        email,
+        expirationDays
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to create invite code');
+    }
+
+    const data = await response.json();
     
-    // Create the invite code model
-    const inviteCodeData = createInviteCodeModel(
-      code,
-      landlordId,
-      propertyId,
-      expirationDays,
-      { unitId, email }
-    );
-    
-    // Add to Firestore
-    const docRef = await addDoc(
-      collection(db, COLLECTION_NAME).withConverter(inviteCodeConverter),
-      inviteCodeData as WithFieldValue<InviteCode>
-    );
-    
-    return {
-      ...inviteCodeData,
-      id: docRef.id
-    };
+    if (!data.success) {
+      throw new Error('Failed to create invite code');
+    }
+
+    return data.inviteCode;
   } catch (error) {
     console.error('Error creating invite code:', error);
-    throw new Error('Failed to create invite code');
+    throw error;
   }
 };
 

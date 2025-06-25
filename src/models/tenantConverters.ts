@@ -110,7 +110,7 @@ const baseUserConverter: FirestoreDataConverter<BaseUser> = {
       phone: data.phone,
       avatar: data.avatar,
       status: data.status || 'active',
-      emailVerified: data.emailVerified || false,
+      emailVerified: data.emailVerified ?? true,
       onboardingComplete: data.onboardingComplete || false,
       profileComplete: data.profileComplete || false,
       createdAt: convertTimestamp(data.createdAt),

@@ -36,6 +36,7 @@ const Login = () => {
       
       // Get the user's role from their token claims or profile
       // For now, redirect to a general dashboard (you'd normally redirect based on role)
+      // Use role-based redirect handled by RoleBasedRedirect component
       navigate('/dashboard');
       
     } catch (err) {

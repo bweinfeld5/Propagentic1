@@ -144,7 +144,8 @@ export const QRInviteGenerator: React.FC<QRInviteGeneratorProps> = ({
       const result = await generateInviteCodeFunction(requestPayload);
       
       console.log('📥 Raw function result:', {
-        data: result.data
+        data: result.data,
+        metadata: result.metadata || 'none'
       });
 
       const data = result.data as any;
@@ -208,27 +209,24 @@ export const QRInviteGenerator: React.FC<QRInviteGeneratorProps> = ({
         try {
           // Use local invite code service for development
           console.log('🔧 Attempting local invite code generation...');
-          // Local service disabled - commenting out for now
-          // const localResult = await inviteCodeServiceLocal.generateInviteCode(selectedPropertyId, 7);
-          // if (localResult.success) {
-          //   console.log('✅ Generated local invite code:', localResult.code);
-          //   setInviteCode(localResult.code);
-          //   setGeneratedAt(new Date());
-          //   
-          //   // Notify parent component
-          //   onInviteCodeGenerated?.(localResult.code);
-          //   
-          //   toast.success('QR code generated (local mode)!');
-          //   toast('⚠️ Using local service - codes valid for this session only', {
-          //     duration: 4000,
-          //     icon: '⚠️'
-          //   });
-          // } else {
-          //   throw new Error('Local service failed');
-          // }
+          const localResult = await inviteCodeServiceLocal.generateInviteCode(selectedPropertyId, 7);
           
-          // Fallback to demo code for now
-          throw new Error('Local service temporarily disabled');
+          if (localResult.success) {
+            console.log('✅ Generated local invite code:', localResult.code);
+            setInviteCode(localResult.code);
+            setGeneratedAt(new Date());
+            
+            // Notify parent component
+            onInviteCodeGenerated?.(localResult.code);
+            
+            toast.success('QR code generated (local mode)!');
+            toast('⚠️ Using local service - codes valid for this session only', {
+              duration: 4000,
+              icon: '⚠️'
+            });
+          } else {
+            throw new Error('Local service failed');
+          }
         } catch (localErr) {
           console.error('❌ Local service also failed:', localErr);
           // Final fallback: simple demo code

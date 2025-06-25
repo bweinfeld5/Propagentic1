@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { validateInviteCode, redeemInviteCode } from '../../services/inviteCodeService';
+import inviteService from '../../services/firestore/inviteService';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { ExclamationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import toastService from '../../services/toastService';
+import InviteCodeValidationTest from '../debug/InviteCodeValidationTest';
 
 interface TenantInviteFormProps {
   onInviteValidated: (propertyInfo: {
@@ -96,7 +97,7 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
       console.log('🔍 Starting invite code validation for:', inviteCode.trim());
       console.log('🔍 Current user:', currentUser?.uid, currentUser?.email);
       
-      const validationResult = await validateInviteCode(inviteCode.trim());
+      const validationResult = await inviteService.validateInviteCode(inviteCode.trim());
       
       console.log('🔍 Validation result:', validationResult);
       
@@ -112,16 +113,16 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
         console.log('🚀 Notifying parent component with property info');
         // Notify parent component that we have a valid invite code
         onInviteValidated({
-          propertyId: validationResult.propertyId!,
-          propertyName: validationResult.propertyName || 'Property',
-          unitId: validationResult.unitId,
+          propertyId: validationResult.inviteData?.propertyId || '',
+          propertyName: validationResult.inviteData?.propertyName || 'Property',
+          unitId: validationResult.inviteData?.unitId || null,
           inviteCode: inviteCode.trim()
         });
       } else {
         console.log('❌ Code validation failed:', validationResult.message);
         setValidationMessage({
           type: 'error',
-          message: validationResult.message
+          message: validationResult.message || 'Invalid invite code. Please check the code and try again.'
         });
       }
     } catch (error: any) {
@@ -152,7 +153,7 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
   };
 
   return (
-    <div className={`${className}`}>
+    <div className={`${className} relative`}>
       <form onSubmit={validateCode} className="space-y-4">
         <div className="space-y-2">
           <label htmlFor="invite-code" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -235,6 +236,9 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
           </Button>
         </div>
       </form>
+      
+      {/* Debug tool - only show in development */}
+      {process.env.NODE_ENV === 'development' && <InviteCodeValidationTest />}
     </div>
   );
 };

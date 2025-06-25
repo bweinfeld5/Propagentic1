@@ -204,9 +204,18 @@ service cloud.firestore {
     match /invites/{inviteId} {
       // Landlords and admins can manage invites.
       allow create: if isLandlord() || isAdmin();
+      
+      // Allow reading for validation purposes (any authenticated user can validate invite codes)
+      allow get: if isSignedIn();
+      
+      // Allow specific tenant and landlord access
       allow read, update: if (isLandlord() && resource.data.landlordId == request.auth.uid) ||
                              (isSignedIn() && resource.data.tenantEmail == request.auth.token.email) ||
                              isAdmin();
+      
+      // Allow querying invites for validation (needed for shortCode lookups)
+      allow list: if isSignedIn();
+      
       allow delete: if (isLandlord() && resource.data.landlordId == request.auth.uid) || isAdmin();
     }
 

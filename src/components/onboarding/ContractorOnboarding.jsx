@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import profileCreationService from '../../services/profileCreationService';
+import onboardingProgressService from '../../services/onboardingProgressService';
 import HomeNavLink from '../layout/HomeNavLink';
+// Import progress components
+import ProgressRecoveryBanner from './ProgressRecoveryBanner';
+import AutoSaveForm from './AutoSaveForm';
 // Import payment components
 import W9FormUpload from '../payments/W9FormUpload';
 import StripeOnboarding from '../payments/StripeOnboarding';
@@ -70,6 +75,12 @@ const ContractorOnboarding = () => {
     6: false, // Payment Methods Setup
   });
 
+  // Progress tracking state
+  const [progressSummary, setProgressSummary] = useState(null);
+  const [showRecoveryBanner, setShowRecoveryBanner] = useState(false);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [progressLoading, setProgressLoading] = useState(false);
+
   // Redirect if user is not authenticated or not a contractor
   useEffect(() => {
     if (!currentUser) {
@@ -93,6 +104,44 @@ const ContractorOnboarding = () => {
       }));
     }
   }, [currentUser, userProfile, navigate]);
+
+  // Load saved progress on component mount
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    // Cleanup expired progress first
+    onboardingProgressService.cleanupExpiredProgress();
+    
+    // Check for recoverable progress
+    if (onboardingProgressService.hasRecoverableProgress(currentUser.uid, 'contractor')) {
+      const summary = onboardingProgressService.getProgressSummary(currentUser.uid, 'contractor');
+      setProgressSummary(summary);
+      setShowRecoveryBanner(true);
+    }
+  }, [currentUser]);
+
+  // Create auto-save function
+  const autoSave = React.useMemo(() => {
+    if (!currentUser || !autoSaveEnabled) return null;
+    return onboardingProgressService.createAutoSaver(currentUser.uid, 'contractor', 2000);
+  }, [currentUser, autoSaveEnabled]);
+
+  // Auto-save progress when form data or step changes
+  useEffect(() => {
+    if (!currentUser || !autoSave) return;
+    
+    const progressData = {
+      currentStep,
+      totalSteps: 6,
+      formData,
+      stepCompletion,
+      onboardingType: 'contractor'
+    };
+    
+    if (onboardingProgressService.validateProgressData(progressData)) {
+      autoSave(progressData);
+    }
+  }, [currentStep, formData, stepCompletion, currentUser, autoSave]);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -120,6 +169,67 @@ const ContractorOnboarding = () => {
       ...prev,
       serviceTypes: newServiceTypes
     }));
+  };
+
+  // Handle progress recovery
+  const handleRestoreProgress = async () => {
+    if (!currentUser || !progressSummary) return;
+    
+    setProgressLoading(true);
+    try {
+      // Restore form data and step completion
+      if (progressSummary.formData) {
+        setFormData(progressSummary.formData);
+      }
+      if (progressSummary.stepCompletion) {
+        setStepCompletion(progressSummary.stepCompletion);
+      }
+      setCurrentStep(progressSummary.step);
+      
+      // Hide recovery banner
+      setShowRecoveryBanner(false);
+      setProgressSummary(null);
+    } catch (error) {
+      console.error('Failed to restore progress:', error);
+      setError('Failed to restore your progress. Please try again.');
+    } finally {
+      setProgressLoading(false);
+    }
+  };
+
+  // Handle discarding saved progress
+  const handleDiscardProgress = () => {
+    if (!currentUser) return;
+    
+    onboardingProgressService.clearProgress(currentUser.uid, 'contractor');
+    setShowRecoveryBanner(false);
+    setProgressSummary(null);
+    
+    // Reset to initial state
+    setCurrentStep(1);
+    setStepCompletion({
+      1: false,
+      2: false,
+      3: false,
+      4: false,
+      5: false,
+      6: false,
+    });
+  };
+
+  // Manual save progress function for AutoSaveForm
+  const handleManualSave = async (data) => {
+    if (!currentUser) return;
+    
+    const progressData = {
+      currentStep,
+      totalSteps: 6,
+      formData: data || formData,
+      stepCompletion,
+      onboardingType: 'contractor'
+    };
+    
+    return onboardingProgressService.saveProgress(currentUser.uid, 'contractor', progressData);
   };
 
   // Navigate to next step
@@ -315,7 +425,7 @@ const ContractorOnboarding = () => {
     }, 500);
   };
 
-  // Submit form to Firestore
+  // Submit form to Firestore - Creates both users/{uid} and contractorProfiles/{contractorId} documents
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -325,23 +435,70 @@ const ContractorOnboarding = () => {
     setError('');
     
     try {
+      // Create a batch to write both documents atomically
+      const batch = writeBatch(db);
+      
+      // Reference to user document
       const userDocRef = doc(db, 'users', currentUser.uid);
       
-      // Use updateDoc to update the user document
-      await updateDoc(userDocRef, {
+      // Reference to contractor profile document
+      const contractorProfileRef = doc(db, 'contractorProfiles', currentUser.uid);
+      
+      // Data for users document (existing onboarding data)
+      const userData = {
         ...formData,
         onboardingComplete: true,
         name: `${formData.firstName} ${formData.lastName}`,
-        userType: 'contractor', // Ensure userType is set
+        userType: 'contractor',
         updatedAt: serverTimestamp(),
-        // Convert hourly rate to a number if it's a valid string
         hourlyRate: formData.hourlyRate ? parseFloat(formData.hourlyRate) : null,
-      });
+      };
+      
+      // Data for contractorProfiles document (service-layer compatible format)
+      const contractorProfileData = {
+        contractorId: currentUser.uid,
+        userId: currentUser.uid,
+        // Map serviceTypes to skills for backward compatibility
+        skills: formData.serviceTypes || [],
+        serviceArea: formData.serviceArea || '',
+        availability: true, // Default to available
+        preferredProperties: [], // Empty array for now
+        rating: 0, // Start with 0 rating
+        jobsCompleted: 0, // Start with 0 completed jobs
+        companyName: formData.companyName || null,
+        // Additional contractor-specific fields
+        yearsExperience: formData.yearsExperience,
+        bio: formData.bio,
+        hourlyRate: formData.hourlyRate ? parseFloat(formData.hourlyRate) : null,
+        phoneNumber: formData.phoneNumber,
+        email: formData.email,
+        preferredContactMethod: formData.preferredContactMethod,
+        availabilityNotes: formData.availabilityNotes,
+        // Verification and payment info
+        taxId: formData.taxId,
+        insuranceInfo: formData.insuranceInfo,
+        website: formData.website,
+        w9FormUrl: formData.w9FormUrl,
+        stripeAccountSetup: formData.stripeAccountSetup,
+        bankAccountVerified: formData.bankAccountVerified,
+        paymentMethodsSetup: formData.paymentMethodsSetup,
+        // Timestamps
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      
+      // Add both operations to the batch
+      // Use setDoc with merge for users document to handle both create and update cases
+      batch.set(userDocRef, userData, { merge: true });
+      batch.set(contractorProfileRef, contractorProfileData);
+      
+      // Execute the batch write
+      await batch.commit();
+      
+      console.log('Contractor onboarding complete - both users and contractorProfiles documents created');
       
       // Refresh the user profile before redirecting
       await fetchUserProfile(currentUser.uid);
-      
-      console.log('Contractor onboarding complete, redirecting to dashboard');
       
       // Redirect to contractor dashboard immediately
       navigate('/contractor/dashboard');
@@ -353,35 +510,82 @@ const ContractorOnboarding = () => {
     }
   };
 
-  // Progress indicator with orange theme
+  // Enhanced progress indicator with detailed information
   const ProgressIndicator = () => {
+    const completionPercentage = onboardingProgressService.calculateCompletionPercentage(
+      currentStep, 
+      6, 
+      stepCompletion
+    );
+
+    const stepTitles = {
+      1: 'Basic Info',
+      2: 'Services & Availability', 
+      3: 'Tax Documentation',
+      4: 'Payment Setup',
+      5: 'Bank Account',
+      6: 'Final Setup'
+    };
+
     return (
-      <div className="mb-8 flex justify-center">
-        <div className="flex items-center">
-          {[1, 2, 3, 4, 5, 6].map((step) => (
-            <React.Fragment key={step}>
-              <div 
-                className={`rounded-full h-8 w-8 flex items-center justify-center border-2 text-sm font-medium
-                  ${currentStep >= step 
-                    ? 'border-orange-500 bg-orange-500 text-white' 
-                    : 'border-gray-300 text-gray-400'}`}
-              >
-                {stepCompletion[step] ? (
-                  <svg className="h-4 w-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  step
-                )}
-              </div>
-              {step < 6 && (
+      <div className="mb-8">
+        {/* Step progress circles */}
+        <div className="flex justify-center mb-4">
+          <div className="flex items-center">
+            {[1, 2, 3, 4, 5, 6].map((step) => (
+              <React.Fragment key={step}>
                 <div 
-                  className={`w-10 h-1 mx-1 
-                    ${currentStep > step ? 'bg-orange-500' : 'bg-gray-300'}`}
-                />
-              )}
-            </React.Fragment>
-          ))}
+                  className={`rounded-full h-8 w-8 flex items-center justify-center border-2 text-sm font-medium transition-all duration-200
+                    ${currentStep >= step 
+                      ? 'border-orange-500 bg-orange-500 text-white' 
+                      : 'border-gray-300 text-gray-400'}`}
+                  title={stepTitles[step]}
+                >
+                  {stepCompletion[step] ? (
+                    <svg className="h-4 w-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                      <path d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    step
+                  )}
+                </div>
+                {step < 6 && (
+                  <div 
+                    className={`w-10 h-1 mx-1 transition-all duration-200
+                      ${currentStep > step ? 'bg-orange-500' : 'bg-gray-300'}`}
+                  />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+
+        {/* Progress summary */}
+        <div className="text-center space-y-2">
+          <div className="text-sm text-gray-600">
+            Step {currentStep} of 6 • {stepTitles[currentStep]}
+          </div>
+          
+          {/* Completion percentage bar */}
+          <div className="max-w-md mx-auto">
+            <div className="flex justify-between text-xs text-gray-500 mb-1">
+              <span>Progress</span>
+              <span>{completionPercentage}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${completionPercentage}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Estimated time remaining */}
+          {currentStep < 6 && (
+            <div className="text-xs text-gray-500">
+              Estimated time: {6 - currentStep} steps remaining
+            </div>
+          )}
         </div>
       </div>
     );
@@ -838,6 +1042,16 @@ const ContractorOnboarding = () => {
               <p className="text-gray-600">Complete all steps to start receiving job assignments and payments</p>
             </div>
 
+            {/* Progress Recovery Banner */}
+            {showRecoveryBanner && progressSummary && (
+              <ProgressRecoveryBanner
+                progressSummary={progressSummary}
+                onRestore={handleRestoreProgress}
+                onDiscard={handleDiscardProgress}
+                isLoading={progressLoading}
+              />
+            )}
+
             <ProgressIndicator />
             
             {/* Error message */}
@@ -847,9 +1061,16 @@ const ContractorOnboarding = () => {
               </div>
             )}
             
-            {/* Step content */}
-            <form onSubmit={currentStep === 6 ? handleSubmit : (e) => e.preventDefault()}>
-              {renderStepContent()}
+            {/* Auto-save form wrapper */}
+            <AutoSaveForm
+              formData={formData}
+              onSave={handleManualSave}
+              debounceMs={2000}
+              showSaveIndicator={autoSaveEnabled && currentStep > 1}
+            >
+              {/* Step content */}
+              <form onSubmit={currentStep === 6 ? handleSubmit : (e) => e.preventDefault()}>
+                {renderStepContent()}
               
               {/* Navigation buttons */}
               <div className="flex justify-between mt-8">
@@ -935,6 +1156,7 @@ const ContractorOnboarding = () => {
                 ) : null}
               </div>
             </form>
+            </AutoSaveForm>
           </div>
         </div>
       </div>

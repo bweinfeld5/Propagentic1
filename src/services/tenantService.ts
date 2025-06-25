@@ -86,7 +86,7 @@ export class TenantService {
         name: `${onboardingData.personalInfo.firstName} ${onboardingData.personalInfo.lastName}`,
         phone: onboardingData.personalInfo.phone,
         status: 'active',
-        emailVerified: false,
+        emailVerified: true,
         onboardingComplete: true,
         profileComplete: true,
         createdAt: Timestamp.now(),

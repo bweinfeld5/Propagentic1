@@ -14,12 +14,8 @@ module.exports = override(
       plugin => !plugin.constructor.name.includes('ReactRefresh')
     );
 
-    // Disable Fast Refresh in environment
-    config.plugins.push(
-      new webpack.DefinePlugin({
-        'process.env.FAST_REFRESH': JSON.stringify('false'),
-      })
-    );
+    // Set FAST_REFRESH via environment instead of DefinePlugin to avoid conflicts
+    process.env.FAST_REFRESH = 'false';
 
     // Core module fallbacks and polyfills
     config.resolve.fallback = {
@@ -42,12 +38,30 @@ module.exports = override(
       exclude: /node_modules\/intro\.js/
     });
 
+    // Configure CSS minimizer to suppress postcss-calc warnings
+    if (config.optimization && config.optimization.minimizer) {
+      config.optimization.minimizer.forEach(minimizer => {
+        if (minimizer.constructor.name === 'CssMinimizerPlugin') {
+          minimizer.options = minimizer.options || {};
+          minimizer.options.minimizerOptions = minimizer.options.minimizerOptions || {};
+          minimizer.options.minimizerOptions.preset = [
+            'default',
+            {
+              calc: false, // Disable calc optimization to prevent CSS variable parsing errors
+            }
+          ];
+        }
+      });
+    }
+
     config.ignoreWarnings = [
       ...(config.ignoreWarnings || []),
       {
         module: /intro\.js/,
       },
       /Failed to parse source map from.*intro\.js/,
+      // Suppress postcss-calc warnings for CSS variables
+      /postcss-calc:/,
     ];
 
     return config;

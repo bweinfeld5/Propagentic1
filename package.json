@@ -127,6 +127,7 @@
     "react-intersection-observer": "^9.16.0",
     "react-qr-code": "^2.0.16",
     "react-qr-scanner": "^1.0.0-alpha.11",
+    "react-quill": "^2.0.0",
     "react-router-dom": "^6.3.0",
     "react-simple-maps": "^1.0.0",
     "recharts": "^2.15.3",

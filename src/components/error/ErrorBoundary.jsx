@@ -60,18 +60,57 @@ class ErrorBoundary extends React.Component {
     try {
       // Import error reporting service dynamically
       const { default: errorReportingService } = await import('../../services/errorReportingService');
-      await errorReportingService.reportError(errorDetails);
+      
+      // Enhanced error reporting with the new service
+      await errorReportingService.reportError({
+        error: {
+          message: errorDetails.error.message,
+          stack: errorDetails.error.stack,
+          name: errorDetails.error.name
+        },
+        type: 'react_error_boundary',
+        context: {
+          errorId: errorDetails.errorId,
+          level: this.props.level || 'component',
+          retryCount: errorDetails.retryCount,
+          componentStack: errorDetails.errorInfo?.componentStack,
+          userAgent: errorDetails.userAgent,
+          url: errorDetails.url,
+          timestamp: errorDetails.timestamp
+        },
+        userInfo: {
+          userId: errorDetails.userId,
+          userRole: errorDetails.userRole
+        },
+        severity: this.props.level === 'page' ? 'error' : 'warning'
+      });
+      
+      // Set user context for future errors
+      if (errorDetails.userId) {
+        await errorReportingService.setUserContext({
+          id: errorDetails.userId,
+          role: errorDetails.userRole
+        });
+      }
+
+      // Add breadcrumb for error tracking
+      await errorReportingService.addBreadcrumb(
+        `ErrorBoundary caught ${errorDetails.error.name}: ${errorDetails.error.message}`,
+        'error',
+        'error'
+      );
+
     } catch (reportingError) {
       console.error('Failed to report error:', reportingError);
-    }
-
-    // Send to Google Analytics if available
-    if (window.gtag) {
-      window.gtag('event', 'exception', {
-        description: errorDetails.error.message,
-        fatal: this.props.level === 'page',
-        error_id: errorDetails.errorId
-      });
+      
+      // Fallback to basic analytics reporting
+      if (window.gtag) {
+        window.gtag('event', 'exception', {
+          description: errorDetails.error.message,
+          fatal: this.props.level === 'page',
+          error_id: errorDetails.errorId
+        });
+      }
     }
   };
 

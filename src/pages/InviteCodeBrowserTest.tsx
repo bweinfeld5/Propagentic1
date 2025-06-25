@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import inviteService from '../services/firestore/inviteService';
-import inviteCodeService from '../services/inviteCodeService.ts';
+import inviteCodeService from '../services/inviteCodeService';
 import { auth } from '../firebase/config';
 import Button from '../components/ui/Button';
 

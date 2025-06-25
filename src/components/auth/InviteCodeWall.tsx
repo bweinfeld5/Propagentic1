@@ -5,7 +5,7 @@ import Button from '../ui/Button';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
-import { redeemInviteCode } from '../../services/inviteCodeService.ts';
+import { redeemInviteCode } from '../../services/inviteCodeService';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 

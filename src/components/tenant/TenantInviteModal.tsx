@@ -4,7 +4,7 @@ import { XMarkIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
 import TenantInviteForm from './TenantInviteForm';
 import Button from '../ui/Button';
 import toast from 'react-hot-toast';
-import inviteCodeService from '../../services/inviteCodeService.ts';
+import inviteCodeService from '../../services/inviteCodeService';
 import { useAuth } from '../../context/AuthContext.jsx';
 import inviteService from '../../services/firestore/inviteService';
 

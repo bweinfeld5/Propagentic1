@@ -28,7 +28,6 @@ import UnifiedHeader from '../../components/layout/UnifiedHeader';
 import NotificationPanel from '../../components/layout/NotificationPanel';
 import inviteService from '../../services/firestore/inviteService';
 import dataService from '../../services/dataService';
-import { AgenticRequestFlow } from '../../components/tenant/agentic/AgenticRequestFlow';
 import EnhancedRequestForm from '../../components/tenant/EnhancedRequestForm';
 import EnhancedRequestHistory from '../../components/tenant/EnhancedRequestHistory';
 import DashboardOverview from '../../components/tenant/DashboardOverview';
@@ -125,7 +124,7 @@ const EnhancedTenantDashboard: React.FC = () => {
   
   // UI states
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<'overview' | 'new-request' | 'agentic-request' | 'history'>('overview');
+  const [currentView, setCurrentView] = useState<'overview' | 'new-request' | 'history'>('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Demo mode flag
@@ -176,42 +175,23 @@ const EnhancedTenantDashboard: React.FC = () => {
           setPendingInvites(invites || []);
         }
         
-        // Fetch associated properties using real property-tenant relationships
-        try {
-          const properties = await dataService.getPropertiesForTenant(currentUser.uid);
-          if (properties && properties.length > 0) {
-            setTenantProperties(properties);
-            setIsDemoMode(false);
-          } else {
-            // Check if user has a direct propertyId association (legacy support)
-            if (userProfile?.propertyId) {
-              const property = await dataService.getPropertyById(userProfile.propertyId);
-              if (property) {
-                setTenantProperties([property]);
-                setIsDemoMode(false);
-              } else {
-                // No properties found, but don't fall back to demo - show empty state
-                setTenantProperties([]);
-                setIsDemoMode(false);
-              }
-            } else {
-              // No properties associated - show empty state
-              setTenantProperties([]);
-              setIsDemoMode(false);
-            }
+        // Fetch associated properties
+        if (userProfile?.propertyId) {
+          const property = await dataService.getPropertyById(userProfile.propertyId);
+          if (property) {
+            setTenantProperties([property]);
           }
-        } catch (propertyError) {
-          console.error('Error fetching tenant properties:', propertyError);
-          // Don't fall back to demo mode - show empty state instead
-          setTenantProperties([]);
-          setIsDemoMode(false);
+        } else {
+          // If no properties, use demo mode
+          setIsDemoMode(true);
+          setTenantProperties([DEMO_PROPERTY]);
         }
       } catch (error) {
         console.error('Error fetching tenant data:', error);
-        setIsError(true);
-        // Show error state instead of demo mode
-        setTenantProperties([]);
-        setIsDemoMode(false);
+        // Instead of showing error, switch to demo mode
+        setIsDemoMode(true);
+        setTenantProperties([DEMO_PROPERTY]);
+        setIsError(false);
       } finally {
         setIsLoading(false);
       }
@@ -294,10 +274,6 @@ const EnhancedTenantDashboard: React.FC = () => {
     setCurrentView('new-request');
   };
 
-  const handleAgenticRequest = () => {
-    setCurrentView('agentic-request');
-  };
-
   const handleViewHistory = () => {
     setCurrentView('history');
   };
@@ -337,42 +313,6 @@ const EnhancedTenantDashboard: React.FC = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-      </div>
-    );
-  }
-
-  // Empty state when no properties are associated
-  if (!isLoading && !isError && tenantProperties.length === 0 && pendingInvites.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            <div className="mb-6">
-              <Home className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">No Properties Found</h2>
-              <p className="text-gray-600 mb-6">
-                You're not currently associated with any properties. 
-                Contact your landlord to get an invitation code to join a property.
-              </p>
-            </div>
-            
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <h3 className="font-semibold text-blue-900 mb-2">What can you do?</h3>
-              <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Ask your landlord for an invitation code</li>
-                <li>• Check your email for pending invitations</li>
-                <li>• Contact PropAgentic support if you need help</li>
-              </ul>
-            </div>
-            
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Refresh Page
-            </button>
-          </div>
-        </div>
       </div>
     );
   }
@@ -451,28 +391,6 @@ const EnhancedTenantDashboard: React.FC = () => {
             </button>
             
             <button
-              onClick={() => setCurrentView('agentic-request')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 group ${
-                currentView === 'agentic-request'
-                  ? 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border-r-2 border-purple-500 shadow-sm'
-                  : 'text-gray-700 hover:bg-gray-100 hover:shadow-sm'
-              }`}
-            >
-              <div className={`${currentView === 'agentic-request' ? 'text-purple-600' : 'text-gray-500 group-hover:text-gray-700'} transition-colors`}>
-                <Sparkles className="w-5 h-5" />
-              </div>
-              {!sidebarCollapsed && (
-                <>
-                  <span className="font-medium">AI Assistant</span>
-                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full ml-1">Beta</span>
-                  {currentView === 'agentic-request' && (
-                    <ChevronRight className="w-4 h-4 ml-auto" />
-                  )}
-                </>
-              )}
-            </button>
-            
-            <button
               onClick={() => setCurrentView('history')}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 group ${
                 currentView === 'history'
@@ -536,13 +454,11 @@ const EnhancedTenantDashboard: React.FC = () => {
           title={
             currentView === 'overview' ? 'Dashboard Overview' :
             currentView === 'new-request' ? 'Submit Maintenance Request' :
-            currentView === 'agentic-request' ? 'AI-Powered Request Assistant' :
             'Request History'
           }
           subtitle={
             currentView === 'overview' ? 'Monitor your property and maintenance status' :
             currentView === 'new-request' ? 'Report issues and request maintenance' :
-            currentView === 'agentic-request' ? 'Get help with conversational AI guidance' :
             'Track and manage your maintenance requests'
           }
           showNotifications={currentView === 'overview'}
@@ -597,21 +513,6 @@ const EnhancedTenantDashboard: React.FC = () => {
                     userProfile={userProfile}
                   />
                 </div>
-              </div>
-            </div>
-          )}
-          {currentView === 'agentic-request' && (
-            <div className="p-6">
-              <div className="max-w-6xl mx-auto">
-                <AgenticRequestFlow
-                  onComplete={(data) => {
-                    console.log('Agentic request completed:', data);
-                    toast.success('Request submitted successfully via AI Assistant!');
-                    setCurrentView('overview');
-                  }}
-                  onCancel={handleBackToOverview}
-                  propertyId={tenantProperties[0]?.id}
-                />
               </div>
             </div>
           )}

@@ -29,8 +29,11 @@ exports.redeemInviteCode = functions.https.onCall(async (data, context) => {
   }
 
   // Get parameters from request
-  const { code } = data;
-  const tenantId = context.auth.uid;
+  const { code, tenantId } = data;
+  const userId = context.auth.uid;
+  
+  // Use tenantId from data if provided, otherwise use authenticated user ID
+  const actualTenantId = tenantId || userId;
 
   // Check if code is provided and in valid format
   if (!code) {
@@ -112,7 +115,7 @@ exports.redeemInviteCode = functions.https.onCall(async (data, context) => {
     }
 
     // Get the user's information
-    const userDoc = await db.collection('users').doc(tenantId).get();
+    const userDoc = await db.collection('users').doc(actualTenantId).get();
     if (!userDoc.exists) {
       throw new functions.https.HttpsError(
         'not-found',
@@ -153,7 +156,7 @@ exports.redeemInviteCode = functions.https.onCall(async (data, context) => {
     // Transaction to update multiple documents atomically
     await db.runTransaction(async (transaction) => {
       // Update the user's profile
-      transaction.update(db.collection('users').doc(tenantId), userUpdateData);
+      transaction.update(db.collection('users').doc(actualTenantId), userUpdateData);
 
       // Update the property to include the tenant
       const propertyData = propertyDoc.data();
@@ -172,9 +175,9 @@ exports.redeemInviteCode = functions.https.onCall(async (data, context) => {
           
           // If unit has tenants array, add to it, otherwise create it
           if (!unit.tenants || !Array.isArray(unit.tenants)) {
-            unit.tenants = [tenantId];
-          } else if (!unit.tenants.includes(tenantId)) {
-            unit.tenants.push(tenantId);
+            unit.tenants = [actualTenantId];
+          } else if (!unit.tenants.includes(actualTenantId)) {
+            unit.tenants.push(actualTenantId);
           }
           
           updatedUnits[unitIndex] = unit;
@@ -187,7 +190,7 @@ exports.redeemInviteCode = functions.https.onCall(async (data, context) => {
           const newUnit = {
             id: unitId,
             unitNumber: unitId,
-            tenants: [tenantId]
+            tenants: [actualTenantId]
           };
           transaction.update(db.collection('properties').doc(propertyId), {
             units: [...units, newUnit],
@@ -201,8 +204,8 @@ exports.redeemInviteCode = functions.https.onCall(async (data, context) => {
           tenants = [];
         }
         
-        if (!tenants.includes(tenantId)) {
-          tenants.push(tenantId);
+        if (!tenants.includes(actualTenantId)) {
+          tenants.push(actualTenantId);
           transaction.update(db.collection('properties').doc(propertyId), { 
             tenants,
             updatedAt: now
@@ -213,14 +216,14 @@ exports.redeemInviteCode = functions.https.onCall(async (data, context) => {
       // Mark the invite code as used
       transaction.update(db.collection('invites').doc(inviteCodeDoc.id), {
         status: 'accepted',
-        usedBy: tenantId,
+        usedBy: actualTenantId,
         usedAt: now
       });
 
       // Create a record in tenantProperties collection for tracking
       const tenantPropertyRef = db.collection('tenantProperties').doc();
       transaction.set(tenantPropertyRef, {
-        tenantId,
+        tenantId: actualTenantId,
         propertyId,
         unitId: unitId || null,
         landlordId,

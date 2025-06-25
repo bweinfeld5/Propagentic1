@@ -1,0 +1,11 @@
+# Task ID: 13
+# Title: Create Emergency Contact Collection System
+# Status: pending
+# Dependencies: 8
+# Priority: medium
+# Description: Implement emergency contact collection during tenant onboarding
+# Details:
+Add emergency contact form fields, validation, and storage in tenant profile according to tenantSchema.ts
+
+# Test Strategy:
+Test emergency contact data collection, validation, and storage

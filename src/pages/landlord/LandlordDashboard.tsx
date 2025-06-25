@@ -181,13 +181,19 @@ const LandlordDashboard: React.FC = () => {
       const ticketsData = await dataService.getTicketsForCurrentUser();
       setTickets(ticketsData);
 
-      // Load tenants data for all properties
+      // Load tenants data for all properties (gracefully handle failures)
       if (properties.length > 0) {
         const allTenants: Tenant[] = [];
         for (const property of properties) {
           if (property.id) {
-            const propertyTenants = await dataService.getTenantsForProperty(property.id);
-            allTenants.push(...propertyTenants);
+            try {
+              const propertyTenants = await dataService.getTenantsForProperty(property.id);
+              allTenants.push(...propertyTenants);
+            } catch (tenantError) {
+              console.warn(`Could not load tenants for property ${property.id}:`, tenantError);
+              // Continue without failing the entire dashboard load
+              // This is normal if no tenants exist yet or permissions are not set up
+            }
           }
         }
         setTenants(allTenants);
@@ -1144,7 +1150,7 @@ const LandlordDashboard: React.FC = () => {
               setShowEditPropertyModal(false);
               setEditingProperty(null);
             }}
-            property={editingProperty}
+            property={editingProperty as any}
             onSuccess={handlePropertyUpdated}
           />
         )}

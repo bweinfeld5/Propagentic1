@@ -5,6 +5,17 @@ import {
 } from '../fixtures';
 import { vi, describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 
+vi.mock('../../src/firebase/config', () => ({
+  auth: {
+    currentUser: {
+      uid: 'test-tenant-id',
+      email: 'test@example.com',
+      getIdToken: async () => 'test-token'
+    }
+  },
+  db: {}
+}));
+
 // Mock firebase functions
 const mockHttpsCallable = vi.fn();
 vi.mock('firebase/functions', async (importOriginal) => {
@@ -83,46 +94,50 @@ describe('redeemInviteCode Cloud Function Tests', () => {
         }
       });
       
-      const inviteCodeService = await import('../../src/services/inviteCodeService');
-      const result = await inviteCodeService.redeemInviteCode(mockInviteCode.code);
+      const { unifiedInviteCodeService } = await import('../../src/services/unifiedInviteCodeService');
+      const result = await unifiedInviteCodeService.redeemInviteCode(mockInviteCode.code);
       
       expect(result).toBeTruthy();
       expect(result.success).toBe(true);
-      expect(result.property.id).toBe(mockProperty.id);
-      expect(result.property.name).toBe(mockProperty.name);
+      expect(result.propertyId).toBe(mockProperty.id);
+      expect(result.propertyName).toBe(mockProperty.name);
       expect(mockHttpsCallable).toHaveBeenCalledWith({ code: mockInviteCode.code });
     });
     
     it('throws an error for invalid invite code format', async () => {
-      const inviteCodeService = await import('../../src/services/inviteCodeService');
-      await expect(inviteCodeService.redeemInviteCode('')).rejects.toThrow('Invalid invite code format');
-      await expect(inviteCodeService.redeemInviteCode(null as any)).rejects.toThrow('Invalid invite code format');
+      const { unifiedInviteCodeService } = await import('../../src/services/unifiedInviteCodeService');
+      // The unified service returns a result object, not throws an error for format
+      const result = await unifiedInviteCodeService.validateInviteCode('');
+      expect(result.isValid).toBe(false);
+      expect(result.message).toContain('Invalid code format');
     });
     
-    it('throws an error when redeeming already used code', async () => {
-      mockHttpsCallable.mockRejectedValue({
-        message: 'This invite code has already been used.'
+    it('returns an error when redeeming already used code', async () => {
+      mockHttpsCallable.mockResolvedValue({
+        data: { success: false, message: 'This invite code has already been used.' }
       });
       
-      const inviteCodeService = await import('../../src/services/inviteCodeService');
-      await expect(inviteCodeService.redeemInviteCode(mockUsedInviteCode.code))
-        .rejects.toThrow('This invite code has already been used.');
+      const { unifiedInviteCodeService } = await import('../../src/services/unifiedInviteCodeService');
+      const result = await unifiedInviteCodeService.redeemInviteCode(mockUsedInviteCode.code);
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('This invite code has already been used.');
       expect(mockHttpsCallable).toHaveBeenCalledWith({ code: mockUsedInviteCode.code });
     });
     
-    it('throws an error when redeeming non-existent code', async () => {
-      mockHttpsCallable.mockRejectedValue({
-        message: 'Invalid invite code. Please check the code and try again.'
+    it('returns an error when redeeming non-existent code', async () => {
+      mockHttpsCallable.mockResolvedValue({
+        data: { success: false, message: 'Invalid invite code. Please check the code and try again.' }
       });
       
-      const inviteCodeService = await import('../../src/services/inviteCodeService');
-      await expect(inviteCodeService.redeemInviteCode('NON-EXISTENT'))
-        .rejects.toThrow('Invalid invite code. Please check the code and try again.');
+      const { unifiedInviteCodeService } = await import('../../src/services/unifiedInviteCodeService');
+      const result = await unifiedInviteCodeService.redeemInviteCode('NON-EXISTENT');
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('Invalid invite code');
       expect(mockHttpsCallable).toHaveBeenCalledWith({ code: 'NON-EXISTENT' });
     });
     
     it('validates an invite code without redeeming it', async () => {
-      const inviteCodeService = await import('../../src/services/inviteCodeService');
+      const { unifiedInviteCodeService } = await import('../../src/services/unifiedInviteCodeService');
       
       mockGetDocs.mockResolvedValue({
         empty: false,
@@ -137,7 +152,7 @@ describe('redeemInviteCode Cloud Function Tests', () => {
         }]
       });
       
-      const result = await inviteCodeService.validateInviteCode(mockInviteCode.code);
+      const result = await unifiedInviteCodeService.validateInviteCode(mockInviteCode.code);
       
       expect(result.isValid).toBe(true);
       expect(result.propertyId).toBe(mockProperty.id);

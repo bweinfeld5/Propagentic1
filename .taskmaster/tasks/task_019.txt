@@ -1,0 +1,11 @@
+# Task ID: 19
+# Title: Add Comprehensive End-to-End Testing
+# Status: pending
+# Dependencies: 11
+# Priority: medium
+# Description: Create automated tests for the complete tenant flow
+# Details:
+Implement Cypress or similar testing for registration, onboarding, invite code validation, property association, and dashboard access
+
+# Test Strategy:
+Run automated tests covering all user scenarios and edge cases

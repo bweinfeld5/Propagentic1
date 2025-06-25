@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import TenantInviteForm from '../components/tenant/TenantInviteForm';
 import Button from '../components/ui/Button';
-import { validateInviteCode } from '../services/inviteCodeService';
+import { unifiedInviteCodeService } from '../services/unifiedInviteCodeService';
 
 interface PropertyInfo {
   propertyId: string;
@@ -33,7 +33,7 @@ const InviteAcceptancePage: React.FC = () => {
 
   const validateCode = async (code: string) => {
     try {
-      const validation = await validateInviteCode(code);
+      const validation = await unifiedInviteCodeService.validateInviteCode(code);
       if (validation.isValid) {
         setPropertyInfo({
           propertyId: validation.propertyId!,

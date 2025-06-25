@@ -1,0 +1,11 @@
+# Task ID: 7
+# Title: Integrate Invite Code Entry in Dashboard
+# Status: pending
+# Dependencies: 6
+# Priority: medium
+# Description: Enhance dashboard's 'No Properties' state with seamless invite code entry
+# Details:
+Improve the NoPropertiesInviteCard component with better UX, real-time validation, QR code scanning, and automatic property association upon successful validation
+
+# Test Strategy:
+Test invite code entry, QR scanning, validation feedback, and property association from dashboard

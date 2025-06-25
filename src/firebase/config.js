@@ -36,6 +36,9 @@ export const database = getDatabase(app); // Realtime Database
 // Initialize Analytics only if measurement ID is provided
 export const analytics = firebaseConfig.measurementId ? getAnalytics(app) : null;
 
+// VAPID key for push notifications
+export const vapidKey = process.env.REACT_APP_VAPID_PUBLIC_KEY || "BAI14COwfdH_tBixfl5794yjUlVZXoB6gOoxCytXCnWyEo1Ahi8tfBozA1YwuqpIMafFViMmH2pXMBz8i-cDF8c";
+
 // Real callFunction implementation using Firebase Functions
 export const callFunction = async (functionName, data) => {
   try {

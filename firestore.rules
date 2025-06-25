@@ -43,10 +43,8 @@ service cloud.firestore {
 
     function isPropertyTenant(propertyId) {
       let userData = getUserData();
-      // Check both direct propertyId and properties array
-      return isTenant() && 
-             (userData.propertyId == propertyId || 
-              (userData.properties != null && propertyId in userData.properties));
+      // Check a map of properties for efficient and secure access
+      return isTenant() && userData.properties[propertyId] == true;
     }
 
     function isContractor() {
@@ -210,11 +208,9 @@ service cloud.firestore {
       allow delete: if (isLandlord() && resource.data.landlordId == request.auth.uid) || isAdmin();
     }
 
-    // New rule for invite codes, allows any authenticated user to read (for validation)
+    // New rule for invite codes, no direct client access
     match /inviteCodes/{code} {
-        allow read: if isSignedIn();
-        // Only cloud functions can create/write codes
-        allow write: if false;
+        allow read, write: if false; // All operations must go through cloud functions
     }
 
     // Property Invitations Collection (for existing users)
@@ -241,6 +237,30 @@ service cloud.firestore {
     // Generic mail collection for triggering emails
     match /mail/{mailId} {
       allow create: if isSignedIn(); // Allow any signed-in user to create an email document
+      allow read: if isSignedIn(); // Allow read access for testing email system functionality
+    }
+
+    // Property Invitations Collection - for tenant property invitations
+    match /propertyInvitations/{invitationId} {
+      // Landlords can create invitations for their properties
+      allow create: if isLandlord() && isPropertyOwner(request.resource.data.propertyId);
+      // Invited tenants can read their own invitations via email match
+      allow read: if isSignedIn() && (
+        (isLandlord() && isPropertyOwner(resource.data.propertyId)) ||
+        (isTenant() && resource.data.tenantEmail == request.auth.token.email) ||
+        isAdmin()
+      );
+      // Tenants can update to accept/decline, landlords can update their own invitations
+      allow update: if isSignedIn() && (
+        (isLandlord() && isPropertyOwner(resource.data.propertyId)) ||
+        (isTenant() && resource.data.tenantEmail == request.auth.token.email) ||
+        isAdmin()
+      );
+      // Landlords can delete their own invitations
+      allow delete: if isSignedIn() && (
+        (isLandlord() && isPropertyOwner(resource.data.propertyId)) ||
+        isAdmin()
+      );
     }
 
     // Notifications Collection
@@ -374,6 +394,7 @@ service cloud.firestore {
       
       // Allow listing relationships for property owners (needed for getPropertyTenants)
       allow list: if isSignedIn() && isLandlord();
+
     }
   }
 }

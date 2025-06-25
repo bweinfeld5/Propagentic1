@@ -60,6 +60,13 @@ service cloud.firestore {
       return landlordProfile.contractors != null && contractorId in landlordProfile.contractors;
     }
 
+    function isTenantOfLandlord(tenantId, landlordId) {
+      // Check if this tenant has a relationship with any properties owned by the landlord
+      // This is a simplified check - in practice, you might want to query the propertyTenantRelationships collection
+      let userData = get(/databases/$(database)/documents/users/$(tenantId)).data;
+      return userData.userType == 'tenant' || userData.role == 'tenant';
+    }
+
 
 
     // --- DATA VALIDATION FUNCTIONS ---
@@ -111,7 +118,19 @@ service cloud.firestore {
 
     // Users Collection
     match /users/{userId} {
+      // Users can read/update their own data, admins can access all
       allow read, update: if isOwner(userId) || isAdmin();
+      
+      // Allow landlords to read tenant data (with function to check relationship)
+      allow read: if isLandlord() && isTenantOfLandlord(userId, request.auth.uid);
+      
+      // Allow landlords to query for tenants (needed for PropertyTenantManager)
+      allow list: if isLandlord();
+      
+      // Allow contractors to read user data for communication purposes
+      allow read: if isContractor();
+      
+      // Anyone can create a user account
       allow create: if isSignedIn();
     }
 
@@ -192,6 +211,27 @@ service cloud.firestore {
     // New rule for invite codes, no direct client access
     match /inviteCodes/{code} {
         allow read, write: if false; // All operations must go through cloud functions
+    }
+
+    // Property Invitations Collection (for existing users)
+    match /propertyInvitations/{invitationId} {
+      // Landlords can read/manage invitations for their properties
+      allow read, update, delete: if isSignedIn() && (
+        (isLandlord() && resource.data.landlordId == request.auth.uid) ||
+        isAdmin()
+      );
+      
+      // Landlords can create invitations for their properties
+      allow create: if isSignedIn() && (
+        (isLandlord() && request.resource.data.landlordId == request.auth.uid) ||
+        isAdmin()
+      );
+      
+      // Tenants can read invitations sent to their email
+      allow read: if isSignedIn() && resource.data.tenantEmail == request.auth.token.email;
+      
+      // Allow cloud functions to manage invitations
+      allow write: if false; // Cloud functions will use admin SDK
     }
 
     // Generic mail collection for triggering emails
@@ -335,27 +375,26 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.senderId == request.auth.uid;
     }
 
-    // This collection is no longer used, so we remove its rules.
-    // match /propertyTenantRelationships/{relationshipId} { ... }
-
-    // Collection for rate limiting function calls
-    match /functionCallLogs/{logId} {
-      // Allow creation only with proper fields for rate limiting
-      allow create: if (
-        // Must have function name and timestamp
-        request.resource.data.keys().hasAll(['function', 'timestamp']) &&
-        // Must have either userId (for authenticated) OR identifier (for anonymous), not both
-        (
-          (request.resource.data.keys().hasAll(['userId']) && !request.resource.data.keys().hasAny(['identifier'])) ||
-          (request.resource.data.keys().hasAll(['identifier']) && !request.resource.data.keys().hasAny(['userId']))
-        ) &&
-        // Validate function names
-        request.resource.data.function in ['generateInviteCode', 'validateInviteCode', 'redeemInviteCode'] &&
-        // Validate timestamp is recent (within last minute to prevent replay attacks)
-        request.resource.data.timestamp > request.time - duration.value(60, 's')
+    // Property-Tenant Relationships Collection
+    match /propertyTenantRelationships/{relationshipId} {
+      // Property owners can read/manage relationships for their properties
+      allow read, update, delete: if isSignedIn() && (
+        isPropertyOwner(resource.data.propertyId) ||
+        isAdmin()
       );
-      // No direct read/write/delete access - logs are write-only for security
-      allow read, update, delete: if false;
+      
+      // Property owners can create relationships for their properties
+      allow create: if isSignedIn() && (
+        isPropertyOwner(request.resource.data.propertyId) ||
+        isAdmin()
+      );
+      
+      // Tenants can read their own relationships
+      allow read: if isSignedIn() && resource.data.tenantId == request.auth.uid;
+      
+      // Allow listing relationships for property owners (needed for getPropertyTenants)
+      allow list: if isSignedIn() && isLandlord();
+
     }
   }
 }

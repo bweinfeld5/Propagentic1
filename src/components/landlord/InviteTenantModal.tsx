@@ -7,8 +7,7 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import toast from 'react-hot-toast';
 import Button from '../ui/Button';
 import { auth } from '../../firebase/config';
-import { QRCodeDisplay } from '../qr/QRCodeDisplay';
-import { unifiedInviteCodeService } from '../../services/unifiedInviteCodeService';
+import inviteService from '../../services/firestore/inviteService';
 
 interface Property {
   id: string;
@@ -108,64 +107,39 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
     const propertyNameForInvite = property?.nickname || property?.name || property?.streetAddress || selectedPropertyName || 'Unknown Property';
     
     try {
-      // First, generate an invite code using the unified service
-      const inviteResult = await unifiedInviteCodeService.generateInviteCode(
-        selectedPropertyId,
+      // Use WORKING inviteService.ts (same logic as working browser tests)
+      console.log(`Using working inviteService to send invitation to ${email} for property ${selectedPropertyId}`);
+      
+      const inviteId = await inviteService.createInvite({
+        tenantEmail: email,
+        propertyId: selectedPropertyId,
+        landlordId: currentUser.uid,
+        propertyName: propertyNameForInvite,
+        landlordName: currentUser.displayName || currentUser.email || 'Property Manager'
+      });
+      
+      setInviteSuccess(true);
+      setInviteId(inviteId);
+      
+      // Enhanced success toast message
+      toast.success(
+        `🎉 Invitation sent to ${email}!\nThey'll receive an email with instructions to join ${propertyNameForInvite}.`,
         {
-          email: email,
-          expirationDays: 7
+          duration: 5000,
+          style: {
+            background: '#10B981',
+            color: '#FFFFFF',
+            padding: '16px',
+            borderRadius: '8px',
+          },
         }
       );
+      
+      if (onInviteSuccess) {
+        onInviteSuccess();
 
-      if (inviteResult.success && inviteResult.code) {
-        setInviteCode(inviteResult.code);
-        
-        // Generate the invite link
-        const baseUrl = window.location.origin;
-        const link = `${baseUrl}/invite-accept?code=${inviteResult.code}`;
-        setInviteLink(link);
-
-        // Now send the email using Firebase function
-        const functions = getFunctions();
-        const sendPropertyInvite = httpsCallable(functions, 'sendPropertyInvite');
-        
-        console.log(`Sending invitation to ${email} for property ${selectedPropertyId}`);
-        
-        const emailResult = await sendPropertyInvite({
-          propertyId: selectedPropertyId,
-          tenantEmail: email,
-          inviteCode: inviteResult.code
-        });
-        
-        const data = emailResult.data as any;
-        
-        if (data.success) {
-          setInviteSuccess(true);
-          setInviteId(data.inviteId || inviteResult.code);
-          
-          // Enhanced success toast message
-          toast.success(
-            `🎉 Invitation sent to ${email}!\nThey'll receive an email with instructions to join ${propertyNameForInvite}.`,
-            {
-              duration: 5000,
-              style: {
-                background: '#10B981',
-                color: '#FFFFFF',
-                padding: '16px',
-                borderRadius: '8px',
-              },
-            }
-          );
-          
-          if (onInviteSuccess) {
-            onInviteSuccess();
-          }
-        } else {
-          throw new Error(data.message || 'Failed to send invitation email');
-        }
-      } else {
-        throw new Error(inviteResult.message || 'Failed to generate invite code');
       }
+      
     } catch (error: any) {
       console.error('Error sending invitation:', error);
       const errorMessage = error.message || 'Failed to send invitation. Please try again.';

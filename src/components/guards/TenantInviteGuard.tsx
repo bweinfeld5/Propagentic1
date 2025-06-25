@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useLocation } from 'react-router-dom';
 import InviteCodeWall from '../auth/InviteCodeWall';
 import { shouldAllowAppAccess, isTenantNeedingInvite } from '../../utils/tenantValidation';
 
@@ -12,6 +13,7 @@ interface TenantInviteGuardProps {
  */
 const TenantInviteGuard: React.FC<TenantInviteGuardProps> = ({ children }) => {
   const { currentUser, userProfile, loading, refreshUserData } = useAuth();
+  const location = useLocation();
   const [shouldShowWall, setShouldShowWall] = useState(false);
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);
 
@@ -32,6 +34,17 @@ const TenantInviteGuard: React.FC<TenantInviteGuardProps> = ({ children }) => {
         return;
       }
 
+      // Check for test mode bypass in development
+      const isTestMode = process.env.NODE_ENV === 'development' && 
+                        (location.state as { testMode?: boolean } | null)?.testMode;
+      
+      if (isTestMode) {
+        console.log('TenantInviteGuard: Test mode detected, bypassing invite requirement');
+        setShouldShowWall(false);
+        setIsCheckingProfile(false);
+        return;
+      }
+
       // Check if tenant needs invite code
       const needsInvite = isTenantNeedingInvite(userProfile);
       const allowAccess = shouldAllowAppAccess(userProfile);
@@ -42,7 +55,8 @@ const TenantInviteGuard: React.FC<TenantInviteGuardProps> = ({ children }) => {
         propertyId: userProfile.propertyId,
         landlordId: userProfile.landlordId,
         needsInvite,
-        allowAccess
+        allowAccess,
+        isTestMode
       });
 
       setShouldShowWall(needsInvite);
@@ -50,7 +64,7 @@ const TenantInviteGuard: React.FC<TenantInviteGuardProps> = ({ children }) => {
     };
 
     checkAccess();
-  }, [currentUser, userProfile, loading]);
+  }, [currentUser, userProfile, loading, location.state]);
 
   // Handle successful invite validation
   const handleInviteValidated = async () => {

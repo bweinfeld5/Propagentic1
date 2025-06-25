@@ -8,6 +8,7 @@ import {
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { QRCodeDisplay } from '../qr/QRCodeDisplay';
+import { unifiedInviteService } from '../../services/unifiedInviteService';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { auth } from '../../firebase/config';
 // import { inviteCodeServiceLocal } from '../../services/inviteCodeServiceLocal';
@@ -40,6 +41,7 @@ export const QRInviteGenerator: React.FC<QRInviteGeneratorProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [generatedAt, setGeneratedAt] = useState<Date | null>(null);
+  const [generationMode, setGenerationMode] = useState<string>('');
 
   // Generate QR code when property changes or when manually triggered
   useEffect(() => {
@@ -49,65 +51,7 @@ export const QRInviteGenerator: React.FC<QRInviteGeneratorProps> = ({
   }, [selectedPropertyId, selectedPropertyName]);
 
   const generateInviteCode = async () => {
-    const currentUser = auth.currentUser;
-    
-    // 🔐 COMPREHENSIVE AUTHENTICATION DEBUGGING
-    console.log('🔐 Auth Debug Start:', {
-      user: currentUser ? {
-        uid: currentUser.uid,
-        email: currentUser.email,
-        emailVerified: currentUser.emailVerified,
-        isAnonymous: currentUser.isAnonymous,
-        displayName: currentUser.displayName,
-        providerId: currentUser.providerId,
-        refreshToken: currentUser.refreshToken ? 'present' : 'missing',
-        accessToken: 'checking...'
-      } : null,
-      authInstance: auth ? 'initialized' : 'missing',
-      selectedPropertyId,
-      selectedPropertyName,
-      timestamp: new Date().toISOString()
-    });
-
-    if (!currentUser) {
-      console.error('❌ No authenticated user found');
-      setError('You must be logged in to generate invite codes');
-      return;
-    }
-
-    // Get ID token for debugging
-    try {
-      const idToken = await currentUser.getIdToken(true);
-      console.log('🔐 ID Token acquired:', {
-        tokenLength: idToken.length,
-        tokenPrefix: idToken.substring(0, 50) + '...',
-        tokenSuffix: '...' + idToken.substring(idToken.length - 10),
-        claims: 'checking...'
-      });
-      
-      // Decode token claims for debugging (client-side decode is safe for debugging)
-      try {
-        const tokenPayload = JSON.parse(atob(idToken.split('.')[1]));
-        console.log('🔐 Token Claims:', {
-          iss: tokenPayload.iss,
-          aud: tokenPayload.aud,
-          exp: new Date(tokenPayload.exp * 1000).toISOString(),
-          iat: new Date(tokenPayload.iat * 1000).toISOString(),
-          userId: tokenPayload.user_id,
-          email: tokenPayload.email,
-          emailVerified: tokenPayload.email_verified
-        });
-      } catch (decodeErr) {
-        console.warn('⚠️ Could not decode token payload:', decodeErr);
-      }
-    } catch (tokenErr) {
-      console.error('❌ Failed to get ID token:', tokenErr);
-      setError('Authentication error: Could not get valid token');
-      return;
-    }
-
     if (!selectedPropertyId) {
-      console.error('❌ No property selected');
       setError('Please select a property first');
       return;
     }
@@ -116,26 +60,13 @@ export const QRInviteGenerator: React.FC<QRInviteGeneratorProps> = ({
     setError(null);
 
     try {
-      console.log('🔧 Starting Firebase Function call:', {
+      console.log('🔧 Starting unified invite code generation:', {
         propertyId: selectedPropertyId,
-        expirationDays: 7,
-        functionName: 'generateInviteCode',
+        propertyName: selectedPropertyName,
         timestamp: new Date().toISOString()
       });
       
-      // Use Firebase Functions instead of direct Firestore write
-      const functions = getFunctions();
-      console.log('🔧 Functions instance:', {
-        app: functions.app.name,
-        region: 'default',
-        customDomain: functions.customDomain || 'none'
-      });
-      
-      const generateInviteCodeFunction = httpsCallable(functions, 'generateInviteCode');
-      console.log('🔧 Callable function created, making request...');
-      
-      const requestPayload = {
-        propertyId: selectedPropertyId,
+      const result = await unifiedInviteService.generateInviteCode(selectedPropertyId, {
         expirationDays: 7
       };
       
@@ -247,10 +178,23 @@ export const QRInviteGenerator: React.FC<QRInviteGeneratorProps> = ({
             icon: '⚠️'
           });
         }
+
+        if (result.message) {
+          console.log('📝 Generation note:', result.message);
+        }
       } else {
-        setError(errorMessage);
-        toast.error(`Failed to generate invite code: ${errorMessage}`);
+        throw new Error('Failed to generate invite code');
       }
+    } catch (err) {
+      console.error('❌ Invite code generation failed:', err);
+      
+      let errorMessage = 'Failed to generate invite code';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+      toast.error(`Failed to generate invite code: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -263,6 +207,32 @@ export const QRInviteGenerator: React.FC<QRInviteGeneratorProps> = ({
   const getInviteUrl = () => {
     const baseUrl = process.env.REACT_APP_QR_BASE_URL || 'https://propagentic.com';
     return `${baseUrl}/invite/${inviteCode}`;
+  };
+
+  const getModeDisplayText = () => {
+    switch (generationMode) {
+      case 'firebase':
+        return 'Production Mode';
+      case 'local':
+        return 'Local Mode (Session Only)';
+      case 'demo':
+        return 'Demo Mode (Testing Only)';
+      default:
+        return '';
+    }
+  };
+
+  const getModeColor = () => {
+    switch (generationMode) {
+      case 'firebase':
+        return 'text-green-600';
+      case 'local':
+        return 'text-yellow-600';
+      case 'demo':
+        return 'text-blue-600';
+      default:
+        return 'text-gray-600';
+    }
   };
 
   if (!selectedPropertyId || !selectedPropertyName) {
@@ -366,6 +336,14 @@ export const QRInviteGenerator: React.FC<QRInviteGeneratorProps> = ({
               }
             </span>
           </div>
+          {generationMode && (
+            <div className="flex justify-between">
+              <span>Mode:</span>
+              <span className={`font-medium ${getModeColor()}`}>
+                {getModeDisplayText()}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

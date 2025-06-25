@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { getAuthErrorMessage } from '../utils/authHelpers';
+import { unifiedInviteCodeService } from '../services/unifiedInviteCodeService';
 
 const RegisterPage = ({ initialRole, isPremium }) => {
   // Form state
@@ -13,6 +14,7 @@ const RegisterPage = ({ initialRole, isPremium }) => {
     password: '',
     confirmPassword: '',
     role: initialRole || 'tenant',
+    inviteCode: '',
     companyName: '',
     specialties: [],
     rememberMe: false
@@ -25,11 +27,40 @@ const RegisterPage = ({ initialRole, isPremium }) => {
     showPassword: false,
     showConfirmPassword: false,
     validationErrors: {},
-    hasInteracted: false
+    hasInteracted: false,
+    isCodeValidating: false,
+    codeValidationResult: null
   });
 
   const { register, fetchUserProfile } = useAuth();
   const navigate = useNavigate();
+
+  // Debounced invite code validation
+  useEffect(() => {
+    if (formData.role !== 'tenant' || formData.inviteCode.length < 6) {
+      setFormState(prev => ({ ...prev, codeValidationResult: null }));
+      return;
+    }
+
+    setFormState(prev => ({ ...prev, isCodeValidating: true, codeValidationResult: null }));
+
+    const handler = setTimeout(async () => {
+      try {
+        const result = await unifiedInviteCodeService.validateInviteCode(formData.inviteCode);
+        setFormState(prev => ({ ...prev, codeValidationResult: result, isCodeValidating: false }));
+      } catch (error) {
+        setFormState(prev => ({
+          ...prev,
+          codeValidationResult: { isValid: false, message: 'Error validating code.' },
+          isCodeValidating: false
+        }));
+      }
+    }, 750); // 750ms debounce delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [formData.inviteCode, formData.role]);
 
   // Specialty options for contractors
   const specialtyOptions = [
@@ -107,9 +138,21 @@ const RegisterPage = ({ initialRole, isPremium }) => {
     errors.email = validateField('email', formData.email);
     errors.password = validateField('password', formData.password);
     errors.confirmPassword = validateField('confirmPassword', formData.confirmPassword);
-    errors.specialties = validateField('specialties', formData.specialties);
+    
+    if (formData.role === 'contractor') {
+      errors.specialties = validateField('specialties', formData.specialties);
+    }
+    
+    // Also validate invite code if tenant
+    if (formData.role === 'tenant') {
+      if (!formData.inviteCode) {
+        errors.inviteCode = 'An invite code is required for tenants.';
+      } else if (!formState.codeValidationResult?.isValid) {
+        errors.inviteCode = formState.codeValidationResult?.message || 'This invite code is not valid.';
+      }
+    }
 
-    const hasErrors = Object.values(errors).some(error => error !== '');
+    const hasErrors = Object.values(errors).some(error => error);
     setFormState(prev => ({ ...prev, validationErrors: errors }));
 
     if (hasErrors) return;
@@ -129,6 +172,11 @@ const RegisterPage = ({ initialRole, isPremium }) => {
           isPremium
         }
       );
+
+      // After user is created, if they are a tenant with a valid code, redeem it.
+      if (formData.role === 'tenant' && formState.codeValidationResult?.isValid) {
+        await unifiedInviteCodeService.redeemInviteCode(formData.inviteCode);
+      }
 
       await fetchUserProfile(userCredential.user.uid);
       setFormState(prev => ({ ...prev, success: true }));
@@ -152,7 +200,7 @@ const RegisterPage = ({ initialRole, isPremium }) => {
     }
   };
 
-  const { loading, error, success, showPassword, showConfirmPassword, validationErrors } = formState;
+  const { loading, error, success, showPassword, showConfirmPassword, validationErrors, isCodeValidating, codeValidationResult } = formState;
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -265,6 +313,46 @@ const RegisterPage = ({ initialRole, isPremium }) => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Invite Code for Tenants */}
+                {formData.role === 'tenant' && (
+                  <div className="animate-in slide-in-from-top duration-500">
+                    <label htmlFor="inviteCode" className="block text-sm font-medium text-gray-700 mb-2">
+                      Invite Code <span className="text-gray-400">(required for tenants)</span>
+                    </label>
+                    <input
+                      id="inviteCode"
+                      type="text"
+                      value={formData.inviteCode}
+                      onChange={(e) => handleInputChange('inviteCode', e.target.value.toUpperCase())}
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-gray-50 ${
+                        validationErrors.inviteCode ? 'border-red-300' : 'border-gray-300'
+                      }`}
+                      placeholder="Enter code from your landlord"
+                    />
+                    {/* Validation feedback */}
+                    {isCodeValidating && (
+                      <div className="mt-2 flex items-center text-sm text-gray-500">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Validating...
+                      </div>
+                    )}
+                    {codeValidationResult && !isCodeValidating && (
+                      <div className={`mt-2 text-sm ${codeValidationResult.isValid ? 'text-green-600' : 'text-red-600'}`}>
+                        {codeValidationResult.isValid
+                          ? `✅ Valid for: ${codeValidationResult.propertyName}`
+                          : `❌ ${codeValidationResult.message}`
+                        }
+                      </div>
+                    )}
+                    {validationErrors.inviteCode && (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.inviteCode}</p>
+                    )}
+                  </div>
+                )}
+
                 {/* Full Name */}
                 <div>
                   <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">

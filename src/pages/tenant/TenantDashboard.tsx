@@ -2,22 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast, Toaster } from 'react-hot-toast';
-import { Bell, Menu, Home, User, BellIcon, AlertTriangle } from 'lucide-react';
+import { Bell, Menu, Home, User, BellIcon, AlertTriangle, QrCodeIcon, KeyIcon } from 'lucide-react';
 import { db } from '../../firebase/config';
 import { collection, query, where, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
 import { PropAgenticMark } from '../../components/brand/PropAgenticMark';
 import EmptyStateCard from '../../components/EmptyStateCard';
 import InvitationBanner from '../../components/InvitationBanner';
+import PropertyInvitationBanner from '../../components/PropertyInvitationBanner';
 import PropertyList from '../../components/PropertyList';
 import { Skeleton } from '../../components/ui/Skeleton';
 import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
 import RequestForm from '../../components/tenant/RequestForm';
 import RequestHistory from '../../components/tenant/RequestHistory';
 import HeaderBar from '../../components/layout/HeaderBar';
 import NotificationPanel from '../../components/layout/NotificationPanel';
 import inviteService from '../../services/firestore/inviteService';
+import propertyInvitationService from '../../services/firestore/propertyInvitationService';
 import dataService from '../../services/dataService';
 import { getDemoProperty, getDemoMaintenanceTickets, isDemoProperty } from '../../services/demoDataService';
+import { QRScanner } from '../../components/tenant/QRScanner';
+import { unifiedInviteService } from '../../services/unifiedInviteService';
 
 interface Ticket {
   id: string;
@@ -45,6 +50,7 @@ const TenantDashboard: React.FC = () => {
   
   // Property and invite states
   const [pendingInvites, setPendingInvites] = useState<any[]>([]);
+  const [pendingPropertyInvitations, setPendingPropertyInvitations] = useState<any[]>([]);
   const [tenantProperties, setTenantProperties] = useState<any[]>([]);
   
   // Maintenance/ticket states
@@ -55,6 +61,23 @@ const TenantDashboard: React.FC = () => {
   
   // Notification states
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+  
+  // QR Scanner state
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [processingQR, setProcessingQR] = useState(false);
+  
+  // Temporary bypass state - for testing tenant view without data
+  const [showBypassTenantView, setShowBypassTenantView] = useState(false);
+
+  // Mock property for bypass mode
+  const mockBypassProperty = {
+    id: 'bypass-property-demo',
+    name: 'Demo Property - Empty State',
+    nickname: 'Demo Property',
+    streetAddress: '123 Demo St',
+    landlordName: 'Demo Landlord',
+    landlordEmail: 'demo@landlord.com'
+  };
 
   // Redirect if not authenticated or not a tenant
   useEffect(() => {
@@ -97,10 +120,16 @@ const TenantDashboard: React.FC = () => {
           userType: userProfile?.userType || userProfile?.role || 'tenant'
         });
         
-        // Fetch pending invites
+        // Fetch pending invites (traditional invite codes)
         if (currentUser.email) {
           const invites = await inviteService.getPendingInvitesForTenant(currentUser.email);
           setPendingInvites(invites || []);
+        }
+
+        // Fetch pending property invitations (from landlords to existing tenants)
+        if (currentUser.email && currentUser.uid) {
+          const propertyInvitations = await propertyInvitationService.getPendingPropertyInvitations(currentUser.email);
+          setPendingPropertyInvitations(propertyInvitations || []);
         }
         
         // Fetch associated properties if the tenant has any
@@ -187,7 +216,7 @@ const TenantDashboard: React.FC = () => {
     fetchTickets();
   }, [currentUser, userProfile]);
   
-  // Handle invite acceptance
+  // Handle invite acceptance (traditional invites)
   const handleAcceptInvite = async (inviteId: string) => {
     if (!currentUser?.uid) {
       toast.error('You must be logged in to accept an invitation');
@@ -197,9 +226,40 @@ const TenantDashboard: React.FC = () => {
     return inviteService.updateInviteStatus(inviteId, 'accepted', currentUser.uid);
   };
   
-  // Handle invite decline
+  // Handle invite decline (traditional invites)
   const handleDeclineInvite = async (inviteId: string) => {
     return inviteService.updateInviteStatus(inviteId, 'declined');
+  };
+
+  // Handle property invitation acceptance
+  const handleAcceptPropertyInvitation = async (invitationId: string) => {
+    if (!currentUser?.uid) {
+      toast.error('You must be logged in to accept an invitation');
+      return;
+    }
+    
+    try {
+      await propertyInvitationService.acceptPropertyInvitation(invitationId, currentUser.uid);
+      // Remove from pending invitations
+      setPendingPropertyInvitations(prev => prev.filter(inv => inv.id !== invitationId));
+      // Refresh tenant data to show new property
+      // You might want to add logic here to fetch the property details and add to tenantProperties
+    } catch (error) {
+      console.error('Error accepting property invitation:', error);
+      throw error;
+    }
+  };
+  
+  // Handle property invitation decline
+  const handleDeclinePropertyInvitation = async (invitationId: string) => {
+    try {
+      await propertyInvitationService.declinePropertyInvitation(invitationId);
+      // Remove from pending invitations
+      setPendingPropertyInvitations(prev => prev.filter(inv => inv.id !== invitationId));
+    } catch (error) {
+      console.error('Error declining property invitation:', error);
+      throw error;
+    }
   };
   
   // Handle maintenance request
@@ -218,6 +278,193 @@ const TenantDashboard: React.FC = () => {
   const filteredTickets = filter === 'all' 
     ? tickets 
     : tickets.filter(ticket => ticket.status === filter);
+
+  const handleQRScan = async (scannedCode: string) => {
+    setProcessingQR(true);
+    
+    try {
+      // Extract invite code from QR data
+      let inviteCode = scannedCode;
+      
+      // If it's a URL, extract the code parameter
+      if (scannedCode.includes('/invite/')) {
+        const url = new URL(scannedCode);
+        const pathParts = url.pathname.split('/');
+        inviteCode = pathParts[pathParts.length - 1];
+      } else if (scannedCode.includes('code=')) {
+        const url = new URL(scannedCode);
+        inviteCode = url.searchParams.get('code') || scannedCode;
+      }
+      
+      // Navigate to invite acceptance page with QR source parameter
+      navigate(`/invite/${inviteCode}?source=qr`);
+      
+      setShowQRScanner(false);
+      
+    } catch (error: any) {
+      console.error('Error processing QR code:', error);
+      toast.error('Invalid QR code. Please try scanning again.');
+    } finally {
+      setProcessingQR(false);
+    }
+  };
+
+  // Component for the No Properties state with invite code functionality
+  const NoPropertiesInviteCard: React.FC<{
+    onInviteValidated: (propertyInfo: any) => void;
+  }> = ({ onInviteValidated }) => {
+    const [inviteCode, setInviteCode] = useState('');
+    const [isValidating, setIsValidating] = useState(false);
+    const [validationMessage, setValidationMessage] = useState<{
+      type: 'success' | 'error';
+      message: string;
+    } | null>(null);
+    const [showInviteSection, setShowInviteSection] = useState(false);
+
+    const handleInviteCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value.toUpperCase().replace(/\s/g, '');
+      setInviteCode(value);
+      if (validationMessage) {
+        setValidationMessage(null);
+      }
+    };
+
+    const validateCode = async (e?: React.FormEvent) => {
+      if (e) {
+        e.preventDefault();
+      }
+
+      if (!inviteCode.trim()) {
+        setValidationMessage({
+          type: 'error',
+          message: 'Please enter an invite code'
+        });
+        return;
+      }
+
+      setIsValidating(true);
+      setValidationMessage(null);
+
+      try {
+        const validationResult = await unifiedInviteService.validateInviteCode(inviteCode.trim());
+        
+        if (validationResult.isValid) {
+          setValidationMessage({
+            type: 'success',
+            message: 'Valid invite code!'
+          });
+          
+          onInviteValidated({
+            propertyId: validationResult.propertyId!,
+            propertyName: validationResult.propertyName || 'Property',
+            unitId: validationResult.unitId,
+            inviteCode: inviteCode.trim()
+          });
+        } else {
+          setValidationMessage({
+            type: 'error',
+            message: validationResult.message
+          });
+        }
+      } catch (error: any) {
+        setValidationMessage({
+          type: 'error',
+          message: error.message || 'Error validating invite code. Please try again.'
+        });
+      } finally {
+        setIsValidating(false);
+      }
+    };
+
+    return (
+      <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border border-orange-200 p-8 text-center">
+        <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Home className="w-8 h-8 text-orange-600" />
+        </div>
+        
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">No Properties Found</h3>
+        <p className="text-gray-600 mb-6 max-w-md mx-auto">
+          You're not currently associated with any properties. Contact your landlord to get an invitation code to join a property.
+        </p>
+
+        {/* Invite Code Section */}
+        <div className="max-w-md mx-auto mb-6">
+          <button
+            onClick={() => setShowInviteSection(!showInviteSection)}
+            className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+          >
+            <KeyIcon className="w-5 h-5" />
+            {showInviteSection ? 'Hide Invite Code Entry' : 'Enter Invite Code'}
+          </button>
+          
+          {showInviteSection && (
+            <div className="mt-4 p-4 bg-white rounded-lg border border-orange-200 text-left">
+              <form onSubmit={validateCode} className="space-y-4">
+                <div>
+                  <label htmlFor="invite-code" className="block text-sm font-medium text-gray-700 mb-2">
+                    Property Invite Code
+                  </label>
+                  <Input
+                    id="invite-code"
+                    type="text"
+                    value={inviteCode}
+                    onChange={handleInviteCodeChange}
+                    placeholder="Enter code (e.g., BWNR3QPR)"
+                    maxLength={12}
+                    autoComplete="off"
+                    disabled={isValidating}
+                    className={`w-full font-mono ${
+                      validationMessage?.type === 'error'
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                        : validationMessage?.type === 'success'
+                        ? 'border-green-500 focus:border-green-500 focus:ring-green-500'
+                        : 'border-orange-300 focus:border-orange-500 focus:ring-orange-500'
+                    }`}
+                  />
+                  
+                  {validationMessage && (
+                    <p className={`text-sm mt-2 ${
+                      validationMessage.type === 'success' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {validationMessage.message}
+                    </p>
+                  )}
+                </div>
+                
+                <Button
+                  type="submit"
+                  disabled={isValidating || !inviteCode.trim()}
+                  className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                >
+                  {isValidating ? 'Validating...' : 'Join Property'}
+                </Button>
+              </form>
+            </div>
+          )}
+        </div>
+
+        {/* What can you do section */}
+        <div className="bg-white rounded-lg p-4 border border-orange-200 text-left max-w-sm mx-auto">
+          <h4 className="font-medium text-gray-900 mb-2">What can you do?</h4>
+          <ul className="text-sm text-gray-600 space-y-1">
+            <li>• Ask your landlord for an invitation code</li>
+            <li>• Check your email for pending invitations</li>
+            <li>• Contact PropAgentic support if you need help</li>
+          </ul>
+          
+          <div className="mt-4 pt-3 border-t border-gray-200">
+            <Button
+              onClick={() => window.location.reload()}
+              variant="outline"
+              className="w-full text-orange-600 border-orange-300 hover:bg-orange-50"
+            >
+              Refresh Page
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   if (!currentUser || !userProfile) {
     return (
@@ -273,9 +520,10 @@ const TenantDashboard: React.FC = () => {
             </div>
           ) : (
             <>
-              {/* Invitation Banner */}
-              {pendingInvites.length > 0 && (
+              {/* Invitation Banners */}
+              {(pendingInvites.length > 0 || pendingPropertyInvitations.length > 0) && (
                 <div className="space-y-4 mb-8">
+                  {/* Traditional invite codes */}
                   {pendingInvites.map(invite => (
                     <InvitationBanner
                       key={invite.id}
@@ -284,18 +532,39 @@ const TenantDashboard: React.FC = () => {
                       onDecline={handleDeclineInvite}
                     />
                   ))}
+                  
+                  {/* Property invitations from landlords */}
+                  {pendingPropertyInvitations.map(invitation => (
+                    <PropertyInvitationBanner
+                      key={invitation.id}
+                      invitation={invitation}
+                      onAccept={handleAcceptPropertyInvitation}
+                      onDecline={handleDeclinePropertyInvitation}
+                    />
+                  ))}
                 </div>
               )}
               
               {/* Property Management Section */}
               {tenantProperties.length === 0 ? (
                 <div className="mb-8">
-                  <EmptyStateCard
-                    title="No properties yet"
-                    message="Properties are added during account setup. If you need to add a property, please contact support or create a new account."
-                    actionLabel=""
-                    onAction={undefined}
-                  />
+                  {pendingPropertyInvitations.length === 0 && pendingInvites.length === 0 ? (
+                    <NoPropertiesInviteCard onInviteValidated={(propertyInfo) => {
+                      // Handle the validated property info
+                      console.log('Validated property info:', propertyInfo);
+                      toast.success(`Found property: ${propertyInfo.propertyName}`);
+                    }} />
+                  ) : (
+                    <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-6 text-center">
+                      <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <BellIcon className="w-6 h-6 text-yellow-600" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Pending Invitations</h3>
+                      <p className="text-gray-600">
+                        You have pending property invitations above. Accept them to start managing your properties.
+                      </p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="mb-8">
@@ -353,11 +622,38 @@ const TenantDashboard: React.FC = () => {
                   )}
                 </>
               )}
+
+              {/* Enhanced Action Buttons */}
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  {/* Existing buttons */}
+                  
+                  {/* QR Code Scanner Button */}
+                  <Button
+                    onClick={() => setShowQRScanner(true)}
+                    variant="outline"
+                    className="flex items-center justify-center gap-2 p-4 h-auto"
+                  >
+                    <QrCodeIcon className="w-6 h-6 text-orange-600" />
+                    <div className="text-left">
+                      <div className="font-semibold text-gray-900">Scan QR Code</div>
+                      <div className="text-sm text-gray-600">Join a new property</div>
+                    </div>
+                  </Button>
+                </div>
+              </div>
             </>
           )}
         </div>
       </main>
 
+      {/* QR Scanner Modal */}
+      <QRScanner
+        isOpen={showQRScanner}
+        onClose={() => setShowQRScanner(false)}
+        onScan={handleQRScan}
+        isLoading={processingQR}
+      />
     </div>
   );
 };

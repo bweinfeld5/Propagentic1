@@ -1,0 +1,11 @@
+# Task ID: 3
+# Title: Consolidate Invite Code Services
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Merge inviteCodeService.js, inviteCodeServiceLocal.ts into unifiedInviteService.ts
+# Details:
+Remove duplicate invite code services and ensure all components use the unified service with proper error handling and fallback strategies
+
+# Test Strategy:
+Verify all invite code operations work through the unified service across all use cases

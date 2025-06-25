@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   HomeIcon,
   BuildingOfficeIcon,
@@ -18,9 +18,7 @@ import {
   CloudArrowUpIcon,
   PencilIcon,
   TrashIcon,
-  EyeIcon,
-  ArrowUpRightIcon,
-  ExclamationTriangleIcon
+  EyeIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useDemoMode } from '../../context/DemoModeContext';
@@ -29,16 +27,15 @@ import CommunicationCenter from '../../components/communication/CommunicationCen
 import InviteTenantModal from '../../components/landlord/InviteTenantModal';
 import AddPropertyModal from '../../components/landlord/AddPropertyModal';
 import EditPropertyModal from '../../components/landlord/EditPropertyModal';
-import useActionFeedback from '../../hooks/useActionFeedback';
-import { EnhancedMaintenanceDashboard } from '../../components/landlord/EnhancedMaintenanceDashboard';
-import GlobalSearch from '../../components/shared/GlobalSearch';
+
+// Phase 1.2 Components
+import GlobalSearch from '../../components/search/GlobalSearch';
 import BulkOperations from '../../components/bulk/BulkOperations';
 
 // Debug components for data persistence investigation
 import DataPersistenceDiagnostic from '../../components/debug/DataPersistenceDiagnostic';
 import TestRunner from '../../components/debug/TestRunner';
 import InvitationFlowTest from '../../components/debug/InvitationFlowTest';
-import QRCodeInviteTest from '../../components/debug/QRCodeInviteTest';
 
 // Define interfaces for type safety
 interface Property {
@@ -910,7 +907,76 @@ const LandlordDashboard: React.FC = () => {
   );
 
   const renderMaintenanceView = (): JSX.Element => (
-    <EnhancedMaintenanceDashboard />
+    <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
+      <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
+        <div className="p-6 border-b border-orange-100">
+          <h3 className="text-lg font-semibold text-gray-900">Maintenance Requests</h3>
+        </div>
+        
+        <div className="p-6">
+          {tickets.length === 0 ? (
+            <div className="text-center py-12">
+              <WrenchScrewdriverIcon className="w-16 h-16 mx-auto mb-4 text-orange-300" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Maintenance Requests</h3>
+              <p className="text-gray-600">
+                Maintenance requests from tenants will appear here for tracking and management.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {tickets.map((ticket) => (
+                <div key={ticket.id} className="p-4 border border-orange-200 rounded-lg hover:border-orange-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-white transition-all">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        ticket.priority === 'high' 
+                          ? 'bg-red-100'
+                          : ticket.priority === 'medium'
+                          ? 'bg-yellow-100'
+                          : 'bg-green-100'
+                      }`}>
+                        <WrenchScrewdriverIcon className={`w-5 h-5 ${
+                          ticket.priority === 'high' 
+                            ? 'text-red-600'
+                            : ticket.priority === 'medium'
+                            ? 'text-yellow-600'
+                            : 'text-green-600'
+                        }`} />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">
+                          {ticket.title || ticket.description || 'Maintenance Request'}
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          {ticket.propertyName || 'Property'} • {ticket.category || 'General'}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {ticket.createdAt ? new Date(ticket.createdAt.toString()).toLocaleDateString() : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        ticket.status === 'completed' 
+                          ? 'bg-green-100 text-green-800' 
+                          : ticket.status === 'in-progress'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {ticket.status || 'pending'}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Priority: {ticket.priority || 'medium'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 
   const renderDocumentsView = (): JSX.Element => (
@@ -1071,7 +1137,7 @@ const LandlordDashboard: React.FC = () => {
       )}
 
               {/* Edit Property Modal */}
-        {showEditPropertyModal && editingProperty && (
+        {showEditPropertyModal && (
           <EditPropertyModal
             isOpen={showEditPropertyModal}
             onClose={() => {
@@ -1089,7 +1155,6 @@ const LandlordDashboard: React.FC = () => {
           <DataPersistenceDiagnostic />
           <TestRunner />
           <InvitationFlowTest />
-          <QRCodeInviteTest />
         </>
       )}
     </div>

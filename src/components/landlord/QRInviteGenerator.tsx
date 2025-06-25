@@ -10,7 +10,7 @@ import {
 import { QRCodeDisplay } from '../qr/QRCodeDisplay';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { auth } from '../../firebase/config';
-import { inviteCodeServiceLocal } from '../../services/inviteCodeServiceLocal';
+// import { inviteCodeServiceLocal } from '../../services/inviteCodeServiceLocal';
 import toast from 'react-hot-toast';
 
 interface Property {
@@ -50,12 +50,64 @@ export const QRInviteGenerator: React.FC<QRInviteGeneratorProps> = ({
 
   const generateInviteCode = async () => {
     const currentUser = auth.currentUser;
+    
+    // 🔐 COMPREHENSIVE AUTHENTICATION DEBUGGING
+    console.log('🔐 Auth Debug Start:', {
+      user: currentUser ? {
+        uid: currentUser.uid,
+        email: currentUser.email,
+        emailVerified: currentUser.emailVerified,
+        isAnonymous: currentUser.isAnonymous,
+        displayName: currentUser.displayName,
+        providerId: currentUser.providerId,
+        refreshToken: currentUser.refreshToken ? 'present' : 'missing',
+        accessToken: 'checking...'
+      } : null,
+      authInstance: auth ? 'initialized' : 'missing',
+      selectedPropertyId,
+      selectedPropertyName,
+      timestamp: new Date().toISOString()
+    });
+
     if (!currentUser) {
+      console.error('❌ No authenticated user found');
       setError('You must be logged in to generate invite codes');
       return;
     }
 
+    // Get ID token for debugging
+    try {
+      const idToken = await currentUser.getIdToken(true);
+      console.log('🔐 ID Token acquired:', {
+        tokenLength: idToken.length,
+        tokenPrefix: idToken.substring(0, 50) + '...',
+        tokenSuffix: '...' + idToken.substring(idToken.length - 10),
+        claims: 'checking...'
+      });
+      
+      // Decode token claims for debugging (client-side decode is safe for debugging)
+      try {
+        const tokenPayload = JSON.parse(atob(idToken.split('.')[1]));
+        console.log('🔐 Token Claims:', {
+          iss: tokenPayload.iss,
+          aud: tokenPayload.aud,
+          exp: new Date(tokenPayload.exp * 1000).toISOString(),
+          iat: new Date(tokenPayload.iat * 1000).toISOString(),
+          userId: tokenPayload.user_id,
+          email: tokenPayload.email,
+          emailVerified: tokenPayload.email_verified
+        });
+      } catch (decodeErr) {
+        console.warn('⚠️ Could not decode token payload:', decodeErr);
+      }
+    } catch (tokenErr) {
+      console.error('❌ Failed to get ID token:', tokenErr);
+      setError('Authentication error: Could not get valid token');
+      return;
+    }
+
     if (!selectedPropertyId) {
+      console.error('❌ No property selected');
       setError('Please select a property first');
       return;
     }
@@ -64,25 +116,51 @@ export const QRInviteGenerator: React.FC<QRInviteGeneratorProps> = ({
     setError(null);
 
     try {
-      console.log('🔧 Generating invite code for property:', selectedPropertyId);
+      console.log('🔧 Starting Firebase Function call:', {
+        propertyId: selectedPropertyId,
+        expirationDays: 7,
+        functionName: 'generateInviteCode',
+        timestamp: new Date().toISOString()
+      });
       
       // Use Firebase Functions instead of direct Firestore write
       const functions = getFunctions();
-      const generateInviteCodeFunction = httpsCallable(functions, 'generateInviteCode');
+      console.log('🔧 Functions instance:', {
+        app: functions.app.name,
+        region: 'default',
+        customDomain: functions.customDomain || 'none'
+      });
       
-      const result = await generateInviteCodeFunction({
+      const generateInviteCodeFunction = httpsCallable(functions, 'generateInviteCode');
+      console.log('🔧 Callable function created, making request...');
+      
+      const requestPayload = {
         propertyId: selectedPropertyId,
         expirationDays: 7
+      };
+      
+      console.log('📤 Request payload:', requestPayload);
+      
+      const result = await generateInviteCodeFunction(requestPayload);
+      
+      console.log('📥 Raw function result:', {
+        data: result.data
       });
 
       const data = result.data as any;
       
       if (!data.success) {
+        console.error('❌ Function returned unsuccessful result:', data);
         throw new Error(data.message || 'Failed to create invite code');
       }
 
       const code = data.inviteCode.code;
-      console.log('✅ Generated invite code:', code);
+      console.log('✅ Successfully generated invite code:', {
+        code: code,
+        codeLength: code.length,
+        generatedAt: new Date().toISOString(),
+        propertyId: selectedPropertyId
+      });
       
       setInviteCode(code);
       setGeneratedAt(new Date());
@@ -92,7 +170,14 @@ export const QRInviteGenerator: React.FC<QRInviteGeneratorProps> = ({
       
       toast.success('QR invite code generated successfully!');
     } catch (err) {
-      console.error('❌ Error generating invite code:', err);
+      console.error('❌ Detailed error analysis:', {
+        error: err,
+        errorMessage: err instanceof Error ? err.message : 'Unknown error',
+        errorCode: (err as any).code,
+        errorDetails: (err as any).details,
+        stack: err instanceof Error ? err.stack : 'No stack trace',
+        timestamp: new Date().toISOString()
+      });
       
       // Check if this is a CORS, permission, or Firebase error - use local fallback
       let errorMessage = 'Failed to generate invite code';
@@ -107,7 +192,10 @@ export const QRInviteGenerator: React.FC<QRInviteGeneratorProps> = ({
             err.message.includes('CORS') ||
             err.message.includes('Failed to fetch') ||
             err.message.includes('internal') ||
-            (err as any).code === 'functions/internal') {
+            err.message.includes('invalid-argument') ||
+            (err as any).code === 'functions/internal' ||
+            (err as any).code === 'functions/invalid-argument' ||
+            (err as any).code === 'functions/unauthenticated') {
           
           console.log('🔧 Firebase Functions issue detected - using local fallback service');
           shouldUseFallback = true;
@@ -120,24 +208,27 @@ export const QRInviteGenerator: React.FC<QRInviteGeneratorProps> = ({
         try {
           // Use local invite code service for development
           console.log('🔧 Attempting local invite code generation...');
-          const localResult = await inviteCodeServiceLocal.generateInviteCode(selectedPropertyId, 7);
+          // Local service disabled - commenting out for now
+          // const localResult = await inviteCodeServiceLocal.generateInviteCode(selectedPropertyId, 7);
+          // if (localResult.success) {
+          //   console.log('✅ Generated local invite code:', localResult.code);
+          //   setInviteCode(localResult.code);
+          //   setGeneratedAt(new Date());
+          //   
+          //   // Notify parent component
+          //   onInviteCodeGenerated?.(localResult.code);
+          //   
+          //   toast.success('QR code generated (local mode)!');
+          //   toast('⚠️ Using local service - codes valid for this session only', {
+          //     duration: 4000,
+          //     icon: '⚠️'
+          //   });
+          // } else {
+          //   throw new Error('Local service failed');
+          // }
           
-          if (localResult.success) {
-            console.log('✅ Generated local invite code:', localResult.code);
-            setInviteCode(localResult.code);
-            setGeneratedAt(new Date());
-            
-            // Notify parent component
-            onInviteCodeGenerated?.(localResult.code);
-            
-            toast.success('QR code generated (local mode)!');
-            toast('⚠️ Using local service - codes valid for this session only', {
-              duration: 4000,
-              icon: '⚠️'
-            });
-          } else {
-            throw new Error('Local service failed');
-          }
+          // Fallback to demo code for now
+          throw new Error('Local service temporarily disabled');
         } catch (localErr) {
           console.error('❌ Local service also failed:', localErr);
           // Final fallback: simple demo code

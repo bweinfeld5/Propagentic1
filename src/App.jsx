@@ -10,6 +10,7 @@ import LogoLoadingAnimation from './components/shared/LogoLoadingAnimation';
 import GlassyHeader from './components/layout/GlassyHeader';
 import DashboardSidebar from './components/layout/SidebarNav';
 import LocalStorageDebug from './components/shared/LocalStorageDebug';
+import ErrorBoundary from './components/shared/ErrorBoundary';
 import UniversalLoadingSpinner from './components/shared/UniversalLoadingSpinner';
 import PreLaunchGuard from './components/guards/PreLaunchGuard';
 import TenantInviteGuard from './components/guards/TenantInviteGuard.tsx';
@@ -183,6 +184,7 @@ function App() {
                   <DataServiceProvider>
                     <NotificationProvider>
                       <Router>
+                        <ErrorBoundary fallback={<div className="p-4 text-center">Something went wrong. Please reload.</div>}>
                         <Suspense fallback={<UniversalLoadingSpinner message="Loading page..." />}>
                         <Routes>
                         {/* Public routes */}
@@ -240,6 +242,7 @@ function App() {
                         />
                       </Routes>
                       </Suspense>
+                      </ErrorBoundary>
                       {/* Toast Notifications */}
                       <Toaster
                         position="top-right"

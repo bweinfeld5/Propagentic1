@@ -14,13 +14,6 @@ module.exports = override(
       plugin => !plugin.constructor.name.includes('ReactRefresh')
     );
 
-    // Disable Fast Refresh in environment
-    config.plugins.push(
-      new webpack.DefinePlugin({
-        'process.env.FAST_REFRESH': JSON.stringify('false'),
-      })
-    );
-
     // Core module fallbacks and polyfills
     config.resolve.fallback = {
       ...config.resolve.fallback,

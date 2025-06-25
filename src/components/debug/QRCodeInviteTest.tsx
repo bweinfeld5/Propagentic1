@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   PlayIcon, 
   CheckCircleIcon, 
@@ -11,6 +11,8 @@ import { auth } from '../../firebase/config';
 // import { inviteCodeServiceLocal } from '../../services/inviteCodeServiceLocal';
 import { QRCodeDisplay } from '../qr/QRCodeDisplay';
 import toast from 'react-hot-toast';
+import QRCodeStyling from 'qr-code-styling';
+import Button from '../ui/Button';
 
 interface TestResult {
   name: string;
@@ -24,6 +26,14 @@ export const QRCodeInviteTest: React.FC = () => {
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
+  const [validationResult, setValidationResult] = useState<any>(null);
+
+  useEffect(() => {
+    // Cleanup on unmount
+    return () => {
+      unifiedInviteCodeService.clearLocalCodes();
+    };
+  }, []);
 
   const updateTest = (name: string, status: TestResult['status'], message: string, data?: any) => {
     setTestResults(prev => {

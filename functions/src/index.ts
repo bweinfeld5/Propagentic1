@@ -38,8 +38,12 @@ import { sendInviteEmail } from './invites';
 export { sendInviteEmail };
 
 // Import and export notification trigger functions  
-import { createNotificationOnInvite } from './inviteTriggers';
-export { createNotificationOnInvite };
+import { createNotificationOnInvite, sendPropertyInviteEmail } from './inviteTriggers';
+export { createNotificationOnInvite, sendPropertyInviteEmail };
+
+// Import and export invite code email trigger
+import { sendInviteCodeEmail } from './inviteCodeEmailTrigger';
+export { sendInviteCodeEmail };
 
 // Import and export SendGrid email functions
 import { sendEmail } from './sendgridEmailService';
@@ -55,3 +59,4 @@ const inviteCodeModule = require('./inviteCode.js');
 export const redeemInviteCode = inviteCodeModule.redeemInviteCode;
 
 console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, invite code redemption).");
+

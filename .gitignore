@@ -116,6 +116,7 @@ dev-debug.log
 *.sln
 *.sw?
 # OS specific
+
 # Task files
-tasks.json
-tasks/ 
+# tasks.json
+# tasks/ 

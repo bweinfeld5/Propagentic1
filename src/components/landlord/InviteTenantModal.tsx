@@ -204,6 +204,98 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                         </div>
                       </div>
 
+                      {/* Invite Code and Link */}
+                      <div className="space-y-4">
+                        {/* Invite Code */}
+                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                          <p className="text-sm font-medium text-gray-700 mb-2">Invite Code:</p>
+                          <div className="flex items-center space-x-2">
+                            <div className="bg-white rounded-lg px-4 py-2 font-mono text-lg text-center border border-gray-300 flex-1">
+                              {inviteCode}
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => copyToClipboard(inviteCode, 'Invite code')}
+                              className="!p-2"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Invite Link */}
+                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                          <p className="text-sm font-medium text-gray-700 mb-2">Direct Invite Link:</p>
+                          <div className="flex items-center space-x-2">
+                            <div className="bg-white rounded-lg px-3 py-2 text-sm text-blue-600 border border-gray-300 flex-1 overflow-hidden">
+                              <LinkIcon className="inline w-4 h-4 mr-1" />
+                              <span className="truncate">{inviteLink}</span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => copyToClipboard(inviteLink, 'Invite link')}
+                              className="!p-2"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                            </Button>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2">
+                            Share this link with the tenant for direct access
+                          </p>
+                        </div>
+
+                        {/* QR Code Button */}
+                        <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="text-sm font-semibold text-blue-800 flex items-center">
+                                <QrCodeIcon className="h-5 w-5 mr-2" />
+                                QR Code
+                              </h4>
+                              <p className="text-xs text-blue-600 mt-1">
+                                Generate a QR code for easy property access
+                              </p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => setShowQRCode(!showQRCode)}
+                              className="text-blue-600 border-blue-300 hover:bg-blue-100"
+                            >
+                              {showQRCode ? 'Hide' : 'Show'} QR Code
+                            </Button>
+                          </div>
+                          
+                          {showQRCode && (
+                            <div className="mt-4 p-4 bg-white rounded-lg border border-blue-200">
+                              <div className="relative">
+                                <QRCodeDisplay 
+                                  inviteCode={inviteCode}
+                                  propertyName={selectedPropertyName}
+                                  size={200}
+                                />
+                                {/* Coming Soon Overlay */}
+                                <div className="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                                  <div className="text-center">
+                                    <div className="bg-blue-100 rounded-full p-3 mx-auto mb-3 w-fit">
+                                      <QrCodeIcon className="h-8 w-8 text-blue-600" />
+                                    </div>
+                                    <p className="text-lg font-semibold text-gray-800">QR Code Coming Soon!</p>
+                                    <p className="text-sm text-gray-600 mt-1">This feature will be available when the Firebase server is live</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
                       {/* Tabs for Info and QR Code */}
                       <div className="border-b border-gray-200">
                         <nav className="-mb-px flex space-x-8" aria-label="Tabs">
@@ -372,19 +464,19 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                             <ul className="text-sm text-blue-700 space-y-1">
                               <li className="flex items-start">
                                 <span className="text-blue-500 mr-2">•</span>
-                                We'll send a professional email invitation to the tenant
+                                We'll send a professional email invitation
                               </li>
                               <li className="flex items-start">
                                 <span className="text-blue-500 mr-2">•</span>
-                                They'll receive a unique invitation code
+                                They'll receive a unique invitation code and link
                               </li>
                               <li className="flex items-start">
                                 <span className="text-blue-500 mr-2">•</span>
-                                The tenant can accept directly from the email or enter the code manually
+                                The tenant can accept via email or use the code/link
                               </li>
                               <li className="flex items-start">
                                 <span className="text-blue-500 mr-2">•</span>
-                                Once accepted, they'll have access to submit maintenance requests
+                                QR codes will be available when Firebase is live
                               </li>
                             </ul>
                           </div>

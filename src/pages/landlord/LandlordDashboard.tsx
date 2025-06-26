@@ -28,6 +28,7 @@ import CommunicationCenter from '../../components/communication/CommunicationCen
 import InviteTenantModal from '../../components/landlord/InviteTenantModal';
 import AddPropertyModal from '../../components/landlord/AddPropertyModal';
 import EditPropertyModal from '../../components/landlord/EditPropertyModal';
+import AcceptedTenantsSection from '../../components/landlord/AcceptedTenantsSection.jsx';
 
 // Phase 1.2 Components
 import GlobalSearch from '../../components/search/GlobalSearch';
@@ -904,103 +905,19 @@ const LandlordDashboard: React.FC = () => {
 
   const renderTenantsView = (): JSX.Element => (
     <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
-      <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
-        <div className="p-6 border-b border-orange-100">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Tenant Management</h3>
-            <button
-              onClick={() => setShowInviteTenantModal(true)}
-              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
-            >
-              <UserGroupIcon className="w-4 h-4" />
-              Invite Tenant
-            </button>
-          </div>
-        </div>
-        
-        <div className="p-6">
-          {tenants.length === 0 ? (
-            <div className="text-center py-12">
-              <UsersIcon className="w-16 h-16 mx-auto mb-4 text-orange-300" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Tenants Found</h3>
-              <p className="text-gray-600 mb-6">
-                Start by inviting tenants to your properties to manage leases and communications.
-              </p>
-              <button
-                onClick={() => setShowInviteTenantModal(true)}
-                className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
-              >
-                <UserGroupIcon className="w-5 h-5" />
-                Invite First Tenant
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {tenants.map((tenant) => (
-                <div key={tenant.id} className="p-4 border border-orange-200 rounded-lg hover:border-orange-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-white transition-all">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <UsersIcon className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900">
-                          {tenant.displayName || tenant.name || tenant.email}
-                        </h4>
-                        <p className="text-sm text-gray-600">{tenant.email}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {tenant.propertyName} {tenant.unitNumber ? `• Unit ${tenant.unitNumber}` : ''}
-                        </p>
-                        {tenant.propertyAddress && (
-                          <p className="text-xs text-gray-400">
-                            {tenant.propertyAddress}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        tenant.status === 'active' 
-                          ? 'bg-green-100 text-green-800' 
-                          : tenant.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {tenant.status || 'active'}
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {(() => {
-                          const joinDate = tenant.acceptedAt || tenant.joinedDate;
-                          if (joinDate) {
-                            try {
-                              return `Joined: ${new Date(joinDate).toLocaleDateString()}`;
-                            } catch (e) {
-                              return 'Invalid join date';
-                            }
-                          }
-                          return 'No join date';
-                        })()}
-                      </p>
-                      {tenant.inviteCode && (
-                        <p className="text-xs text-gray-400 mt-1">
-                          Code: {tenant.inviteCode}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  {tenant.notes && (
-                    <div className="mt-3 p-2 bg-yellow-50 rounded border border-yellow-200">
-                      <p className="text-xs text-yellow-800">
-                        <span className="font-medium">Notes:</span> {tenant.notes}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Add Tenant Button */}
+      <div className="mb-6 flex justify-end">
+        <button
+          onClick={() => setShowInviteTenantModal(true)}
+          className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
+        >
+          <UserGroupIcon className="w-4 h-4" />
+          Invite Tenant
+        </button>
       </div>
+      
+      {/* Enhanced Tenants Section */}
+      <AcceptedTenantsSection properties={properties} />
     </div>
   );
 

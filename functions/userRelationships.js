@@ -174,7 +174,9 @@ exports.acceptTenantInvitation = onCall({
       .collection("properties")
       .doc(invitation.propertyId)
       .update({
-        tenantIds: admin.firestore.FieldValue.arrayUnion(tenantId)
+        tenantIds: admin.firestore.FieldValue.arrayUnion(tenantId), // Legacy field
+        tenants: admin.firestore.FieldValue.arrayUnion(tenantId), // New primary field
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
     
     // Create tenant-property mapping

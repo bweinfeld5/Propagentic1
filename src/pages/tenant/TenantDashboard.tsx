@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { toast, Toaster } from 'react-hot-toast';
 import { Bell, Menu, Home, User, BellIcon, AlertTriangle } from 'lucide-react';
 import { db } from '../../firebase/config';
-import { collection, query, where, orderBy, onSnapshot, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
 import { PropAgenticMark } from '../../components/brand/PropAgenticMark';
 import EmptyStateCard from '../../components/EmptyStateCard';
 import InvitationBanner from '../../components/InvitationBanner';
@@ -13,6 +13,7 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import Button from '../../components/ui/Button';
 import RequestForm from '../../components/tenant/RequestForm';
 import RequestHistory from '../../components/tenant/RequestHistory';
+import AIMaintenanceChat from '../../components/tenant/AIMaintenanceChat';
 import HeaderBar from '../../components/layout/HeaderBar';
 import NotificationPanel from '../../components/layout/NotificationPanel';
 import inviteService from '../../services/firestore/inviteService';
@@ -42,7 +43,6 @@ const TenantDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [propertiesLoading, setPropertiesLoading] = useState(false);
   
   // Property and invite states
   const [pendingInvites, setPendingInvites] = useState<any[]>([]);
@@ -56,6 +56,12 @@ const TenantDashboard: React.FC = () => {
   
   // Notification states
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+  
+  // AI Chat state
+  const [showAIChat, setShowAIChat] = useState(false);
+  
+  // View management for mobile tab navigation
+  const [currentView, setCurrentView] = useState('dashboard');
 
   // Redirect if not authenticated or not a tenant
   useEffect(() => {
@@ -104,71 +110,19 @@ const TenantDashboard: React.FC = () => {
           setPendingInvites(invites || []);
         }
         
-        // Fetch tenant properties from tenantProfile collection
-        console.log('Fetching tenant profile for uid:', currentUser.uid);
-        setPropertiesLoading(true);
-        
-        const profileRef = doc(db, 'tenantProfiles', currentUser.uid);
-        const profileSnap = await getDoc(profileRef);
-        
-        if (profileSnap.exists()) {
-          const tenantProfile = profileSnap.data();
-          console.log('Tenant profile data:', tenantProfile);
-          
-          // Extract the properties array
-          const propertyIds = tenantProfile.properties || [];
-          console.log('Property IDs found:', propertyIds);
-          
-          if (propertyIds.length === 0) {
-            console.log('No properties found in tenant profile');
-            setTenantProperties([]);
-          } else {
-            // Fetch all property documents using Promise.all for efficiency
-            console.log(`Fetching ${propertyIds.length} properties...`);
-            const propertyPromises = propertyIds.map(async (propertyId: string) => {
-              try {
-                console.log('Fetching property:', propertyId);
-                const propRef = doc(db, 'properties', propertyId);
-                const propSnap = await getDoc(propRef);
-                
-                if (propSnap.exists()) {
-                  const propertyData = propSnap.data();
-                  return {
-                    id: propSnap.id,
-                    ...propertyData
-                  };
-                } else {
-                  console.warn(`Property ${propertyId} not found`);
-                  return null;
-                }
-              } catch (error) {
-                console.warn(`Failed to fetch property ${propertyId}:`, error);
-                return null;
-              }
-            });
-            
-            // Wait for all property fetches to complete
-            const properties = await Promise.all(propertyPromises);
-            
-            // Filter out any null results (failed fetches)
-            const validProperties = properties.filter(property => property !== null);
-            console.log('Valid properties loaded:', validProperties);
-            
-            setTenantProperties(validProperties);
+        // Fetch associated properties if the tenant has any
+        if (userProfile?.propertyId) {
+          const property = await dataService.getPropertyById(userProfile.propertyId);
+          if (property) {
+            setTenantProperties([property]);
           }
         } else {
-          console.log('No tenant profile found for uid:', currentUser.uid);
-          // Handle case where tenantProfile doesn't exist - show empty state
           setTenantProperties([]);
         }
-        
-        setPropertiesLoading(false);
-        
       } catch (error) {
         console.error('Error fetching tenant data:', error);
         setIsError(true);
         setErrorMessage('Failed to load your dashboard. Please try again later.');
-        setPropertiesLoading(false);
       } finally {
         setIsLoading(false);
       }
@@ -306,16 +260,48 @@ const TenantDashboard: React.FC = () => {
 
       <main className="py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {isLoading || propertiesLoading ? (
+          {/* Mobile Tab Navigation */}
+          <div className="md:hidden mb-6">
+            <nav className="bg-white rounded-lg shadow-sm border border-gray-200 p-2">
+              <div className="flex space-x-1">
+                <button
+                  onClick={() => setCurrentView('dashboard')}
+                  className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    currentView === 'dashboard'
+                      ? 'bg-[#176B5D] text-white'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  🏠 Dashboard
+                </button>
+                <button
+                  onClick={() => setCurrentView('new-request')}
+                  className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    currentView === 'new-request'
+                      ? 'bg-[#176B5D] text-white'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  ➕ New Request
+                </button>
+                <button
+                  onClick={() => setCurrentView('history')}
+                  className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    currentView === 'history'
+                      ? 'bg-[#176B5D] text-white'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  📋 History
+                </button>
+              </div>
+            </nav>
+          </div>
+          {isLoading ? (
             // Loading state
             <div className="space-y-6">
               <Skeleton className="h-32 rounded-lg" />
               <Skeleton className="h-64 rounded-lg" />
-              {propertiesLoading && (
-                <div className="text-center text-gray-600">
-                  <p>Loading your property information...</p>
-                </div>
-              )}
             </div>
           ) : isError ? (
             // Error state
@@ -349,99 +335,18 @@ const TenantDashboard: React.FC = () => {
               {tenantProperties.length === 0 ? (
                 <div className="mb-8">
                   <EmptyStateCard
-                    title="No properties assigned"
-                    message="You are not currently assigned to any properties. Please accept a property invitation or contact your landlord to get started."
+                    title="No properties yet"
+                    message="Properties are added during account setup. If you need to add a property, please contact support or create a new account."
                     actionLabel=""
                     onAction={undefined}
                   />
                 </div>
               ) : (
                 <div className="mb-8">
-                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <Home className="w-5 h-5 text-orange-500" />
-                        Your {tenantProperties.length === 1 ? 'Property' : 'Properties'}
-                      </h3>
-                    </div>
-                    <div className="p-6 space-y-6">
-                      {tenantProperties.map((property) => (
-                        <div key={property.id} className="space-y-4">
-                          <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-4 border border-orange-200">
-                            <h4 className="text-xl font-bold text-gray-900 mb-2">
-                              {property.name || 'Property'}
-                            </h4>
-                            {property.address && (
-                              <div className="text-gray-600">
-                                <p className="font-medium">
-                                  {property.address.street || property.streetAddress}
-                                  {property.address.unit && `, Unit ${property.address.unit}`}
-                                </p>
-                                <p>
-                                  {property.address.city || property.city}, {property.address.state || property.state} {property.address.zipCode || property.zip}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Landlord Contact Information */}
-                          {(property.landlord?.name || property.landlord?.email || property.landlord?.phone) && (
-                            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                              <h5 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                                <User className="w-4 h-4 text-orange-500" />
-                                Landlord Contact Information
-                              </h5>
-                              <div className="space-y-2">
-                                {property.landlord?.name && (
-                                  <p className="text-sm text-gray-700">
-                                    <span className="font-medium">Name:</span> {property.landlord.name}
-                                  </p>
-                                )}
-                                {property.landlord?.email && (
-                                  <p className="text-sm text-gray-700">
-                                    <span className="font-medium">Email:</span> 
-                                    <a 
-                                      href={`mailto:${property.landlord.email}`}
-                                      className="text-orange-600 hover:text-orange-700 ml-2 hover:underline"
-                                    >
-                                      {property.landlord.email}
-                                    </a>
-                                  </p>
-                                )}
-                                {property.landlord?.phone && (
-                                  <p className="text-sm text-gray-700">
-                                    <span className="font-medium">Phone:</span> 
-                                    <a 
-                                      href={`tel:${property.landlord.phone}`}
-                                      className="text-orange-600 hover:text-orange-700 ml-2 hover:underline"
-                                    >
-                                      {property.landlord.phone}
-                                    </a>
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Property Actions */}
-                          <div className="flex gap-3">
-                            <Button
-                              variant="primary"
-                              onClick={() => handleRequestMaintenance(property.id)}
-                              className="flex-1"
-                            >
-                              Request Maintenance
-                            </Button>
-                          </div>
-
-                          {/* Divider between properties if there are multiple */}
-                          {tenantProperties.length > 1 && property.id !== tenantProperties[tenantProperties.length - 1].id && (
-                            <hr className="border-gray-200" />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <PropertyList
+                    properties={tenantProperties}
+                    onRequestMaintenance={handleRequestMaintenance}
+                  />
                 </div>
               )}
 
@@ -471,13 +376,41 @@ const TenantDashboard: React.FC = () => {
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                      {/* New Maintenance Request Form */}
+                      {/* AI-Powered Maintenance Assistant */}
                       <div className="lg:col-span-1">
-                        <RequestForm 
-                          onSuccess={handleRequestSuccess} 
-                          currentUser={currentUser}
-                          userProfile={userProfile}
-                        />
+                        <div className="bg-white shadow-md rounded-lg overflow-hidden">
+                          <div className="px-6 py-4 bg-[#176B5D] text-white">
+                            <h2 className="text-xl font-bold">🤖 AI Maintenance Assistant</h2>
+                            <p className="text-sm text-teal-100 mt-1">Smart help for your maintenance needs</p>
+                          </div>
+                          <div className="p-0">
+                            <AIMaintenanceChat />
+                          </div>
+                        </div>
+                        
+                        {/* Traditional Form - Collapsible */}
+                        <div className="mt-4">
+                          <button
+                            onClick={() => setShowAIChat(!showAIChat)}
+                            className="w-full text-left text-sm text-gray-600 hover:text-[#176B5D] font-medium py-2 px-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            {showAIChat ? '📝 Show Traditional Form' : '🤖 Show AI Assistant'}
+                          </button>
+                          {showAIChat && (
+                            <div className="mt-2 bg-white shadow-md rounded-lg overflow-hidden">
+                              <div className="px-6 py-4 bg-gray-100 border-b">
+                                <h3 className="text-lg font-semibold text-gray-800">Traditional Form</h3>
+                              </div>
+                              <div className="p-6">
+                                <RequestForm 
+                                  onSuccess={handleRequestSuccess} 
+                                  currentUser={currentUser}
+                                  userProfile={userProfile}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                       
                       {/* Maintenance Request History */}
@@ -493,6 +426,71 @@ const TenantDashboard: React.FC = () => {
                 </>
               )}
             </>
+          )}
+          
+          {/* Mobile-only New Request View */}
+          {currentView === 'new-request' && (
+            <div className="md:hidden space-y-6">
+              <div className="bg-white shadow-md rounded-lg overflow-hidden">
+                <div className="px-6 py-4 bg-[#176B5D] text-white">
+                  <h2 className="text-xl font-bold">New Maintenance Request</h2>
+                  <p className="text-sm text-teal-100 mt-1">Choose your preferred method to submit a request</p>
+                </div>
+                <div className="p-6">
+                  <div className="flex rounded-lg bg-gray-100 p-1 mb-6">
+                    <button
+                      onClick={() => setShowAIChat(false)}
+                      className={`flex-1 px-4 py-3 rounded-md text-sm font-medium transition-colors ${
+                        !showAIChat 
+                          ? 'bg-white text-[#176B5D] shadow-sm' 
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      📝 Quick Form
+                    </button>
+                    <button
+                      onClick={() => setShowAIChat(true)}
+                      className={`flex-1 px-4 py-3 rounded-md text-sm font-medium transition-colors ${
+                        showAIChat 
+                          ? 'bg-white text-[#176B5D] shadow-sm' 
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      🤖 AI Assistant
+                    </button>
+                  </div>
+                  
+                  {showAIChat ? (
+                    <AIMaintenanceChat />
+                  ) : (
+                    <RequestForm 
+                      onSuccess={handleRequestSuccess} 
+                      currentUser={currentUser}
+                      userProfile={userProfile}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Mobile-only Request History View */}
+          {currentView === 'history' && (
+            <div className="md:hidden space-y-6">
+              <div className="bg-white shadow-md rounded-lg overflow-hidden">
+                <div className="px-6 py-4 bg-[#176B5D] text-white">
+                  <h2 className="text-xl font-bold">Request History</h2>
+                  <p className="text-sm text-teal-100 mt-1">View and track all your maintenance requests</p>
+                </div>
+                <div className="p-6">
+                  <RequestHistory 
+                    tickets={filteredTickets} 
+                    loading={ticketsLoading} 
+                    filter={filter}
+                  />
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </main>

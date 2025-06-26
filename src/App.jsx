@@ -57,6 +57,7 @@ const SVGTest = lazy(() => import('./components/branding/SVGTest'));
 const BlueprintTest = lazy(() => import('./components/testing/BlueprintTest'));
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
 const ContractorEstimateReadinessDemo = lazy(() => import('./components/landlord/ContractorEstimateReadinessDemo.jsx'));
+const EmailVerificationTest = lazy(() => import('./pages/EmailVerificationTest.jsx'));
 
 // Route Guards
 const PrivateRoute = ({ children }) => {
@@ -244,6 +245,7 @@ function App() {
                                 <Route path="/landlord/dashboard/demo" element={<LandlordDashboardDemo />} />
                                 <Route path="/demo/pitchdeck" element={<PitchDeckDemo />} />
                                 <Route path="/demo/contractor-readiness" element={<ContractorEstimateReadinessDemo />} />
+                                <Route path="/email-verification-test" element={<PrivateRoute><EmailVerificationTest /></PrivateRoute>} />
                                 {/* Fallback/Not Found - Redirect to login or a dedicated 404 page */}
                                 <Route path="*" element={<Navigate to="/login" />} />
                               </Routes>

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import TenantInviteForm from './TenantInviteForm';
-// import inviteCodeService from '../services/inviteCodeService';
 import Button from '../ui/Button';
+import { functions } from '../../firebase/config';
+import { httpsCallable } from 'firebase/functions';
 import toast from 'react-hot-toast';
 
 interface TenantInviteModalProps {
@@ -29,45 +30,38 @@ const TenantInviteModal: React.FC<TenantInviteModalProps> = ({
     inviteCode?: string;
   } | null>(null);
 
-  // Handle invite code validation success - DISABLED
+  // Handle invite code validation success
   const handleInviteValidated = async (propertyInfo: {
     propertyId: string;
     propertyName: string;
     unitId?: string | null;
     inviteCode: string;
   }) => {
-    // System being rebuilt - show message instead of processing
-    toast.error('Invite code redemption is temporarily disabled while we rebuild this feature. Please contact your landlord for alternative access.');
-    return;
-
-    /* ORIGINAL FUNCTIONALITY COMMENTED OUT - TO BE REBUILT
     setValidatedProperty(propertyInfo);
     
-    // Automatically redeem the code if user wants to join
+    // Automatically proceed to join the property
     handleJoinProperty();
-    */
   };
 
-  // Handle joining the property after validation - DISABLED
+  // Handle joining the property after validation
   const handleJoinProperty = async () => {
-    // System being rebuilt - show message instead of processing
-    toast.error('Invite code redemption is temporarily disabled while we rebuild this feature. Please contact your landlord for alternative access.');
-    return;
-
-    /* ORIGINAL FUNCTIONALITY COMMENTED OUT - TO BE REBUILT
     if (!validatedProperty || !currentUser || !validatedProperty.inviteCode) return;
     
     setIsRedeeming(true);
     
     try {
-      // Redeem the invite code
-      const result = await inviteCodeService.redeemInviteCode(
-        validatedProperty.inviteCode,
-        currentUser.uid
-      );
+      console.log('🔄 Accepting tenant invite for user:', currentUser.uid);
       
-      if (result.success) {
-        // Refresh user data to get updated profile with propertyId and landlordId
+      // Call the new acceptTenantInvite Firebase function
+      const acceptTenantInvite = httpsCallable(functions, 'acceptTenantInvite');
+      const result = await acceptTenantInvite({
+        inviteCode: validatedProperty.inviteCode
+      });
+      
+      const data = result.data as any;
+      
+      if (data.success) {
+        // Refresh user data to get updated profile with property
         await refreshUserData();
         
         toast.success(`You've successfully joined ${validatedProperty.propertyName}!`);
@@ -80,15 +74,29 @@ const TenantInviteModal: React.FC<TenantInviteModalProps> = ({
         // Close modal
         onClose();
       } else {
-        toast.error(result.message || 'Failed to join property');
+        toast.error(data.message || 'Failed to join property');
       }
     } catch (error: any) {
-      console.error('Error redeeming invite code:', error);
-      toast.error(error.message || 'Error joining property');
+      console.error('💥 Error accepting tenant invite:', error);
+      
+      // Handle specific error types
+      let errorMessage = 'Failed to join property. Please try again.';
+      if (error.code === 'functions/invalid-argument') {
+        errorMessage = error.message || 'Invalid invite code format.';
+      } else if (error.code === 'functions/not-found') {
+        errorMessage = error.message || 'Invite code not found or property does not exist.';
+      } else if (error.code === 'functions/already-exists') {
+        errorMessage = error.message || 'You are already linked to this property.';
+      } else if (error.code === 'functions/unauthenticated') {
+        errorMessage = 'Please log in again and try again.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsRedeeming(false);
     }
-    */
   };
   
   // Handle skip (cancel)

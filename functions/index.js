@@ -57,6 +57,15 @@ try {
   console.error('❌ Failed to load inviteCode functions:', error.message);
 }
 
+// Accept Tenant Invite function (NEW - Clean Implementation)
+try {
+  const acceptTenantInvite = require('./lib/acceptTenantInvite');
+  exports.acceptTenantInvite = acceptTenantInvite.acceptTenantInvite;
+  console.log('✅ Loaded acceptTenantInvite function');
+} catch (error) {
+  console.error('❌ Failed to load acceptTenantInvite function:', error.message);
+}
+
 // Notification trigger functions
 try {
   const inviteTriggers = require('./lib/inviteTriggers');

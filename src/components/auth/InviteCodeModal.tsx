@@ -38,39 +38,36 @@ const InviteCodeModal: React.FC<InviteCodeModalProps> = ({
     console.log('🔄 Current user auth token:', await currentUser.getIdToken());
 
     try {
-      // TODO: Invite code redemption functionality is being rebuilt
-      console.warn('Invite code redemption temporarily disabled - feature being rebuilt');
-      toast.error('Invite code redemption is temporarily disabled while we rebuild this feature. Please contact your landlord for alternative access.');
-      return;
-
-      /* ORIGINAL FUNCTIONALITY COMMENTED OUT - TO BE REBUILT
-      // Ensure we have a fresh auth token
-      await currentUser.getIdToken(true);
+      console.log('🔄 Accepting tenant invite for user:', currentUser.uid);
       
-      const redeemInviteCode = httpsCallable(functions, 'redeemInviteCode');
-      const result = await redeemInviteCode({
-        code: propertyInfo.inviteCode,
-        tenantId: currentUser.uid
+      // Call the new acceptTenantInvite Firebase function
+      const acceptTenantInvite = httpsCallable(functions, 'acceptTenantInvite');
+      const result = await acceptTenantInvite({
+        inviteCode: propertyInfo.inviteCode
       });
 
       const data = result.data as any;
       
       if (data.success) {
-        toast.success(`Successfully joined ${data.propertyName || data.property?.name || 'property'}!`);
+        toast.success(`Successfully joined ${data.propertyAddress || 'property'}!`);
         onInviteValidated();
         onClose();
       } else {
-        toast.error(data.message || 'Failed to redeem invite code');
+        toast.error(data.message || 'Failed to accept invite');
       }
-      */
     } catch (error: any) {
-      console.error('💥 Error redeeming invite code:', error);
-      console.error('💥 Error code:', error.code);
-      console.error('💥 Error details:', error.details);
+      console.error('💥 Error accepting tenant invite:', error);
       
-      let errorMessage = 'An error occurred while redeeming the invite code';
-      if (error.code === 'unauthenticated') {
-        errorMessage = 'Authentication failed. Please sign out and sign back in.';
+      // Handle specific error types
+      let errorMessage = 'Failed to join property. Please try again.';
+      if (error.code === 'functions/invalid-argument') {
+        errorMessage = error.message || 'Invalid invite code format.';
+      } else if (error.code === 'functions/not-found') {
+        errorMessage = error.message || 'Invite code not found or property does not exist.';
+      } else if (error.code === 'functions/already-exists') {
+        errorMessage = error.message || 'You are already linked to this property.';
+      } else if (error.code === 'functions/unauthenticated') {
+        errorMessage = 'Please log in again and try again.';
       } else if (error.message) {
         errorMessage = error.message;
       }

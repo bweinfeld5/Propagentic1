@@ -154,6 +154,70 @@ export const acceptTenantInvite = functions.https.onRequest((req, res) => {
 
       functions.logger.info(`Successfully linked tenant ${uid} to property ${propertyId}`);
 
+      // Step 6: Update landlord profile with accepted tenant (NEW)
+      const landlordId = invite.landlordId;
+      const landlordProfileRef = db.collection('landlordProfiles').doc(landlordId);
+
+      await db.runTransaction(async (transaction) => {
+        const landlordDoc = await transaction.get(landlordProfileRef);
+        
+        // Create accepted tenant record
+        const acceptedTenantRecord = {
+          tenantId: uid,
+          propertyId: propertyId,
+          inviteId: inviteDoc.id,
+          inviteCode: normalizedInviteCode,
+          tenantEmail: invite.tenantEmail || '',
+          unitNumber: invite.unitNumber || null,
+          acceptedAt: admin.firestore.FieldValue.serverTimestamp(),
+          inviteType: 'code'
+        };
+        
+        if (!landlordDoc.exists) {
+          // Create new landlord profile
+          transaction.set(landlordProfileRef, {
+            uid: landlordId,
+            landlordId: landlordId,
+            userId: landlordId,
+            email: invite.landlordEmail || '',
+            displayName: invite.landlordName || '',
+            phoneNumber: '',
+            businessName: '',
+            acceptedTenants: [uid],
+            properties: [propertyId],
+            invitesSent: [inviteDoc.id],
+            contractors: [],
+            acceptedTenantDetails: [acceptedTenantRecord],
+            totalInvitesSent: 1,
+            totalInvitesAccepted: 1,
+            inviteAcceptanceRate: 100,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+          
+          functions.logger.info(`Created new landlord profile for ${landlordId}`);
+        } else {
+          // Update existing landlord profile
+          const currentData = landlordDoc.data() || {};
+          const currentAccepted = currentData.totalInvitesAccepted || 0;
+          const currentSent = currentData.totalInvitesSent || 0;
+          const newAccepted = currentAccepted + 1;
+          const newRate = currentSent > 0 ? Math.round((newAccepted / currentSent) * 100) : 100;
+          
+          transaction.update(landlordProfileRef, {
+            acceptedTenants: admin.firestore.FieldValue.arrayUnion(uid),
+            acceptedTenantDetails: admin.firestore.FieldValue.arrayUnion(acceptedTenantRecord),
+            totalInvitesAccepted: admin.firestore.FieldValue.increment(1),
+            inviteAcceptanceRate: newRate,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+          
+          functions.logger.info(`Updated landlord profile for ${landlordId}, new acceptance rate: ${newRate}%`);
+        }
+      });
+
+      functions.logger.info(`Successfully updated landlord profile for ${landlordId} with accepted tenant ${uid}`);
+
       // Return success response
       return res.status(200).json({
         success: true,

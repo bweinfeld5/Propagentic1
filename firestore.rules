@@ -133,8 +133,9 @@ service cloud.firestore {
       allow read: if isOwner(landlordId) ||
                      (isContractor() && isContractorInLandlordRolodex(landlordId, request.auth.uid)) ||
                      isAdmin();
-      // Allow creation during registration process or if user is already a landlord
-      allow create: if isOwner(landlordId) && (isLandlord() || !exists(/databases/$(database)/documents/users/$(landlordId)));
+      // Allow creation during registration/onboarding process - simplified for onboarding
+      // Users can create their own landlord profile if they're the owner
+      allow create: if isOwner(landlordId);
       allow update: if isOwner(landlordId) || isAdmin();
       allow delete: if isOwner(landlordId) || isAdmin();
     }

@@ -54,4 +54,8 @@ export { testSendGrid, testPing, simpleTest };
 const inviteCodeModule = require('./inviteCode.js');
 export const generateInviteCode = inviteCodeModule.generateInviteCode;
 
-console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, invite code generation).");
+// Import and export tenant invite acceptance function (HTTP function with CORS)
+import { acceptTenantInvite } from './acceptTenantInvite';
+export { acceptTenantInvite };
+
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, invite code generation, tenant invite acceptance).");

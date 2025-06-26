@@ -14,6 +14,7 @@ import {
 import { db } from '../../firebase/config';
 import { CreateInviteSchema } from '../../schemas/CreateInviteSchema';
 import unifiedEmailService from '../unifiedEmailService';
+import { auth } from '../../firebase/config';
 
 export type InviteStatus = 'pending' | 'sent' | 'accepted' | 'declined' | 'expired' | 'deleted';
 export type EmailStatus = 'pending' | 'sent' | 'failed';
@@ -404,6 +405,63 @@ export const validateInviteCode = async (code: string): Promise<{
   }
 };
 
+/**
+ * Accept a tenant invite using the new HTTP Cloud Function
+ */
+export const acceptTenantInvite = async (inviteCode: string): Promise<{
+  success: boolean;
+  message: string;
+  propertyId?: string;
+  propertyAddress?: string;
+}> => {
+  try {
+    if (!inviteCode) {
+      return { success: false, message: 'Invite code is required' };
+    }
+
+    // Get the current user's ID token
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      return { success: false, message: 'User must be authenticated' };
+    }
+
+    const token = await currentUser.getIdToken();
+
+    // Call the HTTP Cloud Function
+    const response = await fetch('https://us-central1-propagentic.cloudfunctions.net/acceptTenantInvite', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ inviteCode }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || `HTTP ${response.status}: ${response.statusText}`
+      };
+    }
+
+    return {
+      success: data.success || true,
+      message: data.message || 'Successfully joined property!',
+      propertyId: data.propertyId,
+      propertyAddress: data.propertyAddress
+    };
+
+  } catch (error) {
+    console.error('Error accepting tenant invite:', error);
+    return {
+      success: false,
+      message: 'Failed to join property. Please try again.'
+    };
+  }
+};
+
 // Export all functions as default object
 const inviteService = {
   createInvite,
@@ -412,7 +470,8 @@ const inviteService = {
   deleteInvite,
   declineInvite,
   resolveShortCode,
-  validateInviteCode
+  validateInviteCode,
+  acceptTenantInvite
 };
 
 export default inviteService; 

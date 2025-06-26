@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 import {
   HomeIcon,
   BuildingOfficeIcon,
@@ -18,15 +20,20 @@ import {
   CloudArrowUpIcon,
   PencilIcon,
   TrashIcon,
-  EyeIcon
+  EyeIcon,
+  ClockIcon,
+  TicketIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useDemoMode } from '../../context/DemoModeContext';
 import dataService from '../../services/dataService';
+import { MaintenanceStatus } from '../../models';
 import CommunicationCenter from '../../components/communication/CommunicationCenter';
 import InviteTenantModal from '../../components/landlord/InviteTenantModal';
 import AddPropertyModal from '../../components/landlord/AddPropertyModal';
 import EditPropertyModal from '../../components/landlord/EditPropertyModal';
+import Button from '../../components/ui/Button';
+import StatusPill from '../../components/ui/StatusPill';
 
 // Phase 1.2 Components
 import GlobalSearch from '../../components/search/GlobalSearch';
@@ -128,6 +135,12 @@ const LandlordDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [propertiesLoaded, setPropertiesLoaded] = useState<boolean>(false);
   
+  // Maintenance history state (completed tickets)
+  const [completedTickets, setCompletedTickets] = useState<Ticket[]>([]);
+  const [completedLoading, setCompletedLoading] = useState<boolean>(true);
+  const [completedError, setCompletedError] = useState<string | null>(null);
+  const [displayedCompletedCount, setDisplayedCompletedCount] = useState<number>(5);
+  
   // Phase 1.2 State
   const [currentView, setCurrentView] = useState<string>('dashboard');
   const [showGlobalSearch, setShowGlobalSearch] = useState<boolean>(false);
@@ -139,6 +152,99 @@ const LandlordDashboard: React.FC = () => {
   const [showAddPropertyModal, setShowAddPropertyModal] = useState<boolean>(false);
   const [showEditPropertyModal, setShowEditPropertyModal] = useState<boolean>(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+
+  // Load completed maintenance tickets
+  const loadCompletedTickets = async (): Promise<void> => {
+    if (!currentUser) return;
+    
+    try {
+      setCompletedLoading(true);
+      setCompletedError(null);
+      
+      // Get properties for the current landlord
+      const props = await dataService.getPropertiesForCurrentLandlord();
+      const propertyIds = props.map((p: Property) => p.id);
+      
+      if (propertyIds.length === 0) {
+        // No properties means no completed tickets - this is normal, not an error
+        setCompletedTickets([]);
+        setCompletedLoading(false);
+        return;
+      }
+
+      // Query for completed tickets
+      const queryablePropertyIds = propertyIds.slice(0, 10); // Firestore limit
+      
+      // Build the query more carefully to avoid potential index issues
+      const completedTicketsQuery = query(
+        collection(db, 'tickets'),
+        where('propertyId', 'in', queryablePropertyIds),
+        where('status', 'in', ['completed', 'resolved', 'closed']),
+        orderBy('createdAt', 'desc')
+      );
+
+      // Set up real-time listener for completed tickets
+      onSnapshot(completedTicketsQuery, (snapshot) => {
+        const completedTicketsData = snapshot.docs.map(doc => {
+          const property = props.find((p: Property) => p.id === doc.data().propertyId);
+          return {
+            id: doc.id,
+            ...doc.data(),
+            createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : new Date(),
+            completedAt: doc.data().completedAt?.toDate ? doc.data().completedAt.toDate() : null,
+            propertyName: property?.name || 'Unknown'
+          };
+        });
+        console.log('Completed tickets data received:', completedTicketsData.length);
+        setCompletedTickets(completedTicketsData);
+        setCompletedLoading(false);
+        // Note: Empty array is normal - don't set error for empty results
+      }, (err) => {
+        console.error('Error fetching completed tickets:', err);
+        
+        // For most common scenarios (no completed tickets, permissions, missing indexes), 
+        // show empty state rather than error to provide better UX
+        if (err.code === 'failed-precondition' || // Missing index
+            err.code === 'permission-denied' ||    // Permission issues
+            err.code === 'unavailable' ||          // Service unavailable
+            err.message.includes('index')) {       // Index related errors
+          console.log('Showing empty state instead of error for:', err.code || err.message);
+          setCompletedTickets([]);
+          setCompletedError(null); // Clear any previous errors
+        } else {
+          // Only show error for unexpected/critical failures
+          setCompletedError('Unable to load maintenance history. Please try again later.');
+        }
+        setCompletedLoading(false);
+      });
+
+    } catch (error: any) {
+      console.error('Error setting up completed tickets listener:', error);
+      // Be more specific about errors to avoid false error messages
+      if (error.message.includes('permission') || error.message.includes('Firestore')) {
+        setCompletedError('Database connection issue. Maintenance history unavailable.');
+      } else {
+        setCompletedError('Unable to load maintenance history.');
+      }
+      setCompletedLoading(false);
+    }
+  };
+
+  // Handle completed ticket selection
+  const handleCompletedTicketSelect = (ticket: Ticket): void => {
+    console.log("Selected Completed Ticket:", ticket);
+    alert(`Selected completed ticket: ${ticket.id} - ${ticket.description?.substring(0, 30)}... Detail view not implemented yet.`);
+  };
+
+  // Handle show more completed tickets
+  const handleShowMoreCompleted = (): void => {
+    setDisplayedCompletedCount(prev => prev + 5);
+  };
+
+  // Handle show less completed tickets
+  const handleShowLessCompleted = (): void => {
+    setDisplayedCompletedCount(5);
+  };
 
   const loadDashboardData = async (): Promise<void> => {
     if (!currentUser) return;
@@ -180,6 +286,9 @@ const LandlordDashboard: React.FC = () => {
       // Load maintenance tickets
       const ticketsData = await dataService.getTicketsForCurrentUser();
       setTickets(ticketsData);
+
+      // Load completed maintenance tickets separately
+      await loadCompletedTickets();
 
       // Load tenants data for all properties (gracefully handle failures)
       if (properties.length > 0) {
@@ -914,9 +1023,13 @@ const LandlordDashboard: React.FC = () => {
 
   const renderMaintenanceView = (): JSX.Element => (
     <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
-      <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
+      {/* Active Maintenance Tickets Section */}
+      <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow mb-8">
         <div className="p-6 border-b border-orange-100">
-          <h3 className="text-lg font-semibold text-gray-900">Maintenance Requests</h3>
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            <TicketIcon className="w-6 h-6 mr-2 text-orange-600" />
+            Maintenance Tickets
+          </h3>
         </div>
         
         <div className="p-6">
@@ -978,6 +1091,102 @@ const LandlordDashboard: React.FC = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Maintenance History Section */}
+      <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
+        <div className="p-6 border-b border-orange-100">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            <ClockIcon className="w-6 h-6 mr-2 text-green-600" />
+            Maintenance History
+          </h3>
+        </div>
+
+        <div className="p-6">
+          {completedLoading && (
+            <div className="text-center py-8">
+              <p className="text-gray-600">Loading maintenance history...</p>
+            </div>
+          )}
+          
+          {!completedLoading && completedError && (
+            <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md">
+              <p className="text-sm text-red-700">Error: {completedError}</p>
+            </div>
+          )}
+          
+          {!completedLoading && !completedError && completedTickets.length === 0 && (
+            <div className="text-center py-12">
+              <ClockIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Completed Maintenance Yet</h3>
+              <p className="text-gray-600">
+                Completed maintenance requests will appear here once contractors finish their work.
+              </p>
+            </div>
+          )}
+          
+          {!completedLoading && !completedError && completedTickets.length > 0 && (
+            <div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-orange-200">
+                  <thead className="bg-orange-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Issue</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Property</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Submitted</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Completed</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                      <th className="relative px-6 py-3"><span className="sr-only">View</span></th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-orange-100">
+                    {completedTickets.slice(0, displayedCompletedCount).map(ticket => (
+                      <tr key={ticket.id} className="hover:bg-orange-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" title={ticket.description}>
+                          {ticket.description?.substring(0, 50)}{ticket.description && ticket.description.length > 50 ? '...' : ''}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {ticket.propertyName || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {ticket.createdAt ? new Date(ticket.createdAt.toString()).toLocaleDateString() : 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {ticket.completedAt ? new Date(ticket.completedAt.toString()).toLocaleDateString() : 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <StatusPill status={(ticket.status as MaintenanceStatus) || 'completed'} />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <Button variant="ghost" size="xs" onClick={() => handleCompletedTicketSelect(ticket)}>
+                            View
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Show More / Show Less Controls */}
+              {completedTickets.length > displayedCompletedCount && (
+                <div className="mt-4 text-center">
+                  <Button variant="ghost" size="sm" onClick={handleShowMoreCompleted}>
+                    Show More ({completedTickets.length - displayedCompletedCount} remaining)
+                  </Button>
+                </div>
+              )}
+              
+              {displayedCompletedCount > 5 && completedTickets.length <= displayedCompletedCount && (
+                <div className="mt-4 text-center">
+                  <Button variant="ghost" size="sm" onClick={handleShowLessCompleted}>
+                    Show Less
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>

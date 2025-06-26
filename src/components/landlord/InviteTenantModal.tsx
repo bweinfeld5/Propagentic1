@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import Button from '../ui/Button';
 import { auth } from '../../firebase/config';
 import inviteService from '../../services/firestore/inviteService';
+import { QRCodeDisplay } from '../qr/QRCodeDisplay';
 
 interface Property {
   id: string;

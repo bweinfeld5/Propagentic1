@@ -228,19 +228,32 @@ class ProfileCreationService {
         break;
 
       case 'landlord':
-        // Create landlord profile
+        // Create enhanced landlord profile
         const landlordProfileRef = doc(db, 'landlordProfiles', uid);
         const landlordProfileData = {
+          uid: uid,
           landlordId: uid,
           userId: uid,
           displayName: profileData.displayName || profileData.name || '',
           email: profileData.email,
           phoneNumber: profileData.phoneNumber || '',
           businessName: profileData.businessName || '',
+          
+          // Core arrays as per specification
+          acceptedTenants: [],
           properties: [],
-          tenants: [],
-          contractors: [],
           invitesSent: [],
+          contractors: [],
+          
+          // Enhanced tracking
+          acceptedTenantDetails: [],
+          
+          // Statistics
+          totalInvitesSent: 0,
+          totalInvitesAccepted: 0,
+          inviteAcceptanceRate: 0,
+          
+          // Timestamps
           createdAt: timestamp,
           updatedAt: timestamp
         };

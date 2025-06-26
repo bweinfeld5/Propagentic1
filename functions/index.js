@@ -51,9 +51,8 @@ try {
 try {
   const inviteCode = require('./lib/inviteCode');
   exports.generateInviteCode = inviteCode.generateInviteCode;
-  exports.validateInviteCode = inviteCode.validateInviteCode;
-  exports.redeemInviteCode = inviteCode.redeemInviteCode;
-  console.log('✅ Loaded inviteCode functions');
+  // Note: validateInviteCode and redeemInviteCode functions removed - being rebuilt
+  console.log('✅ Loaded inviteCode functions (generateInviteCode only)');
 } catch (error) {
   console.error('❌ Failed to load inviteCode functions:', error.message);
 }

@@ -50,8 +50,8 @@ import { testSendGrid, testPing } from './testSendGrid';
 import { simpleTest } from './simpleTest';
 export { testSendGrid, testPing, simpleTest };
 
-// Import and export invite code redemption function
+// Import and export invite code generation function (landlord functionality)
 const inviteCodeModule = require('./inviteCode.js');
-export const redeemInviteCode = inviteCodeModule.redeemInviteCode;
+export const generateInviteCode = inviteCodeModule.generateInviteCode;
 
-console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, invite code redemption).");
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, invite code generation).");

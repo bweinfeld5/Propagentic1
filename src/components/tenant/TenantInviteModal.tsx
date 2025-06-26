@@ -1,25 +1,19 @@
-import { useState, Fragment } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { XMarkIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
+import React, { useState } from 'react';
+import { useAuth } from '../../context/AuthContext.jsx';
 import TenantInviteForm from './TenantInviteForm';
+// import inviteCodeService from '../services/inviteCodeService';
 import Button from '../ui/Button';
 import toast from 'react-hot-toast';
-import inviteCodeService from '../../services/inviteCodeService';
-import { useAuth } from '../../context/AuthContext.jsx';
-import inviteService from '../../services/firestore/inviteService';
 
 interface TenantInviteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (propertyInfo: {
-    propertyId: string;
-    propertyName: string;
-    unitId?: string | null;
-  }) => void;
+  onSuccess?: (propertyInfo: any) => void;
 }
 
 /**
  * Modal component allowing tenants to enter invite codes
+ * NOTE: Redemption functionality temporarily disabled while rebuilding the system
  */
 const TenantInviteModal: React.FC<TenantInviteModalProps> = ({
   isOpen,
@@ -35,21 +29,32 @@ const TenantInviteModal: React.FC<TenantInviteModalProps> = ({
     inviteCode?: string;
   } | null>(null);
 
-  // Handle invite code validation success
+  // Handle invite code validation success - DISABLED
   const handleInviteValidated = async (propertyInfo: {
     propertyId: string;
     propertyName: string;
     unitId?: string | null;
     inviteCode: string;
   }) => {
+    // System being rebuilt - show message instead of processing
+    toast.error('Invite code redemption is temporarily disabled while we rebuild this feature. Please contact your landlord for alternative access.');
+    return;
+
+    /* ORIGINAL FUNCTIONALITY COMMENTED OUT - TO BE REBUILT
     setValidatedProperty(propertyInfo);
     
     // Automatically redeem the code if user wants to join
     handleJoinProperty();
+    */
   };
 
-  // Handle joining the property after validation
+  // Handle joining the property after validation - DISABLED
   const handleJoinProperty = async () => {
+    // System being rebuilt - show message instead of processing
+    toast.error('Invite code redemption is temporarily disabled while we rebuild this feature. Please contact your landlord for alternative access.');
+    return;
+
+    /* ORIGINAL FUNCTIONALITY COMMENTED OUT - TO BE REBUILT
     if (!validatedProperty || !currentUser || !validatedProperty.inviteCode) return;
     
     setIsRedeeming(true);
@@ -83,6 +88,7 @@ const TenantInviteModal: React.FC<TenantInviteModalProps> = ({
     } finally {
       setIsRedeeming(false);
     }
+    */
   };
   
   // Handle skip (cancel)
@@ -90,108 +96,93 @@ const TenantInviteModal: React.FC<TenantInviteModalProps> = ({
     onClose();
   };
 
-  // Reset state when modal closes
-  const handleOnClose = () => {
-    setValidatedProperty(null);
-    onClose();
-  };
+  if (!isOpen) return null;
 
   return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={handleOnClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
-        </Transition.Child>
-
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Join Property
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              disabled={isRedeeming}
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                <div className="flex justify-between items-center mb-4">
-                  <Dialog.Title
-                    as="h3"
-                    className="text-lg font-medium leading-6 text-gray-900"
-                  >
-                    Add a Property
-                  </Dialog.Title>
-                  <button
-                    type="button"
-                    className="text-gray-400 hover:text-gray-500"
-                    onClick={handleOnClose}
-                  >
-                    <XMarkIcon className="h-5 w-5" />
-                  </button>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {!validatedProperty ? (
+            <>
+              <div className="mb-6">
+                <p className="text-gray-600">
+                  Enter the invite code provided by your landlord to join their property.
+                </p>
+              </div>
+
+              <TenantInviteForm
+                onInviteValidated={handleInviteValidated}
+                email={currentUser?.email}
+                showSkip={true}
+                onSkip={handleSkip}
+                isProcessing={isRedeeming}
+              />
+            </>
+          ) : (
+            <>
+              <div className="mb-6">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-green-800 mb-2">
+                    Invite Code Validated!
+                  </h3>
+                  <div className="text-green-700 space-y-1">
+                    <p><span className="font-medium">Property:</span> {validatedProperty.propertyName}</p>
+                    {validatedProperty.unitId && (
+                      <p><span className="font-medium">Unit:</span> {validatedProperty.unitId}</p>
+                    )}
+                    <p><span className="font-medium">Code:</span> {validatedProperty.inviteCode}</p>
+                  </div>
                 </div>
+              </div>
 
-                <div className="mt-2">
-                  {validatedProperty ? (
-                    <div className="p-4 bg-blue-50 rounded-lg mb-4">
-                      <p className="text-sm text-gray-700">
-                        <span className="font-medium">Property:</span>{' '}
-                        {validatedProperty.propertyName}
-                      </p>
-                      {validatedProperty.unitId && (
-                        <p className="text-sm text-gray-700 mt-1">
-                          <span className="font-medium">Unit:</span> {validatedProperty.unitId}
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-500 mb-4">
-                      Enter the invite code provided by your landlord to join a property.
-                    </p>
-                  )}
+              <div className="space-y-3">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  onClick={handleJoinProperty}
+                  isLoading={isRedeeming}
+                  disabled={isRedeeming}
+                >
+                  {isRedeeming ? 'Joining Property...' : 'Join Property'}
+                </Button>
+                
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  fullWidth
+                  onClick={handleSkip}
+                  disabled={isRedeeming}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </>
+          )}
 
-                  {!validatedProperty && (
-                    <TenantInviteForm
-                      onInviteValidated={handleInviteValidated}
-                      email={currentUser?.email || undefined}
-                      showSkip={true}
-                      onSkip={handleSkip}
-                    />
-                  )}
-
-                  {validatedProperty && (
-                    <div className="mt-4 flex justify-end space-x-3">
-                      <Button
-                        variant="secondary"
-                        onClick={handleOnClose}
-                        disabled={isRedeeming}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        variant="primary"
-                        onClick={handleJoinProperty}
-                        isLoading={isRedeeming}
-                      >
-                        {isRedeeming ? 'Joining...' : 'Join Property'}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </Dialog.Panel>
-            </Transition.Child>
+          <div className="mt-6 text-center">
+            <p className="text-xs text-gray-500">
+              Need help? Contact your landlord or property manager.
+            </p>
           </div>
         </div>
-      </Dialog>
-    </Transition>
+      </div>
+    </div>
   );
 };
 

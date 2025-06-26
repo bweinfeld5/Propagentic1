@@ -40,218 +40,11 @@ const generateRandomCode = (length = 8): string => {
   return result;
 };
 
-interface ValidationResult {
-  isValid: boolean;
-  message: string;
-  inviteCode?: InviteCode;
-  propertyId?: string;
-  landlordId?: string;
-  unitId?: string | null;
-  email?: string | null;
-  restrictedEmail?: string | null;
-  propertyName?: string;
-}
+// ValidationResult interface removed - part of tenant redemption system to be rebuilt
 
-/**
- * Check if an invite code is valid without redeeming it
- * @param code - The invite code to validate
- * @returns Validation result with status and message
- */
-export const validateInviteCode = async (code: string): Promise<ValidationResult> => {
-  console.log('🔍 validateInviteCode called with:', code);
-  
-  if (!code || typeof code !== 'string' || code.length < 6) {
-    console.log('❌ Invalid code format');
-    return { 
-      isValid: false, 
-      message: 'Invalid code format. Codes must be at least 6 characters.' 
-    };
-  }
+// validateInviteCode function removed - part of tenant redemption system to be rebuilt
 
-  const normalizedCode = code.toUpperCase();
-  console.log('🔍 Normalized code:', normalizedCode);
-  
-  // Check for test codes first, before any Firestore operations
-  if (normalizedCode === 'TEST1234') {
-    console.log('✅ Using test code for development');
-    return {
-      isValid: true,
-      message: 'Valid test invite code (development)',
-      propertyId: 'test-property-123',
-      propertyName: 'Test Property',
-      unitId: null,
-      email: null,
-      restrictedEmail: null
-    };
-  }
-  
-  try {
-    console.log('🔍 Querying Firestore for invite codes...');
-    // Query without converter first to see raw data
-    const codesRef = collection(db, COLLECTION_NAME);
-    const q = query(codesRef, where('code', '==', normalizedCode));
-    
-    console.log('🔍 About to execute Firestore query...');
-    const querySnapshot = await getDocs(q);
-    console.log('🔍 Firestore query completed successfully');
-    
-    console.log('🔍 Query result - empty:', querySnapshot.empty, 'docs:', querySnapshot.docs.length);
-    
-    if (querySnapshot.empty) {
-      console.log('❌ No matching invite code found in database');
-      return { 
-        isValid: false, 
-        message: 'Invalid invite code. Please check the code and try again.' 
-      };
-    }
-    
-    const docSnapshot = querySnapshot.docs[0];
-    const rawData = docSnapshot.data();
-    
-    console.log('🔍 Found raw invite code data:', {
-      id: docSnapshot.id,
-      rawData: rawData
-    });
-    
-    // Handle both old and new data formats
-    const inviteCodeData = {
-      id: docSnapshot.id,
-      code: rawData.code,
-      status: rawData.status || (rawData.used ? 'used' : 'active'),
-      propertyId: rawData.propertyId,
-      propertyName: rawData.propertyName || '',
-      unitId: rawData.unitId,
-      email: rawData.email,
-      expiresAt: rawData.expiresAt,
-      usedAt: rawData.usedAt,
-      usedBy: rawData.usedBy
-    };
-    
-    console.log('🔍 Processed invite code:', inviteCodeData);
-    
-    // Check if code is already used
-    if (inviteCodeData.status === 'used' || rawData.used === true) {
-      console.log('❌ Code is already used');
-      return { 
-        isValid: false, 
-        message: 'This invite code has already been used.' 
-      };
-    }
-    
-    // Check if code is revoked
-    if (inviteCodeData.status === 'revoked') {
-      console.log('❌ Code is revoked');
-      return { 
-        isValid: false, 
-        message: 'This invite code has been revoked.' 
-      };
-    }
-    
-    // Check if code has expired
-    const isExpired = inviteCodeData.status === 'expired' || 
-                     (rawData.expiresAt && rawData.expiresAt.toMillis && rawData.expiresAt.toMillis() < Date.now());
-    
-    if (isExpired) {
-      console.log('❌ Code is expired', {
-        status: inviteCodeData.status,
-        expiresAt: rawData.expiresAt?.toMillis?.(),
-        now: Date.now()
-      });
-      
-      // Auto update status to expired if it's past expiration time
-      if (inviteCodeData.status !== 'expired' && rawData.expiresAt?.toMillis && rawData.expiresAt.toMillis() < Date.now()) {
-        await updateDoc(
-          doc(db, COLLECTION_NAME, docSnapshot.id),
-          { status: 'expired' }
-        );
-      }
-      
-      return { 
-        isValid: false, 
-        message: 'This invite code has expired.' 
-      };
-    }
-    
-    console.log('✅ Code is valid!');
-    // Code is valid
-    return { 
-      isValid: true, 
-      message: 'Valid invite code',
-      propertyId: inviteCodeData.propertyId,
-      landlordId: rawData.landlordId,
-      unitId: inviteCodeData.unitId || null,
-      email: inviteCodeData.email || null,
-      restrictedEmail: inviteCodeData.email || null,
-      propertyName: inviteCodeData.propertyName || ''
-    };
-  } catch (error) {
-    console.error('💥 Error in validateInviteCode:', error);
-    const err = error as { message?: string; code?: string; stack?: string };
-    console.error('💥 Error details:', {
-      message: err.message,
-      code: err.code,
-      stack: err.stack
-    });
-    
-    // If there's a Firestore permission error, still allow test codes
-    if (err.code === 'permission-denied') {
-      console.log('🔒 Firestore permission denied - this is expected in some environments');
-      return { 
-        isValid: false, 
-        message: 'Unable to validate invite code due to permissions. Please contact support.' 
-      };
-    }
-    
-    return { 
-      isValid: false, 
-      message: 'An error occurred while validating the invite code. ' + (err.message || '') 
-    };
-  }
-};
-
-/**
- * Interface defining the result of redeeming an invite code
- */
-interface RedemptionResult {
-  success: boolean;
-  message: string;
-  propertyId?: string;
-  propertyName?: string;
-  unitId?: string | null;
-}
-
-/**
- * Redeem an invite code and create tenant-property relationship
- * @param code - The invite code to redeem
- * @param tenantId - ID of tenant redeeming the code
- * @returns Redemption result
- */
-export const redeemInviteCode = async (
-  code: string, 
-  tenantId: string
-): Promise<RedemptionResult> => {
-  if (!code || typeof code !== 'string') {
-    throw new Error('Invalid invite code format');
-  }
-  
-  if (!tenantId) {
-    throw new Error('Tenant ID is required');
-  }
-  
-  const functions = getFunctions();
-  const redeemFunction = httpsCallable<
-    { code: string; tenantId: string },
-    RedemptionResult
-  >(functions, 'redeemInviteCode');
-  
-  try {
-    const result = await redeemFunction({ code, tenantId });
-    return result.data;
-  } catch (error: any) {
-    console.error('Error redeeming invite code:', error);
-    throw new Error(error.message || 'Failed to redeem invite code');
-  }
-};
+// redeemInviteCode function and related interfaces removed - part of tenant redemption system to be rebuilt
 
 interface InviteCodeOptions {
   unitId?: string;
@@ -479,8 +272,6 @@ export const generateBulkInviteCodes = async (
 };
 
 export default {
-  validateInviteCode,
-  redeemInviteCode,
   createInviteCode,
   getLandlordInviteCodes,
   getPropertyInviteCodes,
@@ -488,4 +279,5 @@ export default {
   extendInviteCode,
   revokeInviteCode,
   generateBulkInviteCodes
+  // validateInviteCode and redeemInviteCode removed - tenant redemption system to be rebuilt
 }; 

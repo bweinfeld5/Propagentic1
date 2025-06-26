@@ -38,6 +38,12 @@ const InviteCodeModal: React.FC<InviteCodeModalProps> = ({
     console.log('🔄 Current user auth token:', await currentUser.getIdToken());
 
     try {
+      // TODO: Invite code redemption functionality is being rebuilt
+      console.warn('Invite code redemption temporarily disabled - feature being rebuilt');
+      toast.error('Invite code redemption is temporarily disabled while we rebuild this feature. Please contact your landlord for alternative access.');
+      return;
+
+      /* ORIGINAL FUNCTIONALITY COMMENTED OUT - TO BE REBUILT
       // Ensure we have a fresh auth token
       await currentUser.getIdToken(true);
       
@@ -56,6 +62,7 @@ const InviteCodeModal: React.FC<InviteCodeModalProps> = ({
       } else {
         toast.error(data.message || 'Failed to redeem invite code');
       }
+      */
     } catch (error: any) {
       console.error('💥 Error redeeming invite code:', error);
       console.error('💥 Error code:', error.code);

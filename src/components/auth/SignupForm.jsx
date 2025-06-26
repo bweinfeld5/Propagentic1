@@ -135,8 +135,8 @@ const SignupForm = ({ initialRole, isPremium }) => {
     try {
       // Use the register function from AuthContext
       console.log('Attempting to register user with email:', email);
-      const result = await register(email, password, userType, isPremium);
-      console.log('User registered successfully');
+      const userCredential = await register(email, password, userType, isPremium);
+      console.log('User registered successfully:', userCredential.user.uid);
       
       // Set success state
       setSuccess(true);

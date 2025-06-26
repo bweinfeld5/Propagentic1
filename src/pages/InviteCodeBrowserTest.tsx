@@ -100,16 +100,23 @@ const InviteCodeBrowserTest: React.FC = () => {
 
   const testRedemption = async (code: string) => {
     try {
-      console.log(`🚀 Testing redemption for: ${code}`);
+      console.log(`🚀 Testing redemption for: ${code} - DISABLED`);
       
       if (!currentUser) {
         addResult(code, 'Redemption', false, null, 'No current user');
         return;
       }
 
+      // TODO: Invite code redemption functionality is being rebuilt
+      console.warn('Invite code redemption temporarily disabled - feature being rebuilt');
+      addResult(code, 'Redemption', false, null, 'Redemption functionality temporarily disabled - being rebuilt');
+      return null;
+
+      /* ORIGINAL FUNCTIONALITY COMMENTED OUT - TO BE REBUILT
       const result = await inviteCodeService.redeemInviteCode(code, currentUser.uid);
       addResult(code, 'Redemption', result.success, result, result.message);
       return result;
+      */
     } catch (error: any) {
       addResult(code, 'Redemption', false, null, error.message);
       return null;
@@ -118,13 +125,19 @@ const InviteCodeBrowserTest: React.FC = () => {
 
   const testFirebaseFunction = async (code: string) => {
     try {
-      console.log(`🔥 Testing Firebase Function directly for: ${code}`);
+      console.log(`🔥 Testing Firebase Function directly for: ${code} - DISABLED`);
       
       if (!currentUser) {
         addResult(code, 'Firebase Function Test', false, null, 'No current user');
         return;
       }
 
+      // TODO: Firebase redeemInviteCode function has been removed - feature being rebuilt
+      console.warn('redeemInviteCode Firebase function removed - feature being rebuilt');
+      addResult(code, 'Firebase Function Test', false, null, 'redeemInviteCode function removed from Firebase - being rebuilt');
+      return;
+
+      /* ORIGINAL FUNCTIONALITY COMMENTED OUT - TO BE REBUILT
       // Get fresh token
       const token = await currentUser.getIdToken(true);
       
@@ -145,6 +158,7 @@ const InviteCodeBrowserTest: React.FC = () => {
 
       const responseData = await response.json();
       addResult(code, 'Firebase Function Direct Call', response.ok, responseData);
+      */
       
     } catch (error: any) {
       addResult(code, 'Firebase Function Test', false, null, error.message);

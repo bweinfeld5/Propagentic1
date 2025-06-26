@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
-import inviteService from '../../services/firestore/inviteService';
+// import inviteService from '../../services/firestore/inviteService';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { ExclamationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
@@ -29,6 +29,8 @@ interface TenantInviteFormProps {
 
 /**
  * Form component for entering and validating invite codes
+ * NOTE: Invite code redemption functionality has been temporarily disabled
+ * while the system is being rebuilt for better reliability.
  */
 const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
   onInviteValidated,
@@ -46,14 +48,17 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
   const [validationMessage, setValidationMessage] = useState<{
     type: 'success' | 'error';
     message: string;
-  } | null>(null);
+  } | null>({
+    type: 'error',
+    message: 'Invite code redemption is temporarily disabled while we rebuild this feature.'
+  });
 
   // If we have propertyInfo, it means the code is already validated
   useEffect(() => {
     if (propertyInfo && initialCode) {
       setValidationMessage({
-        type: 'success',
-        message: 'Invite code validated!'
+        type: 'error',
+        message: 'Invite code redemption is temporarily disabled while we rebuild this feature.'
       });
     }
   }, [propertyInfo, initialCode]);
@@ -65,16 +70,28 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
     
     // Clear validation message when user edits the code
     if (validationMessage) {
-      setValidationMessage(null);
+      setValidationMessage({
+        type: 'error',
+        message: 'Invite code redemption is temporarily disabled while we rebuild this feature.'
+      });
     }
   };
 
-  // Validate the invite code
+  // Validate the invite code - DISABLED
   const validateCode = async (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault();
     }
 
+    // FUNCTIONALITY DISABLED - System being rebuilt
+    setValidationMessage({
+      type: 'error',
+      message: 'Invite code redemption is temporarily disabled while we rebuild this feature for better reliability. Please contact your landlord for alternative access.'
+    });
+    
+    return;
+
+    /* ORIGINAL FUNCTIONALITY COMMENTED OUT - TO BE REBUILT
     // If already validated (from email link), skip to join
     if (propertyInfo && initialCode) {
       onInviteValidated({
@@ -127,20 +144,16 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
           message: validationResult.message || 'Invalid invite code. Please check the code and try again.'
         });
       }
-    } catch (error: any) {
-      console.error('💥 Error validating invite code:', error);
-      console.error('💥 Error details:', {
-        message: error.message,
-        code: error.code,
-        stack: error.stack
-      });
+    } catch (error) {
+      console.error('❌ Error during validation:', error);
       setValidationMessage({
         type: 'error',
-        message: error.message || 'Error validating invite code. Please try again.'
+        message: 'An error occurred while validating the code. Please try again.'
       });
     } finally {
       setIsValidating(false);
     }
+    */
   };
 
   // Handle skip action

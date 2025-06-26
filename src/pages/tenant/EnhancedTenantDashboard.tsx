@@ -17,10 +17,12 @@ import {
   HelpCircle,
   LogOut,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  User,
+  Menu
 } from 'lucide-react';
 import { db } from '../../firebase/config';
-import { collection, query, where, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, getDocs, doc, getDoc } from 'firebase/firestore';
 import EmptyStateCard from '../../components/EmptyStateCard';
 import InvitationBanner from '../../components/InvitationBanner';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -28,7 +30,7 @@ import UnifiedHeader from '../../components/layout/UnifiedHeader';
 import NotificationPanel from '../../components/layout/NotificationPanel';
 import inviteService from '../../services/firestore/inviteService';
 import dataService from '../../services/dataService';
-import EnhancedRequestForm from '../../components/tenant/EnhancedRequestForm';
+
 import EnhancedRequestHistory from '../../components/tenant/EnhancedRequestHistory';
 import DashboardOverview from '../../components/tenant/DashboardOverview';
 
@@ -50,20 +52,22 @@ interface Ticket {
   [key: string]: any;
 }
 
-// Demo data for development
+// Demo data for development - FALLBACK ONLY
 const DEMO_PROPERTY = {
   id: 'demo-property-1',
-  name: 'Sunset Apartments',
+  name: 'Demo Property (No Real Data)',
   address: {
-    street: '123 Main Street',
-    city: 'San Francisco',
+    street: '123 Demo Street',
+    city: 'Demo City',
     state: 'CA',
     zipCode: '94105',
     unit: '4B'
   },
-  landlordName: 'John Smith',
-  landlordEmail: 'landlord@example.com',
-  landlordPhone: '(555) 123-4567'
+  landlord: {
+    name: 'Demo Landlord',
+    email: 'demo@example.com',
+    phone: '(555) 123-4567'
+  }
 };
 
 const DEMO_TICKETS: Ticket[] = [
@@ -103,6 +107,8 @@ const DEMO_TICKETS: Ticket[] = [
 ];
 
 const EnhancedTenantDashboard: React.FC = () => {
+  console.log('🚀 [DEBUG] === ENHANCED TENANT DASHBOARD RENDERING ===');
+  
   const { currentUser, userProfile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -124,7 +130,7 @@ const EnhancedTenantDashboard: React.FC = () => {
   
   // UI states
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<'overview' | 'new-request' | 'history'>('overview');
+  const [currentView, setCurrentView] = useState<'overview' | 'history'>('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Demo mode flag
@@ -154,7 +160,12 @@ const EnhancedTenantDashboard: React.FC = () => {
   // Fetch tenant data (invites and properties)
   useEffect(() => {
     const fetchTenantData = async () => {
+      console.log('🔍 [DEBUG] Starting fetchTenantData');
+      console.log('🔍 [DEBUG] Current User:', currentUser?.uid);
+      console.log('🔍 [DEBUG] User Profile:', userProfile);
+      
       if (!currentUser) {
+        console.log('❌ [DEBUG] No current user, redirecting to login');
         navigate('/login');
         return;
       }
@@ -163,6 +174,7 @@ const EnhancedTenantDashboard: React.FC = () => {
       setIsError(false);
       
       try {
+        // Configure data service with explicit userType
         dataService.configure({ 
           isDemoMode: false, 
           currentUser,
@@ -170,25 +182,125 @@ const EnhancedTenantDashboard: React.FC = () => {
         });
         
         // Fetch pending invites
+        console.log('🔍 [DEBUG] Fetching pending invites for email:', currentUser.email);
         if (currentUser.email) {
           const invites = await inviteService.getPendingInvitesForTenant(currentUser.email);
+          console.log('🔍 [DEBUG] Found pending invites:', invites);
           setPendingInvites(invites || []);
         }
         
-        // Fetch associated properties
-        if (userProfile?.propertyId) {
-          const property = await dataService.getPropertyById(userProfile.propertyId);
-          if (property) {
-            setTenantProperties([property]);
+        // NEW: Fetch tenant properties from tenantProfile collection
+        console.log('🔍 [DEBUG] Fetching tenant profile for uid:', currentUser.uid);
+        const profileRef = doc(db, 'tenantProfiles', currentUser.uid);
+        const profileSnap = await getDoc(profileRef);
+        
+        if (profileSnap.exists()) {
+          const tenantProfile = profileSnap.data();
+          console.log('✅ [DEBUG] Tenant profile found:', tenantProfile);
+          
+          // Extract the properties array
+          const propertyIds = tenantProfile.properties || [];
+          console.log('🔍 [DEBUG] Property IDs found:', propertyIds);
+          
+          if (propertyIds.length === 0) {
+            console.log('⚠️  [DEBUG] No properties found in tenant profile');
+            setTenantProperties([]);
+            setIsDemoMode(false); // Don't use demo mode if profile exists but no properties
+          } else {
+            // Fetch all property documents using Promise.all for efficiency
+            console.log(`🔍 [DEBUG] Fetching ${propertyIds.length} properties...`);
+            const propertyPromises = propertyIds.map(async (propertyId: string) => {
+              try {
+                console.log('🔍 [DEBUG] Fetching property:', propertyId);
+                const propRef = doc(db, 'properties', propertyId);
+                const propSnap = await getDoc(propRef);
+                
+                if (!propSnap.exists()) {
+                  console.warn('❌ [DEBUG] Property not found:', propertyId);
+                  return { id: propertyId, error: 'Property not found', errorType: 'not-found' };
+                }
+
+                const propertyData = propSnap.data();
+                console.log('✅ [DEBUG] Property data loaded:', propertyId, propertyData);
+                return {
+                  id: propSnap.id,
+                  ...propertyData
+                };
+              } catch (error: any) {
+                console.warn('❌ [DEBUG] Failed to fetch property:', propertyId, error);
+                
+                if (error.code === 'permission-denied') {
+                  console.error('🔒 [DEBUG] Permission denied for property:', propertyId);
+                  return { 
+                    id: propertyId, 
+                    error: 'You do not have permission to view this property. Please contact your landlord.',
+                    errorType: 'permission-denied'
+                  };
+                }
+                
+                return { 
+                  id: propertyId, 
+                  error: 'An unexpected error occurred while loading this property.',
+                  errorType: 'unknown'
+                };
+              }
+            });
+            
+            // Wait for all property fetches to complete
+            const properties = await Promise.all(propertyPromises);
+            
+            // Separate successful properties from errors
+            const validProperties = properties.filter(property => !property.error);
+            const errorProperties = properties.filter(property => property.error);
+            
+            console.log('✅ [DEBUG] Valid properties loaded:', validProperties);
+            if (errorProperties.length > 0) {
+              console.log('❌ [DEBUG] Properties with errors:', errorProperties);
+            }
+            
+            // Show both valid properties and error messages
+            const allPropertiesWithErrors = properties; // Include both valid and error properties
+            setTenantProperties(allPropertiesWithErrors);
+            
+            if (validProperties.length > 0) {
+              setIsDemoMode(false);
+            } else if (errorProperties.length > 0) {
+              // All properties had errors - show error state but not demo mode
+              setIsDemoMode(false);
+            } else {
+              console.log('⚠️  [DEBUG] No valid properties loaded, using empty state');
+              setTenantProperties([]);
+              setIsDemoMode(false);
+            }
           }
         } else {
-          // If no properties, use demo mode
-          setIsDemoMode(true);
-          setTenantProperties([DEMO_PROPERTY]);
+          console.log('❌ [DEBUG] No tenant profile found for uid:', currentUser.uid);
+          console.log('🔍 [DEBUG] Checking legacy userProfile.propertyId:', userProfile?.propertyId);
+          
+          // Fallback: Check legacy userProfile.propertyId
+        if (userProfile?.propertyId) {
+            console.log('🔍 [DEBUG] Attempting to load property via legacy propertyId');
+          const property = await dataService.getPropertyById(userProfile.propertyId);
+          if (property) {
+              console.log('✅ [DEBUG] Legacy property loaded:', property);
+            setTenantProperties([property]);
+              setIsDemoMode(false);
+            } else {
+              console.log('❌ [DEBUG] Legacy property fetch failed, showing empty state');
+              setTenantProperties([]);
+              setIsDemoMode(false);
+            }
+          } else {
+            console.log('⚠️  [DEBUG] No tenant profile and no legacy propertyId, showing empty state');
+            setTenantProperties([]);
+            setIsDemoMode(false);
+          }
         }
+        
       } catch (error) {
-        console.error('Error fetching tenant data:', error);
-        // Instead of showing error, switch to demo mode
+        console.error('❌ [DEBUG] Error fetching tenant data:', error);
+        console.log('⚠️  [DEBUG] Falling back to demo mode due to error');
+        // Only use demo mode as last resort
         setIsDemoMode(true);
         setTenantProperties([DEMO_PROPERTY]);
         setIsError(false);
@@ -271,7 +383,7 @@ const EnhancedTenantDashboard: React.FC = () => {
   };
 
   const handleNewRequest = () => {
-    setCurrentView('new-request');
+    navigate('/maintenance/ai-chat');
   };
 
   const handleViewHistory = () => {
@@ -370,23 +482,14 @@ const EnhancedTenantDashboard: React.FC = () => {
             </button>
             
             <button
-              onClick={() => setCurrentView('new-request')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 group ${
-                currentView === 'new-request'
-                  ? 'bg-gradient-to-r from-orange-50 to-orange-100 text-orange-700 border-r-2 border-orange-500 shadow-sm'
-                  : 'text-gray-700 hover:bg-gray-100 hover:shadow-sm'
-              }`}
+              onClick={handleNewRequest}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 group text-gray-700 hover:bg-gray-100 hover:shadow-sm"
             >
-              <div className={`${currentView === 'new-request' ? 'text-orange-600' : 'text-gray-500 group-hover:text-gray-700'} transition-colors`}>
+              <div className="text-gray-500 group-hover:text-gray-700 transition-colors">
                 <Plus className="w-5 h-5" />
               </div>
               {!sidebarCollapsed && (
-                <>
                   <span className="font-medium">New Request</span>
-                  {currentView === 'new-request' && (
-                    <ChevronRight className="w-4 h-4 ml-auto" />
-                  )}
-                </>
               )}
             </button>
             
@@ -453,12 +556,10 @@ const EnhancedTenantDashboard: React.FC = () => {
         <UnifiedHeader
           title={
             currentView === 'overview' ? 'Dashboard Overview' :
-            currentView === 'new-request' ? 'Submit Maintenance Request' :
             'Request History'
           }
           subtitle={
             currentView === 'overview' ? 'Monitor your property and maintenance status' :
-            currentView === 'new-request' ? 'Report issues and request maintenance' :
             'Track and manage your maintenance requests'
           }
           showNotifications={currentView === 'overview'}
@@ -477,6 +578,22 @@ const EnhancedTenantDashboard: React.FC = () => {
         
         {/* Content with Enhanced Background */}
         <div className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100">
+          {/* Development Notice */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 m-6 mb-0">
+              <div className="flex items-center">
+                <div className="text-blue-400 mr-3">🔧</div>
+                <div>
+                  <h3 className="text-sm font-medium text-blue-800">Development Mode Active</h3>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Enhanced debugging enabled. Check console for detailed property loading information.
+                    Current dashboard: <strong>EnhancedTenantDashboard</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Invitation Banners */}
           {pendingInvites.length > 0 && currentView === 'overview' && (
             <div className="p-6 pb-0">
@@ -494,28 +611,241 @@ const EnhancedTenantDashboard: React.FC = () => {
           )}
           
           {currentView === 'overview' && (
-            <DashboardOverview
-              userProfile={userProfile}
-              tenantProperties={tenantProperties}
-              tickets={tickets}
-              onNewRequest={handleNewRequest}
-              onViewProperty={handleViewProperty}
-              onContactLandlord={handleContactLandlord}
-            />
-          )}
-          {currentView === 'new-request' && (
+            <div>
+              {/* Custom Property Display with Error Handling */}
+              <div className="p-6">
+                <div className="max-w-6xl mx-auto">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Quick Actions */}
+                    <div className="lg:col-span-1">
+                      <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                        <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <Plus className="w-5 h-5 text-orange-500" />
+                            Quick Actions
+                          </h3>
+                        </div>
+                        <div className="p-6 space-y-3">
+                          <button
+                            onClick={handleNewRequest}
+                            className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
+                          >
+                            <Plus className="w-5 h-5" />
+                            Submit New Request
+                          </button>
+                          
+                          <button
+                            onClick={handleViewHistory}
+                            className="w-full border-2 border-gray-200 hover:border-orange-300 text-gray-700 hover:text-orange-700 font-medium py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                          >
+                            <Activity className="w-5 h-5" />
+                            View Request History
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Property Information with Error Handling */}
+                    <div className="lg:col-span-2">
+                      <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                        <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <Home className="w-5 h-5 text-orange-500" />
+                            Your {tenantProperties.length === 1 ? 'Property' : 'Properties'}
+                          </h3>
+                        </div>
+                        <div className="p-6">
+                          {tenantProperties.length === 0 ? (
+                            <div className="text-center py-8">
+                              <Home className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                              <h4 className="text-lg font-medium text-gray-900 mb-2">No Properties Assigned</h4>
+                              <p className="text-gray-600">
+                                You are not currently assigned to any properties. Please accept a property invitation or contact your landlord to get started.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-6">
+                              {tenantProperties.map((property, index) => (
+                                <div key={property.id} className="space-y-4">
+                                  {property.error ? (
+                                    /* Error State for Property */
+                                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                                      <div className="flex items-start">
+                                        <div className="flex-shrink-0">
+                                          <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                                            <Home className="w-5 h-5 text-red-600" />
+                                          </div>
+                                        </div>
+                                        <div className="ml-3 flex-1">
+                                          <h4 className="text-sm font-medium text-red-800">
+                                            Property Loading Error
+                                          </h4>
+                                          <p className="text-sm text-red-700 mt-1">{property.error}</p>
+                                          {property.errorType === 'permission-denied' && (
+                                            <div className="mt-3 p-3 bg-red-100 rounded-md">
+                                              <p className="text-xs text-red-800">
+                                                <strong>Possible solutions:</strong>
+                                              </p>
+                                              <ul className="text-xs text-red-700 mt-1 list-disc list-inside">
+                                                <li>Ask your landlord to update Firestore security rules</li>
+                                                <li>Verify your tenant profile is properly configured</li>
+                                                <li>Contact support if the issue persists</li>
+                                              </ul>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    /* Successful Property Display */
+                                    <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-4 border border-orange-200">
+                                      <h4 className="text-xl font-bold text-gray-900 mb-2">
+                                        {property.name || 'Property'}
+                                      </h4>
+                                      {(property.address || property.streetAddress) && (
+                                        <div className="text-gray-600">
+                                          <p className="font-medium">
+                                            {property.address?.street || property.streetAddress}
+                                            {property.address?.unit && `, Unit ${property.address.unit}`}
+                                          </p>
+                                          <p>
+                                            {property.address?.city || property.city}, {property.address?.state || property.state} {property.address?.zipCode || property.zip}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {/* Landlord Contact Information */}
+                                      {(property.landlord?.name || property.landlord?.email || property.landlord?.phone) && (
+                                        <div className="mt-4 bg-white rounded-lg p-4 border border-gray-200">
+                                          <h5 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                            <User className="w-4 h-4 text-orange-500" />
+                                            Landlord Contact Information
+                                          </h5>
+                                          <div className="space-y-2">
+                                            {property.landlord?.name && (
+                                              <p className="text-sm text-gray-700">
+                                                <span className="font-medium">Name:</span> {property.landlord.name}
+                                              </p>
+                                            )}
+                                            {property.landlord?.email && (
+                                              <p className="text-sm text-gray-700">
+                                                <span className="font-medium">Email:</span> 
+                                                <a 
+                                                  href={`mailto:${property.landlord.email}`}
+                                                  className="text-orange-600 hover:text-orange-700 ml-2 hover:underline"
+                                                >
+                                                  {property.landlord.email}
+                                                </a>
+                                              </p>
+                                            )}
+                                            {property.landlord?.phone && (
+                                              <p className="text-sm text-gray-700">
+                                                <span className="font-medium">Phone:</span> 
+                                                <a 
+                                                  href={`tel:${property.landlord.phone}`}
+                                                  className="text-orange-600 hover:text-orange-700 ml-2 hover:underline"
+                                                >
+                                                  {property.landlord.phone}
+                                                </a>
+                                              </p>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Property Actions */}
+                                      <div className="mt-4 flex gap-3">
+                                        <button
+                                          onClick={handleNewRequest}
+                                          className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                                        >
+                                          Request Maintenance
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Divider between properties */}
+                                  {index < tenantProperties.length - 1 && (
+                                    <hr className="border-gray-200" />
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tickets Overview */}
+                  <div className="mt-6">
+                    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                      <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                          <Activity className="w-5 h-5 text-orange-500" />
+                          Recent Maintenance Requests
+                        </h3>
+                      </div>
             <div className="p-6">
-              <div className="max-w-4xl mx-auto">
-                <div className="bg-white rounded-xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
-                  <EnhancedRequestForm
-                    onSuccess={handleRequestSuccess}
-                    currentUser={currentUser!}
-                    userProfile={userProfile}
-                  />
+                        {tickets.length === 0 ? (
+                          <div className="text-center py-8">
+                            <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                            <h4 className="text-lg font-medium text-gray-900 mb-2">No Requests Yet</h4>
+                            <p className="text-gray-600 mb-4">
+                              You haven't submitted any maintenance requests.
+                            </p>
+                            <button
+                              onClick={handleNewRequest}
+                              className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200"
+                            >
+                              Submit Your First Request
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {tickets.slice(0, 3).map((ticket) => (
+                              <div key={ticket.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <h4 className="font-medium text-gray-900">{ticket.issueTitle}</h4>
+                                    <p className="text-sm text-gray-600 mt-1">{ticket.description}</p>
+                                    <div className="flex items-center gap-4 mt-2">
+                                      <span className={`text-xs px-2 py-1 rounded-full ${
+                                        ticket.status === 'resolved' ? 'bg-green-100 text-green-700' :
+                                        ticket.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+                                        'bg-yellow-100 text-yellow-700'
+                                      }`}>
+                                        {ticket.status.replace('_', ' ').toUpperCase()}
+                                      </span>
+                                      <span className="text-xs text-gray-500">
+                                        {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : 'No date'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                            {tickets.length > 3 && (
+                              <div className="text-center pt-4">
+                                <button
+                                  onClick={handleViewHistory}
+                                  className="text-orange-600 hover:text-orange-700 font-medium text-sm"
+                                >
+                                  View All Requests ({tickets.length})
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           )}
+
           {currentView === 'history' && (
             <div className="p-6">
               <div className="max-w-6xl mx-auto">
@@ -533,13 +863,44 @@ const EnhancedTenantDashboard: React.FC = () => {
         
         {/* Enhanced Demo Mode Banner */}
         {isDemoMode && (
-          <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-t border-orange-200 px-6 py-3">
-            <div className="flex items-center gap-2 text-orange-700 text-sm">
+          <div className="bg-gradient-to-r from-red-50 to-orange-50 border-t border-red-200 px-6 py-3">
+            <div className="flex items-center gap-2 text-red-700 text-sm">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                <span className="font-medium">Demo Mode:</span>
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                <span className="font-medium">⚠️ DEMO MODE ACTIVE:</span>
               </div>
-              <span>You're viewing sample data. Real functionality available after property assignment.</span>
+              <span>No real property data found. Check browser console for detailed debugging info.</span>
+            </div>
+          </div>
+        )}
+
+        {/* Debug Panel - Only shown when needed */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="bg-gray-900 text-green-400 text-xs p-4 font-mono">
+            <div className="max-w-6xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <div className="text-green-300 font-semibold mb-1">User Info:</div>
+                  <div>UID: {currentUser?.uid || 'None'}</div>
+                  <div>Email: {currentUser?.email || 'None'}</div>
+                  <div>UserType: {userProfile?.userType || 'Unknown'}</div>
+                </div>
+                <div>
+                  <div className="text-green-300 font-semibold mb-1">Property Data:</div>
+                  <div>Properties Count: {tenantProperties.length}</div>
+                  <div>Demo Mode: {isDemoMode ? 'YES' : 'NO'}</div>
+                  <div>Loading: {isLoading ? 'YES' : 'NO'}</div>
+                </div>
+                <div>
+                  <div className="text-green-300 font-semibold mb-1">Data Sources:</div>
+                  <div>tenantProfiles checked</div>
+                  <div>properties collection accessed</div>
+                  <div>Console logs active</div>
+                </div>
+              </div>
+              <div className="mt-2 text-yellow-400">
+                🔍 Check browser console (F12) for detailed debugging information
+              </div>
             </div>
           </div>
         )}

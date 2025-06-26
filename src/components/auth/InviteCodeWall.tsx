@@ -5,7 +5,7 @@ import Button from '../ui/Button';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
-import { redeemInviteCode } from '../../services/inviteCodeService';
+// import { redeemInviteCode } from '../../services/inviteCodeService'; // Removed - functionality being rebuilt
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -55,28 +55,15 @@ const InviteCodeWall: React.FC<InviteCodeWallProps> = ({ onInviteValidated }) =>
     setIsProcessing(true);
     
     try {
-      console.log('🔄 Redeeming invite code for user:', currentUser.uid);
+      console.log('🔄 Invite code redemption requested for user:', currentUser.uid);
       
-      // Redeem the invite code
-      const result = await redeemInviteCode(propertyInfo.inviteCode, currentUser.uid);
+      // TODO: Invite code redemption functionality is being rebuilt
+      console.warn('Invite code redemption temporarily disabled - feature being rebuilt');
+      toast.error('Invite code redemption is temporarily disabled while we rebuild this feature. Please contact your landlord for alternative access.');
       
-      if (result.success) {
-        console.log('✅ Invite code redeemed successfully');
-        
-        // Refresh user data to get updated profile with propertyId and landlordId
-        await refreshUserData();
-        
-        toast.success(`Successfully joined ${propertyInfo.propertyName}!`);
-        
-        // Notify parent component to refresh and check access
-        onInviteValidated();
-      } else {
-        console.error('❌ Failed to redeem invite code:', result.message);
-        toast.error(result.message || 'Failed to join property');
-      }
     } catch (error: any) {
-      console.error('💥 Error redeeming invite code:', error);
-      toast.error(error.message || 'Failed to join property. Please try again.');
+      console.error('💥 Error with invite code processing:', error);
+      toast.error('Unable to process invite code at this time. Please try again later.');
     } finally {
       setIsProcessing(false);
     }

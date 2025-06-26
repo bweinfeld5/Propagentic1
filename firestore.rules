@@ -12,14 +12,17 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    function getUserDataSafe() {
+      // Safe version that doesn't fail if document doesn't exist
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) ? 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data : 
+             null;
     }
 
     function isUserRole(role) {
       // Check both 'userType' and 'role' fields for broader compatibility
-      let userData = getUserData();
-      return isSignedIn() && (userData.userType == role || userData.role == role);
+      let userData = getUserDataSafe();
+      return isSignedIn() && userData != null && (userData.userType == role || userData.role == role);
     }
 
     function isLandlord() { 
@@ -42,9 +45,9 @@ service cloud.firestore {
     }
 
     function isPropertyTenant(propertyId) {
-      let userData = getUserData();
+      let userData = getUserDataSafe();
       // Check both direct propertyId and properties array
-      return isTenant() && 
+      return isTenant() && userData != null &&
              (userData.propertyId == propertyId || 
               (userData.properties != null && propertyId in userData.properties));
     }
@@ -62,59 +65,17 @@ service cloud.firestore {
       return landlordProfile.contractors != null && contractorId in landlordProfile.contractors;
     }
 
-    function isTenantOfLandlord(tenantId, landlordId) {
+    function isTenantOfLandlord(tenantId) {
       // Check if this tenant has a relationship with any properties owned by the landlord
       // This is a simplified check - in practice, you might want to query the propertyTenantRelationships collection
-      let userData = get(/databases/$(database)/documents/users/$(tenantId)).data;
-      return userData.userType == 'tenant' || userData.role == 'tenant';
+      return exists(/databases/$(database)/documents/users/$(tenantId)) && 
+             get(/databases/$(database)/documents/users/$(tenantId)).data.userType == 'tenant';
     }
 
 
 
     // --- DATA VALIDATION FUNCTIONS ---
-    function isValidEmail(email) {
-      return email is string && email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$');
-    }
-    
-    function isValidInviteCreate() {
-      let data = request.resource.data;
-      return isLandlord() &&
-             data.landlordId == request.auth.uid &&
-             isPropertyOwner(data.propertyId) &&
-             isValidEmail(data.tenantEmail) &&
-             data.status == 'pending' &&
-             data.createdAt == request.time &&
-             data.keys().hasAll(['landlordId', 'propertyId', 'tenantEmail', 'status', 'createdAt']);
-    }
-
-    function isValidInviteUpdate() {
-      let data = request.resource.data;
-      let existingData = resource.data;
-      // Tenant accepting the invite
-      return (isTenant() && 
-              data.status == 'accepted' && 
-              data.tenantId == request.auth.uid &&
-              existingData.tenantEmail == getUserData().email) ||
-             // Landlord revoking the invite
-             (isLandlord() &&
-              isPropertyOwner(existingData.propertyId) &&
-              data.status == 'revoked');
-    }
-
-    function isValidPropertyCreate() {
-      let data = request.resource.data;
-      return isLandlord() &&
-             data.landlordId == request.auth.uid &&
-             data.keys().hasAll(['landlordId', 'streetAddress', 'city', 'state', 'zipCode', 'propertyType']);
-    }
-    
-    function isValidTicketCreate() {
-      let data = request.resource.data;
-      return isTenant() &&
-             data.submittedBy == request.auth.uid &&
-             isPropertyTenant(data.propertyId) &&
-             data.keys().hasAll(['submittedBy', 'propertyId', 'category', 'description', 'priority']);
-    }
+    // Email validation function removed as it was unused
 
     // --- RULES ---
 
@@ -124,7 +85,7 @@ service cloud.firestore {
       allow read, update: if isOwner(userId) || isAdmin();
       
       // Allow landlords to read tenant data (with function to check relationship)
-      allow read: if isLandlord() && isTenantOfLandlord(userId, request.auth.uid);
+      allow read: if isLandlord() && isTenantOfLandlord(userId);
       
       // Allow landlords to query for tenants (needed for PropertyTenantManager)
       allow list: if isLandlord();
@@ -142,7 +103,8 @@ service cloud.firestore {
       allow read: if isOwner(tenantId) || 
                      (isLandlord() && resource.data.landlordId == request.auth.uid) ||
                      isAdmin();
-      allow create: if isOwner(tenantId) && isTenant();
+      // Allow creation during registration process or if user is already a tenant
+      allow create: if isOwner(tenantId) && (isTenant() || !exists(/databases/$(database)/documents/users/$(tenantId)));
       allow update: if isOwner(tenantId) || 
                        (isLandlord() && resource.data.landlordId == request.auth.uid) ||
                        isAdmin();
@@ -157,7 +119,8 @@ service cloud.firestore {
       allow read: if isOwner(contractorId) || 
                      isLandlord() ||
                      isAdmin();
-      allow create: if isOwner(contractorId) && isContractor();
+      // Allow creation during registration process or if user is already a contractor
+      allow create: if isOwner(contractorId) && (isContractor() || !exists(/databases/$(database)/documents/users/$(contractorId)));
       allow update: if isOwner(contractorId) || isAdmin();
       allow delete: if isOwner(contractorId) || isAdmin();
     }
@@ -170,7 +133,8 @@ service cloud.firestore {
       allow read: if isOwner(landlordId) ||
                      (isContractor() && isContractorInLandlordRolodex(landlordId, request.auth.uid)) ||
                      isAdmin();
-      allow create: if isOwner(landlordId) && isLandlord();
+      // Allow creation during registration process or if user is already a landlord
+      allow create: if isOwner(landlordId) && (isLandlord() || !exists(/databases/$(database)/documents/users/$(landlordId)));
       allow update: if isOwner(landlordId) || isAdmin();
       allow delete: if isOwner(landlordId) || isAdmin();
     }

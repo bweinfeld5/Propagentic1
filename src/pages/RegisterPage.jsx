@@ -28,7 +28,7 @@ const RegisterPage = ({ initialRole, isPremium }) => {
     hasInteracted: false
   });
 
-  const { register, fetchUserProfile } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   // Specialty options for contractors
@@ -121,16 +121,10 @@ const RegisterPage = ({ initialRole, isPremium }) => {
         formData.email, 
         formData.password, 
         formData.role, 
-        {
-          fullName: formData.fullName,
-          phoneNumber: formData.phoneNumber || null,
-          companyName: formData.role === 'contractor' ? formData.companyName : null,
-          specialties: formData.role === 'contractor' ? formData.specialties : null,
-          isPremium
-        }
+        isPremium
       );
 
-      await fetchUserProfile(userCredential.user.uid);
+      // No need to manually call fetchUserProfile - onAuthStateChanged will handle it
       setFormState(prev => ({ ...prev, success: true }));
 
       // Redirect after success animation

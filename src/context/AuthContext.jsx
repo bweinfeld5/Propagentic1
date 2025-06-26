@@ -68,10 +68,14 @@ export function AuthProvider({ children }) {
       // Prepare user data object for ProfileCreationService
       const profileData = {
         email,
-        emailVerified: true, // Set as verified since we're not requiring verification
-        isPremium: userType === 'contractor' && isPremium ? true : undefined,
-        subscriptionTier: userType === 'contractor' && isPremium ? 'premium' : undefined
+        emailVerified: true // Set as verified since we're not requiring verification
       };
+
+      // Only add premium fields for contractor accounts when applicable
+      if (userType === 'contractor' && isPremium) {
+        profileData.isPremium = true;
+        profileData.subscriptionTier = 'premium';
+      }
 
       // Use ProfileCreationService for race condition-free creation
       const profileResult = await profileCreationService.createUserProfile(
@@ -89,13 +93,8 @@ export function AuthProvider({ children }) {
       
       console.log('User registered successfully.');
       
-      return { 
-        success: true, 
-        message: 'Registration successful! You can now sign in.',
-        userType: userType,
-        profileCreated: profileResult.success,
-        profileExisted: profileResult.existed
-      };
+      // Return userCredential for compatibility with registration forms
+      return userCredential;
     } catch (error) {
       console.error('Registration error:', error);
       
@@ -298,7 +297,7 @@ export function AuthProvider({ children }) {
 
   // Refresh user data from Firestore
   const refreshUserData = async () => {
-    if (currentUser) {
+    if (currentUser?.uid) {
       try {
         const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
         if (userDoc.exists()) {
@@ -312,6 +311,8 @@ export function AuthProvider({ children }) {
         setProfileError(getAuthErrorMessage(error.code));
         throw error;
       }
+    } else {
+      console.log('No current user available for refresh');
     }
   };
 
@@ -366,10 +367,14 @@ export function AuthProvider({ children }) {
           displayName: user.displayName,
           photoURL: user.photoURL,
           emailVerified: true, // Google OAuth users have verified emails
-          provider: 'google',
-          isPremium: userType === 'contractor' && isPremium ? true : undefined,
-          subscriptionTier: userType === 'contractor' && isPremium ? 'premium' : undefined
+          provider: 'google'
         };
+
+        // Only add premium fields for contractor accounts when applicable
+        if (userType === 'contractor' && isPremium) {
+          profileData.isPremium = true;
+          profileData.subscriptionTier = 'premium';
+        }
         
         // Use ProfileCreationService for race condition-free creation
         const profileResult = await profileCreationService.createUserProfile(

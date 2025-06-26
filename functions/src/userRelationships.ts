@@ -265,7 +265,8 @@ export const acceptPropertyInvite = onCall(async (request: CallableRequest<{ inv
 
       // Update property document (add tenant to list)
       transaction.update(propertyRef, {
-        tenants: admin.firestore.FieldValue.arrayUnion(tenantUid)
+        tenants: admin.firestore.FieldValue.arrayUnion(tenantUid),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
         // Optionally update occupied status/count if needed
       });
 

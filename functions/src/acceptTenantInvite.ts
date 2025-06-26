@@ -214,6 +214,14 @@ export const acceptTenantInvite = functions.https.onRequest((req, res) => {
           
           functions.logger.info(`Updated landlord profile for ${landlordId}, new acceptance rate: ${newRate}%`);
         }
+
+        // Step 7: Add tenant to property tenants array
+        transaction.update(propertyRef, {
+          tenants: admin.firestore.FieldValue.arrayUnion(uid),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        functions.logger.info(`Added tenant ${uid} to property ${propertyId} tenants array`);
       });
 
       functions.logger.info(`Successfully updated landlord profile for ${landlordId} with accepted tenant ${uid}`);

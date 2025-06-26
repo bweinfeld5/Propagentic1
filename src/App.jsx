@@ -5,6 +5,7 @@ import { NotificationProvider } from './context/NotificationContext';
 import { ConnectionProvider } from './context/ConnectionContext.jsx';
 import { DemoModeProvider, useDemoMode } from './context/DemoModeContext.jsx';
 import { ThemeProvider } from './design-system/dark-mode';
+import { ModelContextProvider } from './contexts/ModelContext';
 import DataServiceProvider from './providers/DataServiceProvider';
 import LogoLoadingAnimation from './components/shared/LogoLoadingAnimation';
 import GlassyHeader from './components/layout/GlassyHeader';
@@ -27,6 +28,7 @@ import TestUIComponents from './pages/TestUIComponents';
 import SimpleUIShowcase from './pages/SimpleUIShowcase';
 import MaintenanceSurvey from './components/maintenance/MaintenanceSurvey';
 import EnhancedMaintenancePage from './pages/tenant/EnhancedMaintenancePage';
+import AIMaintenanceChat from './components/tenant/AIMaintenanceChat';
 import PublicPropertyDashboardDemo from './pages/PublicPropertyDashboardDemo';
 import DemoShowcase from './pages/DemoShowcase';
 import TestPage from './pages/TestPage';
@@ -186,7 +188,8 @@ function App() {
               <ConnectionProvider>
                 <DemoModeProvider>
                   <DataServiceProvider>
-                    <NotificationProvider>
+                    <ModelContextProvider>
+                      <NotificationProvider>
                       <ErrorBoundary 
                         level="page"
                         userId={null}
@@ -233,6 +236,7 @@ function App() {
                                 <Route path="/contractor/dashboard/original" element={<PrivateRoute><OriginalContractorDashboard /></PrivateRoute>} />
                                 <Route path="/maintenance/new" element={<PrivateRoute><MaintenanceSurvey /></PrivateRoute>} />
                                 <Route path="/maintenance/enhanced" element={<PrivateRoute><EnhancedMaintenancePage /></PrivateRoute>} />
+                                <Route path="/maintenance/ai-chat" element={<PrivateRoute><AIMaintenanceChat /></PrivateRoute>} />
                                 <Route path="/onboarding" element={<PrivateRoute><OnboardingSurvey /></PrivateRoute>} />
                                 <Route path="/landlord-onboarding" element={<PrivateRoute><LandlordOnboarding /></PrivateRoute>} />
                                 <Route path="/contractor-onboarding" element={<PrivateRoute><ContractorOnboardingPage /></PrivateRoute>} />
@@ -284,10 +288,11 @@ function App() {
                       <LocalStorageDebug />
                     </Router>
                       </ErrorBoundary>
-                  </NotificationProvider>
-                </DataServiceProvider>
-              </DemoModeProvider>
-            </ConnectionProvider>
+                      </NotificationProvider>
+                    </ModelContextProvider>
+                  </DataServiceProvider>
+                </DemoModeProvider>
+              </ConnectionProvider>
             </PreLaunchGuard>
           </AuthProvider>
         </ThemeProvider>

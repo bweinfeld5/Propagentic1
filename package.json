@@ -27,6 +27,7 @@
     "test:analytics:watch": "npx vitest tests/analytics/ --watch",
     "test:analytics:ui": "npx vitest --ui tests/analytics/",
     "test:analytics:perf": "node tests/run-tests.js all --reporter=verbose --performance",
+    "test:firestore:rules": "node scripts/validate-security-rules-manual.js",
     "test:invite:create": "node scripts/test-invite-code-creation.js",
     "test:invite:redeem": "node scripts/test-invite-code-redemption.js",
     "test:invite": "node scripts/test-invite-code-creation.js && node scripts/test-invite-code-redemption.js",

@@ -58,4 +58,8 @@ export const generateInviteCode = inviteCodeModule.generateInviteCode;
 import { acceptTenantInvite } from './acceptTenantInvite';
 export { acceptTenantInvite };
 
+// Import and export tenant removal function
+import { removeTenantFromLandlord } from './removeTenantFromLandlord';
+export { removeTenantFromLandlord };
+
 console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, invite code generation, tenant invite acceptance).");

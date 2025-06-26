@@ -57,11 +57,11 @@ try {
   console.error('❌ Failed to load inviteCode functions:', error.message);
 }
 
-// Accept Tenant Invite function (NEW - Clean Implementation)
+// Accept Tenant Invite function (HTTP function with CORS support)
 try {
-  const acceptTenantInvite = require('./lib/acceptTenantInvite');
-  exports.acceptTenantInvite = acceptTenantInvite.acceptTenantInvite;
-  console.log('✅ Loaded acceptTenantInvite function');
+  const { acceptTenantInvite } = require('./lib/index');
+  exports.acceptTenantInvite = acceptTenantInvite;
+  console.log('✅ Loaded acceptTenantInvite HTTP function with CORS');
 } catch (error) {
   console.error('❌ Failed to load acceptTenantInvite function:', error.message);
 }

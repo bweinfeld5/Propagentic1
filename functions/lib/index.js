@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateInviteCode = exports.simpleTest = exports.testPing = exports.testSendGrid = exports.sendEmail = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
+exports.acceptTenantInvite = exports.generateInviteCode = exports.simpleTest = exports.testPing = exports.testSendGrid = exports.sendEmail = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 // Initialize Firebase Admin SDK
@@ -73,5 +73,8 @@ Object.defineProperty(exports, "simpleTest", { enumerable: true, get: function (
 // Import and export invite code generation function (landlord functionality)
 const inviteCodeModule = require('./inviteCode.js');
 exports.generateInviteCode = inviteCodeModule.generateInviteCode;
-console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, invite code generation).");
+// Import and export tenant invite acceptance function (HTTP function with CORS)
+const acceptTenantInvite_1 = require("./acceptTenantInvite");
+Object.defineProperty(exports, "acceptTenantInvite", { enumerable: true, get: function () { return acceptTenantInvite_1.acceptTenantInvite; } });
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, invite code generation, tenant invite acceptance).");
 //# sourceMappingURL=index.js.map

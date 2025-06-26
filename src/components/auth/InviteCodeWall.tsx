@@ -3,11 +3,11 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import TenantInviteForm from '../tenant/TenantInviteForm';
 import Button from '../ui/Button';
 import { signOut } from 'firebase/auth';
-import { auth, functions } from '../../firebase/config';
+import { auth } from '../../firebase/config';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
-import { httpsCallable } from 'firebase/functions';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import inviteService from '../../services/firestore/inviteService';
 
 interface InviteCodeWallProps {
   onInviteValidated: () => void;
@@ -57,46 +57,29 @@ const InviteCodeWall: React.FC<InviteCodeWallProps> = ({ onInviteValidated }) =>
     try {
       console.log('🔄 Accepting tenant invite for user:', currentUser.uid);
       
-      // Call the new acceptTenantInvite Firebase function
-      const acceptTenantInvite = httpsCallable(functions, 'acceptTenantInvite');
-      const result = await acceptTenantInvite({
-        inviteCode: propertyInfo.inviteCode
-      });
+      // Call the new acceptTenantInvite service
+      const result = await inviteService.acceptTenantInvite(propertyInfo.inviteCode);
       
-      const data = result.data as any;
-      
-      if (data.success) {
+      if (result.success) {
         console.log('✅ Tenant invite accepted successfully');
         
         // Refresh user data to get updated profile with property
         await refreshUserData();
         
-        toast.success(`Successfully joined ${data.propertyAddress || propertyInfo.propertyName}!`);
+        toast.success(`Successfully joined ${result.propertyAddress || propertyInfo.propertyName}!`);
         
         // Notify parent component to refresh and check access
         onInviteValidated();
       } else {
-        console.error('❌ Failed to accept invite:', data.message);
-        toast.error(data.message || 'Failed to join property');
+        console.error('❌ Failed to accept invite:', result.message);
+        toast.error(result.message || 'Failed to join property');
       }
       
     } catch (error: any) {
       console.error('💥 Error accepting tenant invite:', error);
       
-      // Handle specific error types
-      let errorMessage = 'Failed to join property. Please try again.';
-      if (error.code === 'functions/invalid-argument') {
-        errorMessage = error.message || 'Invalid invite code format.';
-      } else if (error.code === 'functions/not-found') {
-        errorMessage = error.message || 'Invite code not found or property does not exist.';
-      } else if (error.code === 'functions/already-exists') {
-        errorMessage = error.message || 'You are already linked to this property.';
-      } else if (error.code === 'functions/unauthenticated') {
-        errorMessage = 'Please log in again and try again.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
+      // Handle any unexpected errors
+      const errorMessage = error.message || 'Failed to join property. Please try again.';
       toast.error(errorMessage);
     } finally {
       setIsProcessing(false);

@@ -113,7 +113,7 @@ const InviteCodeBrowserTest: React.FC = () => {
       return null;
 
       /* ORIGINAL FUNCTIONALITY COMMENTED OUT - TO BE REBUILT
-             const result = await unifiedInviteCodeService.redeemInviteCode(code, currentUser.uid);
+      const result = await unifiedInviteCodeService.redeemInviteCode(code, currentUser.uid);
       addResult(code, 'Redemption', result.success, result, result.message);
       return result;
       */

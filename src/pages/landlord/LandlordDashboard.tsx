@@ -1352,7 +1352,7 @@ const LandlordDashboard: React.FC = () => {
       )}
 
               {/* Edit Property Modal */}
-        {showEditPropertyModal && editingProperty && (
+        {showEditPropertyModal && (
           <EditPropertyModal
             isOpen={showEditPropertyModal}
             onClose={() => {

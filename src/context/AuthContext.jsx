@@ -17,6 +17,7 @@ import {
   safeGetUserData,
   getAuthErrorMessage 
 } from '../utils/authHelpers';
+import profileCreationService from '../services/profileCreationService';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 // Create Auth context
@@ -55,7 +56,7 @@ export function AuthProvider({ children }) {
     setIsProfileCorrupted(false);
   };
 
-  // Register a new user with user type
+  // Register a new user with user type using ProfileCreationService
   const register = async (email, password, userType, isPremium = false) => {
     try {
       clearErrors();
@@ -64,32 +65,49 @@ export function AuthProvider({ children }) {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
-      // Prepare user data object
-      const userData = {
+      // Prepare user data object for ProfileCreationService
+      const profileData = {
         email,
-        userType,
-        role: userType, // Add role field to match userType for backwards compatibility
-        createdAt: serverTimestamp(),
-        uid: user.uid,
-        onboardingComplete: false // Set default onboarding state
+        emailVerified: true // Set as verified since we're not requiring verification
       };
-      
-      // Add premium flag for contractor accounts
+
+      // Only add premium fields for contractor accounts when applicable
       if (userType === 'contractor' && isPremium) {
-        userData.isPremium = true;
-        userData.subscriptionTier = 'premium';
+        profileData.isPremium = true;
+        profileData.subscriptionTier = 'premium';
       }
+
+      // Use ProfileCreationService for race condition-free creation
+      const profileResult = await profileCreationService.createUserProfile(
+        user.uid, 
+        userType, 
+        profileData,
+        {
+          validateBeforeCreate: true,
+          createAdditionalCollections: true,
+          retryOnFailure: true
+        }
+      );
+
+      console.log('[AuthContext] Profile creation result:', profileResult);
       
-      // Store user data in Firestore
-      await setDoc(doc(db, 'users', user.uid), userData);
+      console.log('User registered successfully.');
       
-      // TODO: Set custom claims for Firestore rules (requires working Cloud Function)
-      // For now, we'll rely on the user document in Firestore
-      console.log('User registered successfully. Custom claims will be added later.');
-      
+      // Return userCredential for compatibility with registration forms
       return userCredential;
     } catch (error) {
       console.error('Registration error:', error);
+      
+      // Clean up auth user if profile creation failed
+      if (auth.currentUser) {
+        try {
+          await auth.currentUser.delete();
+          console.log('Cleaned up auth user after profile creation failure');
+        } catch (cleanupError) {
+          console.error('Failed to cleanup auth user:', cleanupError);
+        }
+      }
+      
       setAuthError(getAuthErrorMessage(error.code));
       throw error;
     }
@@ -99,7 +117,17 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       clearErrors();
-      return await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Update user profile to reflect login
+      const userDocRef = doc(db, 'users', user.uid);
+      await setDoc(userDocRef, {
+        emailVerified: true,
+        lastLogin: serverTimestamp()
+      }, { merge: true });
+      
+      return userCredential;
     } catch (error) {
       console.error('Login error:', error);
       setAuthError(getAuthErrorMessage(error.code));
@@ -269,7 +297,7 @@ export function AuthProvider({ children }) {
 
   // Refresh user data from Firestore
   const refreshUserData = async () => {
-    if (currentUser) {
+    if (currentUser?.uid) {
       try {
         const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
         if (userDoc.exists()) {
@@ -283,6 +311,8 @@ export function AuthProvider({ children }) {
         setProfileError(getAuthErrorMessage(error.code));
         throw error;
       }
+    } else {
+      console.log('No current user available for refresh');
     }
   };
 
@@ -330,29 +360,35 @@ export function AuthProvider({ children }) {
         console.log('No existing profile found, creating new one');
       }
       
-      // If no existing profile, create one
+      // If no existing profile, create one using ProfileCreationService
       if (!existingProfile) {
-        const userData = {
+        const profileData = {
           email: user.email,
           displayName: user.displayName,
           photoURL: user.photoURL,
-          userType,
-          role: userType, // For backwards compatibility
-          createdAt: serverTimestamp(),
-          uid: user.uid,
-          onboardingComplete: false,
+          emailVerified: true, // Google OAuth users have verified emails
           provider: 'google'
         };
-        
-        // Add premium flag for contractor accounts
+
+        // Only add premium fields for contractor accounts when applicable
         if (userType === 'contractor' && isPremium) {
-          userData.isPremium = true;
-          userData.subscriptionTier = 'premium';
+          profileData.isPremium = true;
+          profileData.subscriptionTier = 'premium';
         }
         
-        // Store user data in Firestore
-        await setDoc(doc(db, 'users', user.uid), userData);
-        console.log('New Google user profile created');
+        // Use ProfileCreationService for race condition-free creation
+        const profileResult = await profileCreationService.createUserProfile(
+          user.uid, 
+          userType, 
+          profileData,
+          {
+            validateBeforeCreate: true,
+            createAdditionalCollections: true,
+            retryOnFailure: true
+          }
+        );
+        
+        console.log('[AuthContext] Google OAuth profile creation result:', profileResult);
       }
       
       return result;

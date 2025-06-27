@@ -17,9 +17,11 @@ const AuthPage = () => {
   const { currentUser } = useAuth();
   const [selectedIndex, setSelectedIndex] = useState(0);
   
-  // If user is already logged in, redirect to dashboard
+  // If user is already logged in, redirect to role-based dashboard
   useEffect(() => {
     if (currentUser) {
+      // Should use role-based redirect, but we don't have userProfile here
+      // The RoleBasedRedirect component in App.jsx handles this properly
       navigate('/dashboard');
     }
   }, [currentUser, navigate]);

@@ -86,7 +86,7 @@ export class TenantService {
         name: `${onboardingData.personalInfo.firstName} ${onboardingData.personalInfo.lastName}`,
         phone: onboardingData.personalInfo.phone,
         status: 'active',
-        emailVerified: false,
+        emailVerified: true,
         onboardingComplete: true,
         profileComplete: true,
         createdAt: Timestamp.now(),
@@ -457,145 +457,9 @@ export class TenantService {
     }
   }
 
-  /**
-   * Validate invite code
-   */
-  async validateInviteCode(code: string): Promise<InviteCodeValidation> {
-    try {
-      const codeRef = doc(db, 'inviteCodes', code).withConverter(inviteCodeConverter);
-      const codeDoc = await getDoc(codeRef);
+  // validateInviteCode method removed - part of tenant redemption system to be rebuilt
 
-      if (!codeDoc.exists()) {
-        return {
-          isValid: false,
-          message: 'Invalid invite code'
-        };
-      }
-
-      const inviteCode = codeDoc.data();
-
-      // Check if code is active
-      if (inviteCode.status !== 'active') {
-        return {
-          isValid: false,
-          message: 'Invite code is no longer valid'
-        };
-      }
-
-      // Check if code has expired
-      if (inviteCode.expiresAt.toDate() < new Date()) {
-        return {
-          isValid: false,
-          message: 'Invite code has expired'
-        };
-      }
-
-      // Check usage limits
-      if (inviteCode.currentUses >= inviteCode.maxUses) {
-        return {
-          isValid: false,
-          message: 'Invite code has reached maximum usage'
-        };
-      }
-
-      return {
-        isValid: true,
-        message: 'Valid invite code',
-        propertyId: inviteCode.propertyId,
-        propertyName: inviteCode.propertyName,
-        unitId: inviteCode.unitId,
-        restrictedEmail: inviteCode.email,
-        expiresAt: inviteCode.expiresAt
-      };
-    } catch (error: any) {
-      console.error('Error validating invite code:', error);
-      return {
-        isValid: false,
-        message: 'Error validating invite code'
-      };
-    }
-  }
-
-  /**
-   * Redeem invite code
-   */
-  async redeemInviteCode(code: string, tenantId: string): Promise<InviteServiceResult> {
-    try {
-      if (!this.currentUser || this.currentUser.uid !== tenantId) {
-        throw new Error('Unauthorized to redeem this code');
-      }
-
-      // First validate the code
-      const validation = await this.validateInviteCode(code);
-      if (!validation.isValid) {
-        return {
-          success: false,
-          message: validation.message
-        };
-      }
-
-      // Check email restriction if exists
-      if (validation.restrictedEmail && validation.restrictedEmail !== this.currentUser?.email) {
-        return {
-          success: false,
-          message: `This invite code is restricted to ${validation.restrictedEmail}`
-        };
-      }
-
-      return await runTransaction(db, async (transaction) => {
-        // Update invite code usage
-        const codeRef = doc(db, 'inviteCodes', code);
-        const codeDoc = await transaction.get(codeRef);
-        
-        if (!codeDoc.exists()) {
-          throw new Error('Invite code not found');
-        }
-
-        const inviteCodeData = codeDoc.data();
-        const newUsageCount = inviteCodeData.currentUses + 1;
-        const newStatus = newUsageCount >= inviteCodeData.maxUses ? 'used' : 'active';
-
-        transaction.update(codeRef, {
-          currentUses: newUsageCount,
-          status: newStatus,
-          usedAt: serverTimestamp(),
-          usedBy: tenantId
-        });
-
-        // Add property association to tenant
-        const association: PropertyAssociation = {
-          propertyId: validation.propertyId!,
-          unitId: validation.unitId,
-          status: 'active',
-          startDate: Timestamp.now(),
-          inviteCodeId: code
-        };
-
-        await this.addPropertyAssociation(
-          tenantId,
-          validation.propertyId!,
-          validation.unitId,
-          undefined
-        );
-
-        return {
-          success: true,
-          message: 'Invite code redeemed successfully',
-          data: {
-            propertyId: validation.propertyId,
-            propertyName: validation.propertyName,
-            unitId: validation.unitId
-          }
-        };
-      });
-    } catch (error: any) {
-      console.error('Error redeeming invite code:', error);
-      return {
-        success: false,
-        message: error.message
-      };
-    }
-  }
+  // redeemInviteCode method removed - part of tenant redemption system to be rebuilt
 
   // ==================== MAINTENANCE TICKETS ====================
 

@@ -51,11 +51,19 @@ try {
 try {
   const inviteCode = require('./lib/inviteCode');
   exports.generateInviteCode = inviteCode.generateInviteCode;
-  exports.validateInviteCode = inviteCode.validateInviteCode;
-  exports.redeemInviteCode = inviteCode.redeemInviteCode;
-  console.log('✅ Loaded inviteCode functions');
+  // Note: validateInviteCode and redeemInviteCode functions removed - being rebuilt
+  console.log('✅ Loaded inviteCode functions (generateInviteCode only)');
 } catch (error) {
   console.error('❌ Failed to load inviteCode functions:', error.message);
+}
+
+// Accept Tenant Invite function (HTTP function with CORS support)
+try {
+  const { acceptTenantInvite } = require('./lib/index');
+  exports.acceptTenantInvite = acceptTenantInvite;
+  console.log('✅ Loaded acceptTenantInvite HTTP function with CORS');
+} catch (error) {
+  console.error('❌ Failed to load acceptTenantInvite function:', error.message);
 }
 
 // Notification trigger functions

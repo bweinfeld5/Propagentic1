@@ -40,8 +40,8 @@ const LandlordForm = () => {
         role: 'landlord' // Ensure role is set
       });
       
-      // Redirect to dashboard
-      navigate('/dashboard');
+      // Redirect to landlord dashboard
+      navigate('/landlord/dashboard');
     } catch (error) {
       console.error('Error saving onboarding data:', error);
       setError('Failed to save your information. Please try again.');

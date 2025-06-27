@@ -36,6 +36,7 @@ import {
 } from '../../models/Property';
 import propertyService from '../../services/propertyService';
 import { useAuth } from '../../context/AuthContext';
+import RichTextEditor from '../forms/RichTextEditor';
 import toast from 'react-hot-toast';
 
 const AMENITIES_OPTIONS = [
@@ -388,14 +389,29 @@ const PropertyForm = ({
                 </div>
 
                 <div className="mt-6">
-                  <TextArea
-                    label="Description"
-                    value={formData.description}
-                    onChange={(value) => handleChange('description', value)}
-                    error={errors.description}
-                    rows="4"
-                    placeholder="Describe the property..."
-                  />
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Description
+                    </label>
+                    <RichTextEditor
+                      value={formData.description}
+                      onChange={(content, stats) => {
+                        handleChange('description', content);
+                      }}
+                      placeholder="Describe your property in detail - highlight key features, amenities, location benefits, and any unique selling points..."
+                      maxLength={3000}
+                      allowImages={true}
+                      allowLinks={true}
+                      allowLists={true}
+                      height="250px"
+                      toolbar="default"
+                      error={errors.description}
+                      className="w-full"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      Create an engaging property description with rich formatting, images, and lists to attract potential tenants.
+                    </p>
+                  </div>
                 </div>
 
                 <div className="mt-6">

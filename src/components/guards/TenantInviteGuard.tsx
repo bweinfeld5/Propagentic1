@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useLocation } from 'react-router-dom';
-import InviteCodeWall from '../auth/InviteCodeWall';
+import InviteCodeModal from '../auth/InviteCodeModal';
 import { shouldAllowAppAccess, isTenantNeedingInvite } from '../../utils/tenantValidation';
 
 interface TenantInviteGuardProps {
@@ -14,7 +14,7 @@ interface TenantInviteGuardProps {
 const TenantInviteGuard: React.FC<TenantInviteGuardProps> = ({ children }) => {
   const { currentUser, userProfile, loading, refreshUserData } = useAuth();
   const location = useLocation();
-  const [shouldShowWall, setShouldShowWall] = useState(false);
+  const [shouldShowModal, setShouldShowModal] = useState(false);
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ const TenantInviteGuard: React.FC<TenantInviteGuardProps> = ({ children }) => {
       
       // If no user, allow access (will show login/register)
       if (!currentUser) {
-        setShouldShowWall(false);
+        setShouldShowModal(false);
         setIsCheckingProfile(false);
         return;
       }
@@ -40,7 +40,7 @@ const TenantInviteGuard: React.FC<TenantInviteGuardProps> = ({ children }) => {
       
       if (isTestMode) {
         console.log('TenantInviteGuard: Test mode detected, bypassing invite requirement');
-        setShouldShowWall(false);
+        setShouldShowModal(false);
         setIsCheckingProfile(false);
         return;
       }
@@ -59,7 +59,7 @@ const TenantInviteGuard: React.FC<TenantInviteGuardProps> = ({ children }) => {
         isTestMode
       });
 
-      setShouldShowWall(needsInvite);
+      setShouldShowModal(needsInvite);
       setIsCheckingProfile(false);
     };
 
@@ -77,7 +77,7 @@ const TenantInviteGuard: React.FC<TenantInviteGuardProps> = ({ children }) => {
       // Re-check access after a short delay to ensure data is updated
       setTimeout(() => {
         if (userProfile && shouldAllowAppAccess(userProfile)) {
-          setShouldShowWall(false);
+          setShouldShowModal(false);
         }
       }, 1000);
     } catch (error) {
@@ -94,13 +94,17 @@ const TenantInviteGuard: React.FC<TenantInviteGuardProps> = ({ children }) => {
     );
   }
 
-  // Show invite wall if tenant needs invite code
-  if (shouldShowWall) {
-    return <InviteCodeWall onInviteValidated={handleInviteValidated} />;
-  }
-
-  // Allow access to the app
-  return <>{children}</>;
+  // Always render children (the app), but show modal if needed
+  return (
+    <>
+      {children}
+      <InviteCodeModal
+        isOpen={shouldShowModal}
+        onClose={() => setShouldShowModal(false)}
+        onInviteValidated={handleInviteValidated}
+      />
+    </>
+  );
 };
 
 export default TenantInviteGuard; 

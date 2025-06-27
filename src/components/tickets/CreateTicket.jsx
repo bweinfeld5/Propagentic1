@@ -132,6 +132,7 @@ const CreateTicket = () => {
       
       // Redirect to the tickets list or the new ticket detail page
       if (result.success) {
+        // Use role-based redirect handled by RoleBasedRedirect component
         navigate('/dashboard');
       } else {
         throw new Error('Failed to create ticket');
@@ -323,7 +324,7 @@ const CreateTicket = () => {
         <div className="bg-gray-50 px-4 py-3 text-right sm:px-6">
           <button
             type="button"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/dashboard')} // Role-based redirect handled by RoleBasedRedirect
             className="mr-2 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             Cancel

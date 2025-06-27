@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { db, storage } from '../../firebase/config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { toast } from 'react-hot-toast';
 import { 
@@ -241,6 +241,14 @@ const EnhancedRequestForm: React.FC<EnhancedRequestFormProps> = ({
       // Upload photos first
       const photoURLs = photos.length > 0 ? await uploadPhotos(photos) : [];
       
+      // Get property ID for linking
+      const propertyId = userProfile?.propertyId;
+      if (!propertyId || propertyId === 'unknown') {
+        toast.error('Property information not found. Please contact your landlord.');
+        setUploading(false);
+        return;
+      }
+      
       // Prepare ticket data
       const ticketData = {
         issueTitle: formData.issueTitle.trim(),
@@ -252,7 +260,7 @@ const EnhancedRequestForm: React.FC<EnhancedRequestFormProps> = ({
         accessInstructions: formData.accessInstructions.trim(),
         status: 'pending_classification',
         submittedBy: currentUser.uid,
-        propertyId: userProfile?.propertyId || 'unknown',
+        propertyId: propertyId,
         propertyName: userProfile?.propertyName || 'Unknown Property',
         unitNumber: formData.location || userProfile?.unitNumber || 'N/A',
         photoUrls: photoURLs,
@@ -271,10 +279,33 @@ const EnhancedRequestForm: React.FC<EnhancedRequestFormProps> = ({
         timestamp: new Date().toISOString()
       };
 
-      // Submit to Firestore
+      // Step 1: Create the maintenance request in Firestore
+      console.log('🔍 [DEBUG] Creating maintenance request...');
       const docRef = await addDoc(collection(db, 'tickets'), ticketData);
+      const requestId = docRef.id;
+      console.log('✅ [DEBUG] Maintenance request created with ID:', requestId);
       
-      console.log('Maintenance request submitted with ID:', docRef.id);
+      // Step 2: Link the request to the property document
+      console.log('🔍 [DEBUG] Linking request to property:', propertyId);
+      try {
+        const propertyRef = doc(db, 'properties', propertyId);
+        const propertySnap = await getDoc(propertyRef);
+        
+        if (propertySnap.exists()) {
+          // Update property document to include this maintenance request
+          await updateDoc(propertyRef, {
+            maintenanceRequests: arrayUnion(requestId),
+            updatedAt: serverTimestamp()
+          });
+          console.log('✅ [DEBUG] Successfully linked request to property');
+        } else {
+          console.warn('⚠️  [DEBUG] Property document not found:', propertyId);
+          // Don't fail the request creation, just log the warning
+        }
+      } catch (propertyError) {
+        console.warn('⚠️  [DEBUG] Failed to link request to property:', propertyError);
+        // Don't fail the request creation, property linking is secondary
+      }
       
       // Success feedback
       toast.success('Request submitted successfully! You\'ll receive updates via email.');
@@ -296,7 +327,7 @@ const EnhancedRequestForm: React.FC<EnhancedRequestFormProps> = ({
       onSuccess();
       
     } catch (error) {
-      console.error('Error submitting maintenance request:', error);
+      console.error('❌ [DEBUG] Error submitting maintenance request:', error);
       toast.error('Failed to submit request. Please try again.');
     } finally {
       setUploading(false);

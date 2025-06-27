@@ -34,10 +34,12 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendPropertyInvitationEmailManual = exports.sendPropertyInvitationEmail = void 0;
-const functions = __importStar(require("firebase-functions"));
+// Removed unused import
+// import * as functions from 'firebase-functions';
 const https_1 = require("firebase-functions/v2/https");
 const admin = __importStar(require("firebase-admin"));
 const logger = __importStar(require("firebase-functions/logger"));
+const firestore_1 = require("firebase-functions/v2/firestore");
 // Initialize admin if not already done
 if (!admin.apps.length) {
     admin.initializeApp();
@@ -47,9 +49,7 @@ let APP_DOMAIN;
 const getAppDomain = () => {
     if (!APP_DOMAIN) {
         try {
-            APP_DOMAIN = process.env.APP_DOMAIN ||
-                (functions.config().app && functions.config().app.domain) ||
-                'https://propagentic.com';
+            APP_DOMAIN = process.env.APP_DOMAIN || 'https://propagentic.com';
         }
         catch (error) {
             logger.warn('Failed to get app domain from config, using default');
@@ -59,66 +59,72 @@ const getAppDomain = () => {
     return APP_DOMAIN;
 };
 /**
- * Send property invitation email using Firebase Extension
+ * Send property invitation email via Firebase Extension
+ * Uses consistent format and enhanced error logging
  */
 const sendPropertyInvitationEmailViaExtension = async (tenantEmail, tenantName, landlordEmail, propertyName, propertyAddress, appDomain) => {
     try {
         const loginUrl = `${appDomain}/login`;
         const dashboardUrl = `${appDomain}/tenant/dashboard`;
+        // Generate comprehensive email content
         const htmlContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h1 style="color: #4F46E5; margin: 0; padding: 0;">PropAgentic</h1>
-          <p style="color: #64748b; font-size: 16px; margin-top: 5px;">Property Management, Simplified</p>
-        </div>
-        
-        <div style="background-color: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-          <h2 style="color: #333; font-size: 20px; margin-top: 0;">Property Invitation</h2>
-          
-          <p style="font-size: 16px; line-height: 1.5; color: #555;">
-            Hello ${tenantName},
-          </p>
-          
-          <p style="font-size: 16px; line-height: 1.5; color: #555;">
-            ${landlordEmail} has invited you to join 
-            <strong>${propertyName}</strong>${propertyAddress ? ` (${propertyAddress})` : ''} on PropAgentic.
-          </p>
-          
-          <div style="background-color: #EEF2FF; border-left: 4px solid #4F46E5; padding: 15px; margin: 20px 0; border-radius: 4px;">
-            <p style="margin: 0; font-weight: bold; color: #333;">🏠 Property Details:</p>
-            <p style="margin: 5px 0; color: #4F46E5; font-weight: bold;">${propertyName}</p>
-            ${propertyAddress ? `<p style="margin: 5px 0; color: #64748b; font-size: 14px;">${propertyAddress}</p>` : ''}
-          </div>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${dashboardUrl}" 
-               style="background-color: #4F46E5; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-weight: bold; display: inline-block;">
-               View Dashboard
-            </a>
-          </div>
-          
-          <p style="font-size: 14px; color: #64748b; line-height: 1.5;">
-            You can access your tenant dashboard at any time by logging into 
-            <a href="${loginUrl}" style="color: #4F46E5; text-decoration: none;">${appDomain}</a>
-          </p>
-          
-          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-            <h3 style="color: #333; font-size: 16px; margin-bottom: 10px;">What's Next?</h3>
-            <ul style="color: #555; font-size: 14px; line-height: 1.6; margin: 0; padding-left: 20px;">
-              <li>Log into your PropAgentic account</li>
-              <li>Check your tenant dashboard for the property invitation</li>
-              <li>Accept the invitation to get full access to property features</li>
-              <li>Submit maintenance requests, view property info, and communicate with your landlord</li>
-            </ul>
-          </div>
-        </div>
-        
-        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #64748b; font-size: 12px;">
-          <p>This is an automated message from PropAgentic. Please do not reply to this email.</p>
-          <p>If you have questions, please contact your property manager: ${landlordEmail}</p>
-          <p>&copy; ${new Date().getFullYear()} PropAgentic. All rights reserved.</p>
-        </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Property Invitation: ${propertyName}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+    <!-- Header -->
+    <div style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); padding: 40px 20px; text-align: center;">
+      <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">PropAgentic</h1>
+      <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Property Invitation</p>
+    </div>
+    
+    <!-- Content -->
+    <div style="padding: 40px 20px;">
+      <h2 style="color: #1f2937; margin: 0 0 20px 0;">Hello ${tenantName}!</h2>
+      
+      <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+        ${landlordEmail} has invited you to join <strong>${propertyName}</strong>${propertyAddress ? ` located at ${propertyAddress}` : ''} on PropAgentic.
+      </p>
+      
+      <!-- What's Next Section -->
+      <div style="background-color: #f3f4f6; padding: 25px; border-radius: 8px; margin: 30px 0;">
+        <h3 style="color: #374151; margin: 0 0 15px 0; font-size: 18px;">What's Next?</h3>
+        <ol style="color: #6b7280; margin: 0; padding-left: 20px; line-height: 1.8;">
+          <li>Log into your PropAgentic account at <a href="${loginUrl}" style="color: #4F46E5;">${loginUrl}</a></li>
+          <li>Check your tenant dashboard for the property invitation</li>
+          <li>Accept the invitation to get full access to property features</li>
+          <li>Submit maintenance requests, view property info, and communicate with your landlord</li>
+        </ol>
       </div>
+      
+      <!-- CTA Button -->
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${dashboardUrl}" 
+           style="background-color: #4F46E5; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px;">
+          Access Your Dashboard
+        </a>
+      </div>
+      
+      <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0;">
+        This is an automated message from PropAgentic. If you have questions, please contact your property manager: 
+        <a href="mailto:${landlordEmail}" style="color: #4F46E5;">${landlordEmail}</a>
+      </p>
+    </div>
+    
+    <!-- Footer -->
+    <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+      <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+        © ${new Date().getFullYear()} PropAgentic. All rights reserved.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
     `;
         const textContent = `
 PropAgentic Property Invitation
@@ -139,70 +145,81 @@ This is an automated message from PropAgentic. If you have questions, please con
 
 © ${new Date().getFullYear()} PropAgentic. All rights reserved.
     `;
-        // Use Firebase Extension for email sending
+        // Use CONSISTENT Firebase Extension format (direct fields, no message wrapper)
         const emailData = {
             to: tenantEmail,
             subject: `Property Invitation: ${propertyName}`,
             html: htmlContent,
             text: textContent,
+            // Add metadata for tracking and debugging
             metadata: {
                 type: 'property_invitation',
                 tenantEmail: tenantEmail,
                 landlordEmail: landlordEmail,
                 propertyName: propertyName,
-                source: 'propertyInvitationNotifications'
+                source: 'propertyInvitationNotifications',
+                version: '2.0', // Version for tracking format updates
+                timestamp: new Date().toISOString()
             }
         };
+        logger.info('Attempting to queue property invitation email', {
+            tenantEmail,
+            propertyName,
+            landlordEmail,
+            emailFormat: 'direct_fields',
+            dataStructure: Object.keys(emailData)
+        });
         // Add to mail collection for Firebase Extension to process
         const mailDoc = await admin.firestore().collection('mail').add(emailData);
         logger.info(`Property invitation email queued successfully via Firebase Extension`, {
             mailDocId: mailDoc.id,
             tenantEmail,
-            propertyName
+            propertyName,
+            subjectLength: emailData.subject.length,
+            htmlLength: emailData.html.length,
+            textLength: emailData.text.length
         });
         return mailDoc.id;
     }
     catch (error) {
-        logger.error('Error sending property invitation email via Firebase Extension:', error);
+        logger.error('Error sending property invitation email via Firebase Extension:', {
+            error: error.message,
+            errorCode: error.code,
+            errorStack: error.stack,
+            tenantEmail,
+            propertyName,
+            landlordEmail
+        });
         throw error;
     }
 };
 /**
- * Firestore trigger: Send email notification when property invitation is created for existing users
+ * Firestore trigger: Send property invitation email when invitation document is created
  */
-exports.sendPropertyInvitationEmail = functions.firestore
-    .onDocumentCreated('propertyInvitations/{invitationId}', async (event) => {
+exports.sendPropertyInvitationEmail = (0, firestore_1.onDocumentCreated)('propertyInvitations/{invitationId}', async (event) => {
     const snap = event.data;
     if (!snap) {
-        logger.error('No data associated with the event');
+        logger.error('No data associated with the propertyInvitations event');
         return;
     }
     const invitationData = snap.data();
     const { invitationId } = event.params;
+    logger.info('Property invitation created, processing email...', {
+        invitationId,
+        tenantEmail: invitationData === null || invitationData === void 0 ? void 0 : invitationData.tenantEmail,
+        propertyId: invitationData === null || invitationData === void 0 ? void 0 : invitationData.propertyId
+    });
     if (!invitationData || !invitationData.tenantEmail) {
-        logger.error('Invalid invitation data or missing email:', invitationData);
-        return;
-    }
-    // Only send emails for existing users (not for new invitations that use traditional invite codes)
-    if (invitationData.type !== 'existing_user') {
-        logger.info(`Skipping email for invitation ${invitationId} - not for existing user`);
-        return;
-    }
-    // Update the document to show we're sending the email
-    try {
-        await snap.ref.update({
-            emailSentAt: admin.firestore.FieldValue.serverTimestamp(),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        logger.error('Invalid invitation data or missing tenant email:', {
+            invitationId,
+            hasData: !!invitationData,
+            tenantEmail: invitationData === null || invitationData === void 0 ? void 0 : invitationData.tenantEmail
         });
-        logger.info(`Property invitation ${invitationId} marked as sending email.`);
-    }
-    catch (error) {
-        logger.error(`Error updating property invitation ${invitationId}:`, error);
         return;
     }
-    // Get property details for the email
-    let propertyName = 'a property';
-    let propertyAddress = '';
+    // Get property details
+    let propertyName = invitationData.propertyName || 'your property';
+    let propertyAddress = invitationData.propertyAddress || '';
     if (invitationData.propertyId) {
         try {
             const propertyDoc = await admin.firestore()
@@ -211,31 +228,20 @@ exports.sendPropertyInvitationEmail = functions.firestore
                 .get();
             if (propertyDoc.exists) {
                 const propertyData = propertyDoc.data();
-                propertyName = (propertyData === null || propertyData === void 0 ? void 0 : propertyData.name) || (propertyData === null || propertyData === void 0 ? void 0 : propertyData.nickname) || (propertyData === null || propertyData === void 0 ? void 0 : propertyData.title) || 'a property';
-                // Construct address
-                if (propertyData === null || propertyData === void 0 ? void 0 : propertyData.address) {
-                    if (typeof propertyData.address === 'string') {
-                        propertyAddress = propertyData.address;
-                    }
-                    else {
-                        const { street, city, state, zip } = propertyData.address;
-                        propertyAddress = [street, city, state, zip].filter(Boolean).join(', ');
-                    }
-                }
-                else {
-                    // Fallback to individual fields
-                    const parts = [
-                        (propertyData === null || propertyData === void 0 ? void 0 : propertyData.street) || (propertyData === null || propertyData === void 0 ? void 0 : propertyData.streetAddress),
-                        propertyData === null || propertyData === void 0 ? void 0 : propertyData.city,
-                        propertyData === null || propertyData === void 0 ? void 0 : propertyData.state,
-                        (propertyData === null || propertyData === void 0 ? void 0 : propertyData.zipCode) || (propertyData === null || propertyData === void 0 ? void 0 : propertyData.zip)
-                    ].filter(Boolean);
-                    propertyAddress = parts.join(', ');
-                }
+                propertyName = (propertyData === null || propertyData === void 0 ? void 0 : propertyData.name) || propertyName;
+                propertyAddress = (propertyData === null || propertyData === void 0 ? void 0 : propertyData.address) || propertyAddress;
+                logger.info('Property details fetched successfully', {
+                    propertyId: invitationData.propertyId,
+                    propertyName,
+                    hasAddress: !!propertyAddress
+                });
             }
         }
         catch (error) {
-            logger.warn(`Could not fetch property details for ${invitationData.propertyId}:`, error);
+            logger.warn(`Could not fetch property details for ${invitationData.propertyId}:`, {
+                error: error.message,
+                propertyId: invitationData.propertyId
+            });
         }
     }
     // Send the property invitation email
@@ -243,60 +249,68 @@ exports.sendPropertyInvitationEmail = functions.firestore
     const tenantEmail = invitationData.tenantEmail;
     const tenantName = invitationData.tenantName || tenantEmail.split('@')[0];
     try {
-        logger.info(`Sending property invitation email to existing user: ${tenantEmail}`);
-        // Use Firebase Extension instead of direct SendGrid
+        logger.info(`Sending property invitation email to: ${tenantEmail}`, {
+            invitationId,
+            tenantName,
+            landlordEmail,
+            propertyName
+        });
+        // Use Firebase Extension with consistent format
         const mailDocId = await sendPropertyInvitationEmailViaExtension(tenantEmail, tenantName, landlordEmail, propertyName, propertyAddress, getAppDomain());
         if (mailDocId) {
             // Update document with success status
             await snap.ref.update({
                 emailDeliveredAt: admin.firestore.FieldValue.serverTimestamp(),
                 mailDocId: mailDocId,
+                emailStatus: 'queued', // Track email status
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
-            logger.info(`Property invitation email queued successfully via Firebase Extension`, {
+            logger.info(`Property invitation email queued successfully`, {
                 tenantEmail,
                 invitationId,
-                mailDocId
+                mailDocId,
+                status: 'queued'
             });
         }
         else {
-            throw new Error('Firebase Extension email queueing failed');
+            throw new Error('Firebase Extension email queueing failed - no mailDocId returned');
         }
     }
     catch (error) {
         logger.error('Error sending property invitation email:', {
             error: error.message,
+            errorCode: error.code,
+            errorStack: error.stack,
             invitationId,
-            tenantEmail
+            tenantEmail,
+            landlordEmail,
+            propertyName
         });
         // Update the document to reflect the email failure
         await snap.ref.update({
             emailError: error.message || 'Failed to send email notification.',
+            emailStatus: 'failed',
+            emailFailedAt: admin.firestore.FieldValue.serverTimestamp(),
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
     }
 });
 /**
- * Manual function to send property invitation emails (can be called from frontend)
+ * Callable function: Manually send property invitation email
  */
 exports.sendPropertyInvitationEmailManual = (0, https_1.onCall)(async (request) => {
-    // Verify authentication
+    // Verify user is authenticated
     if (!request.auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated');
     }
-    // Verify user is a landlord
-    const userDoc = await admin.firestore()
-        .collection('users')
-        .doc(request.auth.uid)
-        .get();
-    const userData = userDoc.data();
-    if (!userData || (userData.userType !== 'landlord' && userData.role !== 'landlord')) {
-        throw new https_1.HttpsError('permission-denied', 'Only landlords can send property invitations');
-    }
     const { invitationId } = request.data;
     if (!invitationId) {
-        throw new https_1.HttpsError('invalid-argument', 'Invitation ID is required');
+        throw new https_1.HttpsError('invalid-argument', 'invitationId is required');
     }
+    logger.info('Manual property invitation email requested', {
+        invitationId,
+        userId: request.auth.uid
+    });
     try {
         // Get the invitation data
         const invitationDoc = await admin.firestore()
@@ -321,12 +335,14 @@ exports.sendPropertyInvitationEmailManual = (0, https_1.onCall)(async (request) 
             await invitationDoc.ref.update({
                 manualEmailSentAt: admin.firestore.FieldValue.serverTimestamp(),
                 manualEmailDocId: mailDocId,
+                manualEmailStatus: 'queued',
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
             logger.info(`Manual property invitation email sent successfully`, {
                 invitationId,
                 mailDocId,
-                tenantEmail: invitationData.tenantEmail
+                tenantEmail: invitationData.tenantEmail,
+                userId: request.auth.uid
             });
             return {
                 success: true,
@@ -335,13 +351,25 @@ exports.sendPropertyInvitationEmailManual = (0, https_1.onCall)(async (request) 
             };
         }
         catch (error) {
-            logger.error('Error in manual email sending:', error);
+            logger.error('Error in manual email sending:', {
+                error: error.message,
+                errorCode: error.code,
+                invitationId,
+                userId: request.auth.uid
+            });
             throw new https_1.HttpsError('internal', `Failed to send email: ${error.message}`);
         }
     }
     catch (error) {
-        logger.error('Error in manual property invitation email:', error);
-        throw new https_1.HttpsError('internal', error.message || 'Failed to process email request');
+        if (error instanceof https_1.HttpsError) {
+            throw error;
+        }
+        logger.error('Unexpected error in manual email sending:', {
+            error: error.message,
+            invitationId,
+            userId: request.auth.uid
+        });
+        throw new https_1.HttpsError('internal', 'An unexpected error occurred');
     }
 });
 //# sourceMappingURL=propertyInvitationNotifications.js.map

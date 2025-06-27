@@ -381,6 +381,11 @@ const GlassyHeader = () => {
     }
   };
 
+  // Skip header entirely for AI chat (after all hooks have been called)
+  if (location.pathname === '/maintenance/ai-chat') {
+    return null;
+  }
+
   return (
     <UIComponentErrorBoundary componentName="GlassyHeader">
       {renderHeader()}

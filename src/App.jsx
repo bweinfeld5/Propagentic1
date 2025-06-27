@@ -5,6 +5,7 @@ import { NotificationProvider } from './context/NotificationContext';
 import { ConnectionProvider } from './context/ConnectionContext.jsx';
 import { DemoModeProvider, useDemoMode } from './context/DemoModeContext.jsx';
 import { ThemeProvider } from './design-system/dark-mode';
+import { ModelContextProvider } from './contexts/ModelContext';
 import DataServiceProvider from './providers/DataServiceProvider';
 import LogoLoadingAnimation from './components/shared/LogoLoadingAnimation';
 import GlassyHeader from './components/layout/GlassyHeader';
@@ -13,6 +14,9 @@ import LocalStorageDebug from './components/shared/LocalStorageDebug';
 import UniversalLoadingSpinner from './components/shared/UniversalLoadingSpinner';
 import PreLaunchGuard from './components/guards/PreLaunchGuard';
 import TenantInviteGuard from './components/guards/TenantInviteGuard.tsx';
+import ProfileCompletionGuard from './components/guards/ProfileCompletionGuard';
+import ErrorBoundary from './components/error/ErrorBoundary';
+import ErrorMonitoringDashboard from './components/admin/ErrorMonitoringDashboard';
 import { Toaster } from 'react-hot-toast';
 import PitchDeckDemo from './pages/demo/PitchDeckDemo';
 import DemoPage from './pages/DemoPage';
@@ -24,11 +28,12 @@ import TestUIComponents from './pages/TestUIComponents';
 import SimpleUIShowcase from './pages/SimpleUIShowcase';
 import MaintenanceSurvey from './components/maintenance/MaintenanceSurvey';
 import EnhancedMaintenancePage from './pages/tenant/EnhancedMaintenancePage';
+import AIMaintenanceChat from './components/tenant/AIMaintenanceChat';
 import PublicPropertyDashboardDemo from './pages/PublicPropertyDashboardDemo';
 import DemoShowcase from './pages/DemoShowcase';
 import TestPage from './pages/TestPage';
-import TenantDemo from './pages/TenantDemo';
 import InviteAcceptancePage from './pages/InviteAcceptancePage';
+import InviteCodeBrowserTest from './pages/InviteCodeBrowserTest';
 
 // Lazy load page components
 const LandingPage = lazy(() => import('./components/landing/LandingPage.jsx'));
@@ -44,14 +49,17 @@ const ContractorDashboard = lazy(() => import('./components/contractor/EnhancedC
 const ContractorDashboardDemo = lazy(() => import('./pages/ContractorDashboardDemo.jsx'));
 const OriginalContractorDashboard = lazy(() => import('./components/contractor/ContractorDashboard.jsx'));
 const ContractorMessagesPage = lazy(() => import('./pages/contractor/ContractorMessagesPage.tsx'));
+const ContractorProfilePage = lazy(() => import('./pages/ContractorProfilePage.jsx'));
+const JobHistoryPage = lazy(() => import('./pages/JobHistoryPage.jsx'));
 const PricingPage = lazy(() => import('./pages/PricingPage.jsx'));
-const TenantOnboardingPage = lazy(() => import('./pages/onboarding/TenantOnboardingPage.jsx'));
+const OnboardingSurvey = lazy(() => import('./components/onboarding/OnboardingSurvey.jsx'));
 const LandlordOnboarding = lazy(() => import('./components/onboarding/LandlordOnboarding.jsx'));
 const ContractorOnboardingPage = lazy(() => import('./pages/ContractorOnboardingPage.jsx'));
 const SVGTest = lazy(() => import('./components/branding/SVGTest'));
 const BlueprintTest = lazy(() => import('./components/testing/BlueprintTest'));
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
 const ContractorEstimateReadinessDemo = lazy(() => import('./components/landlord/ContractorEstimateReadinessDemo.jsx'));
+const EmailVerificationTest = lazy(() => import('./pages/EmailVerificationTest.jsx'));
 
 // Route Guards
 const PrivateRoute = ({ children }) => {
@@ -181,10 +189,16 @@ function App() {
               <ConnectionProvider>
                 <DemoModeProvider>
                   <DataServiceProvider>
-                    <NotificationProvider>
-                      <Router>
-                        <Suspense fallback={<UniversalLoadingSpinner message="Loading page..." />}>
-                        <Routes>
+                    <ModelContextProvider>
+                      <NotificationProvider>
+                      <ErrorBoundary 
+                        level="page"
+                        userId={null}
+                        userRole={null}
+                      >
+                        <Router>
+                          <Suspense fallback={<UniversalLoadingSpinner message="Loading page..." />}>
+                          <Routes>
                         {/* Public routes */}
                         <Route path="/" element={<Navigate to="/propagentic/new" replace />} />
                         <Route path="/propagentic/new" element={<LandingPage />} />
@@ -210,17 +224,21 @@ function App() {
                                 <Route path="/forgot-password" element={<ForgotPassword />} />
                                 <Route path="/auth" element={<AuthPage />} />
                                 <Route path="/invite" element={<InviteAcceptancePage />} />
+                                <Route path="/invite-test" element={<PrivateRoute><InviteCodeBrowserTest /></PrivateRoute>} />
                                 <Route path="/dashboard" element={<PrivateRoute><RoleBasedRedirect /></PrivateRoute>} />
-                                <Route path="/tenant/dashboard" element={<PrivateRoute><EnhancedTenantDashboard /></PrivateRoute>} />
-                                <Route path="/tenant/dashboard/legacy" element={<PrivateRoute><TenantDashboard /></PrivateRoute>} />
-                                <Route path="/landlord/dashboard" element={<PrivateRoute><LandlordDashboard /></PrivateRoute>} />
-                                <Route path="/contractor/dashboard" element={<PrivateRoute><ContractorDashboard /></PrivateRoute>} />
+                                <Route path="/tenant/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={85}><EnhancedTenantDashboard /></ProfileCompletionGuard></PrivateRoute>} />
+                                <Route path="/tenant/dashboard/legacy" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={85}><TenantDashboard /></ProfileCompletionGuard></PrivateRoute>} />
+                                <Route path="/landlord/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={90}><LandlordDashboard /></ProfileCompletionGuard></PrivateRoute>} />
+                                <Route path="/contractor/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={95}><ContractorDashboard /></ProfileCompletionGuard></PrivateRoute>} />
                                 <Route path="/contractor/messages" element={<PrivateRoute><ContractorMessagesPage /></PrivateRoute>} />
+                                <Route path="/contractor/profile" element={<PrivateRoute><ContractorProfilePage /></PrivateRoute>} />
+                                <Route path="/contractor/history" element={<PrivateRoute><JobHistoryPage /></PrivateRoute>} />
                                 <Route path="/contractor/dashboard/enhanced" element={<ContractorDashboardDemo />} />
                                 <Route path="/contractor/dashboard/original" element={<PrivateRoute><OriginalContractorDashboard /></PrivateRoute>} />
                                 <Route path="/maintenance/new" element={<PrivateRoute><MaintenanceSurvey /></PrivateRoute>} />
                                 <Route path="/maintenance/enhanced" element={<PrivateRoute><EnhancedMaintenancePage /></PrivateRoute>} />
-                                <Route path="/onboarding" element={<PrivateRoute><TenantOnboardingPage /></PrivateRoute>} />
+                                <Route path="/maintenance/ai-chat" element={<PrivateRoute><AIMaintenanceChat /></PrivateRoute>} />
+                                <Route path="/onboarding" element={<PrivateRoute><OnboardingSurvey /></PrivateRoute>} />
                                 <Route path="/landlord-onboarding" element={<PrivateRoute><LandlordOnboarding /></PrivateRoute>} />
                                 <Route path="/contractor-onboarding" element={<PrivateRoute><ContractorOnboardingPage /></PrivateRoute>} />
                                 <Route path="/ai-examples" element={<AIExamples />} />
@@ -231,7 +249,7 @@ function App() {
                                 <Route path="/landlord/dashboard/demo" element={<LandlordDashboardDemo />} />
                                 <Route path="/demo/pitchdeck" element={<PitchDeckDemo />} />
                                 <Route path="/demo/contractor-readiness" element={<ContractorEstimateReadinessDemo />} />
-                                <Route path="/tenant/demo" element={<TenantDemo />} />
+                                <Route path="/email-verification-test" element={<PrivateRoute><EmailVerificationTest /></PrivateRoute>} />
                                 {/* Fallback/Not Found - Redirect to login or a dedicated 404 page */}
                                 <Route path="*" element={<Navigate to="/login" />} />
                               </Routes>
@@ -271,10 +289,12 @@ function App() {
                       </div>
                       <LocalStorageDebug />
                     </Router>
-                  </NotificationProvider>
-                </DataServiceProvider>
-              </DemoModeProvider>
-            </ConnectionProvider>
+                      </ErrorBoundary>
+                      </NotificationProvider>
+                    </ModelContextProvider>
+                  </DataServiceProvider>
+                </DemoModeProvider>
+              </ConnectionProvider>
             </PreLaunchGuard>
           </AuthProvider>
         </ThemeProvider>

@@ -1,0 +1,43 @@
+{
+  "autoMode": false,
+  "checkInterval": 30000,
+  "emailNotifications": true,
+  "slackWebhook": null,
+  "maxRetries": 3,
+  "phases": {
+    "foundation": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "development": [
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "integration": [
+      "11",
+      "12",
+      "13",
+      "14",
+      "15"
+    ],
+    "testing": [
+      "17",
+      "18",
+      "19",
+      "20"
+    ],
+    "deployment": [
+      "21",
+      "22",
+      "23",
+      "24",
+      "25"
+    ]
+  }
+}

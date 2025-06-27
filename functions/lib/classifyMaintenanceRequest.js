@@ -63,7 +63,7 @@ function getOpenAIClient() {
  * with status 'pending_classification'
  */
 exports.classifyMaintenanceRequest = (0, firestore_1.onDocumentCreated)({
-    document: "maintenanceRequests/{requestId}",
+    document: "tickets/{ticketId}",
     region: "us-central1",
 }, async (event) => {
     var _a;
@@ -76,11 +76,11 @@ exports.classifyMaintenanceRequest = (0, firestore_1.onDocumentCreated)({
         const requestData = snapshot.data();
         // Only process documents with 'pending_classification' status
         if (!requestData || requestData.status !== "pending_classification") {
-            logger.info(`Document ${event.params.requestId} already processed or has no data. ` +
+            logger.info(`Document ${event.params.ticketId} already processed or has no data. ` +
                 `Status: ${requestData === null || requestData === void 0 ? void 0 : requestData.status}`);
             return;
         }
-        logger.info(`Processing maintenance request: ${event.params.requestId}`);
+        logger.info(`Processing maintenance ticket: ${event.params.ticketId}`);
         // Extract the description from the document
         const description = requestData.description;
         if (!description) {
@@ -97,10 +97,28 @@ exports.classifyMaintenanceRequest = (0, firestore_1.onDocumentCreated)({
         await snapshot.ref.update({
             category: classification.category,
             urgency: classification.urgency,
-            status: "ready_to_dispatch",
+            status: "pending", // Change to pending after classification
             classifiedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-        logger.info(`Successfully classified request ${event.params.requestId} as ` +
+        // Create notification for the tenant
+        if (requestData.submittedBy) {
+            await admin.firestore().collection('notifications').add({
+                userId: requestData.submittedBy,
+                userRole: 'tenant',
+                type: 'ticket_update',
+                title: 'Maintenance Request Analyzed',
+                message: `Your ${classification.category} request has been analyzed and classified as ${getUrgencyText(classification.urgency)} priority.`,
+                data: {
+                    ticketId: event.params.ticketId,
+                    category: classification.category,
+                    urgency: classification.urgency,
+                    originalDescription: description
+                },
+                read: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        }
+        logger.info(`Successfully classified ticket ${event.params.ticketId} as ` +
             `${classification.category} with urgency ${classification.urgency}`);
     }
     catch (error) {
@@ -119,6 +137,19 @@ exports.classifyMaintenanceRequest = (0, firestore_1.onDocumentCreated)({
         }
     }
 });
+/**
+ * Helper function to convert urgency number to text
+ */
+function getUrgencyText(urgency) {
+    switch (urgency) {
+        case 1: return "low";
+        case 2: return "minor";
+        case 3: return "normal";
+        case 4: return "important";
+        case 5: return "emergency";
+        default: return "normal";
+    }
+}
 /**
  * Function to classify a maintenance request description using OpenAI's GPT-4
  * @param {string} description - The maintenance request description

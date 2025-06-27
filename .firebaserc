@@ -1,5 +1,13 @@
 {
   "projects": {
-    "default": "propagentic" // TODO: Verify this is your correct Firebase project ID
+    "default": "propagentic"
+  },
+  "targets": {},
+  "etags": {
+    "propagentic": {
+      "extensionInstances": {
+        "firestore-send-email": "b28920c76ebb85ad03e1d7b0ca4d1139a97c103225344e7daaf263f4e2d59048"
+      }
+    }
   }
 }

@@ -19,8 +19,34 @@ import {
   ContractorProfile
 } from './schema';
 
-import { Invite } from '../types/invite';
+import { Invite } from './Invite';
+import { 
+  MaintenanceRequest,
+  StatusChange
+} from './MaintenanceRequest';
+import {
+  ContractorMaintenanceProfile,
+  BulkOperation,
+  RequestTemplate,
+  ContractorRating,
+  PhotoDocumentation,
+  TimeTracking
+} from './Maintenance';
+import {
+  CommunicationMessage,
+  CommunicationRole,
+  MessageType,
+  Conversation,
+  Message,
+  NotificationPreference
+} from './Communication';
 import { createTypedConverter, safeCast } from '../utils/TypeUtils';
+import {
+  NotificationSettings
+} from './User';
+
+// Type alias for backward compatibility
+type Communication = CommunicationMessage;
 
 /**
  * Helper function to create a Firestore converter for any model type
@@ -63,32 +89,96 @@ function createConverter<T extends { [key: string]: any }>(
 /**
  * Converter for User document
  */
-export const userConverter = createTypedConverter<User>('uid');
+export const userConverter = createConverter<User>('uid');
 
 /**
  * Converter for Property document
  */
-export const propertyConverter = createTypedConverter<Property>('propertyId');
+export const propertyConverter = createConverter<Property>('propertyId');
 
 /**
  * Converter for MaintenanceTicket document
  */
-export const maintenanceTicketConverter = createTypedConverter<MaintenanceTicket>('ticketId');
+export const maintenanceTicketConverter = createConverter<MaintenanceTicket>('ticketId');
 
 /**
  * Converter for LandlordProfile document
  */
-export const landlordProfileConverter = createTypedConverter<LandlordProfile>('landlordId');
+export const landlordProfileConverter = createConverter<LandlordProfile>('landlordId');
 
 /**
  * Converter for ContractorProfile document
  */
-export const contractorProfileConverter = createTypedConverter<ContractorProfile>('contractorId');
+export const contractorProfileConverter = createConverter<ContractorProfile>('contractorId');
 
 /**
  * Converter for Invite document
  */
-export const inviteConverter = createTypedConverter<Invite>('inviteId');
+export const inviteConverter = createConverter<Invite>('inviteId');
+
+// =============================================
+// MAINTENANCE SYSTEM CONVERTERS
+// =============================================
+
+/**
+ * Converter for MaintenanceRequest document
+ */
+export const maintenanceRequestConverter = createConverter<MaintenanceRequest>('id');
+
+/**
+ * Converter for Communication document (subcollection)
+ */
+export const communicationConverter = createConverter<Communication>('id');
+
+/**
+ * Converter for ContractorMaintenanceProfile document
+ */
+export const contractorMaintenanceProfileConverter = createConverter<ContractorMaintenanceProfile>('contractorId');
+
+/**
+ * Converter for BulkOperation document
+ */
+export const bulkOperationConverter = createConverter<BulkOperation>('id');
+
+/**
+ * Converter for RequestTemplate document
+ */
+export const requestTemplateConverter = createConverter<RequestTemplate>('id');
+
+/**
+ * Converter for ContractorRating document
+ */
+export const contractorRatingConverter = createConverter<ContractorRating>('id');
+
+/**
+ * Converter for NotificationSettings document
+ */
+export const notificationSettingsConverter = createConverter<NotificationSettings>('userId');
+
+/**
+ * Converter for PhotoDocumentation document (subcollection)
+ */
+export const photoDocumentationConverter = createConverter<PhotoDocumentation>('id');
+
+/**
+ * Converter for TimeTracking document (subcollection)
+ */
+export const timeTrackingConverter = createConverter<TimeTracking>('sessionId');
+
+/**
+ * Converter for Conversation document
+ */
+export const conversationConverter = createConverter<Conversation>('id');
+
+/**
+ * Converter for Message document (subcollection)
+ */
+export const messageConverter = createConverter<Message>('id');
+
+/**
+ * Converter for NotificationPreference document
+ */
+export const notificationPreferenceConverter = createConverter<NotificationPreference>('userId');
 
 /**
  * Helper functions for creating new documents with default values
@@ -188,6 +278,7 @@ export function createNewProperty(
     landlordId,
     unitList,
     tenantIds: [],
+    tenants: [], // Array of tenant user IDs
     activeRequests: [],
     createdAt: serverTimestamp() as Timestamp
   };
@@ -289,5 +380,314 @@ export function createNewInvite(
     unitNumber,
     createdAt: now,
     expiresAt
+  };
+}
+
+// =============================================
+// MAINTENANCE SYSTEM HELPER FUNCTIONS
+// =============================================
+
+/**
+ * Create a new maintenance request with default values
+ */
+export function createNewMaintenanceRequest(
+  requestData: {
+    id: string;
+    propertyId: string;
+    propertyName: string;
+    propertyAddress: string;
+    tenantId: string;
+    tenantName: string;
+    tenantEmail: string;
+    title: string;
+    description: string;
+    category: MaintenanceRequest['category'];
+    priority: MaintenanceRequest['priority'];
+    unitNumber?: string;
+    isEmergency?: boolean;
+  }
+): MaintenanceRequest {
+  const now = serverTimestamp() as Timestamp;
+  
+  return {
+    id: requestData.id,
+    propertyId: requestData.propertyId,
+    propertyName: requestData.propertyName,
+    propertyAddress: requestData.propertyAddress,
+    tenantId: requestData.tenantId,
+    tenantName: requestData.tenantName,
+    tenantEmail: requestData.tenantEmail,
+    tenantPhone: undefined,
+    contractorId: undefined,
+    contractorName: undefined,
+    
+    title: requestData.title,
+    description: requestData.description,
+    category: requestData.category,
+    priority: requestData.priority,
+    status: 'submitted',
+    
+    unitNumber: requestData.unitNumber,
+    specificLocation: undefined,
+    accessInstructions: undefined,
+    
+    scheduledDate: undefined,
+    estimatedDuration: undefined,
+    actualDuration: undefined,
+    
+    photos: [],
+    
+    estimatedCost: undefined,
+    actualCost: undefined,
+    
+    createdAt: now,
+    updatedAt: now,
+    completedDate: undefined,
+    lastStatusChange: new Date(),
+    
+    statusHistory: [],
+    communications: [],
+    
+    isEmergency: requestData.isEmergency || false,
+    emergencyContact: undefined,
+    
+    rating: undefined,
+    tenantFeedback: undefined,
+    
+    templateUsed: undefined,
+    workOrderNumber: undefined,
+    internalNotes: undefined,
+    tags: [],
+    recurringSchedule: undefined,
+    assignedDate: undefined
+  };
+}
+
+/**
+ * Create a new status change entry
+ */
+export function createNewStatusChange(
+  status: StatusChange['status'],
+  userId: string,
+  userRole: string,
+  notes?: string,
+  reason?: string
+): StatusChange {
+  return {
+    status,
+    timestamp: new Date(),
+    updatedBy: userId,
+    reason,
+    notes
+  };
+}
+
+/**
+ * Create a new communication entry
+ */
+export function createNewCommunication(
+  id: string,
+  requestId: string,
+  userId: string,
+  userRole: CommunicationRole,
+  userName: string,
+  message: string,
+  messageType: MessageType = 'message',
+  attachments: string[] = [],
+  isUrgent: boolean = false
+): CommunicationMessage {
+  const now = serverTimestamp() as Timestamp;
+  return {
+    id,
+    requestId,
+    senderId: userId,
+    senderName: userName,
+    senderRole: userRole,
+    content: message,
+    timestamp: now,
+    type: messageType,
+    isRead: false,
+    attachments,
+    isUrgent,
+    metadata: {},
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
+/**
+ * Create a new contractor maintenance profile with default values
+ */
+export function createNewContractorMaintenanceProfile(
+  contractorId: string,
+  userId: string,
+  skills: ContractorMaintenanceProfile['skills'] = [],
+  hourlyRate: number = 50
+): ContractorMaintenanceProfile {
+  const now = serverTimestamp() as Timestamp;
+  
+  return {
+    contractorId,
+    userId,
+    
+    skills,
+    certifications: [],
+    
+    availability: {
+      isAvailable: true,
+      maxConcurrentJobs: 5,
+      workingHours: {
+        monday: { start: '08:00', end: '17:00', available: true },
+        tuesday: { start: '08:00', end: '17:00', available: true },
+        wednesday: { start: '08:00', end: '17:00', available: true },
+        thursday: { start: '08:00', end: '17:00', available: true },
+        friday: { start: '08:00', end: '17:00', available: true },
+        saturday: { start: '09:00', end: '15:00', available: false },
+        sunday: { start: '09:00', end: '15:00', available: false }
+      },
+      emergencyAvailable: false,
+      serviceRadius: 25, // 25 miles
+      baseLocation: {
+        latitude: 0,
+        longitude: 0
+      }
+    },
+    
+    pricing: {
+      hourlyRate,
+      emergencyRate: hourlyRate * 1.5,
+      minimumCharge: hourlyRate,
+      mileageRate: 0
+    },
+    
+    equipment: [],
+    serviceAreas: [],
+    
+    ratings: {
+      averageRating: 0,
+      totalRatings: 0,
+      categories: {}
+    },
+    
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
+/**
+ * Create a new request template
+ */
+export function createNewRequestTemplate(
+  id: string,
+  title: string,
+  description: string,
+  category: string,
+  suggestedPriority: 'low' | 'medium' | 'high'
+): RequestTemplate {
+  return {
+    id,
+    name: title,
+    category,
+    description,
+    priority: suggestedPriority
+  };
+}
+
+/**
+ * Create a new contractor rating
+ */
+export function createNewContractorRating(
+  id: string,
+  requestId: string,
+  contractorId: string,
+  ratedBy: string,
+  rating: 1 | 2 | 3 | 4 | 5,
+  comment?: string
+): ContractorRating {
+  return {
+    id,
+    requestId,
+    contractorId,
+    tenantId: ratedBy,
+    rating,
+    comment,
+    createdAt: serverTimestamp() as Timestamp
+  };
+}
+
+/**
+ * Create default notification settings for a user
+ */
+export function createDefaultNotificationSettings(
+  userId: string,
+  userRole: NotificationSettings['userRole']
+): NotificationSettings {
+  return {
+    userId,
+    userRole,
+    
+    emailNotifications: {
+      newRequests: true,
+      statusUpdates: true,
+      messages: true,
+      emergencies: true,
+      reminders: true
+    },
+    
+    pushNotifications: {
+      newRequests: false,
+      statusUpdates: false,
+      messages: false,
+      emergencies: false,
+      reminders: false
+    },
+    
+    smsNotifications: {
+      emergencies: false,
+      reminders: false
+    },
+    
+    quietHours: {
+      enabled: false,
+      startTime: '22:00',
+      endTime: '08:00'
+    },
+    
+    frequency: 'immediate'
+  };
+}
+
+/**
+ * Create a new photo documentation entry
+ */
+export function createNewPhotoDocumentation(
+  id: string,
+  url: string,
+  uploadedBy: string,
+  caption?: string
+): PhotoDocumentation {
+  return {
+    id,
+    url,
+    uploadedBy,
+    uploadedAt: serverTimestamp() as Timestamp,
+    caption
+  };
+}
+
+/**
+ * Create a new time tracking entry
+ */
+export function createNewTimeTracking(
+  sessionId: string,
+  notes?: string,
+  startTime?: Timestamp
+): TimeTracking {
+  return {
+    sessionId,
+    startTime: startTime || serverTimestamp() as Timestamp,
+    endTime: undefined,
+    durationMinutes: undefined,
+    notes
   };
 } 

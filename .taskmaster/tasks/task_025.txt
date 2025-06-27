@@ -1,0 +1,11 @@
+# Task ID: 25
+# Title: Conduct User Acceptance Testing
+# Status: pending
+# Dependencies: 19, 20, 21, 22
+# Priority: medium
+# Description: Test the complete tenant flow with real users
+# Details:
+Organize user testing sessions with landlords and tenants to validate the complete signup and onboarding experience
+
+# Test Strategy:
+Collect user feedback and measure success metrics defined in PRD

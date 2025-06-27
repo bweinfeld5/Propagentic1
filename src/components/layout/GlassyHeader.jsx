@@ -156,7 +156,8 @@ const GlassyHeader = () => {
       return (
         <header
           ref={headerRef}
-          className="flex justify-between items-center p-4 bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-700 sticky top-0 z-10"
+          className="dashboard-header flex justify-between items-center p-4 bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-700 sticky top-0 z-10"
+          style={{ backgroundColor: 'white', opacity: 1 }}
         >
           {/* Left side: Page title */}
           <div className="flex items-center">
@@ -271,7 +272,7 @@ const GlassyHeader = () => {
                 <NavLink to="/propagentic/new">Home</NavLink>
                 <NavLink to="/pricing">Pricing</NavLink>
                 <NavLink to="/about">About</NavLink>
-                <NavLink to="/demo">Demo</NavLink>
+                <NavLink to="/demo/pitchdeck">Demo</NavLink>
                 <div className="ml-4 flex items-center space-x-3">
                   {/* Theme Toggle for public pages */}
                   <div className="bg-white/10 backdrop-blur-sm rounded-lg">
@@ -339,7 +340,7 @@ const GlassyHeader = () => {
                 <MobileNavLink to="/propagentic/new" onClick={() => setMobileMenuOpen(false)}>Home</MobileNavLink>
                 <MobileNavLink to="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</MobileNavLink>
                 <MobileNavLink to="/about" onClick={() => setMobileMenuOpen(false)}>About</MobileNavLink>
-                <MobileNavLink to="/demo" onClick={() => setMobileMenuOpen(false)}>Demo</MobileNavLink>
+                <MobileNavLink to="/demo/pitchdeck" onClick={() => setMobileMenuOpen(false)}>Demo</MobileNavLink>
                 <div className="pt-4 flex flex-col space-y-3">
                   {/* Theme Toggle for mobile */}
                   <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2">
@@ -379,6 +380,11 @@ const GlassyHeader = () => {
       );
     }
   };
+
+  // Skip header entirely for AI chat (after all hooks have been called)
+  if (location.pathname === '/maintenance/ai-chat') {
+    return null;
+  }
 
   return (
     <UIComponentErrorBoundary componentName="GlassyHeader">

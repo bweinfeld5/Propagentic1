@@ -1,125 +1,132 @@
 {
-  "tasks": [
-    {
-      "id": 1,
-      "title": "Upgrade Firebase Storage for Document Management",
-      "description": "Upgrade Firebase Storage to support secure file uploads, multiple file formats, and implement security rules for document management.",
-      "details": "Configure Firebase Storage to accept PDF, JPG, PNG files. Set up security rules to restrict access. Implement document expiration tracking and prepare for OCR integration. Ensure encryption for sensitive documents.",
-      "testStrategy": "Test file uploads, format support, security rule enforcement, and document expiration tracking. Verify encryption and access controls.",
-      "priority": "high",
-      "dependencies": [],
-      "status": "done",
-      "subtasks": []
-    },
-    {
-      "id": 2,
-      "title": "Implement Secure Document Upload and OCR Verification",
-      "description": "Build secure file upload interface and integrate OCR for automated document verification.",
-      "details": "Develop frontend upload component with validation for supported formats. Integrate OCR service for license/certificate verification. Store results in Firebase with audit logs. Implement document encryption.",
-      "testStrategy": "Test upload flow, OCR accuracy, document encryption, and audit logging. Validate error handling for unsupported formats.",
-      "priority": "high",
-      "dependencies": [
-        1
-      ],
-      "status": "in-progress",
-      "subtasks": []
-    },
-    {
-      "id": 3,
-      "title": "Develop Enhanced Scheduling System",
-      "description": "Create a scheduling system with weekly availability, emergency toggle, timezone support, recurring patterns, and calendar integration.",
-      "details": "Build UI for setting weekly availability, emergency toggle, and timezone selection. Support recurring patterns. Integrate Google Calendar/iCal. Store schedules in Firebase.",
-      "testStrategy": "Test scheduling UI, timezone handling, recurring patterns, and calendar sync. Validate data persistence and error handling.",
-      "priority": "medium",
-      "dependencies": [],
-      "status": "pending",
-      "subtasks": []
-    },
-    {
-      "id": 4,
-      "title": "Enhance Service Details and Pricing",
-      "description": "Add detailed service categorization, custom pricing tiers, equipment listing, custom service definitions, and map integration.",
-      "details": "Extend form to include service categories, pricing tiers, equipment/tools, custom service fields. Integrate Google Maps API for service area mapping.",
-      "testStrategy": "Test service form, pricing logic, equipment listing, map integration, and data validation.",
-      "priority": "medium",
-      "dependencies": [],
-      "status": "pending",
-      "subtasks": []
-    },
-    {
-      "id": 5,
-      "title": "Build Portfolio Management Features",
-      "description": "Implement photo gallery, before/after images, project descriptions, video upload, and reference collection.",
-      "details": "Develop portfolio upload interface for images/videos. Add before/after pairs, project description fields, and reference collection. Store in Firebase Storage.",
-      "testStrategy": "Test image/video upload, project description, reference collection, and data integrity.",
-      "priority": "medium",
-      "dependencies": [
-        1
-      ],
-      "status": "pending",
-      "subtasks": []
-    },
-    {
-      "id": 6,
-      "title": "Integrate Stripe Connect for Payments",
-      "description": "Integrate Stripe Connect for contractor payments, ACH, W-9 collection, bank account verification, and multiple payment methods.",
-      "details": "Implement Stripe Connect integration. Add ACH, W-9 form collection, bank account verification, and support for multiple payment methods. Store payment info securely.",
-      "testStrategy": "Test payment setup, ACH, W-9 collection, bank verification, and error handling. Validate security and data storage.",
-      "priority": "high",
-      "dependencies": [],
-      "status": "done",
-      "subtasks": []
-    },
-    {
-      "id": 7,
-      "title": "Optimize Mobile Onboarding Experience",
-      "description": "Add camera integration, mobile UI improvements, SMS verification, offline support, and resume-later functionality.",
-      "details": "Implement camera integration for document capture. Enhance mobile UI. Add SMS verification via gateway. Support offline form completion and resume-later.",
-      "testStrategy": "Test camera integration, mobile UI, SMS verification, offline support, and resume-later flow.",
-      "priority": "medium",
-      "dependencies": [
-        2,
-        3,
-        4
-      ],
-      "status": "pending",
-      "subtasks": []
-    },
-    {
-      "id": 8,
-      "title": "Implement Accessibility and Auto-save Features",
-      "description": "Add ARIA labels, keyboard navigation, screen reader support, high contrast mode, text size adjustment, auto-save, and progress indicators.",
-      "details": "Implement ARIA labels, keyboard navigation, screen reader support, high contrast mode, text size adjustment. Add auto-save, progress indicators, and email link for resume.",
-      "testStrategy": "Test accessibility features, auto-save, progress indicators, and resume functionality.",
-      "priority": "medium",
-      "dependencies": [],
-      "status": "pending",
-      "subtasks": []
-    },
-    {
-      "id": 9,
-      "title": "Enhance Form Validation and Help/Support",
-      "description": "Add real-time validation, error messages, password strength, field hints, address autocomplete, help tooltips, popovers, example inputs, chat support, and FAQ.",
-      "details": "Implement real-time validation, error messages, password strength, field hints, address autocomplete. Add help tooltips, popovers, example inputs, chat support, and FAQ section.",
-      "testStrategy": "Test validation logic, help features, chat integration, and FAQ usability.",
-      "priority": "medium",
-      "dependencies": [],
-      "status": "pending",
-      "subtasks": []
-    },
-    {
-      "id": 10,
-      "title": "Implement Analytics and Security Features",
-      "description": "Track form completion, drop-off points, field times, error frequencies, generate reports, add two-factor authentication, session management, and audit logging.",
-      "details": "Integrate analytics to track form completion, drop-off, field times, errors, and generate reports. Add two-factor authentication, session management, and audit logging.",
-      "testStrategy": "Test analytics collection, report generation, two-factor auth, session management, and audit logs.",
-      "priority": "medium",
-      "dependencies": [
-        2,
-        6
-      ],
-      "status": "pending",
-      "subtasks": []
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Upgrade Firebase Storage for Document Management",
+        "description": "Upgrade Firebase Storage to support secure file uploads, multiple file formats, and implement security rules for document management.",
+        "details": "Configure Firebase Storage to accept PDF, JPG, PNG files. Set up security rules to restrict access. Implement document expiration tracking and prepare for OCR integration. Ensure encryption for sensitive documents.",
+        "testStrategy": "Test file uploads, format support, security rule enforcement, and document expiration tracking. Verify encryption and access controls.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Implement Secure Document Upload and OCR Verification",
+        "description": "Build secure file upload interface and integrate OCR for automated document verification.",
+        "details": "Develop frontend upload component with validation for supported formats. Integrate OCR service for license/certificate verification. Store results in Firebase with audit logs. Implement document encryption.",
+        "testStrategy": "Test upload flow, OCR accuracy, document encryption, and audit logging. Validate error handling for unsupported formats.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "in-progress",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Develop Enhanced Scheduling System",
+        "description": "Create a scheduling system with weekly availability, emergency toggle, timezone support, recurring patterns, and calendar integration.",
+        "details": "Build UI for setting weekly availability, emergency toggle, and timezone selection. Support recurring patterns. Integrate Google Calendar/iCal. Store schedules in Firebase.",
+        "testStrategy": "Test scheduling UI, timezone handling, recurring patterns, and calendar sync. Validate data persistence and error handling.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Enhance Service Details and Pricing",
+        "description": "Add detailed service categorization, custom pricing tiers, equipment listing, custom service definitions, and map integration.",
+        "details": "Extend form to include service categories, pricing tiers, equipment/tools, custom service fields. Integrate Google Maps API for service area mapping.",
+        "testStrategy": "Test service form, pricing logic, equipment listing, map integration, and data validation.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Build Portfolio Management Features",
+        "description": "Implement photo gallery, before/after images, project descriptions, video upload, and reference collection.",
+        "details": "Develop portfolio upload interface for images/videos. Add before/after pairs, project description fields, and reference collection. Store in Firebase Storage.",
+        "testStrategy": "Test image/video upload, project description, reference collection, and data integrity.",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Integrate Stripe Connect for Payments",
+        "description": "Integrate Stripe Connect for contractor payments, ACH, W-9 collection, bank account verification, and multiple payment methods.",
+        "details": "Implement Stripe Connect integration. Add ACH, W-9 form collection, bank account verification, and support for multiple payment methods. Store payment info securely.",
+        "testStrategy": "Test payment setup, ACH, W-9 collection, bank verification, and error handling. Validate security and data storage.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Optimize Mobile Onboarding Experience",
+        "description": "Add camera integration, mobile UI improvements, SMS verification, offline support, and resume-later functionality.",
+        "details": "Implement camera integration for document capture. Enhance mobile UI. Add SMS verification via gateway. Support offline form completion and resume-later.",
+        "testStrategy": "Test camera integration, mobile UI, SMS verification, offline support, and resume-later flow.",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          3,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Implement Accessibility and Auto-save Features",
+        "description": "Add ARIA labels, keyboard navigation, screen reader support, high contrast mode, text size adjustment, auto-save, and progress indicators.",
+        "details": "Implement ARIA labels, keyboard navigation, screen reader support, high contrast mode, text size adjustment. Add auto-save, progress indicators, and email link for resume.",
+        "testStrategy": "Test accessibility features, auto-save, progress indicators, and resume functionality.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Enhance Form Validation and Help/Support",
+        "description": "Add real-time validation, error messages, password strength, field hints, address autocomplete, help tooltips, popovers, example inputs, chat support, and FAQ.",
+        "details": "Implement real-time validation, error messages, password strength, field hints, address autocomplete. Add help tooltips, popovers, example inputs, chat support, and FAQ section.",
+        "testStrategy": "Test validation logic, help features, chat integration, and FAQ usability.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Implement Analytics and Security Features",
+        "description": "Track form completion, drop-off points, field times, error frequencies, generate reports, add two-factor authentication, session management, and audit logging.",
+        "details": "Integrate analytics to track form completion, drop-off, field times, errors, and generate reports. Add two-factor authentication, session management, and audit logging.",
+        "testStrategy": "Test analytics collection, report generation, two-factor auth, session management, and audit logs.",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-15T19:28:36.219Z",
+      "updated": "2025-06-15T19:28:36.219Z",
+      "description": "Tasks for master context"
     }
-  ]
+  }
 }

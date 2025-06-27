@@ -2,6 +2,7 @@
 import { HttpsError, onCall, CallableRequest } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
+import { sendPropertyInvitationEmailUnified } from './unifiedEmailService';
 
 // Ensure admin is initialized if needed (though index.ts should handle it)
 if (!admin.apps.length) {
@@ -61,24 +62,64 @@ export const sendPropertyInvite = onCall(async (request: CallableRequest<{ prope
       logger.warn("sendPropertyInvite: Could not fetch landlord/property name, using defaults.", { error: fetchError.message });
     }
 
-    // 4. Create Invite Document
+    // 4. Send Email Using Unified Service (Same Logic as Working Browser Tests)
+    logger.info(`Sending invitation email using unified service for ${tenantEmail}`);
+    
+    let propertyAddress = '';
+    try {
+      const propertySnap = await db.collection("properties").doc(propertyId).get();
+      if (propertySnap.exists) {
+        const propertyData = propertySnap.data();
+        if (propertyData?.streetAddress) {
+          propertyAddress = `${propertyData.streetAddress}`;
+          if (propertyData.city) propertyAddress += `, ${propertyData.city}`;
+          if (propertyData.state) propertyAddress += `, ${propertyData.state}`;
+        }
+      }
+    } catch (error: any) {
+      logger.warn("Could not fetch property address:", error.message);
+    }
+
+    const emailResult = await sendPropertyInvitationEmailUnified({
+      tenantEmail: tenantEmail.toLowerCase(),
+      landlordName: landlordName,
+      propertyName: propertyName,
+      propertyAddress: propertyAddress || undefined
+    });
+
+    // 5. Create Invite Document with Email Info
     const inviteData = {
       landlordId: landlordUid,
       landlordName: landlordName,
       propertyId: propertyId,
       propertyName: propertyName,
-      tenantEmail: tenantEmail.toLowerCase(), // Store email in lowercase for consistency
-      status: "pending",
+      propertyAddress: propertyAddress,
+      tenantEmail: tenantEmail.toLowerCase(),
+      status: "sent", // Changed from "pending" to "sent" since email is sent
+      emailSent: true,
+      emailSentAt: admin.firestore.FieldValue.serverTimestamp(),
+      mailDocId: emailResult.mailDocId,
+      inviteCode: emailResult.inviteCode,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      method: "unified_service", // Track that this used the unified service
     };
 
     const inviteRef = await db.collection("invites").add(inviteData);
-    logger.info(`Successfully created invite document ${inviteRef.id} for ${tenantEmail}`);
+    logger.info(`Successfully created invite document ${inviteRef.id} and sent email to ${tenantEmail} via unified service`, {
+      inviteId: inviteRef.id,
+      mailDocId: emailResult.mailDocId,
+      inviteCode: emailResult.inviteCode
+    });
 
-    // 5. Return Success
-    // Note: The actual notification to the tenant is handled by the
-    // 'createNotificationOnInvite' trigger listening to the 'invites' collection.
-    return { success: true, message: "Invitation sent successfully.", inviteId: inviteRef.id };
+    // 6. Return Success with Details
+    return { 
+      success: true, 
+      message: "Invitation sent successfully via unified email service.", 
+      inviteId: inviteRef.id,
+      mailDocId: emailResult.mailDocId,
+      inviteCode: emailResult.inviteCode,
+      method: "unified_service"
+    };
 
   } catch (error: any) {
     logger.error("sendPropertyInvite: Failed to send invitation.", { 
@@ -224,17 +265,45 @@ export const acceptPropertyInvite = onCall(async (request: CallableRequest<{ inv
 
       // Update property document (add tenant to list)
       transaction.update(propertyRef, {
-        tenants: admin.firestore.FieldValue.arrayUnion(tenantUid)
+        tenants: admin.firestore.FieldValue.arrayUnion(tenantUid),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
         // Optionally update occupied status/count if needed
       });
 
-      // Optional: Update landlord profile (add tenant to list)
+      // Update landlord profile with accepted tenant details
       // Ensure landlord profile exists before attempting update
       const landlordProfileSnap = await transaction.get(landlordProfileRef);
       if (landlordProfileSnap.exists) {
+        // Create accepted tenant record with rich metadata
+        const acceptedTenantRecord = {
+          tenantId: tenantUid,
+          propertyId: propertyId,
+          inviteId: inviteId,
+          inviteCode: inviteData.inviteCode || '',
+          tenantEmail: inviteData.tenantEmail || tenantEmail || '',
+          unitNumber: inviteData.unitNumber || null,
+          acceptedAt: admin.firestore.FieldValue.serverTimestamp(),
+          inviteType: 'email' // Direct invite ID acceptance typically from email
+        };
+
+        // Update landlord profile arrays and statistics
+        const currentData = landlordProfileSnap.data() || {};
+        const currentAccepted = currentData.totalInvitesAccepted || 0;
+        const currentSent = currentData.totalInvitesSent || 0;
+        const newAccepted = currentAccepted + 1;
+        const newRate = currentSent > 0 ? Math.round((newAccepted / currentSent) * 100) : 100;
+
         transaction.update(landlordProfileRef, {
-          tenants: admin.firestore.FieldValue.arrayUnion(tenantUid)
+          acceptedTenants: admin.firestore.FieldValue.arrayUnion(tenantUid),
+          acceptedTenantDetails: admin.firestore.FieldValue.arrayUnion(acceptedTenantRecord),
+          totalInvitesAccepted: admin.firestore.FieldValue.increment(1),
+          inviteAcceptanceRate: newRate,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
+
+        logger.info(`Updated landlord profile ${landlordId} with accepted tenant details for ${tenantUid}`);
+      } else {
+        logger.warn(`Landlord profile ${landlordId} not found during invite acceptance`);
       }
     });
 

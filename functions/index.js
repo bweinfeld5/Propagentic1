@@ -28,24 +28,42 @@ try {
   console.error('❌ Failed to load userRelationships functions:', error.message);
 }
 
+// SendGrid Email functions (NEW)
+try {
+  const sendgridTests = require('./lib/testSendGrid');
+  exports.testSendGrid = sendgridTests.testSendGrid;
+  exports.testPing = sendgridTests.testPing;
+  console.log('✅ Loaded SendGrid test functions');
+} catch (error) {
+  console.error('❌ Failed to load SendGrid test functions:', error.message);
+}
+
+// Updated Invite functions with SendGrid
+try {
+  const invites = require('./lib/invites');
+  exports.sendInviteEmail = invites.sendInviteEmail;
+  console.log('✅ Loaded SendGrid-powered invite functions');
+} catch (error) {
+  console.error('❌ Failed to load invite functions:', error.message);
+}
+
 // Invite Code functions
 try {
   const inviteCode = require('./lib/inviteCode');
   exports.generateInviteCode = inviteCode.generateInviteCode;
-  exports.validateInviteCode = inviteCode.validateInviteCode;
-  exports.redeemInviteCode = inviteCode.redeemInviteCode;
-  console.log('✅ Loaded inviteCode functions');
+  // Note: validateInviteCode and redeemInviteCode functions removed - being rebuilt
+  console.log('✅ Loaded inviteCode functions (generateInviteCode only)');
 } catch (error) {
   console.error('❌ Failed to load inviteCode functions:', error.message);
 }
 
-// Email invite function
+// Accept Tenant Invite function (HTTP function with CORS support)
 try {
-  const invites = require('./lib/invites');
-  exports.sendInviteEmail = invites.sendInviteEmail;
-  console.log('✅ Loaded email invite function');
+  const { acceptTenantInvite } = require('./lib/index');
+  exports.acceptTenantInvite = acceptTenantInvite;
+  console.log('✅ Loaded acceptTenantInvite HTTP function with CORS');
 } catch (error) {
-  console.error('❌ Failed to load invites functions:', error.message);
+  console.error('❌ Failed to load acceptTenantInvite function:', error.message);
 }
 
 // Notification trigger functions
@@ -61,6 +79,55 @@ try {
 exports.ping = require('firebase-functions').https.onCall(async () => {
   console.log("Ping function invoked.");
   return { message: "pong", timestamp: Date.now() };
+});
+
+// Set custom claims for users (for Firestore rules)
+exports.setUserClaims = require('firebase-functions').https.onCall(async (data, context) => {
+  // Check if user is authenticated
+  if (!context.auth) {
+    throw new require('firebase-functions').https.HttpsError(
+      'unauthenticated',
+      'The function must be called while authenticated.'
+    );
+  }
+
+  const { uid, userType } = data;
+  
+  // Validate input
+  if (!uid || !userType) {
+    throw new require('firebase-functions').https.HttpsError(
+      'invalid-argument',
+      'Missing uid or userType'
+    );
+  }
+
+  // Validate userType
+  const validUserTypes = ['landlord', 'tenant', 'contractor', 'admin'];
+  if (!validUserTypes.includes(userType)) {
+    throw new require('firebase-functions').https.HttpsError(
+      'invalid-argument',
+      'Invalid userType'
+    );
+  }
+
+  try {
+    // Set custom claims
+    await admin.auth().setCustomUserClaims(uid, { userType });
+    
+    console.log(`Set custom claims for user ${uid}: userType=${userType}`);
+    
+    return { 
+      success: true, 
+      message: `Custom claims set for user ${uid}`,
+      userType 
+    };
+  } catch (error) {
+    console.error('Error setting custom claims:', error);
+    throw new require('firebase-functions').https.HttpsError(
+      'internal',
+      'Failed to set custom claims'
+    );
+  }
 });
 
 // Legacy stub functions (keeping for backward compatibility if needed)

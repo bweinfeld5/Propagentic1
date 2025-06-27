@@ -1,0 +1,24 @@
+# PropAgentic Background Agent Environment Variables
+# Copy this to .cursor/agent-env and fill in your actual values
+
+# Firebase Configuration (if agent needs direct Firebase access)
+FIREBASE_API_KEY=your_firebase_api_key_here
+FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+FIREBASE_APP_ID=your_app_id
+
+# Task Master AI Configuration
+ANTHROPIC_API_KEY=your_anthropic_key_for_task_master
+PERPLEXITY_API_KEY=your_perplexity_key_for_research
+
+# GitHub Configuration (usually handled by Cursor)
+GITHUB_TOKEN=your_github_token_if_needed
+
+# Development Configuration
+NODE_ENV=development
+REACT_APP_ENV=development
+
+# Optional: External APIs
+# Add any other API keys your PropAgentic project uses 

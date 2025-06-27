@@ -1,0 +1,93 @@
+sequenceDiagram
+    participant User
+    participant App as App.jsx
+    participant LS as localStorage
+    participant Loading as LogoLoadingAnimation
+    participant Providers as Provider Hierarchy
+    participant Auth as AuthProvider
+    participant Guard as PreLaunchGuard
+    participant Router as React Router
+    participant RBR as RoleBasedRedirect
+    participant Dashboard as Dashboard Components
+
+    Note over User, Dashboard: App.jsx Initialization & Flow Sequence
+
+    User->>App: Navigate to Application
+    App->>LS: Check hasVisitedBefore
+    
+    alt First Time Visitor
+        LS-->>App: null/false
+        App->>Loading: Show LogoLoadingAnimation
+        Loading->>App: finishLoading() callback
+        App->>LS: Set hasVisitedBefore = true
+    else Returning Visitor
+        LS-->>App: true
+        App->>App: setShowContent(true), setLoading(false)
+    end
+
+    App->>Providers: Initialize Provider Hierarchy
+    Note over Providers: ThemeProvider → AuthProvider → PreLaunchGuard<br/>→ ConnectionProvider → DemoModeProvider<br/>→ DataServiceProvider → NotificationProvider
+
+    Providers->>Auth: Initialize Authentication
+    Auth->>Auth: Check currentUser & userProfile
+    Providers->>Guard: Initialize PreLaunchGuard
+    Guard->>Router: Initialize React Router
+
+    User->>Router: Navigate to Route
+    
+    alt Public Routes
+        Router->>Router: Direct Component Loading
+        Note over Router: /propagentic/new → LandingPage<br/>/about → AboutPage<br/>/login → LoginPage<br/>/pricing → PricingPage
+    else Private Routes (/dashboard, /tenant/*, /landlord/*, /contractor/*)
+        Router->>Router: PrivateRoute Check
+        Router->>Auth: Verify currentUser
+        
+        alt Not Authenticated
+            Auth-->>Router: No currentUser
+            Router->>Router: Navigate("/propagentic/new")
+        else Authenticated
+            Auth-->>Router: currentUser exists
+            Router->>Router: Wrap with TenantInviteGuard
+            
+            alt Dashboard Root Route
+                Router->>RBR: Load RoleBasedRedirect
+                RBR->>Auth: Get userProfile & onboardingComplete
+                
+                alt Onboarding Incomplete
+                    RBR->>RBR: Check userType/role
+                    alt Landlord
+                        RBR->>Router: Navigate("/landlord-onboarding")
+                    else Contractor  
+                        RBR->>Router: Navigate("/contractor-onboarding")
+                    else Default
+                        RBR->>Router: Navigate("/onboarding")
+                    end
+                else Onboarding Complete
+                    alt Tenant
+                        RBR->>Router: Navigate("/tenant/dashboard")
+                    else Landlord
+                        RBR->>Router: Navigate("/landlord/dashboard")  
+                    else Contractor
+                        RBR->>Router: Navigate("/contractor/dashboard")
+                    else Default
+                        RBR->>Router: Navigate("/profile")
+                    end
+                end
+            else Specific Dashboard Routes
+                Router->>Dashboard: Load Specific Dashboard
+                Note over Dashboard: /tenant/dashboard → EnhancedTenantDashboard<br/>/tenant/dashboard/legacy → TenantDashboard<br/>/landlord/dashboard → LandlordDashboard<br/>/contractor/dashboard → EnhancedContractorDashboard<br/>/contractor/dashboard/original → ContractorDashboard
+            end
+        end
+    end
+
+    Note over User, Dashboard: Component Loading Strategy
+
+    alt Lazy-Loaded Components
+        Router->>Router: Dynamic import()
+        Router->>Router: Show UniversalLoadingSpinner
+        Router->>Dashboard: Load component when needed
+    else Direct Imports
+        App->>Dashboard: Component loaded at bundle time
+    end
+
+    Dashboard-->>User: Render Final UI 

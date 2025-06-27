@@ -1,0 +1,273 @@
+{
+  "project": {
+    "name": "PropAgentic Phase 1: Core Stability",
+    "description": "Implement core stability improvements for the landlord dashboard",
+    "version": "1.0.0",
+    "branch": "feature/phase1-core-stability"
+  },
+  "agent": {
+    "role": "Senior Full-Stack Developer",
+    "focus": "React/TypeScript, Firebase, Error Handling, UX",
+    "guidelines": [
+      "Follow existing code patterns and conventions",
+      "Prioritize user experience and error handling",
+      "Write TypeScript with proper type safety",
+      "Use existing UI components when possible",
+      "Implement comprehensive error boundaries",
+      "Add loading states for all async operations"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "task-1",
+      "title": "Fix Data Persistence Issues",
+      "priority": "critical",
+      "estimated_hours": 16,
+      "description": "Resolve data persistence issues identified in the debug panel",
+      "subtasks": [
+        {
+          "id": "task-1.1",
+          "title": "Enhance DataService Reliability",
+          "files": ["src/services/dataService.js"],
+          "actions": [
+            "Add retry logic with exponential backoff",
+            "Improve error handling in subscribeToProperties",
+            "Add data validation and sanitization",
+            "Implement connection state monitoring"
+          ]
+        },
+        {
+          "id": "task-1.2",
+          "title": "Create Connection Context",
+          "files": ["src/context/ConnectionContext.jsx"],
+          "actions": [
+            "Create new ConnectionContext for network state",
+            "Add online/offline detection",
+            "Implement connection quality monitoring",
+            "Provide hooks for components to use"
+          ]
+        },
+        {
+          "id": "task-1.3",
+          "title": "Enhance Cache Service",
+          "files": ["src/services/cacheService.js"],
+          "actions": [
+            "Implement TTL-based caching",
+            "Add cache invalidation strategies",
+            "Create cache warming for critical data",
+            "Add memory management for large datasets"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "task-2",
+      "title": "Add Property CRUD Operations",
+      "priority": "high",
+      "estimated_hours": 20,
+      "description": "Implement complete property editing and deletion functionality",
+      "subtasks": [
+        {
+          "id": "task-2.1",
+          "title": "Create EditPropertyModal",
+          "files": ["src/components/landlord/EditPropertyModal.jsx"],
+          "actions": [
+            "Create modal component with form validation",
+            "Implement property update functionality",
+            "Add loading states and error handling",
+            "Ensure responsive design"
+          ]
+        },
+        {
+          "id": "task-2.2",
+          "title": "Create ConfirmationModal",
+          "files": ["src/components/ui/ConfirmationModal.jsx"],
+          "actions": [
+            "Create reusable confirmation modal",
+            "Support different variants (danger, warning)",
+            "Add loading states for async actions",
+            "Implement keyboard navigation"
+          ]
+        },
+        {
+          "id": "task-2.3",
+          "title": "Update DataService CRUD",
+          "files": ["src/services/dataService.js"],
+          "actions": [
+            "Add updateProperty method with validation",
+            "Add deleteProperty with safety checks",
+            "Implement soft delete functionality",
+            "Add batch operations support"
+          ]
+        },
+        {
+          "id": "task-2.4",
+          "title": "Update LandlordDashboard",
+          "files": ["src/pages/landlord/LandlordDashboard.tsx"],
+          "actions": [
+            "Integrate edit and delete functionality",
+            "Add context menus for property actions",
+            "Implement optimistic updates",
+            "Add keyboard shortcuts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "task-3",
+      "title": "Implement Error Boundaries and Retry Logic",
+      "priority": "high",
+      "estimated_hours": 12,
+      "description": "Add comprehensive error handling throughout the application",
+      "subtasks": [
+        {
+          "id": "task-3.1",
+          "title": "Enhance ErrorBoundary",
+          "files": ["src/components/error/ErrorBoundary.jsx"],
+          "actions": [
+            "Add retry functionality to error boundary",
+            "Implement error reporting to monitoring service",
+            "Create different error UI variants",
+            "Add development vs production error displays"
+          ]
+        },
+        {
+          "id": "task-3.2",
+          "title": "Create Retry Hook",
+          "files": ["src/hooks/useRetry.js"],
+          "actions": [
+            "Create reusable retry hook",
+            "Implement exponential backoff",
+            "Add configurable retry strategies",
+            "Include loading and error states"
+          ]
+        },
+        {
+          "id": "task-3.3",
+          "title": "Add Global Error Handler",
+          "files": ["src/utils/errorHandler.js"],
+          "actions": [
+            "Create centralized error handling",
+            "Add error categorization",
+            "Implement user-friendly error messages",
+            "Add error logging and reporting"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "task-4",
+      "title": "Add Loading States and Skeleton Screens",
+      "priority": "medium",
+      "estimated_hours": 14,
+      "description": "Improve user experience with proper loading states",
+      "subtasks": [
+        {
+          "id": "task-4.1",
+          "title": "Create Skeleton Components",
+          "files": ["src/components/ui/Skeleton.jsx"],
+          "actions": [
+            "Create base Skeleton component",
+            "Add PropertyCardSkeleton",
+            "Add DashboardStatsSkeleton",
+            "Create skeleton variants for different content types"
+          ]
+        },
+        {
+          "id": "task-4.2",
+          "title": "Create Loading States Hook",
+          "files": ["src/hooks/useLoadingStates.js"],
+          "actions": [
+            "Create hook for managing multiple loading states",
+            "Add utilities for checking loading status",
+            "Implement loading state persistence",
+            "Add loading state debugging tools"
+          ]
+        },
+        {
+          "id": "task-4.3",
+          "title": "Update Components with Loading States",
+          "files": [
+            "src/pages/landlord/LandlordDashboard.tsx",
+            "src/components/landlord/PropertyCard.jsx"
+          ],
+          "actions": [
+            "Replace loading spinners with skeleton screens",
+            "Add loading states to all async operations",
+            "Implement progressive loading for large datasets",
+            "Add loading state transitions"
+          ]
+        }
+      ]
+    }
+  ],
+  "technical_requirements": {
+    "frameworks": ["React 18", "TypeScript", "Tailwind CSS"],
+    "backend": ["Firebase Firestore", "Firebase Auth", "Firebase Functions"],
+    "testing": ["Jest", "React Testing Library", "Cypress"],
+    "code_quality": ["ESLint", "Prettier", "TypeScript strict mode"],
+    "performance": ["React.memo", "useMemo", "useCallback", "Code splitting"]
+  },
+  "file_structure": {
+    "components": {
+      "ui": ["Button", "Modal", "Skeleton", "ConfirmationModal"],
+      "landlord": ["EditPropertyModal", "PropertyCard", "AddPropertyModal"],
+      "error": ["ErrorBoundary"],
+      "debug": ["DataPersistenceDiagnostic"]
+    },
+    "hooks": ["useRetry", "useLoadingStates", "useConnection"],
+    "services": ["dataService", "cacheService"],
+    "context": ["AuthContext", "ConnectionContext", "DemoModeContext"],
+    "utils": ["errorHandler", "retryUtils"]
+  },
+  "testing_strategy": {
+    "unit_tests": [
+      "DataService CRUD operations",
+      "Error boundary functionality", 
+      "Retry logic",
+      "Loading state management",
+      "Cache service operations"
+    ],
+    "integration_tests": [
+      "Property creation, editing, deletion flow",
+      "Error handling scenarios",
+      "Loading state transitions",
+      "Data persistence across page refreshes"
+    ],
+    "e2e_tests": [
+      "Complete property management workflow",
+      "Error recovery scenarios",
+      "Network failure handling",
+      "User experience flows"
+    ]
+  },
+  "success_criteria": [
+    "Data persistence issues resolved (verified by debug panel)",
+    "Property CRUD operations working smoothly",
+    "Error boundaries catch and handle errors gracefully", 
+    "Loading states provide clear user feedback",
+    "No console errors in production build",
+    "Performance metrics within acceptable ranges",
+    "User experience is smooth and responsive",
+    "All tests passing",
+    "TypeScript compilation without errors"
+  ],
+  "deployment": {
+    "environment": "development",
+    "build_command": "npm run build",
+    "test_command": "npm test",
+    "lint_command": "npm run lint",
+    "typecheck_command": "npm run typecheck"
+  },
+  "monitoring": {
+    "error_tracking": "Console logging (development)",
+    "performance_metrics": "React DevTools Profiler",
+    "user_feedback": "Manual testing checklist"
+  },
+  "documentation": {
+    "code_comments": "Required for complex logic",
+    "component_props": "TypeScript interfaces",
+    "api_documentation": "JSDoc comments",
+    "testing_documentation": "Test descriptions and scenarios"
+  }
+} 

@@ -61,7 +61,8 @@ export const PropertySchema = {
   documents: ['string'], // URLs
   
   // Relationships
-  tenantId: 'string|null',
+  tenantId: 'string|null', // Legacy field
+  tenants: ['string'], // Array of tenant user IDs
   leaseId: 'string|null',
   
   // Amenities
@@ -116,6 +117,7 @@ export const createDefaultProperty = (ownerId) => ({
   documents: [],
   
   tenantId: null,
+  tenants: [], // Array of tenant user IDs
   leaseId: null,
   
   amenities: [],

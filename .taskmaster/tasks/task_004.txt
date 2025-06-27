@@ -1,0 +1,11 @@
+# Task ID: 4
+# Title: Create Enhanced Tenant Registration Flow
+# Status: pending
+# Dependencies: 3
+# Priority: high
+# Description: Enhance RegisterPage.jsx to handle tenant-specific requirements and invite code integration
+# Details:
+Add invite code input field to registration form, implement real-time validation, integrate with unifiedInviteService, and handle property association during registration
+
+# Test Strategy:
+Test registration with valid invite codes, invalid codes, expired codes, and without invite codes

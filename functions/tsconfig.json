@@ -1,7 +1,7 @@
     // functions/tsconfig.json
     {
         "compilerOptions": {
-          "module": "CommonJS",
+          "module": "commonjs",
           "noImplicitReturns": true,
           "noUnusedLocals": true,
           "outDir": "lib", // Compile JS to the 'lib' directory
@@ -15,5 +15,11 @@
         "compileOnSave": true,
         "include": [
           "src" // Only compile files in the 'src' directory
+        ],
+        "exclude": [
+          "src/stripe/**/*",
+          "src/payments/**/*",
+          "src/inviteCode.ts",
+          "src/config/stripe.ts"
         ]
       }

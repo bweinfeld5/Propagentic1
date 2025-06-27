@@ -1,0 +1,80 @@
+sequenceDiagram
+    participant User
+    participant Router as React Router
+    participant PR as PrivateRoute
+    participant Auth as AuthProvider
+    participant TIG as TenantInviteGuard
+    participant RBR as RoleBasedRedirect
+    participant Dashboard as Dashboard Component
+
+    Note over User, Dashboard: Authentication & Role-Based Routing Flow
+
+    User->>Router: Access Private Route
+    Router->>PR: Execute PrivateRoute Component
+    
+    PR->>Auth: Check currentUser & loading state
+    
+    alt Still Loading
+        Auth-->>PR: loading = true
+        PR-->>User: Show Loading Spinner
+    else Not Authenticated
+        Auth-->>PR: currentUser = null, loading = false
+        PR->>Router: Navigate("/propagentic/new")
+        Router-->>User: Redirect to Landing Page
+    else Authenticated
+        Auth-->>PR: currentUser exists, loading = false
+        PR->>TIG: Wrap children with TenantInviteGuard
+        
+        alt Route is /dashboard (Root Dashboard)
+            TIG->>RBR: Execute RoleBasedRedirect
+            RBR->>Auth: Get userProfile & authLoading
+            
+            alt Auth Still Loading
+                Auth-->>RBR: authLoading = true
+                RBR-->>User: Show Loading Spinner
+            else No User Profile
+                Auth-->>RBR: userProfile = null
+                RBR->>RBR: setProfileLoading(true)
+                RBR-->>User: Show Loading Spinner
+            else Profile Loaded
+                Auth-->>RBR: userProfile with userType/role
+                RBR->>RBR: Check onboardingComplete
+                
+                alt Onboarding Not Complete
+                    RBR->>RBR: Switch on userType/role
+                    alt userType = 'landlord'
+                        RBR->>Router: Navigate("/landlord-onboarding")
+                    else userType = 'contractor'
+                        RBR->>Router: Navigate("/contractor-onboarding")
+                    else Default
+                        RBR->>Router: Navigate("/onboarding")
+                    end
+                else Onboarding Complete
+                    RBR->>RBR: Switch on userType/role
+                    alt userType = 'tenant'
+                        RBR->>Router: Navigate("/tenant/dashboard")
+                    else userType = 'landlord'
+                        RBR->>Router: Navigate("/landlord/dashboard")
+                    else userType = 'contractor'
+                        RBR->>Router: Navigate("/contractor/dashboard")
+                    else Default
+                        RBR->>Router: Navigate("/profile")
+                    end
+                end
+            end
+        else Specific Dashboard Route
+            TIG->>Dashboard: Load Specific Dashboard Component
+            
+            alt Lazy-Loaded Component
+                Dashboard->>Dashboard: Dynamic import()
+                Dashboard-->>User: Show Loading, then Component
+            else Direct Import
+                Dashboard-->>User: Render Component Immediately
+            end
+        end
+    end
+
+    Note over User, Dashboard: Final Dashboard Rendering
+    Dashboard->>Dashboard: Initialize component state
+    Dashboard->>Auth: Subscribe to auth changes
+    Dashboard-->>User: Render Dashboard UI 

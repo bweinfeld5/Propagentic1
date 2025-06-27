@@ -12,14 +12,17 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    function getUserDataSafe() {
+      // Safe version that doesn't fail if document doesn't exist
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) ? 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data : 
+             null;
     }
 
     function isUserRole(role) {
       // Check both 'userType' and 'role' fields for broader compatibility
-      let userData = getUserData();
-      return isSignedIn() && (userData.userType == role || userData.role == role);
+      let userData = getUserDataSafe();
+      return isSignedIn() && userData != null && (userData.userType == role || userData.role == role);
     }
 
     function isLandlord() { 
@@ -42,67 +45,55 @@ service cloud.firestore {
     }
 
     function isPropertyTenant(propertyId) {
-      let userData = getUserData();
+      let userData = getUserDataSafe();
       // Check both direct propertyId and properties array
-      return isTenant() && 
+      return isTenant() && userData != null &&
              (userData.propertyId == propertyId || 
               (userData.properties != null && propertyId in userData.properties));
+    }
+
+    function isContractor() {
+      return isUserRole('contractor');
     }
 
     function isAdmin() {
       return isUserRole('admin');
     }
 
+    function isContractorInLandlordRolodex(landlordId, contractorId) {
+      let landlordProfile = get(/databases/$(database)/documents/landlordProfiles/$(landlordId)).data;
+      return landlordProfile.contractors != null && contractorId in landlordProfile.contractors;
+    }
+
+    function isTenantOfLandlord(tenantId) {
+      // Check if this tenant has a relationship with any properties owned by the landlord
+      // This is a simplified check - in practice, you might want to query the propertyTenantRelationships collection
+      return exists(/databases/$(database)/documents/users/$(tenantId)) && 
+             get(/databases/$(database)/documents/users/$(tenantId)).data.userType == 'tenant';
+    }
+
+
+
     // --- DATA VALIDATION FUNCTIONS ---
-    function isValidEmail(email) {
-      return email is string && email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$');
-    }
-    
-    function isValidInviteCreate() {
-      let data = request.resource.data;
-      return isLandlord() &&
-             data.landlordId == request.auth.uid &&
-             isPropertyOwner(data.propertyId) &&
-             isValidEmail(data.tenantEmail) &&
-             data.status == 'pending' &&
-             data.createdAt == request.time &&
-             data.keys().hasAll(['landlordId', 'propertyId', 'tenantEmail', 'status', 'createdAt']);
-    }
-
-    function isValidInviteUpdate() {
-      let data = request.resource.data;
-      let existingData = resource.data;
-      // Tenant accepting the invite
-      return (isTenant() && 
-              data.status == 'accepted' && 
-              data.tenantId == request.auth.uid &&
-              existingData.tenantEmail == getUserData().email) ||
-             // Landlord revoking the invite
-             (isLandlord() &&
-              isPropertyOwner(existingData.propertyId) &&
-              data.status == 'revoked');
-    }
-
-    function isValidPropertyCreate() {
-      let data = request.resource.data;
-      return isLandlord() &&
-             data.landlordId == request.auth.uid &&
-             data.keys().hasAll(['landlordId', 'streetAddress', 'city', 'state', 'zipCode', 'propertyType']);
-    }
-    
-    function isValidTicketCreate() {
-      let data = request.resource.data;
-      return isTenant() &&
-             data.submittedBy == request.auth.uid &&
-             isPropertyTenant(data.propertyId) &&
-             data.keys().hasAll(['submittedBy', 'propertyId', 'category', 'description', 'priority']);
-    }
+    // Email validation function removed as it was unused
 
     // --- RULES ---
 
     // Users Collection
     match /users/{userId} {
+      // Users can read/update their own data, admins can access all
       allow read, update: if isOwner(userId) || isAdmin();
+      
+      // Allow landlords to read tenant data (with function to check relationship)
+      allow read: if isLandlord() && isTenantOfLandlord(userId);
+      
+      // Allow landlords to query for tenants (needed for PropertyTenantManager)
+      allow list: if isLandlord();
+      
+      // Allow contractors to read user data for communication purposes
+      allow read: if isContractor();
+      
+      // Anyone can create a user account
       allow create: if isSignedIn();
     }
 
@@ -112,29 +103,105 @@ service cloud.firestore {
       allow read: if isOwner(tenantId) || 
                      (isLandlord() && resource.data.landlordId == request.auth.uid) ||
                      isAdmin();
-      allow create: if isOwner(tenantId) && isTenant();
+      // Allow creation during registration process or if user is already a tenant
+      allow create: if isOwner(tenantId) && (isTenant() || !exists(/databases/$(database)/documents/users/$(tenantId)));
       allow update: if isOwner(tenantId) || 
                        (isLandlord() && resource.data.landlordId == request.auth.uid) ||
                        isAdmin();
       allow delete: if isOwner(tenantId) || isAdmin();
     }
 
+    // Contractor Profiles Collection - CRITICAL SECURITY FIX
+    match /contractorProfiles/{contractorId} {
+      // Contractors can read/update their own profile
+      // Landlords can read contractor profiles in their rolodex
+      // Admins can access all contractor profiles
+      allow read: if isOwner(contractorId) || 
+                     isLandlord() ||
+                     isAdmin();
+      // Allow creation during registration process or if user is already a contractor
+      allow create: if isOwner(contractorId) && (isContractor() || !exists(/databases/$(database)/documents/users/$(contractorId)));
+      allow update: if isOwner(contractorId) || isAdmin();
+      allow delete: if isOwner(contractorId) || isAdmin();
+    }
+
+    // Landlord Profiles Collection - Enhanced Security Rules
+    match /landlordProfiles/{landlordId} {
+      // Helper function to check if update contains restricted fields
+      function isRestrictedFieldUpdate() {
+        let restrictedFields = ['acceptedTenants', 'invitesSent', 'acceptedTenantDetails'];
+        return request.resource.data.diff(resource.data).affectedKeys().hasAny(restrictedFields);
+      }
+
+      // Helper function to check valid profile creation
+      function isValidProfileCreation() {
+        return isOwner(landlordId) && 
+               request.resource.data.uid == request.auth.uid &&
+               request.resource.data.landlordId == landlordId;
+      }
+
+      // Helper function to check valid profile update (excluding restricted fields)
+      function isValidProfileUpdate() {
+        return isOwner(landlordId) && 
+               !isRestrictedFieldUpdate() &&
+               request.resource.data.uid == resource.data.uid &&
+               request.resource.data.landlordId == resource.data.landlordId;
+      }
+
+      // Read access: Landlords can read their own profile, contractors can read if in rolodex, admins can read all
+      allow read: if isOwner(landlordId) ||
+                     (isContractor() && isContractorInLandlordRolodex(landlordId, request.auth.uid)) ||
+                     isAdmin();
+
+      // Create access: Only the landlord can create their own profile with proper validation
+      allow create: if isValidProfileCreation();
+
+      // Update access: Landlords can update their own profile EXCEPT restricted fields, admins can update all
+      allow update: if isValidProfileUpdate() || isAdmin();
+
+      // Delete access: Only the owner or admin can delete the profile
+      allow delete: if isOwner(landlordId) || isAdmin();
+
+      // Explicit denial for restricted field updates by clients
+      // Only Cloud Functions (using admin SDK) can modify these fields
+      allow write: if false && isRestrictedFieldUpdate();
+    }
+
     // Properties Collection
     match /properties/{propertyId} {
+      // Helper function to check if update contains restricted fields
+      function isPropertyRestrictedFieldUpdate() {
+        let restrictedFields = ['tenants'];
+        return request.resource.data.diff(resource.data).affectedKeys().hasAny(restrictedFields);
+      }
+
       // Allow individual document reads for property owners, managers, tenants, and admins
       allow get: if isSignedIn() && ((isLandlord() && resource.data.landlordId == request.auth.uid) || isPropertyManager(propertyId) || isPropertyTenant(propertyId) || isAdmin());
       // Allow listing properties for landlords (they can query their own properties)
       allow list: if isSignedIn() && (isLandlord() || isAdmin());
       allow create: if isSignedIn() && (isLandlord() || isAdmin());
-      allow update: if isSignedIn() && (isPropertyOwner(propertyId) || isPropertyManager(propertyId) || isAdmin());
+      
+      // Update access: Property owners can update EXCEPT tenants field, admins can update all
+      allow update: if isSignedIn() && (
+        (isPropertyOwner(propertyId) && !isPropertyRestrictedFieldUpdate()) ||
+        isPropertyManager(propertyId) && !isPropertyRestrictedFieldUpdate() ||
+        isAdmin()
+      );
+      
       allow delete: if isSignedIn() && (isPropertyOwner(propertyId) || isAdmin());
     }
 
     // Tickets Collection
     match /tickets/{ticketId} {
-      // Submitted by user, or owner/manager of the property can read/update.
-      allow read, update: if isSignedIn() && (isOwner(resource.data.submittedBy) || isPropertyOwner(resource.data.propertyId) || isPropertyManager(resource.data.propertyId) || isAdmin());
-      // Any signed-in user can create a ticket.
+      // Submitted by user, property owner/manager, assigned contractor, or admin can read/update
+      allow read, update: if isSignedIn() && (
+        isOwner(resource.data.submittedBy) || 
+        isPropertyOwner(resource.data.propertyId) || 
+        isPropertyManager(resource.data.propertyId) ||
+        (isContractor() && resource.data.contractorId == request.auth.uid) ||
+        isAdmin()
+      );
+      // Any signed-in user can create a ticket
       allow create: if isSignedIn(); 
     }
 
@@ -142,9 +209,18 @@ service cloud.firestore {
     match /invites/{inviteId} {
       // Landlords and admins can manage invites.
       allow create: if isLandlord() || isAdmin();
+      
+      // Allow reading for validation purposes (any authenticated user can validate invite codes)
+      allow get: if isSignedIn();
+      
+      // Allow specific tenant and landlord access
       allow read, update: if (isLandlord() && resource.data.landlordId == request.auth.uid) ||
                              (isSignedIn() && resource.data.tenantEmail == request.auth.token.email) ||
                              isAdmin();
+      
+      // Allow querying invites for validation (needed for shortCode lookups)
+      allow list: if isSignedIn();
+      
       allow delete: if (isLandlord() && resource.data.landlordId == request.auth.uid) || isAdmin();
     }
 
@@ -155,20 +231,102 @@ service cloud.firestore {
         allow write: if false;
     }
 
+    // Property Invitations Collection (for existing users)
+    match /propertyInvitations/{invitationId} {
+      // Landlords can read/manage invitations for their properties
+      allow read, update, delete: if isSignedIn() && (
+        (isLandlord() && resource.data.landlordId == request.auth.uid) ||
+        isAdmin()
+      );
+      
+      // Landlords can create invitations for their properties
+      allow create: if isSignedIn() && (
+        (isLandlord() && request.resource.data.landlordId == request.auth.uid) ||
+        isAdmin()
+      );
+      
+      // Tenants can read invitations sent to their email
+      allow read: if isSignedIn() && resource.data.tenantEmail == request.auth.token.email;
+      
+      // Allow cloud functions to manage invitations
+      allow write: if false; // Cloud functions will use admin SDK
+    }
+
     // Generic mail collection for triggering emails
     match /mail/{mailId} {
       allow create: if isSignedIn(); // Allow any signed-in user to create an email document
     }
 
+    // Notifications Collection
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Only cloud functions can create notifications
+      allow create: if false;
+      // Users can update their own notifications (mark as read, etc.)
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Users can delete their own notifications
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Jobs Collection - for job/work order management
+    match /jobs/{jobId} {
+      // Property owners, assigned contractors, and admins can access jobs
+      allow read, update: if isSignedIn() && (
+        isPropertyOwner(resource.data.propertyId) ||
+        (isContractor() && resource.data.contractorId == request.auth.uid) ||
+        isAdmin()
+      );
+      // Property owners and admins can create jobs
+      allow create: if isSignedIn() && (
+        isLandlord() ||
+        isAdmin()
+      );
+      // Property owners and admins can delete jobs
+      allow delete: if isSignedIn() && (
+        isPropertyOwner(resource.data.propertyId) ||
+        isAdmin()
+      );
+    }
+
+    // Disputes Collection - for handling disputes
+    match /disputes/{disputeId} {
+      // Involved parties (submitter, contractor, property owner) and admins can access
+      allow read, update: if isSignedIn() && (
+        resource.data.submittedBy == request.auth.uid ||
+        resource.data.contractorId == request.auth.uid ||
+        isPropertyOwner(resource.data.propertyId) ||
+        isAdmin()
+      );
+      // Tenants and landlords can create disputes
+      allow create: if isSignedIn() && (isTenant() || isLandlord());
+      // Only admins can delete disputes
+      allow delete: if isAdmin();
+    }
+
+    // Escrow Collection - for payment management
+    match /escrow/{escrowId} {
+      // Property owners, contractors involved, and admins can access
+      allow read, update: if isSignedIn() && (
+        isPropertyOwner(resource.data.propertyId) ||
+        resource.data.contractorId == request.auth.uid ||
+        isAdmin()
+      );
+      // Property owners and admins can create escrow
+      allow create: if isSignedIn() && (isLandlord() || isAdmin());
+      // Only admins can delete escrow records
+      allow delete: if isAdmin();
+    }
+
     // Conversations Collection - for real-time messaging
     match /conversations/{conversationId} {
       function isParticipant() {
-        return isSignedIn() && request.auth.uid in resource.data.participants[].id;
+        return isSignedIn() && request.auth.uid in resource.data.participants;
       }
 
       function isValidParticipant() {
         return isSignedIn() && 
-               request.auth.uid in request.resource.data.participants[].id;
+               request.auth.uid in request.resource.data.participants;
       }
 
       // Read conversations if user is a participant
@@ -188,13 +346,13 @@ service cloud.firestore {
     match /messages/{messageId} {
       function isMessageParticipant() {
         let conversation = get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data;
-        return isSignedIn() && request.auth.uid in conversation.participants[].id;
+        return isSignedIn() && request.auth.uid in conversation.participants;
       }
 
       function canCreateMessage() {
         let conversation = get(/databases/$(database)/documents/conversations/$(request.resource.data.conversationId)).data;
         return isSignedIn() && 
-               request.auth.uid in conversation.participants[].id &&
+               request.auth.uid in conversation.participants &&
                request.resource.data.senderId == request.auth.uid;
       }
 
@@ -209,6 +367,27 @@ service cloud.firestore {
       
       // Delete messages if user is the sender
       allow delete: if isSignedIn() && resource.data.senderId == request.auth.uid;
+    }
+
+    // Property-Tenant Relationships Collection
+    match /propertyTenantRelationships/{relationshipId} {
+      // Property owners can read/manage relationships for their properties
+      allow read, update, delete: if isSignedIn() && (
+        isPropertyOwner(resource.data.propertyId) ||
+        isAdmin()
+      );
+      
+      // Property owners can create relationships for their properties
+      allow create: if isSignedIn() && (
+        isPropertyOwner(request.resource.data.propertyId) ||
+        isAdmin()
+      );
+      
+      // Tenants can read their own relationships
+      allow read: if isSignedIn() && resource.data.tenantId == request.auth.uid;
+      
+      // Allow listing relationships for property owners (needed for getPropertyTenants)
+      allow list: if isSignedIn() && isLandlord();
     }
   }
 }

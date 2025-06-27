@@ -31,6 +31,11 @@ import {
 import * as demoData from '../utils/demoData';
 import { resilientFirestoreOperation } from '../utils/retryUtils';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { 
+  getTenantProperties, 
+  getPropertyTenants, 
+  createRelationship 
+} from './propertyTenantService';
 
 let currentUser = null;
 let isDemoMode = false;
@@ -112,7 +117,7 @@ class DataService {
 
     const getPropertiesOperation = async () => {
       try {
-        // Use landlordId as the standard field name
+        // Use only landlordId field for consistency
         console.log('Querying properties with landlordId field');
         const q = query(
           collection(db, 'properties'), 
@@ -141,20 +146,29 @@ class DataService {
   }
 
   /**
-   * Set up a real-time listener for properties
+   * Set up a real-time listener for properties with enhanced reliability
    * @param {Function} onData - Callback for data updates
    * @param {Function} onError - Callback for errors
+   * @param {Object} options - Configuration options
    * @returns {Function} Unsubscribe function
    */
-  subscribeToProperties(onData, onError) {
+  subscribeToProperties(onData, onError, options = {}) {
+    const {
+      enableRetry = true,
+      maxRetries = 5,
+      retryDelay = 2000,
+      enableConnectionMonitoring = true
+    } = options;
+
     if (!this.currentUser) {
       console.error('subscribeToProperties: No authenticated user');
-      onError(new Error('No authenticated user'));
+      const error = new Error('No authenticated user');
+      onError(error);
       return () => {};
     }
 
     const userId = this.currentUser.uid;
-    console.log(`Setting up properties subscription for user: ${userId}`);
+    console.log(`Setting up enhanced properties subscription for user: ${userId}`);
 
     if (this.isDemoMode) {
       console.log('Using demo data for properties subscription');
@@ -167,48 +181,160 @@ class DataService {
       return () => {};
     }
 
-    try {
-      // Check for empty or invalid user ID
-      if (!userId || userId.trim() === '') {
-        console.error('Invalid user ID for properties subscription');
-        onError(new Error('Invalid user ID'));
-        return () => {};
-      }
+    let unsubscribe = null;
+    let retryCount = 0;
+    let retryTimeout = null;
+    let connectionMonitor = null;
+    let isActive = true;
 
-      // Set up subscription using just the landlordId field
-      console.log('Setting up properties subscription with landlordId field');
-      
-      const q = query(
-        collection(db, 'properties'),
-        where('landlordId', '==', userId)
-      );
-      
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const properties = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-          
-          console.log(`Properties subscription returned ${properties.length} properties`);
-          onData(properties);
-        },
-        (error) => {
-          console.error('Properties subscription failed:', error);
+    // Enhanced subscription setup with retry logic
+    const setupSubscription = async () => {
+      if (!isActive) return;
+
+      try {
+        // Check for empty or invalid user ID
+        if (!userId || userId.trim() === '') {
+          console.error('Invalid user ID for properties subscription');
+          const error = new Error('Invalid user ID');
           onError(error);
+          return;
         }
-      );
+
+        console.log(`Setting up properties subscription (attempt ${retryCount + 1})`);
+        
+        const q = query(
+          collection(db, 'properties'),
+          where('landlordId', '==', userId)
+        );
+        
+        unsubscribe = onSnapshot(
+          q,
+          (snapshot) => {
+            if (!isActive) return;
+
+            try {
+              const properties = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                // Ensure dates are properly converted
+                createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : new Date(),
+                updatedAt: doc.data().updatedAt?.toDate ? doc.data().updatedAt.toDate() : new Date()
+              }));
+              
+              console.log(`Properties subscription success: ${properties.length} properties received`);
+              
+              // Reset retry count on successful data receive
+              retryCount = 0;
+              
+              onData(properties);
+            } catch (dataError) {
+              console.error('Error processing properties data:', dataError);
+              onError(dataError);
+            }
+          },
+          (error) => {
+            if (!isActive) return;
+
+            console.error(`Properties subscription failed (attempt ${retryCount + 1}):`, error);
+            
+            // Classify error type for retry decision
+            const isRetryableError = 
+              error.code === 'unavailable' ||
+              error.code === 'deadline-exceeded' ||
+              error.code === 'resource-exhausted' ||
+              error.code === 'internal' ||
+              error.code === 'failed-precondition' ||
+              error.message?.includes('network') ||
+              error.message?.includes('connection');
+
+            if (enableRetry && isRetryableError && retryCount < maxRetries) {
+              retryCount++;
+              const delay = retryDelay * Math.pow(2, retryCount - 1); // Exponential backoff
+              
+              console.log(`Retrying properties subscription in ${delay}ms (attempt ${retryCount}/${maxRetries})`);
+              
+              retryTimeout = setTimeout(() => {
+                if (isActive) {
+                  setupSubscription();
+                }
+              }, delay);
+            } else {
+              console.error(`Properties subscription failed permanently after ${retryCount} retries`);
+              onError(error);
+            }
+          }
+        );
+        
+      } catch (setupError) {
+        console.error('Error setting up properties subscription:', setupError);
+        
+        if (enableRetry && retryCount < maxRetries) {
+          retryCount++;
+          const delay = retryDelay * Math.pow(2, retryCount - 1);
+          
+          console.log(`Retrying subscription setup in ${delay}ms`);
+          retryTimeout = setTimeout(() => {
+            if (isActive) {
+              setupSubscription();
+            }
+          }, delay);
+        } else {
+          onError(setupError);
+        }
+      }
+    };
+
+    // Connection monitoring (if available)
+    if (enableConnectionMonitoring && typeof window !== 'undefined') {
+      const handleOnline = () => {
+        if (isActive) {
+          console.log('Connection restored, re-establishing properties subscription');
+          retryCount = 0; // Reset retry count on connection restore
+          setupSubscription();
+        }
+      };
+
+      const handleOffline = () => {
+        console.log('Connection lost, properties subscription may be affected');
+        // Don't call onError for offline events, just log
+      };
+
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
       
-      // Return unsubscribe function
-      return unsubscribe;
-    } catch (error) {
-      console.error('Error setting up properties subscription:', error);
-      onError(error);
-      
-      // Return a no-op cleanup function
-      return () => {};
+      connectionMonitor = () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      };
     }
+
+    // Start the subscription
+    setupSubscription();
+    
+    // Return enhanced cleanup function
+    return () => {
+      isActive = false;
+      
+      console.log('Cleaning up properties subscription');
+      
+      // Clear retry timeout
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+        retryTimeout = null;
+      }
+      
+      // Unsubscribe from Firestore
+      if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
+      }
+      
+      // Clean up connection monitoring
+      if (connectionMonitor) {
+        connectionMonitor();
+        connectionMonitor = null;
+      }
+    };
   }
 
   /**
@@ -510,7 +636,7 @@ class DataService {
   }
 
   /**
-   * Get tenants for a property
+   * Get tenants for a property using real relationships
    * @param {string} propertyId - Property ID
    * @returns {Promise<Array>} Array of tenant objects
    */
@@ -520,25 +646,99 @@ class DataService {
     }
 
     if (this.isDemoMode) {
+      // Still support demo mode for testing
       return demoData.getDemoTenantsForProperty(propertyId);
     }
 
-    const getTenantsOperation = async () => {
-      const q = query(
-        collection(db, 'users'),
-        where('propertyId', '==', propertyId),
-        where('userType', '==', 'tenant')
-      );
+    try {
+      // Get property-tenant relationships
+      const relationships = await getPropertyTenants(propertyId);
       
-      const querySnapshot = await getDocs(q);
-      
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-    };
+      if (relationships.length === 0) {
+        return [];
+      }
 
-    return await resilientFirestoreOperation(getTenantsOperation);
+      // Fetch full tenant profiles
+      const tenants = [];
+      for (const relationship of relationships) {
+        const tenantDoc = await getDoc(doc(db, 'users', relationship.tenantId));
+        if (tenantDoc.exists()) {
+          tenants.push({
+            id: tenantDoc.id,
+            ...tenantDoc.data(),
+            // Include relationship info
+            unitId: relationship.unitId,
+            status: relationship.status,
+            startDate: relationship.startDate,
+            endDate: relationship.endDate
+          });
+        }
+      }
+
+      return tenants;
+    } catch (error) {
+      console.error('Error fetching tenants for property:', error);
+      
+      // If it's a permissions error or the collection doesn't exist, return empty array
+      // This is normal for new properties or when invite system is being set up
+      if (error.code === 'permission-denied' || error.message.includes('permissions')) {
+        console.warn('Insufficient permissions to read tenant data - this is normal for new properties');
+        return [];
+      }
+      
+      // For other errors, return empty array but don't throw to prevent dashboard crashes
+      console.warn('Returning empty tenant list due to error - tenant invitations will still work');
+      return [];
+    }
+  }
+
+  /**
+   * Get properties for a tenant using real relationships
+   * @param {string} tenantId - Tenant ID
+   * @returns {Promise<Array>} Array of property objects
+   */
+  async getPropertiesForTenant(tenantId) {
+    if (!tenantId) {
+      throw new Error('Tenant ID is required');
+    }
+
+    if (this.isDemoMode) {
+      // Still support demo mode for testing
+      return demoData.getDemoPropertiesForTenant ? 
+             demoData.getDemoPropertiesForTenant(tenantId) : 
+             [];
+    }
+
+    try {
+      // Get tenant-property relationships
+      const relationships = await getTenantProperties(tenantId);
+      
+      if (relationships.length === 0) {
+        return [];
+      }
+
+      // Fetch full property details
+      const properties = [];
+      for (const relationship of relationships) {
+        const propertyDoc = await getDoc(doc(db, 'properties', relationship.propertyId));
+        if (propertyDoc.exists()) {
+          properties.push({
+            id: propertyDoc.id,
+            ...propertyDoc.data(),
+            // Include relationship info
+            unitId: relationship.unitId,
+            tenantStatus: relationship.status,
+            tenantStartDate: relationship.startDate,
+            tenantEndDate: relationship.endDate
+          });
+        }
+      }
+
+      return properties;
+    } catch (error) {
+      console.error('Error fetching properties for tenant:', error);
+      throw new Error('Failed to fetch properties for tenant');
+    }
   }
 
   /**
@@ -849,163 +1049,6 @@ class DataService {
     };
 
     return propertiesUnsubscribe; // Return the master unsubscribe function
-  }
-
-  /**
-   * Get properties for a specific tenant
-   * @param {string} tenantId - Tenant ID
-   * @returns {Promise<Array>} Array of property objects
-   */
-  async getPropertiesForTenant(tenantId) {
-    if (!tenantId) {
-      throw new Error('Tenant ID is required');
-    }
-
-    if (this.isDemoMode) {
-      // For demo mode, return mock tenant properties
-      return demoData.getDemoPropertiesForTenant ? 
-             demoData.getDemoPropertiesForTenant(tenantId) : 
-             [];
-    }
-
-    const getPropertiesOperation = async () => {
-      try {
-        console.log(`Fetching properties for tenant: ${tenantId}`);
-        
-        // Attempt different strategies to find tenant properties
-        
-        // Strategy 1: Check user profile for property assignments
-        try {
-          const userDoc = await getDoc(doc(db, 'users', tenantId));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            
-            // If user has a direct propertyId assignment
-            if (userData.propertyId) {
-              const property = await this.getPropertyById(userData.propertyId);
-              if (property) {
-                console.log(`Found property directly assigned to tenant: ${property.id}`);
-                return [property];
-              }
-            }
-            
-            // If user has multiple properties
-            if (userData.properties && Array.isArray(userData.properties)) {
-              if (userData.properties.length > 0) {
-                console.log(`Found ${userData.properties.length} properties in user profile`);
-                // If properties are IDs, fetch them
-                if (typeof userData.properties[0] === 'string') {
-                  const propertyPromises = userData.properties.map(id => this.getPropertyById(id));
-                  const properties = await Promise.all(propertyPromises);
-                  return properties.filter(p => p !== null);
-                }
-                // If properties are objects with IDs, fetch them
-                else if (userData.properties[0].id) {
-                  const propertyPromises = userData.properties.map(p => this.getPropertyById(p.id));
-                  const properties = await Promise.all(propertyPromises);
-                  return properties.filter(p => p !== null);
-                }
-                // If properties are embedded, return them directly
-                else {
-                  return userData.properties;
-                }
-              }
-            }
-          }
-        } catch (profileError) {
-          console.warn("Error checking user profile for properties:", profileError);
-        }
-        
-        // Strategy 2: Check property records for tenant references (property.tenants array)
-        try {
-          const propertiesWithTenantRef = query(
-            collection(db, 'properties'),
-            where('tenants', 'array-contains', tenantId)
-          );
-          
-          const querySnapshot = await getDocs(propertiesWithTenantRef);
-          if (!querySnapshot.empty) {
-            console.log(`Found ${querySnapshot.docs.length} properties with tenant in 'tenants' array`);
-            return querySnapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data()
-            }));
-          }
-        } catch (arrayContainsError) {
-          console.warn("Error querying properties with tenant reference:", arrayContainsError);
-        }
-        
-        // Strategy 3: Check for units containing this tenant
-        try {
-          // First attempt: Try units as nested array in properties
-          const propertiesWithUnitTenant = query(
-            collection(db, 'properties')
-          );
-          
-          const allProperties = await getDocs(propertiesWithUnitTenant);
-          const matchingProperties = [];
-          
-          // Manually filter properties with units containing this tenant
-          allProperties.forEach(propertyDoc => {
-            const propertyData = propertyDoc.data();
-            if (propertyData.units && Array.isArray(propertyData.units)) {
-              // Check if any unit contains this tenant
-              const hasTenant = propertyData.units.some(unit => 
-                unit.tenantId === tenantId || 
-                (unit.tenants && Array.isArray(unit.tenants) && unit.tenants.includes(tenantId))
-              );
-              
-              if (hasTenant) {
-                matchingProperties.push({
-                  id: propertyDoc.id,
-                  ...propertyData
-                });
-              }
-            }
-          });
-          
-          if (matchingProperties.length > 0) {
-            console.log(`Found ${matchingProperties.length} properties with tenant in units`);
-            return matchingProperties;
-          }
-        } catch (unitsError) {
-          console.warn("Error searching units for tenant:", unitsError);
-        }
-        
-        // Strategy 4: Check tenantProperties collection if it exists
-        try {
-          const tenantPropertiesRef = collection(db, 'tenantProperties');
-          const tenantPropertiesQuery = query(
-            tenantPropertiesRef,
-            where('tenantId', '==', tenantId)
-          );
-          
-          const tenantPropertiesSnapshot = await getDocs(tenantPropertiesQuery);
-          if (!tenantPropertiesSnapshot.empty) {
-            console.log(`Found ${tenantPropertiesSnapshot.docs.length} entries in tenantProperties collection`);
-            
-            // Extract property IDs and fetch full property data
-            const propertyIds = tenantPropertiesSnapshot.docs.map(doc => doc.data().propertyId);
-            const uniqueIds = [...new Set(propertyIds)]; // Remove duplicates
-            
-            const propertyPromises = uniqueIds.map(id => this.getPropertyById(id));
-            const properties = await Promise.all(propertyPromises);
-            return properties.filter(p => p !== null);
-          }
-        } catch (tenantPropertiesError) {
-          console.warn("Error checking tenantProperties collection:", tenantPropertiesError);
-        }
-        
-        // No properties found using any method
-        console.log(`No properties found for tenant: ${tenantId}`);
-        return [];
-      } catch (error) {
-        console.error('Error retrieving tenant properties:', error);
-        throw error;
-      }
-    };
-
-    return await resilientFirestoreOperation(getPropertiesOperation);
   }
 
   /**

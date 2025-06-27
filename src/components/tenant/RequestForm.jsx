@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { db, storage } from '../../firebase/config';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 import PropTypes from 'prop-types';
+import { toast } from 'react-hot-toast';
 
 const URGENCY_LEVELS = [
   { id: 'low', label: 'Low' },
@@ -16,10 +17,10 @@ const RequestForm = ({ onSuccess, currentUser, userProfile }) => {
     issueTitle: '',
     description: '',
     urgency: 'medium',
+    category: '',
   });
   
-  const [photo, setPhoto] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState('');
+  const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -43,28 +44,24 @@ const RequestForm = ({ onSuccess, currentUser, userProfile }) => {
         return;
       }
       
-      setPhoto(file);
-      setPhotoPreview(URL.createObjectURL(file));
+      setPhotos([file]);
     }
   };
 
   // Remove photo
-  const removePhoto = () => {
-    if (photoPreview) {
-      URL.revokeObjectURL(photoPreview);
-    }
-    setPhoto(null);
-    setPhotoPreview('');
+  const removePhoto = (index) => {
+    const newPhotos = photos.filter((_, i) => i !== index);
+    setPhotos(newPhotos);
   };
 
   // Upload photo to Firebase Storage
-  const uploadPhoto = async () => {
-    if (!photo) return null;
+  const uploadPhoto = async (file) => {
+    if (!file) return null;
     
     try {
-      const fileRef = ref(storage, `maintenance-requests/${currentUser.uid}/${Date.now()}-${photo.name}`);
-      await uploadBytes(fileRef, photo);
-      return await getDownloadURL(fileRef);
+      const fileRef = ref(storage, `maintenance-photos/${Date.now()}-${file.name}`);
+      const snapshot = await uploadBytes(fileRef, file);
+      return await getDownloadURL(snapshot.ref);
     } catch (error) {
       console.error('Error uploading photo:', error);
       throw new Error('Failed to upload photo');
@@ -77,55 +74,69 @@ const RequestForm = ({ onSuccess, currentUser, userProfile }) => {
       issueTitle: '',
       description: '',
       urgency: 'medium',
+      category: '',
     });
-    removePhoto();
+    setPhotos([]);
   };
 
   // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate form
-    if (!formData.issueTitle.trim()) {
-      setError('Please provide a title for the issue');
-      return;
-    }
-
-    if (!formData.description.trim()) {
-      setError('Please provide a description of the issue');
-      return;
-    }
-
-    setError('');
     setLoading(true);
+    setError('');
 
     try {
-      // Upload photo if exists
-      const photoUrl = photo ? await uploadPhoto() : null;
-      
-      // Generate a unique ID for the request
-      const ticketId = uuidv4();
-      
-      // Create document in Firestore
-      await setDoc(doc(db, 'tickets', ticketId), {
-        issueTitle: formData.issueTitle,
+      // Upload photos first if any
+      const photoURLs = [];
+      if (photos.length > 0) {
+        for (const photo of photos) {
+          const photoRef = ref(storage, `maintenance-photos/${Date.now()}-${photo.name}`);
+          const snapshot = await uploadBytes(photoRef, photo);
+          const downloadURL = await getDownloadURL(snapshot.ref);
+          photoURLs.push(downloadURL);
+        }
+      }
+
+      // Create the maintenance request with pending_classification status
+      const ticketData = {
+        issueTitle: formData.issueTitle || 'Maintenance Request',
         description: formData.description,
-        photoUrl,
         urgency: formData.urgency,
-        unitNumber: userProfile.unitNumber || 'Not specified',
+        category: formData.category || 'general',
+        status: 'pending_classification', // Start with classification status
         submittedBy: currentUser.uid,
-        tenantName: userProfile.name || currentUser.email,
-        tenantEmail: currentUser.email,
-        status: 'pending_classification', // Initial status for AI classification
+        propertyId: userProfile?.propertyId || 'unknown',
+        unitNumber: userProfile?.unitNumber || 'N/A',
+        photoUrl: photoURLs[0] || null,
+        photoUrls: photoURLs,
         createdAt: serverTimestamp(),
-      });
+        updatedAt: serverTimestamp(),
+        tenantEmail: currentUser.email,
+        tenantName: userProfile?.fullName || currentUser.displayName || 'Unknown'
+      };
+
+      console.log('Creating ticket with data:', ticketData);
       
-      // Reset form and show success
+      // Add to Firestore - this will trigger the AI classification function
+      const docRef = await addDoc(collection(db, 'tickets'), ticketData);
+      
+      console.log('Ticket created with ID:', docRef.id);
+      
+      // Show success message
+      toast.success('Maintenance request submitted! AI is analyzing your request...');
+      
+      // Reset form
       resetForm();
-      onSuccess();
+      
+      // Call onSuccess if provided
+      if (onSuccess) {
+        onSuccess();
+      }
+      
     } catch (error) {
       console.error('Error submitting maintenance request:', error);
-      setError('Failed to submit request. Please try again.');
+      setError('Failed to submit maintenance request. Please try again.');
+      toast.error('Failed to submit maintenance request');
     } finally {
       setLoading(false);
     }
@@ -199,13 +210,30 @@ const RequestForm = ({ onSuccess, currentUser, userProfile }) => {
           </select>
         </div>
         
+        {/* Category */}
+        <div className="mb-4">
+          <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+            Category
+          </label>
+          <select
+            id="category"
+            name="category"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+            value={formData.category}
+            onChange={handleChange}
+            disabled={loading}
+          >
+            {/* Add category options here */}
+          </select>
+        </div>
+        
         {/* Photo Upload */}
         <div className="mb-4">
           <span className="block text-sm font-medium text-gray-700 mb-1">
             Photo Upload
           </span>
           
-          {!photoPreview ? (
+          {!photos.length ? (
             <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
               <div className="space-y-1 text-center">
                 <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
@@ -231,21 +259,25 @@ const RequestForm = ({ onSuccess, currentUser, userProfile }) => {
             </div>
           ) : (
             <div className="mt-1 relative">
-              <img
-                src={photoPreview}
-                alt="Preview"
-                className="h-64 w-full object-contain rounded-md border border-gray-300"
-              />
-              <button
-                type="button"
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 focus:outline-none"
-                onClick={removePhoto}
-                disabled={loading}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
+              {photos.map((photo, index) => (
+                <div key={index} className="mb-4">
+                  <img
+                    src={URL.createObjectURL(photo)}
+                    alt={`Preview ${index + 1}`}
+                    className="h-64 w-full object-contain rounded-md border border-gray-300"
+                  />
+                  <button
+                    type="button"
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 focus:outline-none"
+                    onClick={() => removePhoto(index)}
+                    disabled={loading}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>

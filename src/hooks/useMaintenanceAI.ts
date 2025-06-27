@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useModelContext } from '../contexts/ModelContext';
+import { generateFollowUpQuestions } from '../services/ai/questionEngine';
 
 // Maintenance request classification types
 export type MaintenanceCategory = 
@@ -33,16 +34,33 @@ Provide your classification in JSON format without explanation.
  * Hook for using AI to classify maintenance requests
  */
 export const useMaintenanceAI = () => {
-  const { 
-    addMessage, 
-    setSystemMessage, 
-    getCompletion, 
-    clearContext, 
-    isLoading, 
-    error 
+  const {
+    addMessage,
+    setSystemMessage,
+    getCompletion,
+    clearContext,
+    isLoading,
+    error,
+    messages
   } = useModelContext();
   
   const [classification, setClassification] = useState<MaintenanceClassification | null>(null);
+
+  /** Send a message in the current conversation and get the AI response */
+  const sendMessage = async (message: string): Promise<string> => {
+    addMessage('user', message);
+    const response = await getCompletion();
+    return response.content;
+  };
+
+  /** Get follow-up question suggestions based on conversation context */
+  const getFollowUpQuestions = () => generateFollowUpQuestions(messages);
+
+  /** Reset the conversation context */
+  const resetConversation = () => {
+    clearContext();
+    setClassification(null);
+  };
 
   /**
    * Classifies a maintenance request using the AI
@@ -72,6 +90,10 @@ export const useMaintenanceAI = () => {
 
   return {
     classifyMaintenanceRequest,
+    sendMessage,
+    getFollowUpQuestions,
+    resetConversation,
+    messages,
     classification,
     isLoading,
     error,

@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import Button from '../ui/Button';
 import StatusPill from '../ui/StatusPill';
+import VerificationStatusPill from '../ui/VerificationStatusPill';
 import { useAuth } from '../../context/AuthContext';
 import { 
   collection, 
@@ -446,7 +447,7 @@ const DocumentVerificationDashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredRequests.map((document) => (
+                {filteredDocuments.map((document: ContractorDocument) => (
                   <tr key={document.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -477,7 +478,7 @@ const DocumentVerificationDashboard: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-2">
                         {getStatusIcon(document.verificationStatus)}
-                        <StatusPill status={document.verificationStatus} />
+                        <VerificationStatusPill status={document.verificationStatus} />
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -535,7 +536,7 @@ const DocumentVerificationDashboard: React.FC = () => {
             </table>
           </div>
 
-          {filteredRequests.length === 0 && (
+          {filteredDocuments.length === 0 && (
             <div className="text-center py-12">
               <DocumentCheckIcon className="w-12 h-12 mx-auto text-gray-400 mb-4" />
               <p className="text-gray-500">
@@ -611,7 +612,7 @@ const DocumentVerificationDashboard: React.FC = () => {
                   <div className="space-y-2 text-sm">
                     <div><span className="font-medium">Name:</span> {selectedDocument.name}</div>
                     <div><span className="font-medium">Type:</span> {formatDocumentType(selectedDocument.documentType)}</div>
-                    <div><span className="font-medium">Status:</span> <StatusPill status={selectedDocument.verificationStatus} /></div>
+                    <div><span className="font-medium">Status:</span> <VerificationStatusPill status={selectedDocument.verificationStatus} /></div>
                     <div><span className="font-medium">Upload Date:</span> {selectedDocument.uploadedAt.toLocaleDateString()}</div>
                     {selectedDocument.expirationDate && (
                       <div><span className="font-medium">Expiration:</span> {selectedDocument.expirationDate.toLocaleDateString()}</div>

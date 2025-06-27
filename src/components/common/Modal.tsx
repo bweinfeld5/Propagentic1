@@ -4,14 +4,32 @@ interface ModalProps {
   children: React.ReactNode;
   onClose: () => void;
   title?: string;
+  isOpen?: boolean;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  className?: string;
 }
 
-const Modal: React.FC<ModalProps> = ({ children, onClose, title }) => {
+const sizeClasses: Record<NonNullable<ModalProps['size']>, string> = {
+  sm: 'max-w-sm',
+  md: 'max-w-md',
+  lg: 'max-w-lg',
+  xl: 'max-w-3xl'
+};
+
+const Modal: React.FC<ModalProps> = ({ 
+  children, 
+  onClose, 
+  title, 
+  isOpen = true,
+  size = 'md',
+  className = ''
+}) => {
+  if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 overflow-y-auto">
+      <div className={`bg-white dark:bg-gray-800 rounded-lg p-6 w-full ${sizeClasses[size]} max-h-[90vh] overflow-y-auto ${className}`}>
         <div className="flex justify-between items-center mb-4">
-          {title && <h3 className="text-lg font-semibold">{title}</h3>}
+          {title && <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>}
           <button 
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"

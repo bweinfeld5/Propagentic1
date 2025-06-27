@@ -30,10 +30,23 @@
 
 /* Dashboard header specific styles */
 .dashboard-header {
-  background-color: white;
-  border-bottom: 1px solid rgb(226, 232, 240);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  z-index: 100;
+  background-color: white !important;
+  border-bottom: 1px solid rgb(226, 232, 240) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  z-index: 100 !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+}
+
+/* Ensure dashboard header content is not transparent */
+.dashboard-header * {
+  backdrop-filter: none !important;
+}
+
+/* Override any transparent header styles that might bleed through */
+.dashboard-header:not(.transparent-header) {
+  background-color: white !important;
+  backdrop-filter: none !important;
 }
 
 /* Navigation links transitions */

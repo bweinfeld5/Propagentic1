@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { unifiedInviteService } from '../../services/unifiedInviteService';
+import inviteService from '../../services/firestore/inviteService';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { ExclamationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
@@ -23,10 +23,12 @@ interface TenantInviteFormProps {
     propertyName: string;
     unitId?: string | null;
   } | null;
+  isProcessing?: boolean;
 }
 
 /**
  * Form component for entering and validating invite codes
+ * This validates invite codes and notifies parent components for redemption.
  */
 const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
   onInviteValidated,
@@ -35,7 +37,8 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
   showSkip = false,
   onSkip,
   initialCode = '',
-  propertyInfo = null
+  propertyInfo = null,
+  isProcessing = false
 }) => {
   const { currentUser } = useAuth();
   const [inviteCode, setInviteCode] = useState(initialCode);
@@ -50,7 +53,7 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
     if (propertyInfo && initialCode) {
       setValidationMessage({
         type: 'success',
-        message: 'Invite code validated!'
+        message: 'Invite code validated! Ready to join property.'
       });
     }
   }, [propertyInfo, initialCode]);
@@ -66,7 +69,7 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
     }
   };
 
-  // Validate the invite code using unified service
+  // Validate the invite code
   const validateCode = async (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault();
@@ -93,12 +96,12 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
     setValidationMessage(null);
 
     try {
-      console.log('🔍 Starting unified invite code validation for:', inviteCode.trim());
+      console.log('🔍 Starting invite code validation for:', inviteCode.trim());
       console.log('🔍 Current user:', currentUser?.uid, currentUser?.email);
       
-      const validationResult = await unifiedInviteService.validateInviteCode(inviteCode.trim());
+      const validationResult = await inviteService.validateInviteCode(inviteCode.trim());
       
-      console.log('🔍 Unified validation result:', validationResult);
+      console.log('🔍 Validation result:', validationResult);
       
       if (validationResult.isValid) {
         console.log('✅ Code is valid!');
@@ -110,28 +113,23 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
         console.log('🚀 Notifying parent component with property info');
         // Notify parent component that we have a valid invite code
         onInviteValidated({
-          propertyId: validationResult.propertyId!,
-          propertyName: validationResult.propertyName || 'Property',
-          unitId: validationResult.unitId,
+          propertyId: validationResult.inviteData?.propertyId || '',
+          propertyName: validationResult.inviteData?.propertyName || 'Property',
+          unitId: validationResult.inviteData?.unitId || null,
           inviteCode: inviteCode.trim()
         });
       } else {
         console.log('❌ Code validation failed:', validationResult.message);
         setValidationMessage({
           type: 'error',
-          message: validationResult.message
+          message: validationResult.message || 'Invalid invite code. Please check the code and try again.'
         });
       }
-    } catch (error: any) {
-      console.error('💥 Error validating invite code:', error);
-      console.error('💥 Error details:', {
-        message: error.message,
-        code: error.code,
-        stack: error.stack
-      });
+    } catch (error) {
+      console.error('❌ Error during validation:', error);
       setValidationMessage({
         type: 'error',
-        message: error.message || 'Error validating invite code. Please try again.'
+        message: 'An error occurred while validating the code. Please try again.'
       });
     } finally {
       setIsValidating(false);
@@ -150,7 +148,7 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
   };
 
   return (
-    <div className={`${className}`}>
+    <div className={`${className} relative`}>
       <form onSubmit={validateCode} className="space-y-4">
         <div className="space-y-2">
           <label htmlFor="invite-code" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -166,7 +164,7 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
               placeholder="Enter the 8-character code (e.g., ABCD1234)"
               maxLength={12}
               autoComplete="off"
-              disabled={isValidating}
+              disabled={isValidating || isProcessing}
               className={`w-full px-4 py-3 font-mono ${
                 validationMessage?.type === 'error'
                   ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
@@ -216,7 +214,7 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
               type="button"
               onClick={handleSkip}
               variant="secondary"
-              disabled={isValidating}
+              disabled={isValidating || isProcessing}
               className="px-4 py-2 text-sm"
             >
               Skip for now
@@ -226,13 +224,16 @@ const TenantInviteForm: React.FC<TenantInviteFormProps> = ({
           <Button
             type="submit"
             variant="primary"
-            isLoading={isValidating}
+            isLoading={isValidating || isProcessing}
             className="px-6 py-2"
           >
-            {isValidating ? 'Validating...' : (propertyInfo ? 'Join Property' : 'Validate Code')}
+            {(isValidating || isProcessing) ? 'Processing...' : (propertyInfo ? 'Join Property' : 'Validate Code')}
           </Button>
         </div>
       </form>
+      
+      {/* Debug tool - only show in development */}
+                {/* {process.env.NODE_ENV === 'development' && <InviteCodeValidationTest />} */}
     </div>
   );
 };

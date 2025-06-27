@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   PlayIcon, 
   CheckCircleIcon, 
@@ -8,11 +8,9 @@ import {
 } from '@heroicons/react/24/outline';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { auth } from '../../firebase/config';
-import { unifiedInviteCodeService, GenerationResult } from '../../services/unifiedInviteCodeService';
+// import { inviteCodeServiceLocal } from '../../services/inviteCodeServiceLocal';
 import { QRCodeDisplay } from '../qr/QRCodeDisplay';
 import toast from 'react-hot-toast';
-import QRCodeStyling from 'qr-code-styling';
-import Button from '../ui/Button';
 
 interface TestResult {
   name: string;
@@ -26,14 +24,6 @@ export const QRCodeInviteTest: React.FC = () => {
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
-  const [validationResult, setValidationResult] = useState<any>(null);
-
-  useEffect(() => {
-    // Cleanup on unmount
-    return () => {
-      unifiedInviteCodeService.clearLocalCodes();
-    };
-  }, []);
 
   const updateTest = (name: string, status: TestResult['status'], message: string, data?: any) => {
     setTestResults(prev => {
@@ -76,13 +66,15 @@ export const QRCodeInviteTest: React.FC = () => {
       // Test 2: Test Local Invite Code Service
       updateTest('localService', 'running', 'Testing local invite code service...');
       try {
-        const localResult = await unifiedInviteCodeService.generateInviteCode('test-property-local', { expirationDays: 7 });
-        if (localResult.success) {
-          updateTest('localService', 'success', `Local service works: ${localResult.code}`, localResult);
-          setGeneratedCode(localResult.code);
-        } else {
-          updateTest('localService', 'error', 'Local service returned failure');
-        }
+        // Local service disabled - commenting out for now
+        // const localResult = await inviteCodeServiceLocal.generateInviteCode('test-property-local', 7);
+        // if (localResult.success) {
+        //   updateTest('localService', 'success', `Local service works: ${localResult.code}`, localResult);
+        //   setGeneratedCode(localResult.code);
+        // } else {
+        //   updateTest('localService', 'error', 'Local service returned failure');
+        // }
+        updateTest('localService', 'error', 'Local service temporarily disabled');
       } catch (error: any) {
         updateTest('localService', 'error', `Local service error: ${error.message}`);
       }
@@ -130,12 +122,14 @@ export const QRCodeInviteTest: React.FC = () => {
       if (generatedCode) {
         updateTest('validation', 'running', 'Testing invite code validation...');
         try {
-          const validationResult = await unifiedInviteCodeService.validateInviteCode(generatedCode);
-          if (validationResult.isValid) {
-            updateTest('validation', 'success', 'Code validation successful', validationResult);
-          } else {
-            updateTest('validation', 'error', `Validation failed: ${validationResult.message}`);
-          }
+          // Local validation disabled - commenting out for now
+          // const validationResult = await inviteCodeServiceLocal.validateInviteCode(generatedCode);
+          // if (validationResult.valid) {
+          //   updateTest('validation', 'success', 'Code validation successful', validationResult);
+          // } else {
+          //   updateTest('validation', 'error', `Validation failed: ${validationResult.message}`);
+          // }
+          updateTest('validation', 'error', 'Local validation temporarily disabled');
         } catch (error: any) {
           updateTest('validation', 'error', `Validation error: ${error.message}`);
         }
@@ -150,7 +144,7 @@ export const QRCodeInviteTest: React.FC = () => {
   };
 
   const clearLocalCodes = () => {
-    unifiedInviteCodeService.clearLocalCodes();
+    // inviteCodeServiceLocal.clearAllCodes();
     toast.success('Local invite codes cleared');
     setGeneratedCode(null);
     setTestResults([]);

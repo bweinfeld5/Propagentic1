@@ -42,9 +42,9 @@ const GoogleSignInButton = ({
           navigate(dashboardRoute);
         } else {
           // Navigate to onboarding
-          const onboardingRoute = profile.userType === 'landlord' ? '/landlord-onboarding' :
-                                profile.userType === 'contractor' ? '/contractor-onboarding' :
-                                '/onboarding';
+          const onboardingRoute = profile.userType === 'landlord' ? '/onboarding/landlord' :
+                                profile.userType === 'contractor' ? '/onboarding/contractor' :
+                                '/onboarding/tenant';
           navigate(onboardingRoute);
         }
       }

@@ -5,9 +5,9 @@ import Button from '../ui/Button';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
-import { unifiedInviteCodeService } from '../../services/unifiedInviteCodeService';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import inviteService from '../../services/firestore/inviteService';
 
 interface InviteCodeWallProps {
   onInviteValidated: () => void;
@@ -55,28 +55,32 @@ const InviteCodeWall: React.FC<InviteCodeWallProps> = ({ onInviteValidated }) =>
     setIsProcessing(true);
     
     try {
-      console.log('🔄 Redeeming invite code for user:', currentUser.uid);
+      console.log('🔄 Accepting tenant invite for user:', currentUser.uid);
       
-      // Redeem the invite code
-      const result = await unifiedInviteCodeService.redeemInviteCode(propertyInfo.inviteCode);
+      // Call the new acceptTenantInvite service
+      const result = await inviteService.acceptTenantInvite(propertyInfo.inviteCode);
       
       if (result.success) {
-        console.log('✅ Invite code redeemed successfully');
+        console.log('✅ Tenant invite accepted successfully');
         
-        // Refresh user data to get updated profile with propertyId and landlordId
+        // Refresh user data to get updated profile with property
         await refreshUserData();
         
-        toast.success(`Successfully joined ${propertyInfo.propertyName}!`);
+        toast.success(`Successfully joined ${result.propertyAddress || propertyInfo.propertyName}!`);
         
         // Notify parent component to refresh and check access
         onInviteValidated();
       } else {
-        console.error('❌ Failed to redeem invite code:', result.message);
+        console.error('❌ Failed to accept invite:', result.message);
         toast.error(result.message || 'Failed to join property');
       }
+      
     } catch (error: any) {
-      console.error('💥 Error redeeming invite code:', error);
-      toast.error(error.message || 'Failed to join property. Please try again.');
+      console.error('💥 Error accepting tenant invite:', error);
+      
+      // Handle any unexpected errors
+      const errorMessage = error.message || 'Failed to join property. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsProcessing(false);
     }

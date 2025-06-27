@@ -33,6 +33,7 @@ import dataService from '../../services/dataService';
 
 import EnhancedRequestHistory from '../../components/tenant/EnhancedRequestHistory';
 import DashboardOverview from '../../components/tenant/DashboardOverview';
+import LeavePropertyModal from '../../components/tenant/LeavePropertyModal';
 
 interface Ticket {
   id: string;
@@ -132,6 +133,10 @@ const EnhancedTenantDashboard: React.FC = () => {
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const [currentView, setCurrentView] = useState<'overview' | 'history'>('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Leave Property Modal states
+  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<any | null>(null);
 
   // Demo mode flag
   const [isDemoMode, setIsDemoMode] = useState(false);
@@ -419,6 +424,22 @@ const EnhancedTenantDashboard: React.FC = () => {
   const handleLogout = () => {
     // Implement logout functionality
     toast.success('Logging out...');
+  };
+
+  // Handle leaving a property
+  const handleLeavePropertyClick = (property: any) => {
+    console.log('🚪 Leave Property clicked for:', property.name);
+    setSelectedProperty(property);
+    setLeaveModalOpen(true);
+  };
+
+  const handleLeavePropertySuccess = () => {
+    console.log('✅ Leave Property successful');
+    setLeaveModalOpen(false);
+    setSelectedProperty(null);
+    
+    // Refresh the page to update all data
+    window.location.reload();
   };
 
   if (isLoading) {
@@ -761,6 +782,13 @@ const EnhancedTenantDashboard: React.FC = () => {
                                         >
                                           Request Maintenance
                                         </button>
+                                        <button
+                                          onClick={() => handleLeavePropertyClick(property)}
+                                          className="flex items-center gap-2 bg-white hover:bg-red-50 text-red-600 border border-red-300 hover:border-red-400 font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                                        >
+                                          <LogOut className="w-4 h-4" />
+                                          Leave Property
+                                        </button>
                                       </div>
                                     </div>
                                   )}
@@ -911,6 +939,19 @@ const EnhancedTenantDashboard: React.FC = () => {
         isOpen={notificationPanelOpen} 
         onClose={() => setNotificationPanelOpen(false)} 
       />
+
+      {/* Leave Property Modal */}
+      {selectedProperty && (
+        <LeavePropertyModal
+          isOpen={leaveModalOpen}
+          onClose={() => {
+            setLeaveModalOpen(false);
+            setSelectedProperty(null);
+          }}
+          onSuccess={handleLeavePropertySuccess}
+          property={selectedProperty}
+        />
+      )}
       
       <Toaster 
         position="top-right"

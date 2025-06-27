@@ -9,9 +9,11 @@ import {
   FunnelIcon,
   ChevronDownIcon,
   ChatBubbleLeftRightIcon,
-  WrenchScrewdriverIcon
+  WrenchScrewdriverIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import { format, formatDistanceToNow, isToday, isYesterday, isThisWeek } from 'date-fns';
+import { toast } from 'react-hot-toast';
 
 interface Ticket {
   id: string;
@@ -40,6 +42,7 @@ interface EnhancedRequestHistoryProps {
   tickets: Ticket[];
   loading: boolean;
   filter?: string;
+  onDelete?: (requestId: string) => Promise<void>;
 }
 
 const STATUS_CONFIG = {
@@ -96,7 +99,8 @@ const CATEGORY_ICONS = {
 const EnhancedRequestHistory: React.FC<EnhancedRequestHistoryProps> = ({
   tickets,
   loading,
-  filter
+  filter,
+  onDelete
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -104,6 +108,35 @@ const EnhancedRequestHistory: React.FC<EnhancedRequestHistoryProps> = ({
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   const [expandedTicket, setExpandedTicket] = useState<string | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+  // Handle delete request
+  const handleDeleteRequest = async (requestId: string) => {
+    if (!onDelete) return;
+    
+    setIsDeleting(requestId);
+    try {
+      await onDelete(requestId);
+      toast.success('Maintenance request deleted successfully');
+      setDeleteConfirmation(null);
+    } catch (error) {
+      console.error('Error deleting maintenance request:', error);
+      toast.error('Failed to delete maintenance request. Please try again.');
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, requestId: string) => {
+    e.stopPropagation(); // Prevent expanding the ticket
+    setDeleteConfirmation(requestId);
+  };
+
+  const handleCancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeleteConfirmation(null);
+  };
 
   // Filter and sort tickets
   const filteredAndSortedTickets = useMemo(() => {
@@ -333,10 +366,10 @@ const EnhancedRequestHistory: React.FC<EnhancedRequestHistoryProps> = ({
               const isExpanded = expandedTicket === ticket.id;
 
               return (
-                <div key={ticket.id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                <div key={ticket.id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow group">
                   {/* Main Content */}
                   <div
-                    className="p-4 cursor-pointer"
+                    className="p-4 cursor-pointer relative"
                     onClick={() => toggleExpanded(ticket.id)}
                   >
                     <div className="flex items-start justify-between">
@@ -387,14 +420,59 @@ const EnhancedRequestHistory: React.FC<EnhancedRequestHistoryProps> = ({
                         </div>
                       </div>
 
-                      {/* Expand Arrow */}
-                      <ChevronDownIcon 
-                        className={`w-5 h-5 text-gray-400 transition-transform ${
-                          isExpanded ? 'transform rotate-180' : ''
-                        }`}
-                      />
+                      {/* Controls - Delete Button and Expand Arrow */}
+                      <div className="flex items-center space-x-2 ml-4">
+                        {/* Delete Button - Shows on hover */}
+                        {onDelete && (
+                          <button
+                            onClick={(e) => handleDeleteClick(e, ticket.id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 rounded-full hover:bg-red-100 text-red-600 hover:text-red-700"
+                            title="Delete request"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        )}
+                        
+                        {/* Expand Arrow */}
+                        <ChevronDownIcon 
+                          className={`w-5 h-5 text-gray-400 transition-transform ${
+                            isExpanded ? 'transform rotate-180' : ''
+                          }`}
+                        />
+                      </div>
                     </div>
                   </div>
+                  
+                  {/* Delete Confirmation Dialog */}
+                  {deleteConfirmation === ticket.id && (
+                    <div className="px-4 py-3 bg-red-50 border-t border-red-200">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="text-sm font-medium text-red-800">Delete this maintenance request?</h4>
+                          <p className="text-xs text-red-600 mt-1">This action cannot be undone.</p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={handleCancelDelete}
+                            disabled={isDeleting === ticket.id}
+                            className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteRequest(ticket.id);
+                            }}
+                            disabled={isDeleting === ticket.id}
+                            className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                          >
+                            {isDeleting === ticket.id ? 'Deleting...' : 'Delete'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Expanded Details */}
                   {isExpanded && (

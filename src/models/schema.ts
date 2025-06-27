@@ -54,7 +54,8 @@ export interface Property {
   propertyName: string;
   unitList: string[]; // Array of unit numbers/identifiers
   landlordId: string; // Reference to the owner/landlord
-  tenantIds: string[]; // References to tenant users
+  tenantIds: string[]; // References to tenant users (legacy)
+  tenants: string[]; // Array of tenant user IDs (primary field)
   activeRequests: string[]; // References to active maintenance tickets
   createdAt: Timestamp;
 }

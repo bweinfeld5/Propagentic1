@@ -389,5 +389,43 @@ service cloud.firestore {
       // Allow listing relationships for property owners (needed for getPropertyTenants)
       allow list: if isSignedIn() && isLandlord();
     }
+
+    // Contractors Collection - for landlord's preferred contractors list
+    match /contractors/{contractorId} {
+      // Helper function to check if contractor belongs to the requesting landlord
+      function isContractorOwner() {
+        return isSignedIn() && resource.data.landlordId == request.auth.uid;
+      }
+
+      function isValidContractorCreation() {
+        return isSignedIn() && 
+               isLandlord() &&
+               request.resource.data.landlordId == request.auth.uid;
+      }
+
+      // Landlords can read their own contractors, admins can read all
+      allow read: if isSignedIn() && (
+        (isLandlord() && resource.data.landlordId == request.auth.uid) ||
+        isAdmin()
+      );
+      
+      // Allow landlords to list their contractors
+      allow list: if isSignedIn() && (isLandlord() || isAdmin());
+      
+      // Landlords can create contractors for themselves
+      allow create: if isValidContractorCreation();
+      
+      // Landlords can update their own contractors
+      allow update: if isSignedIn() && (
+        isContractorOwner() ||
+        isAdmin()
+      );
+      
+      // Landlords can delete their own contractors
+      allow delete: if isSignedIn() && (
+        isContractorOwner() ||
+        isAdmin()
+      );
+    }
   }
 }

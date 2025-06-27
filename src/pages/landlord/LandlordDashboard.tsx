@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   HomeIcon,
   BuildingOfficeIcon,
@@ -18,7 +18,8 @@ import {
   CloudArrowUpIcon,
   PencilIcon,
   TrashIcon,
-  EyeIcon
+  EyeIcon,
+  UserIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useDemoMode } from '../../context/DemoModeContext';
@@ -29,6 +30,9 @@ import InviteTenantModal from '../../components/landlord/InviteTenantModal';
 import AddPropertyModal from '../../components/landlord/AddPropertyModal';
 import EditPropertyModal from '../../components/landlord/EditPropertyModal';
 import AcceptedTenantsSection from '../../components/landlord/AcceptedTenantsSection.jsx';
+import PreferredContractorsGrid from '../../components/landlord/PreferredContractorsGrid';
+import AddContractorModal from '../../components/landlord/AddContractorModal';
+import SMSTestPanel from '../../components/landlord/SMSTestPanel';
 
 // Phase 1.2 Components
 import GlobalSearch from '../../components/search/GlobalSearch';
@@ -150,6 +154,10 @@ const LandlordDashboard: React.FC = () => {
   const [showAddPropertyModal, setShowAddPropertyModal] = useState<boolean>(false);
   const [showEditPropertyModal, setShowEditPropertyModal] = useState<boolean>(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  
+  // Contractor modal state
+  const [showAddContractorModal, setShowAddContractorModal] = useState<boolean>(false);
+  const [editingContractor, setEditingContractor] = useState<any>(null);
 
   const loadDashboardData = async (): Promise<void> => {
     if (!currentUser) return;
@@ -283,6 +291,28 @@ const LandlordDashboard: React.FC = () => {
     setEditingProperty(null);
   };
 
+  // Contractor handlers
+  const handleAddContractor = (): void => {
+    setEditingContractor(null);
+    setShowAddContractorModal(true);
+  };
+
+  const handleEditContractor = (contractor: any): void => {
+    setEditingContractor(contractor);
+    setShowAddContractorModal(true);
+  };
+
+  const handleRateContractor = (contractor: any): void => {
+    // TODO: Implement rating modal
+    console.log('Rate contractor:', contractor);
+  };
+
+  const handleContractorSuccess = (): void => {
+    // Refresh contractor data if needed
+    setShowAddContractorModal(false);
+    setEditingContractor(null);
+  };
+
   // Handle bulk operations
   const handleBulkAction = (action: string, items: any[], values?: any): void => {
     console.log('Bulk action:', action, 'Items:', items, 'Values:', values);
@@ -348,6 +378,12 @@ const LandlordDashboard: React.FC = () => {
       label: 'Tenants',
       icon: UsersIcon,
       view: 'tenants'
+    },
+    {
+      id: 'contractors',
+      label: 'Contractors',
+      icon: UserIcon,
+      view: 'contractors'
     },
     {
       id: 'maintenance',
@@ -515,6 +551,33 @@ const LandlordDashboard: React.FC = () => {
       );
     }
 
+    if (currentView === 'contractors') {
+      return (
+        <div className="bg-gradient-to-r from-white to-orange-50 border-b border-orange-100 px-6 py-3 shadow-sm">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-semibold text-gray-900">Preferred Contractors</h1>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowGlobalSearch(true)}
+                className="px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors flex items-center gap-2"
+                title="Search (Ctrl+K)"
+              >
+                <MagnifyingGlassIcon className="w-4 h-4" />
+                <span className="hidden sm:inline">Search</span>
+              </button>
+              <button
+                onClick={handleAddContractor}
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
+              >
+                <PlusIcon className="w-4 h-4" />
+                Add Contractor
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     // Default action bar for other views
     return (
       <div className="bg-gradient-to-r from-white to-orange-50 border-b border-orange-100 px-6 py-3 shadow-sm">
@@ -568,6 +631,8 @@ const LandlordDashboard: React.FC = () => {
         return renderPropertiesView();
       case 'tenants':
         return renderTenantsView();
+      case 'contractors':
+        return renderContractorsView();
       case 'maintenance':
         return renderMaintenanceView();
       case 'documents':
@@ -921,6 +986,25 @@ const LandlordDashboard: React.FC = () => {
     </div>
   );
 
+  const renderContractorsView = (): JSX.Element => (
+    <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main contractors grid - takes up 2 columns on large screens */}
+        <div className="lg:col-span-2">
+          <PreferredContractorsGrid
+            landlordId={currentUser?.uid || ''}
+            onAddContractor={handleAddContractor}
+          />
+        </div>
+        
+        {/* SMS test panel - takes up 1 column on large screens */}
+        <div className="lg:col-span-1">
+          <SMSTestPanel />
+        </div>
+      </div>
+    </div>
+  );
+
   const renderMaintenanceView = (): JSX.Element => (
     <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
       <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
@@ -1163,6 +1247,17 @@ const LandlordDashboard: React.FC = () => {
             onSuccess={handlePropertyUpdated}
           />
         )}
+
+      {/* Add Contractor Modal */}
+      {showAddContractorModal && (
+        <AddContractorModal
+          isOpen={showAddContractorModal}
+          onClose={() => setShowAddContractorModal(false)}
+          landlordId={currentUser?.uid || ''}
+          onSuccess={handleContractorSuccess}
+          editContractor={editingContractor}
+        />
+      )}
 
       {/* Debug: Data Persistence Diagnostic Panel */}
       {process.env.NODE_ENV === 'development' && (

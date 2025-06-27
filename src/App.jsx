@@ -41,8 +41,7 @@ const CanvasLandingPage = lazy(() => import('./pages/CanvasLandingPage.tsx'));
 const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage.jsx'));
 const ForgotPassword = lazy(() => import('./components/auth/ForgotPassword.jsx'));
-const TenantDashboard = lazy(() => import('./pages/tenant/TenantDashboard.tsx'));
-const EnhancedTenantDashboard = lazy(() => import('./pages/tenant/EnhancedTenantDashboard.tsx'));
+const TenantDashboard = lazy(() => import('./pages/tenant/EnhancedTenantDashboard.tsx'));
 const LandlordDashboard = lazy(() => import('./pages/landlord/LandlordDashboard.tsx'));
 const LandlordDashboardDemo = lazy(() => import('./pages/LandlordDashboardDemoPage.jsx'));
 const ContractorDashboard = lazy(() => import('./components/contractor/EnhancedContractorDashboard'));
@@ -55,6 +54,10 @@ const PricingPage = lazy(() => import('./pages/PricingPage.jsx'));
 const OnboardingSurvey = lazy(() => import('./components/onboarding/OnboardingSurvey.jsx'));
 const LandlordOnboarding = lazy(() => import('./components/onboarding/LandlordOnboarding.jsx'));
 const ContractorOnboardingPage = lazy(() => import('./pages/ContractorOnboardingPage.jsx'));
+// New onboarding components
+const TenantOnboarding = lazy(() => import('./components/onboarding/TenantOnboarding.jsx'));
+const LandlordOnboardingNew = lazy(() => import('./components/onboarding/LandlordOnboardingNew.jsx'));
+const ContractorOnboardingNew = lazy(() => import('./components/onboarding/ContractorOnboardingNew.jsx'));
 const SVGTest = lazy(() => import('./components/branding/SVGTest'));
 const BlueprintTest = lazy(() => import('./components/testing/BlueprintTest'));
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
@@ -101,9 +104,10 @@ const RoleBasedRedirect = () => {
     const onboardingComplete = userProfile.onboardingComplete;
     if (!onboardingComplete) {
       switch (userRole) {
-        case 'landlord': navigate('/landlord-onboarding'); break;
-        case 'contractor': navigate('/contractor-onboarding'); break;
-        default: navigate('/onboarding'); break;
+        case 'landlord': navigate('/onboarding/landlord'); break;
+        case 'contractor': navigate('/onboarding/contractor'); break;
+        case 'tenant': navigate('/onboarding/tenant'); break;
+        default: navigate('/onboarding/tenant'); break;
       }
     } else {
        switch (userRole) {
@@ -221,15 +225,17 @@ function App() {
                                 <Route path="/login" element={<LoginPage />} />
                                 <Route path="/register" element={<RegisterPage />} />
                                 <Route path="/signup" element={<RegisterPage />} />
+                                <Route path="/onboarding/tenant" element={<PrivateRoute><OnboardingSurvey /></PrivateRoute>} />
+                                <Route path="/onboarding/landlord" element={<PrivateRoute><LandlordOnboarding /></PrivateRoute>} />
+                                <Route path="/onboarding/contractor" element={<PrivateRoute><ContractorOnboardingPage /></PrivateRoute>} />
                                 <Route path="/forgot-password" element={<ForgotPassword />} />
                                 <Route path="/auth" element={<AuthPage />} />
                                 <Route path="/invite" element={<InviteAcceptancePage />} />
                                 <Route path="/invite-test" element={<PrivateRoute><InviteCodeBrowserTest /></PrivateRoute>} />
                                 <Route path="/dashboard" element={<PrivateRoute><RoleBasedRedirect /></PrivateRoute>} />
-                                <Route path="/tenant/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={85}><EnhancedTenantDashboard /></ProfileCompletionGuard></PrivateRoute>} />
-                                <Route path="/tenant/dashboard/legacy" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={85}><TenantDashboard /></ProfileCompletionGuard></PrivateRoute>} />
-                                <Route path="/landlord/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={90}><LandlordDashboard /></ProfileCompletionGuard></PrivateRoute>} />
-                                <Route path="/contractor/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={95}><ContractorDashboard /></ProfileCompletionGuard></PrivateRoute>} />
+                                <Route path="/tenant/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={75}><TenantDashboard /></ProfileCompletionGuard></PrivateRoute>} />
+                                <Route path="/landlord/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={85}><LandlordDashboard /></ProfileCompletionGuard></PrivateRoute>} />
+                                <Route path="/contractor/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={90}><ContractorDashboard /></ProfileCompletionGuard></PrivateRoute>} />
                                 <Route path="/contractor/messages" element={<PrivateRoute><ContractorMessagesPage /></PrivateRoute>} />
                                 <Route path="/contractor/profile" element={<PrivateRoute><ContractorProfilePage /></PrivateRoute>} />
                                 <Route path="/contractor/history" element={<PrivateRoute><JobHistoryPage /></PrivateRoute>} />

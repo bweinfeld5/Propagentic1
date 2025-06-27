@@ -125,29 +125,69 @@ service cloud.firestore {
       allow delete: if isOwner(contractorId) || isAdmin();
     }
 
-    // Landlord Profiles Collection
+    // Landlord Profiles Collection - Enhanced Security Rules
     match /landlordProfiles/{landlordId} {
-      // Landlords can read/update their own profile
-      // Contractors can read profiles of landlords who have them in their rolodex
-      // Admins can access all
+      // Helper function to check if update contains restricted fields
+      function isRestrictedFieldUpdate() {
+        let restrictedFields = ['acceptedTenants', 'invitesSent', 'acceptedTenantDetails'];
+        return request.resource.data.diff(resource.data).affectedKeys().hasAny(restrictedFields);
+      }
+
+      // Helper function to check valid profile creation
+      function isValidProfileCreation() {
+        return isOwner(landlordId) && 
+               request.resource.data.uid == request.auth.uid &&
+               request.resource.data.landlordId == landlordId;
+      }
+
+      // Helper function to check valid profile update (excluding restricted fields)
+      function isValidProfileUpdate() {
+        return isOwner(landlordId) && 
+               !isRestrictedFieldUpdate() &&
+               request.resource.data.uid == resource.data.uid &&
+               request.resource.data.landlordId == resource.data.landlordId;
+      }
+
+      // Read access: Landlords can read their own profile, contractors can read if in rolodex, admins can read all
       allow read: if isOwner(landlordId) ||
                      (isContractor() && isContractorInLandlordRolodex(landlordId, request.auth.uid)) ||
                      isAdmin();
-      // Allow creation during registration/onboarding process - simplified for onboarding
-      // Users can create their own landlord profile if they're the owner
-      allow create: if isOwner(landlordId);
-      allow update: if isOwner(landlordId) || isAdmin();
+
+      // Create access: Only the landlord can create their own profile with proper validation
+      allow create: if isValidProfileCreation();
+
+      // Update access: Landlords can update their own profile EXCEPT restricted fields, admins can update all
+      allow update: if isValidProfileUpdate() || isAdmin();
+
+      // Delete access: Only the owner or admin can delete the profile
       allow delete: if isOwner(landlordId) || isAdmin();
+
+      // Explicit denial for restricted field updates by clients
+      // Only Cloud Functions (using admin SDK) can modify these fields
+      allow write: if false && isRestrictedFieldUpdate();
     }
 
     // Properties Collection
     match /properties/{propertyId} {
+      // Helper function to check if update contains restricted fields
+      function isPropertyRestrictedFieldUpdate() {
+        let restrictedFields = ['tenants'];
+        return request.resource.data.diff(resource.data).affectedKeys().hasAny(restrictedFields);
+      }
+
       // Allow individual document reads for property owners, managers, tenants, and admins
       allow get: if isSignedIn() && ((isLandlord() && resource.data.landlordId == request.auth.uid) || isPropertyManager(propertyId) || isPropertyTenant(propertyId) || isAdmin());
       // Allow listing properties for landlords (they can query their own properties)
       allow list: if isSignedIn() && (isLandlord() || isAdmin());
       allow create: if isSignedIn() && (isLandlord() || isAdmin());
-      allow update: if isSignedIn() && (isPropertyOwner(propertyId) || isPropertyManager(propertyId) || isAdmin());
+      
+      // Update access: Property owners can update EXCEPT tenants field, admins can update all
+      allow update: if isSignedIn() && (
+        (isPropertyOwner(propertyId) && !isPropertyRestrictedFieldUpdate()) ||
+        isPropertyManager(propertyId) && !isPropertyRestrictedFieldUpdate() ||
+        isAdmin()
+      );
+      
       allow delete: if isSignedIn() && (isPropertyOwner(propertyId) || isAdmin());
     }
 

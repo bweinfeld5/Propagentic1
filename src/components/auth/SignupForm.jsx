@@ -143,13 +143,14 @@ const SignupForm = ({ initialRole, isPremium }) => {
       
       // Redirect directly to onboarding - no email verification required
       console.log('Redirecting to onboarding');
+      const userProfile = await fetchUserProfile();
+      const onboardingRoute = userProfile.userType === 'landlord'
+        ? '/onboarding/landlord'
+        : userProfile.userType === 'contractor'
+        ? '/onboarding/contractor'
+        : '/onboarding/tenant';
       setTimeout(() => {
-        const continueUrl = userType === 'landlord' 
-          ? '/landlord-onboarding' 
-          : userType === 'contractor' 
-            ? '/contractor-onboarding' 
-            : '/onboarding';
-        navigate(continueUrl);
+        navigate(onboardingRoute);
       }, 1000); // Short delay to show success state
       
     } catch (error) {

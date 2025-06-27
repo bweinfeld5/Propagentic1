@@ -260,16 +260,42 @@ exports.acceptPropertyInvite = (0, https_1.onCall)(async (request) => {
             });
             // Update property document (add tenant to list)
             transaction.update(propertyRef, {
-                tenants: admin.firestore.FieldValue.arrayUnion(tenantUid)
+                tenants: admin.firestore.FieldValue.arrayUnion(tenantUid),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
                 // Optionally update occupied status/count if needed
             });
-            // Optional: Update landlord profile (add tenant to list)
+            // Update landlord profile with accepted tenant details
             // Ensure landlord profile exists before attempting update
             const landlordProfileSnap = await transaction.get(landlordProfileRef);
             if (landlordProfileSnap.exists) {
+                // Create accepted tenant record with rich metadata
+                const acceptedTenantRecord = {
+                    tenantId: tenantUid,
+                    propertyId: propertyId,
+                    inviteId: inviteId,
+                    inviteCode: inviteData.inviteCode || '',
+                    tenantEmail: inviteData.tenantEmail || tenantEmail || '',
+                    unitNumber: inviteData.unitNumber || null,
+                    acceptedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    inviteType: 'email' // Direct invite ID acceptance typically from email
+                };
+                // Update landlord profile arrays and statistics
+                const currentData = landlordProfileSnap.data() || {};
+                const currentAccepted = currentData.totalInvitesAccepted || 0;
+                const currentSent = currentData.totalInvitesSent || 0;
+                const newAccepted = currentAccepted + 1;
+                const newRate = currentSent > 0 ? Math.round((newAccepted / currentSent) * 100) : 100;
                 transaction.update(landlordProfileRef, {
-                    tenants: admin.firestore.FieldValue.arrayUnion(tenantUid)
+                    acceptedTenants: admin.firestore.FieldValue.arrayUnion(tenantUid),
+                    acceptedTenantDetails: admin.firestore.FieldValue.arrayUnion(acceptedTenantRecord),
+                    totalInvitesAccepted: admin.firestore.FieldValue.increment(1),
+                    inviteAcceptanceRate: newRate,
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
                 });
+                logger.info(`Updated landlord profile ${landlordId} with accepted tenant details for ${tenantUid}`);
+            }
+            else {
+                logger.warn(`Landlord profile ${landlordId} not found during invite acceptance`);
             }
         });
         logger.info(`Invite ${inviteId} successfully accepted by tenant ${tenantUid}`);

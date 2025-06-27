@@ -60,14 +60,14 @@ const ProfileCompletionGuard: React.FC<ProfileCompletionGuardProps> = ({
     // For critical missing fields, redirect to onboarding
     if (!allowPartialAccess || validation.completionPercentage < 50) {
       const onboardingRoutes = {
-        contractor: '/contractor-onboarding',
-        landlord: '/landlord-onboarding', 
-        tenant: '/onboarding'
+        contractor: '/onboarding/contractor',
+        landlord: '/onboarding/landlord', 
+        tenant: '/onboarding/tenant'
       };
 
       return (
         <Navigate 
-          to={onboardingRoutes[userProfile.userType as keyof typeof onboardingRoutes] || '/onboarding'} 
+          to={onboardingRoutes[userProfile.userType as keyof typeof onboardingRoutes] || '/onboarding/tenant'} 
           state={{ from: location, reason: 'incomplete_profile' }} 
           replace 
         />

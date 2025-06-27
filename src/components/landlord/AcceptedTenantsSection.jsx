@@ -1,4 +1,25 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
+import { db } from '../../firebase/config';
+import {
+  UsersIcon,
+  BuildingOfficeIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  TrashIcon,
+  EyeIcon,
+  CalendarIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  MapPinIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  XMarkIcon
+} from '@heroicons/react/24/outline';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { useAuth } from '../../context/AuthContext';
+import landlordProfileService from '../../services/firestore/landlordProfileService';
+import toast from 'react-hot-toast';
 
 interface Property {
   id: string;
@@ -33,24 +54,6 @@ interface Property {
 interface AcceptedTenantsSectionProps {
   properties?: Property[];
 }
-import {
-  UsersIcon,
-  BuildingOfficeIcon,
-  MagnifyingGlassIcon,
-  FunnelIcon,
-  TrashIcon,
-  EyeIcon,
-  CalendarIcon,
-  PhoneIcon,
-  EnvelopeIcon,
-  MapPinIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  XMarkIcon
-} from '@heroicons/react/24/outline';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { useAuth } from '../../context/AuthContext';
-import landlordProfileService from '../../services/firestore/landlordProfileService';
 
 const AcceptedTenantsSection: React.FC<AcceptedTenantsSectionProps> = ({ properties = [] }) => {
   const { currentUser } = useAuth();
@@ -64,27 +67,153 @@ const AcceptedTenantsSection: React.FC<AcceptedTenantsSectionProps> = ({ propert
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [tenantToRemove, setTenantToRemove] = useState(null);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
   // Load accepted tenants
   useEffect(() => {
     loadAcceptedTenants();
   }, [currentUser]);
 
-  const loadAcceptedTenants = async () => {
+  // Add periodic refresh to catch tenant departures
+  useEffect(() => {
     if (!currentUser) return;
 
-    setIsLoading(true);
+    // Refresh every 30 seconds to catch real-time changes
+    const refreshInterval = setInterval(() => {
+      console.log('🔄 Auto-refreshing accepted tenants...');
+      loadAcceptedTenants();
+    }, 30000);
+
+    return () => clearInterval(refreshInterval);
+  }, [currentUser]);
+
+  const loadAcceptedTenants = async (isManualRefresh = false) => {
+    if (!currentUser) return;
+
+    if (isManualRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
-      const acceptedTenants = await landlordProfileService.getAcceptedTenantsWithDetails(currentUser.uid);
-      console.log('Loaded accepted tenants:', acceptedTenants);
-      setTenants(acceptedTenants);
+      // Use a safer approach that handles permission errors gracefully
+      const landlordProfile = await landlordProfileService.getLandlordProfile(currentUser.uid);
+      
+      if (!landlordProfile || !landlordProfile.acceptedTenantDetails) {
+        console.log('No accepted tenant details found');
+        setTenants([]);
+        setLastUpdated(new Date());
+        return;
+      }
+
+      console.log('Raw acceptedTenantDetails:', landlordProfile.acceptedTenantDetails);
+
+      // Process each tenant record, skipping ones that cause permission errors
+      const tenantDetails = [];
+      
+      for (const tenantRecord of landlordProfile.acceptedTenantDetails) {
+        try {
+          // Get basic property data first (this should work)
+          const propertyDoc = await getDocs(
+            query(
+              collection(db, 'properties'),
+              where('__name__', '==', tenantRecord.propertyId)
+            )
+          );
+          
+          let propertyData = {};
+          if (!propertyDoc.empty) {
+            propertyData = propertyDoc.docs[0].data();
+          }
+
+          // Create a basic tenant record with available data
+          const basicTenantRecord = {
+            ...tenantRecord,
+            // Use email as fallback name
+            name: tenantRecord.tenantEmail ? tenantRecord.tenantEmail.split('@')[0] : 'Unknown',
+            email: tenantRecord.tenantEmail,
+            
+            // Property information
+            propertyName: propertyData.name || propertyData.nickname || 'Unknown Property',
+            propertyAddress: propertyData.address || 
+                           `${propertyData.streetAddress || ''} ${propertyData.city || ''}`.trim() ||
+                           'Address not available',
+            
+            // Status and metadata
+            status: 'active',
+            joinedDate: tenantRecord.acceptedAt,
+            inviteMethod: tenantRecord.inviteType || 'code',
+            notes: tenantRecord.landlordNotes || ''
+          };
+
+          // Try to get additional tenant details (this may fail due to permissions)
+          try {
+            const userDoc = await getDoc(doc(db, 'users', tenantRecord.tenantId));
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              basicTenantRecord.name = userData.displayName || userData.name || 
+                                     `${userData.firstName || ''} ${userData.lastName || ''}`.trim() ||
+                                     basicTenantRecord.name;
+              basicTenantRecord.phone = userData.phoneNumber;
+            }
+          } catch (permissionError) {
+            console.warn(`Permission denied accessing user ${tenantRecord.tenantId}, using basic data`);
+          }
+
+          try {
+            const tenantProfileDoc = await getDoc(doc(db, 'tenantProfiles', tenantRecord.tenantId));
+            if (tenantProfileDoc.exists()) {
+              const tenantProfileData = tenantProfileDoc.data();
+              basicTenantRecord.name = tenantProfileData.fullName || basicTenantRecord.name;
+              basicTenantRecord.phone = tenantProfileData.phoneNumber || basicTenantRecord.phone;
+            }
+          } catch (permissionError) {
+            console.warn(`Permission denied accessing tenant profile ${tenantRecord.tenantId}, using basic data`);
+          }
+
+          tenantDetails.push(basicTenantRecord);
+          
+        } catch (error) {
+          console.error(`Error processing tenant ${tenantRecord.tenantId}:`, error);
+          // Still add a minimal record so landlord can see and potentially remove it
+          tenantDetails.push({
+            ...tenantRecord,
+            name: tenantRecord.tenantEmail ? tenantRecord.tenantEmail.split('@')[0] : 'Unknown Tenant',
+            email: tenantRecord.tenantEmail,
+            status: 'error',
+            propertyName: 'Unknown Property',
+            error: 'Failed to load details'
+          });
+        }
+      }
+
+      console.log('Processed tenant details:', tenantDetails);
+      setTenants(tenantDetails);
+      setLastUpdated(new Date());
     } catch (err) {
       console.error('Error loading accepted tenants:', err);
       setError(err.message);
     } finally {
-      setIsLoading(false);
+      if (isManualRefresh) {
+        setIsRefreshing(false);
+      } else {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  // Manual refresh function
+  const handleManualRefresh = async () => {
+    console.log('🔄 Manual refresh triggered');
+    try {
+      await loadAcceptedTenants(true);
+      // Note: toast.success would require importing react-hot-toast
+      console.log('✅ Tenant list refreshed successfully');
+    } catch (error) {
+      console.error('❌ Failed to refresh tenant list:', error);
     }
   };
 
@@ -140,17 +269,44 @@ const AcceptedTenantsSection: React.FC<AcceptedTenantsSectionProps> = ({ propert
   const confirmRemoveTenant = async () => {
     if (!tenantToRemove || !currentUser) return;
 
+    // Debug: Log the tenant object to see what fields are available
+    console.log('🗑️ Attempting to remove tenant:', tenantToRemove);
+    console.log('Current user:', currentUser.uid);
+
+    // Validate required fields
+    const landlordId = currentUser.uid;
+    const tenantId = tenantToRemove.tenantId;
+    const propertyId = tenantToRemove.propertyId;
+
+    if (!landlordId || !tenantId || !propertyId) {
+      console.error('❌ Missing required fields:', {
+        landlordId: !!landlordId,
+        tenantId: !!tenantId,
+        propertyId: !!propertyId,
+        tenantObject: tenantToRemove
+      });
+      setError(`Missing required fields: ${!landlordId ? 'landlordId ' : ''}${!tenantId ? 'tenantId ' : ''}${!propertyId ? 'propertyId' : ''}`);
+      setShowRemoveModal(false);
+      return;
+    }
+
     setIsRemoving(true);
     try {
       // Call cloud function to remove tenant
       const functions = getFunctions();
       const removeTenant = httpsCallable(functions, 'removeTenantFromLandlord');
       
-      await removeTenant({
-        landlordId: currentUser.uid,
-        tenantId: tenantToRemove.tenantId,
-        propertyId: tenantToRemove.propertyId
-      });
+      const payload = {
+        landlordId,
+        tenantId,
+        propertyId
+      };
+
+      console.log('🚀 Calling removeTenantFromLandlord with payload:', payload);
+      
+      await removeTenant(payload);
+
+      console.log('✅ Tenant removed successfully');
 
       // Refresh tenants list
       await loadAcceptedTenants();
@@ -158,8 +314,8 @@ const AcceptedTenantsSection: React.FC<AcceptedTenantsSectionProps> = ({ propert
       setShowRemoveModal(false);
       setTenantToRemove(null);
     } catch (err) {
-      console.error('Error removing tenant:', err);
-      setError('Failed to remove tenant: ' + err.message);
+      console.error('❌ Error removing tenant:', err);
+      setError('Failed to remove tenant: ' + (err.message || err.toString()));
     } finally {
       setIsRemoving(false);
     }
@@ -205,20 +361,45 @@ const AcceptedTenantsSection: React.FC<AcceptedTenantsSectionProps> = ({ propert
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-            <UsersIcon className="w-5 h-5 mr-2 text-blue-600" />
-            Accepted Tenants
-            <span className="ml-2 bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded-full">
-              {tenants.length}
-            </span>
-          </h3>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <UsersIcon className="w-5 h-5 mr-2 text-blue-600" />
+              Accepted Tenants
+              <span className="ml-2 bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded-full">
+                {tenants.length}
+              </span>
+            </h3>
+            <p className="text-xs text-gray-500 mt-1">
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </p>
+          </div>
           
-          {error && (
-            <div className="flex items-center text-red-600 text-sm">
-              <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
-              {error}
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {/* Refresh Button */}
+            <button
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Refresh tenant list"
+            >
+              <svg 
+                className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
+
+            {error && (
+              <div className="flex items-center text-red-600 text-sm">
+                <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
+                {error}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Filters and Search */}
@@ -355,7 +536,13 @@ const AcceptedTenantsSection: React.FC<AcceptedTenantsSectionProps> = ({ propert
                       
                       {tenant.inviteMethod && (
                         <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                          Joined via {tenant.inviteMethod}
+                          Joined via {tenant.inviteMethod === 'email' ? 'Email Invite' : 'Invite Code'}
+                        </span>
+                      )}
+                      
+                      {tenant.inviteCode && (
+                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded font-mono">
+                          Code: {tenant.inviteCode}
                         </span>
                       )}
                     </div>

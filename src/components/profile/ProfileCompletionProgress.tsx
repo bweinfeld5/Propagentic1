@@ -120,11 +120,11 @@ const ProfileCompletionProgress: React.FC<ProfileCompletionProgressProps> = ({
           <button
             onClick={() => {
               const routes = {
-                contractor: '/contractor-onboarding',
-                landlord: '/landlord-onboarding',
-                tenant: '/onboarding'
+                contractor: '/onboarding/contractor',
+                landlord: '/onboarding/landlord',
+                tenant: '/onboarding/tenant'
               };
-              window.location.href = routes[userType as keyof typeof routes] || '/onboarding';
+              window.location.href = routes[userType as keyof typeof routes] || '/onboarding/tenant';
             }}
             className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-700 transition-colors"
           >

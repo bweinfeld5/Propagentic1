@@ -62,4 +62,8 @@ export { acceptTenantInvite };
 import { removeTenantFromLandlord } from './removeTenantFromLandlord';
 export { removeTenantFromLandlord };
 
-console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, invite code generation, tenant invite acceptance).");
+// Import and export tenant leave property function
+import { tenantLeaveProperty } from './tenantLeaveProperty';
+export { tenantLeaveProperty };
+
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, invite code generation, tenant invite acceptance, tenant leave property).");

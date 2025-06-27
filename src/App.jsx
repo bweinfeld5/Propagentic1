@@ -51,11 +51,10 @@ const ContractorMessagesPage = lazy(() => import('./pages/contractor/ContractorM
 const ContractorProfilePage = lazy(() => import('./pages/ContractorProfilePage.jsx'));
 const JobHistoryPage = lazy(() => import('./pages/JobHistoryPage.jsx'));
 const PricingPage = lazy(() => import('./pages/PricingPage.jsx'));
-const OnboardingSurvey = lazy(() => import('./components/onboarding/OnboardingSurvey.jsx'));
+const TenantOnboarding = lazy(() => import('./components/onboarding/TenantOnboarding.jsx'));
 const LandlordOnboarding = lazy(() => import('./components/onboarding/LandlordOnboarding.jsx'));
 const ContractorOnboardingPage = lazy(() => import('./pages/ContractorOnboardingPage.jsx'));
 // New onboarding components
-const TenantOnboarding = lazy(() => import('./components/onboarding/TenantOnboarding.jsx'));
 const LandlordOnboardingNew = lazy(() => import('./components/onboarding/LandlordOnboardingNew.jsx'));
 const ContractorOnboardingNew = lazy(() => import('./components/onboarding/ContractorOnboardingNew.jsx'));
 const SVGTest = lazy(() => import('./components/branding/SVGTest'));
@@ -225,7 +224,7 @@ function App() {
                                 <Route path="/login" element={<LoginPage />} />
                                 <Route path="/register" element={<RegisterPage />} />
                                 <Route path="/signup" element={<RegisterPage />} />
-                                <Route path="/onboarding/tenant" element={<PrivateRoute><OnboardingSurvey /></PrivateRoute>} />
+                                <Route path="/onboarding/tenant" element={<PrivateRoute><TenantOnboarding /></PrivateRoute>} />
                                 <Route path="/onboarding/landlord" element={<PrivateRoute><LandlordOnboarding /></PrivateRoute>} />
                                 <Route path="/onboarding/contractor" element={<PrivateRoute><ContractorOnboardingPage /></PrivateRoute>} />
                                 <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -244,7 +243,7 @@ function App() {
                                 <Route path="/maintenance/new" element={<PrivateRoute><MaintenanceSurvey /></PrivateRoute>} />
                                 <Route path="/maintenance/enhanced" element={<PrivateRoute><EnhancedMaintenancePage /></PrivateRoute>} />
                                 <Route path="/maintenance/ai-chat" element={<PrivateRoute><AIMaintenanceChat /></PrivateRoute>} />
-                                <Route path="/onboarding" element={<PrivateRoute><OnboardingSurvey /></PrivateRoute>} />
+                                <Route path="/onboarding" element={<PrivateRoute><TenantOnboarding /></PrivateRoute>} />
                                 <Route path="/landlord-onboarding" element={<PrivateRoute><LandlordOnboarding /></PrivateRoute>} />
                                 <Route path="/contractor-onboarding" element={<PrivateRoute><ContractorOnboardingPage /></PrivateRoute>} />
                                 <Route path="/ai-examples" element={<AIExamples />} />

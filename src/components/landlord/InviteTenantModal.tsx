@@ -9,7 +9,7 @@ import Button from '../ui/Button';
 import { auth } from '../../firebase/config';
 import inviteService from '../../services/firestore/inviteService';
 import { QRCodeDisplay } from '../qr/QRCodeDisplay';
-import inviteCodeService from '../../services/inviteCodeService';
+import { unifiedInviteCodeService } from '../../services/unifiedInviteCodeService';
 
 interface Property {
   id: string;

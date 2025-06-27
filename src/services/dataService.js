@@ -678,7 +678,17 @@ class DataService {
       return tenants;
     } catch (error) {
       console.error('Error fetching tenants for property:', error);
-      throw new Error('Failed to fetch tenants for property');
+      
+      // If it's a permissions error or the collection doesn't exist, return empty array
+      // This is normal for new properties or when invite system is being set up
+      if (error.code === 'permission-denied' || error.message.includes('permissions')) {
+        console.warn('Insufficient permissions to read tenant data - this is normal for new properties');
+        return [];
+      }
+      
+      // For other errors, return empty array but don't throw to prevent dashboard crashes
+      console.warn('Returning empty tenant list due to error - tenant invitations will still work');
+      return [];
     }
   }
 

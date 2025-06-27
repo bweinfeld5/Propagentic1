@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import inviteService from '../services/firestore/inviteService';
-import inviteCodeService from '../services/inviteCodeService';
+import { unifiedInviteCodeService } from '../services/unifiedInviteCodeService';
 import { auth } from '../firebase/config';
 import Button from '../components/ui/Button';
 
@@ -113,7 +113,7 @@ const InviteCodeBrowserTest: React.FC = () => {
       return null;
 
       /* ORIGINAL FUNCTIONALITY COMMENTED OUT - TO BE REBUILT
-      const result = await inviteCodeService.redeemInviteCode(code, currentUser.uid);
+      const result = await unifiedInviteCodeService.redeemInviteCode(code, currentUser.uid);
       addResult(code, 'Redemption', result.success, result, result.message);
       return result;
       */

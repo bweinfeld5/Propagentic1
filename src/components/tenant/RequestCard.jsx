@@ -1,9 +1,36 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { format } from 'date-fns';
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid';
+import { ChevronDownIcon, ChevronUpIcon, TrashIcon } from '@heroicons/react/24/solid';
 
-const RequestCard = ({ ticket, expanded, toggleExpand }) => {
+const RequestCard = ({ ticket, expanded, toggleExpand, onDelete }) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
+  const handleDeleteClick = (e) => {
+    e.stopPropagation(); // Prevent expanding the card
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async (e) => {
+    e.stopPropagation();
+    setIsDeleting(true);
+    try {
+      await onDelete(ticket.id);
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      console.error('Error deleting request:', error);
+      // You could add a toast notification here
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = (e) => {
+    e.stopPropagation();
+    setShowDeleteConfirm(false);
+  };
+
   // Get status badge color
   const getStatusBadge = (status) => {
     switch (status) {
@@ -59,9 +86,9 @@ const RequestCard = ({ ticket, expanded, toggleExpand }) => {
   };
 
   return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden">
+    <div className="bg-white shadow-md rounded-lg overflow-hidden group">
       <div 
-        className="px-6 py-4 flex justify-between items-center cursor-pointer hover:bg-gray-50"
+        className="px-6 py-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 relative"
         onClick={toggleExpand}
       >
         <div className="flex-1">
@@ -84,14 +111,54 @@ const RequestCard = ({ ticket, expanded, toggleExpand }) => {
               : 'Recently submitted'}
           </p>
         </div>
-        <div className="ml-4">
-          {expanded ? (
-            <ChevronUpIcon className="h-5 w-5 text-gray-500" />
-          ) : (
-            <ChevronDownIcon className="h-5 w-5 text-gray-500" />
-          )}
+        
+        {/* Delete Button - Shows on hover */}
+        <div className="flex items-center space-x-2 ml-4">
+          <button
+            onClick={handleDeleteClick}
+            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 rounded-full hover:bg-red-100 text-red-600 hover:text-red-700"
+            title="Delete request"
+          >
+            <TrashIcon className="h-5 w-5" />
+          </button>
+          
+          <div>
+            {expanded ? (
+              <ChevronUpIcon className="h-5 w-5 text-gray-500" />
+            ) : (
+              <ChevronDownIcon className="h-5 w-5 text-gray-500" />
+            )}
+          </div>
         </div>
       </div>
+      
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="px-6 py-4 bg-red-50 border-t border-red-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-sm font-medium text-red-800">Delete this maintenance request?</h4>
+              <p className="text-xs text-red-600 mt-1">This action cannot be undone.</p>
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={handleCancelDelete}
+                disabled={isDeleting}
+                className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {expanded && (
         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
@@ -168,7 +235,8 @@ RequestCard.propTypes = {
     completedAt: PropTypes.object,
   }).isRequired,
   expanded: PropTypes.bool.isRequired,
-  toggleExpand: PropTypes.func.isRequired
+  toggleExpand: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired
 };
 
 export default RequestCard; 

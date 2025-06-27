@@ -1,0 +1,11 @@
+# Task ID: 9
+# Title: Implement Tenant-Property Association Logic
+# Status: pending
+# Dependencies: 3
+# Priority: high
+# Description: Create robust system for associating tenants with properties through invite codes
+# Details:
+Implement proper tenant-property relationships in Firestore, handle multiple property associations, and ensure proper permissions and access control
+
+# Test Strategy:
+Test tenant association with single property, multiple properties, and permission validation

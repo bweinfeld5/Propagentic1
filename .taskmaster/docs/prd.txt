@@ -779,3 +779,253 @@ Required functionality:
 - Integration complexity: Start with simple integrations and enhance iteratively
 
 This PRD defines the complete scope for implementing the missing maintenance management components in PropAgentic's Phase 2, ensuring a comprehensive, user-friendly, and technically robust solution for all stakeholders in the property management workflow. 
+
+# PropAgentic Tenant Signup Flow Audit & Improvement PRD
+
+## Project Overview
+
+PropAgentic's tenant signup flow currently has several critical gaps that prevent a seamless user experience from registration to property management. This project focuses on auditing the complete tenant journey, identifying all gaps, and implementing a unified, robust tenant onboarding system.
+
+## Background
+
+Based on comprehensive code audit, the following critical issues have been identified:
+
+### Current State Issues
+
+1. **Fragmented Authentication Flow**
+   - Multiple competing onboarding paths (OnboardingSurvey.jsx, TenantForm.jsx, OnboardingModal.jsx)
+   - Inconsistent redirect logic after registration
+   - Missing tenant-specific onboarding completion checks
+
+2. **Invite Code System Gaps**
+   - Three separate invite services (inviteCodeService.js, inviteCodeServiceLocal.ts, unifiedInviteService.ts)
+   - Authentication issues with Firebase Functions
+   - No seamless integration between invite code entry and tenant registration
+   - Missing validation for tenant-property associations
+
+3. **Dashboard Integration Issues**
+   - Two competing tenant dashboards (TenantDashboard.tsx, EnhancedTenantDashboard.tsx)
+   - Inconsistent property association logic
+   - Missing unified "No Properties" state handling
+   - Incomplete invite code integration in dashboard
+
+4. **Registration Flow Inconsistencies**
+   - RegisterPage.jsx doesn't handle tenant-specific requirements
+   - Missing integration with invite codes during registration
+   - No tenant profile creation during signup
+   - Inconsistent role/userType handling
+
+5. **Missing Tenant Profile Management**
+   - Incomplete tenant profile schema implementation
+   - Missing tenant-specific data collection
+   - No emergency contact collection
+   - Incomplete preference handling
+
+## Goals
+
+### Primary Goals
+1. Create a unified, seamless tenant signup flow from registration to dashboard access
+2. Integrate invite code validation directly into the registration process
+3. Establish proper tenant profile creation and management
+4. Consolidate competing components and services
+5. Ensure proper tenant-property associations
+
+### Secondary Goals
+1. Improve error handling and user feedback
+2. Add comprehensive tenant data validation
+3. Create proper tenant onboarding experience
+4. Enhance security and permissions
+
+## Technical Requirements
+
+### Frontend Requirements
+1. **Unified Registration Flow**
+   - Single tenant registration path that handles invite codes
+   - Proper role validation and tenant-specific data collection
+   - Seamless redirect to tenant dashboard after completion
+
+2. **Consolidated Dashboard**
+   - Single, enhanced tenant dashboard
+   - Proper "No Properties" state with invite code entry
+   - Seamless property association handling
+
+3. **Tenant Profile System**
+   - Complete tenant profile creation during onboarding
+   - Emergency contact collection
+   - Preference setting interface
+   - Profile validation and completion checks
+
+4. **Invite Code Integration**
+   - Direct invite code entry during registration
+   - Validation and property association during signup
+   - QR code scanning integration
+   - Proper error handling for invalid codes
+
+### Backend Requirements
+1. **Unified Invite Service**
+   - Consolidate invite code services into single, reliable implementation
+   - Fix Firebase Functions authentication issues
+   - Implement proper fallback strategies
+
+2. **Tenant Data Management**
+   - Proper tenant profile document structure
+   - Tenant-property association management
+   - Role and permission validation
+
+3. **Authentication & Authorization**
+   - Proper tenant role validation
+   - Secure invite code redemption
+   - Property access authorization
+
+## User Stories
+
+### Core User Journey
+1. **As a tenant**, I want to register for PropAgentic using an invite code so that I can immediately access my property management tools
+2. **As a tenant**, I want to complete my profile during registration so that my landlord has my contact information
+3. **As a tenant**, I want to be automatically associated with my property after registration so that I can start using the platform immediately
+4. **As a tenant**, I want a clear dashboard that shows my properties or helps me join one if I don't have any yet
+
+### Additional User Stories
+1. **As a tenant**, I want to enter invite codes via QR scan or manual entry during registration
+2. **As a tenant**, I want clear error messages if my invite code is invalid or expired
+3. **As a tenant**, I want to set my communication preferences during onboarding
+4. **As a tenant**, I want to provide emergency contact information for safety
+5. **As a landlord**, I want tenants to have a smooth signup experience when using my invite codes
+
+## Success Metrics
+
+### Primary Metrics
+1. **Signup Completion Rate**: 95% of tenants who start registration complete it successfully
+2. **Property Association Rate**: 100% of tenants with valid invite codes are properly associated with properties
+3. **Error Rate**: <5% of signup attempts result in errors
+4. **Time to Dashboard**: <2 minutes from registration start to accessing tenant dashboard
+
+### Secondary Metrics
+1. **Support Tickets**: 90% reduction in tenant signup-related support requests
+2. **User Satisfaction**: >4.5/5 rating for signup experience
+3. **Invite Code Success Rate**: 98% of valid invite codes work on first attempt
+
+## Implementation Phases
+
+### Phase 1: Audit & Planning
+1. Complete code audit of all tenant-related components
+2. Map current user journey and identify all gaps
+3. Design unified flow architecture
+4. Create implementation timeline
+
+### Phase 2: Backend Consolidation
+1. Fix unified invite service authentication issues
+2. Consolidate invite code services
+3. Implement proper tenant profile management
+4. Fix tenant-property association logic
+
+### Phase 3: Frontend Unification
+1. Create unified tenant registration flow
+2. Consolidate dashboard components
+3. Implement invite code integration in registration
+4. Create proper tenant onboarding experience
+
+### Phase 4: Testing & Optimization
+1. Comprehensive end-to-end testing
+2. Performance optimization
+3. Error handling improvements
+4. User experience refinements
+
+### Phase 5: Deployment & Monitoring
+1. Staged deployment with rollback capability
+2. User experience monitoring
+3. Performance metrics tracking
+4. Support documentation updates
+
+## Architecture Decisions
+
+### Component Consolidation
+- **Registration**: Use enhanced RegisterPage.jsx with tenant-specific flow
+- **Dashboard**: Consolidate to single EnhancedTenantDashboard.tsx
+- **Onboarding**: Create unified TenantOnboarding component
+- **Invite Service**: Use unifiedInviteService.ts as primary with fixes
+
+### Data Flow
+1. **Registration** → **Invite Code Validation** → **Tenant Profile Creation** → **Property Association** → **Dashboard Access**
+
+### Error Handling Strategy
+1. Graceful degradation with fallback options
+2. Clear, actionable error messages
+3. Comprehensive logging for debugging
+4. User-friendly retry mechanisms
+
+## Security Considerations
+
+1. **Invite Code Security**: Proper validation and expiration handling
+2. **Tenant Data Protection**: Secure profile information storage
+3. **Property Access Control**: Proper authorization for property association
+4. **Authentication Security**: Secure registration and login process
+
+## Performance Requirements
+
+1. **Registration Speed**: <3 seconds for form submission
+2. **Dashboard Load**: <2 seconds for initial dashboard load
+3. **Invite Validation**: <1 second for invite code validation
+4. **Error Recovery**: <30 seconds for error resolution
+
+## Dependencies
+
+### Internal Dependencies
+- Firebase Authentication and Firestore
+- Existing property management system
+- Landlord invite code generation system
+- Notification system
+
+### External Dependencies
+- React Router for navigation
+- React Hook Form for form management
+- Tailwind CSS for styling
+- React Hot Toast for notifications
+
+## Constraints
+
+1. **Backward Compatibility**: Must support existing tenant accounts
+2. **Data Migration**: Existing tenant data must be preserved
+3. **API Compatibility**: Must work with existing Firebase Functions
+4. **Mobile Responsiveness**: Must work on all device sizes
+
+## Definition of Done
+
+### For Each Component
+1. Component implements unified design system
+2. Component has comprehensive error handling
+3. Component has proper loading states
+4. Component is fully tested
+5. Component has proper accessibility features
+
+### For Overall System
+1. End-to-end tenant signup flow works seamlessly
+2. All competing components are consolidated or removed
+3. Invite code system works reliably
+4. Tenant dashboard provides complete functionality
+5. All security requirements are met
+6. Performance requirements are achieved
+
+## Future Considerations
+
+1. **Multi-tenant Support**: Support for tenants with multiple properties
+2. **Advanced Preferences**: More granular notification and communication preferences
+3. **Tenant Verification**: Identity verification system
+4. **Mobile App Integration**: React Native app support
+5. **Internationalization**: Multi-language support
+
+## Stakeholders
+
+### Primary Stakeholders
+- Product Manager
+- Engineering Team
+- UX/UI Design Team
+- QA Team
+
+### Secondary Stakeholders
+- Customer Support Team
+- Landlords (as they create invite codes)
+- Existing Tenants
+- Sales Team
+
+This PRD addresses the comprehensive gaps in the tenant signup flow and provides a roadmap for creating a unified, robust tenant onboarding experience in PropAgentic. 

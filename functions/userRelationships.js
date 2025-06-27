@@ -174,7 +174,9 @@ exports.acceptTenantInvitation = onCall({
       .collection("properties")
       .doc(invitation.propertyId)
       .update({
-        tenantIds: admin.firestore.FieldValue.arrayUnion(tenantId)
+        tenantIds: admin.firestore.FieldValue.arrayUnion(tenantId), // Legacy field
+        tenants: admin.firestore.FieldValue.arrayUnion(tenantId), // New primary field
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
     
     // Create tenant-property mapping
@@ -208,6 +210,46 @@ exports.acceptTenantInvitation = onCall({
           properties: [invitation.propertyId],
           createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
+    }
+
+    // Update landlord profile with accepted tenant details (new enhancement)
+    const landlordProfileRef = admin.firestore()
+      .collection("landlordProfiles")
+      .doc(invitation.landlordId);
+    
+    const landlordProfileSnapshot = await landlordProfileRef.get();
+    
+    if (landlordProfileSnapshot.exists) {
+      // Create accepted tenant record with rich metadata
+      const acceptedTenantRecord = {
+        tenantId: tenantId,
+        propertyId: invitation.propertyId,
+        inviteId: invitationId,
+        inviteCode: '', // Legacy invitations may not have shortCode
+        tenantEmail: invitation.email,
+        unitNumber: invitation.unitNumber || null,
+        acceptedAt: admin.firestore.FieldValue.serverTimestamp(),
+        inviteType: 'email' // Legacy invitation via email
+      };
+
+      // Update landlord profile arrays and statistics
+      const currentData = landlordProfileSnapshot.data() || {};
+      const currentAccepted = currentData.totalInvitesAccepted || 0;
+      const currentSent = currentData.totalInvitesSent || 0;
+      const newAccepted = currentAccepted + 1;
+      const newRate = currentSent > 0 ? Math.round((newAccepted / currentSent) * 100) : 100;
+
+      await landlordProfileRef.update({
+        acceptedTenants: admin.firestore.FieldValue.arrayUnion(tenantId),
+        acceptedTenantDetails: admin.firestore.FieldValue.arrayUnion(acceptedTenantRecord),
+        totalInvitesAccepted: admin.firestore.FieldValue.increment(1),
+        inviteAcceptanceRate: newRate,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      logger.info(`Updated landlord profile ${invitation.landlordId} with accepted tenant details for ${tenantId}`);
+    } else {
+      logger.warn(`Landlord profile ${invitation.landlordId} not found during legacy invite acceptance`);
     }
     
     logger.info(

@@ -444,6 +444,7 @@ const propertyConverter: FirestoreDataConverter<Property> = {
       landlordName: data.landlordName,
       description: data.description,
       amenities: data.amenities || [],
+      tenants: data.tenants || [], // Array of tenant user IDs
       units: (data.units || []).map((unit: any) => ({
         unitId: unit.unitId || unit.id,
         unitNumber: unit.unitNumber || unit.number,

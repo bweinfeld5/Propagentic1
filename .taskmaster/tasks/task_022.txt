@@ -1,0 +1,11 @@
+# Task ID: 22
+# Title: Add Accessibility Features
+# Status: pending
+# Dependencies: 11
+# Priority: medium
+# Description: Ensure tenant flow is fully accessible
+# Details:
+Add proper ARIA labels, keyboard navigation, screen reader support, and color contrast compliance
+
+# Test Strategy:
+Test with screen readers and accessibility tools to ensure WCAG compliance

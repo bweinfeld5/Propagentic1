@@ -23,16 +23,14 @@ const ProfileCompletionPrompt: React.FC<ProfileCompletionPromptProps> = ({
     // Navigate to appropriate onboarding or profile edit page
     switch (userType) {
       case 'contractor':
-        navigate('/contractor-onboarding');
+        navigate('/onboarding/contractor');
         break;
       case 'landlord':
-        navigate('/landlord-onboarding');
-        break;
-      case 'tenant':
-        navigate('/onboarding');
+        navigate('/onboarding/landlord');
         break;
       default:
-        navigate('/profile');
+        navigate('/onboarding/tenant');
+        break;
     }
   };
 

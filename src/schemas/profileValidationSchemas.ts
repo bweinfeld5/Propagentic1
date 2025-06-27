@@ -58,8 +58,8 @@ export const REQUIRED_FIELDS = {
     optional: ['managementSoftware']
   },
   tenant: {
-    basic: ['firstName', 'lastName', 'phoneNumber', 'address'],
-    optional: ['propertyType', 'preferredContactMethod']
+    basic: ['firstName', 'lastName', 'phoneNumber'],
+    optional: ['address', 'propertyType', 'preferredContactMethod']
   }
 };
 
@@ -121,7 +121,14 @@ export function validateLandlordProfile(profile: LandlordProfile): ValidationRes
   const warnings: string[] = [];
 
   // Check basic required fields
-  [...REQUIRED_FIELDS.landlord.basic, ...REQUIRED_FIELDS.landlord.business].forEach(field => {
+  REQUIRED_FIELDS.landlord.basic.forEach(field => {
+    if (!profile[field as keyof LandlordProfile]) {
+      missingFields.push(field);
+    }
+  });
+
+  // Check business required fields
+  REQUIRED_FIELDS.landlord.business.forEach(field => {
     if (!profile[field as keyof LandlordProfile]) {
       missingFields.push(field);
     }

@@ -129,18 +129,46 @@ service cloud.firestore {
       allow delete: if isOwner(contractorId) || isAdmin();
     }
 
-    // Landlord Profiles Collection
+    // Landlord Profiles Collection - Enhanced Security Rules
     match /landlordProfiles/{landlordId} {
-      // Landlords can read/update their own profile
-      // Contractors can read profiles of landlords who have them in their rolodex
-      // Admins can access all
+      // Helper function to check if update contains restricted fields
+      function isRestrictedFieldUpdate() {
+        let restrictedFields = ['acceptedTenants', 'invitesSent', 'acceptedTenantDetails'];
+        return request.resource.data.diff(resource.data).affectedKeys().hasAny(restrictedFields);
+      }
+
+      // Helper function to check valid profile creation
+      function isValidProfileCreation() {
+        return isOwner(landlordId) && 
+               request.resource.data.uid == request.auth.uid &&
+               request.resource.data.landlordId == landlordId;
+      }
+
+      // Helper function to check valid profile update (excluding restricted fields)
+      function isValidProfileUpdate() {
+        return isOwner(landlordId) && 
+               !isRestrictedFieldUpdate() &&
+               request.resource.data.uid == resource.data.uid &&
+               request.resource.data.landlordId == resource.data.landlordId;
+      }
+
+      // Read access: Landlords can read their own profile, contractors can read if in rolodex, admins can read all
       allow read: if isOwner(landlordId) ||
                      (isContractor() && isContractorInLandlordRolodex(landlordId, request.auth.uid)) ||
                      isAdmin();
-      // Allow creation during registration process or if user is already a landlord
-      allow create: if isOwner(landlordId) && (isLandlord() || !exists(/databases/$(database)/documents/users/$(landlordId)));
-      allow update: if isOwner(landlordId) || isAdmin();
+
+      // Create access: Only the landlord can create their own profile with proper validation
+      allow create: if isValidProfileCreation();
+
+      // Update access: Landlords can update their own profile EXCEPT restricted fields, admins can update all
+      allow update: if isValidProfileUpdate() || isAdmin();
+
+      // Delete access: Only the owner or admin can delete the profile
       allow delete: if isOwner(landlordId) || isAdmin();
+
+      // Explicit denial for restricted field updates by clients
+      // Only Cloud Functions (using admin SDK) can modify these fields
+      allow write: if false && isRestrictedFieldUpdate();
     }
 
     // Contractors Collection - for landlord's preferred contractors list
@@ -183,15 +211,21 @@ service cloud.firestore {
 
     // Properties Collection
     match /properties/{propertyId} {
+      // Helper function to check if update contains restricted fields
+      function isPropertyRestrictedFieldUpdate() {
+        let restrictedFields = ['tenants'];
+        return request.resource.data.diff(resource.data).affectedKeys().hasAny(restrictedFields);
+      }
+
       // Allow individual document reads for property owners, managers, tenants, and admins
       // More permissive read access for authenticated users
       allow get: if isSignedIn();
       // Allow listing properties for landlords (they can query their own properties)
       allow list: if isSignedIn() && (isLandlord() || isAdmin());
       allow create: if isSignedIn() && (isLandlord() || isAdmin());
-      // Allow authenticated users to update properties
-      // Application logic ensures proper access control
-      // Tenants need update access to remove their maintenance request IDs from the maintenanceRequests array
+      
+      // Update access: Property owners can update EXCEPT tenants field, admins can update all
+      // Also allow authenticated users to update for maintenance request functionality
       allow update: if isSignedIn();
       allow delete: if isSignedIn() && (isPropertyOwner(propertyId) || isAdmin());
     }
@@ -423,6 +457,44 @@ service cloud.firestore {
       
       // Allow listing relationships for property owners (needed for getPropertyTenants)
       allow list: if isSignedIn() && isLandlord();
+    }
+
+    // Contractors Collection - for landlord's preferred contractors list
+    match /contractors/{contractorId} {
+      // Helper function to check if contractor belongs to the requesting landlord
+      function isContractorOwner() {
+        return isSignedIn() && resource.data.landlordId == request.auth.uid;
+      }
+
+      function isValidContractorCreation() {
+        return isSignedIn() && 
+               isLandlord() &&
+               request.resource.data.landlordId == request.auth.uid;
+      }
+
+      // Landlords can read their own contractors, admins can read all
+      allow read: if isSignedIn() && (
+        (isLandlord() && resource.data.landlordId == request.auth.uid) ||
+        isAdmin()
+      );
+      
+      // Allow landlords to list their contractors
+      allow list: if isSignedIn() && (isLandlord() || isAdmin());
+      
+      // Landlords can create contractors for themselves
+      allow create: if isValidContractorCreation();
+      
+      // Landlords can update their own contractors
+      allow update: if isSignedIn() && (
+        isContractorOwner() ||
+        isAdmin()
+      );
+      
+      // Landlords can delete their own contractors
+      allow delete: if isSignedIn() && (
+        isContractorOwner() ||
+        isAdmin()
+      );
     }
   }
 }

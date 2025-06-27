@@ -1,356 +1,296 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, Wrench, Zap, Wind, Home, Shield, Bug, Sparkles, MoreHorizontal, User, LayoutDashboard } from 'lucide-react';
+import { useModelContext } from '../../contexts/ModelContext';
+import useMaintenanceAI from '../../hooks/useMaintenanceAI';
+import { 
+  Wrench, 
+  Zap, 
+  Wind, 
+  Home, 
+  Shield, 
+  Bug, 
+  Sparkles, 
+  MoreHorizontal,
+  ArrowLeft,
+  Send,
+  User,
+  Bot
+} from 'lucide-react';
 
-// Mock message type
-interface MockMessage {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
+interface MaintenanceCategory {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  color: string;
 }
 
-// Maintenance categories with icons and descriptions
-const MAINTENANCE_CATEGORIES = [
+const maintenanceCategories: MaintenanceCategory[] = [
   {
     id: 'plumbing',
     name: 'Plumbing',
     description: 'Leaks, clogs, water pressure issues',
     icon: <Wrench className="w-6 h-6" />,
-    iconBg: 'bg-blue-600'
+    color: 'bg-blue-500'
   },
   {
     id: 'electrical',
-    name: 'Electrical', 
+    name: 'Electrical',
     description: 'Outlets, lighting, electrical safety',
     icon: <Zap className="w-6 h-6" />,
-    iconBg: 'bg-yellow-600'
+    color: 'bg-yellow-500'
   },
   {
     id: 'hvac',
     name: 'HVAC',
     description: 'Heating, cooling, ventilation',
     icon: <Wind className="w-6 h-6" />,
-    iconBg: 'bg-cyan-600'
+    color: 'bg-teal-500'
   },
   {
     id: 'appliances',
     name: 'Appliances',
     description: 'Refrigerator, washer, dryer, dishwasher',
     icon: <Home className="w-6 h-6" />,
-    iconBg: 'bg-green-600'
+    color: 'bg-green-500'
   },
   {
     id: 'structural',
     name: 'Structural',
     description: 'Walls, floors, doors, windows',
     icon: <Home className="w-6 h-6" />,
-    iconBg: 'bg-purple-600'
+    color: 'bg-purple-500'
   },
   {
     id: 'security',
     name: 'Security',
     description: 'Locks, alarms, access control',
     icon: <Shield className="w-6 h-6" />,
-    iconBg: 'bg-red-600'
+    color: 'bg-red-500'
   },
   {
-    id: 'pest-control',
+    id: 'pest',
     name: 'Pest Control',
     description: 'Insects, rodents, infestations',
     icon: <Bug className="w-6 h-6" />,
-    iconBg: 'bg-orange-600'
+    color: 'bg-orange-500'
   },
   {
     id: 'cleaning',
     name: 'Cleaning',
     description: 'Deep cleaning, maintenance cleaning',
     icon: <Sparkles className="w-6 h-6" />,
-    iconBg: 'bg-pink-600'
+    color: 'bg-pink-500'
   },
   {
     id: 'other',
     name: 'Other',
     description: 'Something else not listed above',
     icon: <MoreHorizontal className="w-6 h-6" />,
-    iconBg: 'bg-gray-600'
+    color: 'bg-gray-500'
   }
 ];
 
-// Mock AI responses for demonstration
-const MOCK_AI_RESPONSES = [
-  "Thank you for providing that information. Can you tell me more about when this issue started?",
-  "I understand the problem. To help route this to the right contractor, can you describe the specific symptoms you're experiencing?",
-  "That's helpful information. Is this affecting your daily activities? How urgent would you say this issue is?",
-  "Perfect! I have enough information to create your maintenance request. A qualified contractor will be notified and should contact you within 24 hours.",
-  "Based on your description, this sounds like it may require immediate attention. I'm prioritizing this request for you."
-];
-
 const AIMaintenanceChat: React.FC = () => {
-  const navigate = useNavigate();
+  const { messages, isLoading } = useModelContext();
+  const { sendMessage } = useMaintenanceAI();
+  const [selectedCategory, setSelectedCategory] = useState<MaintenanceCategory | null>(null);
+  const [chatMessages, setChatMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
   const [input, setInput] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<'category' | 'chat'>('category');
-  const [messages, setMessages] = useState<MockMessage[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [chatMessages]);
 
-  const handleCategorySelect = (categoryId: string) => {
-    const category = MAINTENANCE_CATEGORIES.find(cat => cat.id === categoryId);
-    if (category) {
-      setSelectedCategory(categoryId);
-      setCurrentStep('chat');
-      
-      // Add initial user message about the selected category
-      const userMessage: MockMessage = {
-        role: 'user',
-        content: `I need help with: ${category.name} - ${category.description}`,
-        timestamp: new Date()
-      };
-      
-      setMessages([userMessage]);
-      
-      // Mock AI response after a short delay
-      setTimeout(() => {
-        const aiMessage: MockMessage = {
-          role: 'assistant',
-          content: `I can help you with ${category.name.toLowerCase()} issues. Please describe the specific problem you're experiencing in detail.`,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, aiMessage]);
-      }, 1000);
-    }
-  };
-
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  const handleCategorySelect = (category: MaintenanceCategory) => {
+    setSelectedCategory(category);
+    setCurrentStep('chat');
     
-    // Add user message
-    const userMessage: MockMessage = {
-      role: 'user',
-      content: input.trim(),
-      timestamp: new Date()
+    // Initialize chat with AI greeting
+    const initialMessage = {
+      role: 'assistant' as const,
+      content: `Hi! I'm your Propagentic maintenance assistant. To help you get the right contractor quickly, let's start by selecting the category that best describes your maintenance issue.`
     };
     
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    setIsLoading(true);
+    const categoryMessage = {
+      role: 'assistant' as const,
+      content: `Great! You selected ${category.name} - ${category.description}. Now, please describe your specific issue in detail, and I'll help connect you with the right contractor.`
+    };
     
-    // Mock AI response after delay
-    setTimeout(() => {
-      const randomResponse = MOCK_AI_RESPONSES[Math.floor(Math.random() * MOCK_AI_RESPONSES.length)];
-      const aiMessage: MockMessage = {
-        role: 'assistant',
-        content: randomResponse,
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => [...prev, aiMessage]);
-      setIsLoading(false);
-    }, 1500);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+    setChatMessages([initialMessage, categoryMessage]);
   };
 
   const handleBackToCategories = () => {
     setCurrentStep('category');
     setSelectedCategory(null);
-    setMessages([]);
+    setChatMessages([]);
+    setInput('');
   };
 
-  const handleBackToDashboard = () => {
-    navigate('/tenant/dashboard');
+  const handleSendMessage = async () => {
+    if (!input.trim()) return;
+
+    const userMessage = { role: 'user' as const, content: input.trim() };
+    setChatMessages(prev => [...prev, userMessage]);
+
+    try {
+      // Here you would integrate with your AI service
+      // For now, providing intelligent responses based on category
+      const response = await generateAIResponse(input, selectedCategory);
+      const aiMessage = { role: 'assistant' as const, content: response };
+      setChatMessages(prev => [...prev, aiMessage]);
+      setInput('');
+    } catch (err) {
+      console.error('Failed to send message', err);
+    }
   };
 
-  const selectedCategoryData = MAINTENANCE_CATEGORIES.find(cat => cat.id === selectedCategory);
+  const generateAIResponse = async (userInput: string, category: MaintenanceCategory | null): Promise<string> => {
+    // This is a simplified AI response. In production, you'd use your actual AI service
+    const responses = {
+      plumbing: "I understand you're having plumbing issues. Based on your description, I recommend documenting the problem with photos if possible. Is this an emergency (like a major leak) or can it wait for regular business hours?",
+      electrical: "Electrical issues can be serious. For safety, please don't attempt any repairs yourself. Can you tell me if this affects your main power or just specific outlets/fixtures?",
+      hvac: "HVAC problems can affect your comfort significantly. Is this issue affecting heating, cooling, or both? Also, when did you first notice the problem?",
+      structural: "Structural issues should be addressed promptly. Can you describe the extent of the damage and whether it seems to be getting worse?",
+      security: "Security concerns are important for your safety. Is this preventing you from properly securing your home?",
+      other: "I'd be happy to help with your maintenance issue. Can you provide more specific details about what's happening?"
+    };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 text-white">
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-800 border-b border-slate-600">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center">
-              <Wrench className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white">PropAgentic</h1>
-              <p className="text-slate-300 text-sm">AI-Powered Property Maintenance</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            {currentStep === 'chat' && (
-              <button
-                onClick={handleBackToCategories}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back to Categories
-              </button>
-            )}
-            
+    return responses[category?.id as keyof typeof responses] || "Thank you for the information. I'm processing your request and will connect you with an appropriate contractor. Is there anything else you'd like to add about this issue?";
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  if (currentStep === 'category') {
+    return (
+      <div className="bg-slate-700 min-h-[500px] p-4 rounded-lg">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-bold text-white mb-2">
+            What type of maintenance do you need?
+          </h2>
+          <p className="text-slate-300 text-sm">
+            Select the category that best describes your issue
+          </p>
+        </div>
+
+        {/* Category Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {maintenanceCategories.map((category) => (
             <button
-              onClick={handleBackToDashboard}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors"
+              key={category.id}
+              onClick={() => handleCategorySelect(category)}
+              className="bg-slate-600 hover:bg-slate-500 transition-colors duration-200 rounded-lg p-4 text-left group"
             >
-              <LayoutDashboard className="w-4 h-4" />
-              Back to Dashboard
+              <div className={`${category.color} w-10 h-10 rounded-lg flex items-center justify-center mb-3 text-white group-hover:scale-110 transition-transform duration-200`}>
+                {category.icon}
+              </div>
+              <h3 className="text-base font-semibold text-white mb-1">
+                {category.name}
+              </h3>
+              <p className="text-slate-300 text-xs">
+                {category.description}
+              </p>
             </button>
-          </div>
+          ))}
         </div>
       </div>
+    );
+  }
 
-      {/* Category Selection */}
-      {currentStep === 'category' && (
-        <div className="max-w-4xl mx-auto px-6 py-12 pt-32">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">
-              What type of maintenance do you need?
-            </h2>
-            <p className="text-slate-300 text-lg">
-              Select the category that best describes your issue
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {MAINTENANCE_CATEGORIES.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => handleCategorySelect(category.id)}
-                className="bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600 hover:border-slate-500 rounded-xl p-6 text-left transition-all duration-200 hover:scale-105 hover:shadow-xl"
-              >
-                <div className={`${category.iconBg} w-12 h-12 rounded-lg flex items-center justify-center mb-4`}>
-                  {category.icon}
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  {category.name}
-                </h3>
-                <p className="text-slate-300 text-sm">
-                  {category.description}
-                </p>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Chat Interface */}
-      {currentStep === 'chat' && selectedCategoryData && (
-        <div className="max-w-4xl mx-auto px-6 py-8 pt-24 flex flex-col h-[calc(100vh-96px)]">
-          {/* Selected Category Badge */}
-          <div className="flex justify-center mb-6">
-            <div className="bg-orange-600 text-white px-4 py-2 rounded-full flex items-center gap-2">
-              {selectedCategoryData.icon}
-              {selectedCategoryData.name}
+  return (
+    <div className="bg-slate-700 min-h-[500px] p-4 rounded-lg flex flex-col">
+      {/* Header with back button and selected category */}
+      <div className="flex items-center mb-4">
+        <button
+          onClick={handleBackToCategories}
+          className="flex items-center text-slate-300 hover:text-white transition-colors mr-4 text-sm"
+        >
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back to Categories
+        </button>
+        
+        {selectedCategory && (
+          <div className="flex items-center">
+            <div className={`${selectedCategory.color} w-6 h-6 rounded-lg flex items-center justify-center text-white mr-2`}>
+              {selectedCategory.icon}
             </div>
+            <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+              {selectedCategory.name}
+            </span>
           </div>
+        )}
+      </div>
 
-          {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto mb-6 space-y-4">
-            {/* Initial AI Message */}
-            <div className="flex justify-start">
-              <div className="bg-slate-700/50 rounded-2xl rounded-bl-sm px-6 py-4 max-w-[80%]">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 bg-orange-600 rounded-full flex items-center justify-center">
-                    <Wrench className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-sm font-medium text-slate-300">AI Assistant</span>
-                </div>
-                <p className="text-white">
-                  Hi! I'm your PropAgentic maintenance assistant. To help you get the right contractor quickly, let's start by selecting the category that best describes your maintenance issue.
-                </p>
+      {/* Chat Messages */}
+      <div className="flex-1 overflow-y-auto mb-3 space-y-3 min-h-[300px]">
+        {chatMessages.map((msg, idx) => (
+          <div
+            key={idx}
+            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div className={`flex items-start max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+              <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
+                msg.role === 'user' ? 'bg-slate-600 ml-2' : 'bg-orange-500 mr-2'
+              }`}>
+                {msg.role === 'user' ? (
+                  <User className="w-3 h-3 text-white" />
+                ) : (
+                  <Bot className="w-3 h-3 text-white" />
+                )}
               </div>
-            </div>
-
-            {/* Messages */}
-            {messages.map((msg, idx) => (
               <div
-                key={idx}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`px-3 py-2 rounded-lg text-sm ${
+                  msg.role === 'user' 
+                    ? 'bg-slate-600 text-white' 
+                    : 'bg-slate-600 text-slate-100 border border-slate-500'
+                }`}
               >
-                <div
-                  className={`max-w-[80%] px-6 py-4 rounded-2xl ${
-                    msg.role === 'user'
-                      ? 'bg-orange-600 text-white rounded-br-sm'
-                      : 'bg-slate-700/50 text-white rounded-bl-sm'
-                  }`}
-                >
-                  {msg.role === 'assistant' && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 bg-orange-600 rounded-full flex items-center justify-center">
-                        <Wrench className="w-4 h-4 text-white" />
-                      </div>
-                      <span className="text-sm font-medium text-slate-300">AI Assistant</span>
-                    </div>
-                  )}
-                  {msg.role === 'user' && (
-                    <div className="flex items-center gap-2 mb-2 justify-end">
-                      <span className="text-sm font-medium text-orange-100">You</span>
-                      <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
-                        <User className="w-4 h-4 text-white" />
-                      </div>
-                    </div>
-                  )}
-                  <p>{msg.content}</p>
-                </div>
+                {msg.content}
               </div>
-            ))}
-            
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-slate-700/50 rounded-2xl rounded-bl-sm px-6 py-4 max-w-[80%]">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-6 h-6 bg-orange-600 rounded-full flex items-center justify-center">
-                      <Wrench className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="text-sm font-medium text-slate-300">AI Assistant</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-slate-300">
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
+            </div>
           </div>
+        ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-slate-600 text-slate-300 px-3 py-2 rounded-lg text-sm">
+              AI is typing...
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
 
-          {/* Input Area */}
-          <div className="bg-slate-700/30 rounded-2xl p-4 border border-slate-600">
-            <div className="flex gap-4 items-end">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Describe your maintenance issue in detail..."
-                className="flex-1 bg-transparent text-white placeholder-slate-400 resize-none focus:outline-none min-h-[60px] max-h-32"
-                disabled={isLoading}
-                rows={2}
-              />
-              <button
-                onClick={handleSend}
-                disabled={!input.trim() || isLoading}
-                className="bg-orange-600 hover:bg-orange-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white p-3 rounded-xl transition-colors flex-shrink-0"
-              >
-                <Send className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="text-center mt-3 text-sm text-slate-400">
-              Demo Mode • Responses are simulated for demonstration purposes
-            </div>
-          </div>
+      {/* Input Area */}
+      <div className="bg-slate-600 rounded-lg p-3">
+        <div className="flex items-center space-x-2">
+          <input
+            type="text"
+            className="flex-1 bg-slate-700 text-white placeholder-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Describe your maintenance issue in detail..."
+            disabled={isLoading}
+          />
+          <button
+            onClick={handleSendMessage}
+            className="bg-orange-500 hover:bg-orange-600 text-white p-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!input.trim() || isLoading}
+          >
+            <Send className="w-4 h-4" />
+          </button>
         </div>
-      )}
+        <p className="text-slate-400 text-xs mt-2 text-center">
+          Powered by AI • Your request will be automatically routed to the right contractor
+        </p>
+      </div>
     </div>
   );
 };

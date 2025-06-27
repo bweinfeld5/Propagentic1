@@ -1,0 +1,94 @@
+flowchart TD
+    A[App.jsx Starts] --> B{First Visit?}
+    B -->|Yes| C[Show LogoLoadingAnimation]
+    B -->|No| D[Skip Loading Animation]
+    
+    C --> E[finishLoading Callback]
+    D --> F[Initialize Providers]
+    E --> F
+    
+    F --> G[Provider Hierarchy Setup]
+    G --> H[React Router Ready]
+    
+    H --> I{Route Type?}
+    
+    I -->|Public Route| J[Direct Component Loading]
+    I -->|Private Route| K[PrivateRoute Check]
+    
+    J --> L{Component Type?}
+    L -->|Direct Import| M[Bundle Time Loading]
+    L -->|Lazy Import| N[Dynamic Import]
+    
+    K --> O{Authenticated?}
+    O -->|No| P[Redirect to Landing]
+    O -->|Yes| Q[TenantInviteGuard]
+    
+    Q --> R{Route Category?}
+    R -->|Dashboard Root| S[RoleBasedRedirect]
+    R -->|Specific Route| T[Load Target Component]
+    
+    S --> U{Onboarding Complete?}
+    U -->|No| V[Onboarding Route]
+    U -->|Yes| W[Role-based Dashboard]
+    
+    V --> X[Load Onboarding Component]
+    W --> Y[Load Dashboard Component]
+    T --> Z[Load Route Component]
+    
+    N --> AA[Show UniversalLoadingSpinner]
+    AA --> AB[Component Loads]
+    AB --> AC[Hide Spinner]
+    AC --> AD[Render Component]
+    
+    M --> AD
+    X --> AD
+    Y --> AD
+    Z --> AD
+    
+    AD --> AE[Component Mounted]
+    
+    subgraph "Direct Imports (Bundle Time)"
+        AI[PitchDeckDemo]
+        AJ[AboutPage]
+        AK[AIExamples]
+        AL[TestUIComponents]
+        AM[MaintenanceSurvey]
+        AN[InviteAcceptancePage]
+    end
+    
+    subgraph "Lazy Imports (On-Demand)"
+        AO[LandingPage]
+        AP[LoginPage]
+        AQ[TenantDashboard]
+        AR[EnhancedTenantDashboard]
+        AS[LandlordDashboard]
+        AT[ContractorDashboard]
+        AU[OnboardingPages]
+    end
+    
+    subgraph "Always Loaded"
+        AV[LogoLoadingAnimation]
+        AW[GlassyHeader]
+        AX[UniversalLoadingSpinner]
+        AY[Provider Components]
+        AZ[Guard Components]
+    end
+    
+    M -.-> AI
+    M -.-> AJ
+    M -.-> AK
+    
+    N -.-> AO
+    N -.-> AP
+    N -.-> AQ
+    
+    F -.-> AV
+    F -.-> AW
+    F -.-> AY
+    
+    style A fill:#e1f5fe
+    style F fill:#f3e5f5
+    style AD fill:#e8f5e8
+    style AI fill:#fff3e0
+    style AO fill:#fce4ec
+    style AV fill:#f1f8e9 

@@ -1,0 +1,80 @@
+sequenceDiagram
+    participant App as App Component
+    participant TP as ThemeProvider
+    participant AP as AuthProvider
+    participant PLG as PreLaunchGuard
+    participant CP as ConnectionProvider
+    participant DMP as DemoModeProvider
+    participant DSP as DataServiceProvider
+    participant NP as NotificationProvider
+    participant Router as React Router
+    participant Child as Child Components
+
+    Note over App, Child: Provider Hierarchy Initialization Flow
+
+    App->>TP: Initialize ThemeProvider
+    TP->>TP: Setup theme state (system/light/dark)
+    TP->>AP: Initialize AuthProvider
+    
+    AP->>AP: Initialize Firebase Auth
+    AP->>AP: Setup currentUser state
+    AP->>AP: Setup userProfile state
+    AP->>AP: Setup auth state listeners
+    AP->>PLG: Initialize PreLaunchGuard
+    
+    PLG->>PLG: Check feature flags
+    PLG->>PLG: Determine if app is launched
+    PLG->>CP: Initialize ConnectionProvider
+    
+    CP->>CP: Setup network status monitoring
+    CP->>CP: Initialize online/offline state
+    CP->>DMP: Initialize DemoModeProvider
+    
+    DMP->>DMP: Setup demo mode state
+    DMP->>DMP: Initialize demo data if needed
+    DMP->>DSP: Initialize DataServiceProvider
+    
+    DSP->>DSP: Setup Firebase services
+    DSP->>DSP: Initialize data layer connections
+    DSP->>NP: Initialize NotificationProvider
+    
+    NP->>NP: Setup notification state
+    NP->>NP: Initialize toast configuration
+    NP->>Router: Initialize React Router
+    
+    Router->>Router: Setup routing configuration
+    Router->>Child: Render route components
+    
+    Note over App, Child: Context Value Propagation
+
+    Child->>NP: useNotification() hook
+    NP-->>Child: Notification context values
+    
+    Child->>DSP: useDataService() hook  
+    DSP-->>Child: Data service context values
+    
+    Child->>DMP: useDemoMode() hook
+    DMP-->>Child: Demo mode context values
+    
+    Child->>CP: useConnection() hook
+    CP-->>Child: Connection status values
+    
+    Child->>AP: useAuth() hook
+    AP-->>Child: Auth context values (currentUser, userProfile, etc.)
+    
+    Child->>TP: useTheme() hook
+    TP-->>Child: Theme context values
+
+    Note over App, Child: Context Dependencies
+    
+    rect rgb(240, 248, 255)
+        Note over AP, DSP: Auth context is used by:<br/>- DataServiceProvider (user-specific data)<br/>- Child components (user state)
+    end
+    
+    rect rgb(248, 255, 240)
+        Note over DMP, Child: Demo mode affects:<br/>- Data loading behavior<br/>- UI rendering (demo banners)
+    end
+    
+    rect rgb(255, 248, 240)
+        Note over CP, Child: Connection status affects:<br/>- Data fetching strategies<br/>- UI feedback for offline state
+    end 

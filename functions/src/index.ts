@@ -45,4 +45,9 @@ export {
   addContractorToRolodex 
 };
 
+// Import and export document management functions
+import { processUploadedDocument, uploadWorkOrderDocument } from './documentManagement';
+
+export { processUploadedDocument, uploadWorkOrderDocument };
+
 console.log("✅ Essential functions loaded (ping, invite code, email invites, notifications, property invites).");

@@ -53,5 +53,11 @@ service firebase.storage {
                      isValidDocumentType() && 
                      isValidFileSize();
     }
+
+    // Work order documents
+    match /work-orders/{jobId}/{category}/{fileName} {
+      allow read: if isAuthenticated(); // TODO: Add role-based access
+      allow write: if isAuthenticated(); // TODO: Add validation and participant checks
+    }
   }
 } 

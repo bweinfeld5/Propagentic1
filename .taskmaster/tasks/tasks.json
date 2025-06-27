@@ -1,0 +1,320 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Audit Current Tenant Flow Components",
+        "description": "Comprehensively audit all existing tenant-related components to identify gaps and inconsistencies",
+        "status": "done",
+        "priority": "high",
+        "dependencies": [],
+        "details": "Analyze OnboardingSurvey.jsx, TenantForm.jsx, OnboardingModal.jsx, RegisterPage.jsx, TenantDashboard.tsx, EnhancedTenantDashboard.tsx, and all invite code services to map current flow and identify gaps",
+        "testStrategy": "Create flow diagram and gap analysis document showing current vs desired state"
+      },
+      {
+        "id": 2,
+        "title": "Fix UnifiedInviteService Authentication Issues",
+        "description": "Resolve Firebase Functions authentication problems in the unified invite service",
+        "status": "done",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "details": "Fix authentication token refresh issues, implement proper error handling, and ensure reliable fallback to Firestore direct access when Firebase Functions fail",
+        "testStrategy": "Test invite code generation and validation in all scenarios: Firebase Functions working, Functions failing, and direct Firestore fallback"
+      },
+      {
+        "id": 3,
+        "title": "Consolidate Invite Code Services",
+        "description": "Merge inviteCodeService.js, inviteCodeServiceLocal.ts into unifiedInviteService.ts",
+        "status": "done",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "details": "Remove duplicate invite code services and ensure all components use the unified service with proper error handling and fallback strategies",
+        "testStrategy": "Verify all invite code operations work through the unified service across all use cases"
+      },
+      {
+        "id": 4,
+        "title": "Create Enhanced Tenant Registration Flow",
+        "description": "Enhance RegisterPage.jsx to handle tenant-specific requirements and invite code integration",
+        "status": "done",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "details": "Add invite code input field to registration form, implement real-time validation, integrate with unifiedInviteService, and handle property association during registration",
+        "testStrategy": "Test registration with valid invite codes, invalid codes, expired codes, and without invite codes"
+      },
+      {
+        "id": 5,
+        "title": "Implement Unified Tenant Profile Creation",
+        "description": "Create comprehensive tenant profile during registration with all required data",
+        "status": "done",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "details": "Implement tenant profile document creation with emergency contact, preferences, property associations, and all fields from tenantSchema.ts",
+        "testStrategy": "Verify tenant profile is created with all required fields and proper validation"
+      },
+      {
+        "id": 6,
+        "title": "Consolidate Tenant Dashboard Components",
+        "description": "Merge TenantDashboard.tsx and EnhancedTenantDashboard.tsx into single component",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          5
+        ],
+        "details": "Choose the best features from both dashboards, implement unified design, ensure proper property association handling, and create seamless 'No Properties' state",
+        "testStrategy": "Test dashboard with no properties, one property, multiple properties, and pending invitations"
+      },
+      {
+        "id": 7,
+        "title": "Integrate Invite Code Entry in Dashboard",
+        "description": "Enhance dashboard's 'No Properties' state with seamless invite code entry",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "details": "Improve the NoPropertiesInviteCard component with better UX, real-time validation, QR code scanning, and automatic property association upon successful validation",
+        "testStrategy": "Test invite code entry, QR scanning, validation feedback, and property association from dashboard"
+      },
+      {
+        "id": 8,
+        "title": "Create Unified Tenant Onboarding Component",
+        "description": "Replace competing onboarding components with single, comprehensive tenant onboarding flow",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          5
+        ],
+        "details": "Create TenantOnboarding.tsx that handles post-registration profile completion, emergency contacts, preferences, and property association confirmation",
+        "testStrategy": "Test complete onboarding flow from registration through dashboard access"
+      },
+      {
+        "id": 9,
+        "title": "Implement Tenant-Property Association Logic",
+        "description": "Create robust system for associating tenants with properties through invite codes",
+        "status": "done",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "details": "Implement proper tenant-property relationships in Firestore, handle multiple property associations, and ensure proper permissions and access control",
+        "testStrategy": "Test tenant association with single property, multiple properties, and permission validation"
+      },
+      {
+        "id": 10,
+        "title": "Enhance Error Handling and User Feedback",
+        "description": "Implement comprehensive error handling throughout the tenant flow",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          3,
+          4
+        ],
+        "details": "Add proper error messages, loading states, retry mechanisms, and user-friendly feedback for all tenant flow operations",
+        "testStrategy": "Test error scenarios including network failures, invalid data, expired codes, and permission errors"
+      },
+      {
+        "id": 11,
+        "title": "Update App Routing for Unified Flow",
+        "description": "Modify App.jsx routing to support the unified tenant flow",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          6,
+          8
+        ],
+        "details": "Update routes to use consolidated components, ensure proper redirects for different tenant states, and handle onboarding completion checks",
+        "testStrategy": "Test all routing scenarios for new tenants, existing tenants, and tenants with incomplete onboarding"
+      },
+      {
+        "id": 12,
+        "title": "Implement Tenant Profile Validation",
+        "description": "Add comprehensive validation for tenant profile data",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          5
+        ],
+        "details": "Implement client-side and server-side validation for all tenant profile fields, emergency contacts, and preferences",
+        "testStrategy": "Test validation with valid and invalid data, edge cases, and proper error messaging"
+      },
+      {
+        "id": 13,
+        "title": "Create Emergency Contact Collection System",
+        "description": "Implement emergency contact collection during tenant onboarding",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          8
+        ],
+        "details": "Add emergency contact form fields, validation, and storage in tenant profile according to tenantSchema.ts",
+        "testStrategy": "Test emergency contact data collection, validation, and storage"
+      },
+      {
+        "id": 14,
+        "title": "Implement Tenant Preference Management",
+        "description": "Create system for collecting and managing tenant preferences",
+        "status": "pending",
+        "priority": "low",
+        "dependencies": [
+          8
+        ],
+        "details": "Implement notification preferences, communication preferences, and other tenant settings during onboarding and in dashboard",
+        "testStrategy": "Test preference collection, storage, and modification through dashboard settings"
+      },
+      {
+        "id": 15,
+        "title": "Add QR Code Integration to Registration",
+        "description": "Allow tenants to scan QR codes during registration to auto-fill invite codes",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "details": "Integrate QRScanner component into registration flow, auto-populate invite code field, and handle QR code validation",
+        "testStrategy": "Test QR code scanning during registration with valid and invalid codes"
+      },
+      {
+        "id": 16,
+        "title": "Implement Tenant Role Validation",
+        "description": "Add proper role validation throughout the tenant flow",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          5
+        ],
+        "details": "Ensure proper userType/role validation, implement guards for tenant-only features, and handle role mismatches gracefully",
+        "testStrategy": "Test role validation for tenants, landlords trying to access tenant features, and undefined roles"
+      },
+      {
+        "id": 17,
+        "title": "Create Tenant Flow Documentation",
+        "description": "Document the complete tenant signup and onboarding flow",
+        "status": "pending",
+        "priority": "low",
+        "dependencies": [
+          11
+        ],
+        "details": "Create comprehensive documentation covering user journey, technical implementation, error handling, and troubleshooting",
+        "testStrategy": "Verify documentation accuracy by following it to implement features"
+      },
+      {
+        "id": 18,
+        "title": "Implement Backward Compatibility for Existing Tenants",
+        "description": "Ensure existing tenant accounts work with the new unified flow",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          5,
+          6
+        ],
+        "details": "Add migration logic for existing tenant accounts, handle incomplete profiles, and ensure seamless transition to new system",
+        "testStrategy": "Test with existing tenant accounts in various states of completion"
+      },
+      {
+        "id": 19,
+        "title": "Add Comprehensive End-to-End Testing",
+        "description": "Create automated tests for the complete tenant flow",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          11
+        ],
+        "details": "Implement Cypress or similar testing for registration, onboarding, invite code validation, property association, and dashboard access",
+        "testStrategy": "Run automated tests covering all user scenarios and edge cases"
+      },
+      {
+        "id": 20,
+        "title": "Optimize Performance and Loading States",
+        "description": "Improve performance and add proper loading states throughout tenant flow",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          10
+        ],
+        "details": "Add skeleton loaders, optimize API calls, implement lazy loading where appropriate, and ensure fast user experience",
+        "testStrategy": "Test performance metrics and loading states across different network conditions"
+      },
+      {
+        "id": 21,
+        "title": "Implement Security Enhancements",
+        "description": "Add security improvements for tenant data and invite code system",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          9
+        ],
+        "details": "Implement proper authorization checks, secure invite code validation, rate limiting, and data encryption where needed",
+        "testStrategy": "Conduct security testing including authorization bypass attempts and data validation"
+      },
+      {
+        "id": 22,
+        "title": "Add Accessibility Features",
+        "description": "Ensure tenant flow is fully accessible",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          11
+        ],
+        "details": "Add proper ARIA labels, keyboard navigation, screen reader support, and color contrast compliance",
+        "testStrategy": "Test with screen readers and accessibility tools to ensure WCAG compliance"
+      },
+      {
+        "id": 23,
+        "title": "Create Tenant Support Documentation",
+        "description": "Create user-facing help documentation for the tenant flow",
+        "status": "pending",
+        "priority": "low",
+        "dependencies": [
+          17
+        ],
+        "details": "Create FAQ, troubleshooting guides, and step-by-step instructions for tenant registration and onboarding",
+        "testStrategy": "Validate documentation with actual user testing and feedback"
+      },
+      {
+        "id": 24,
+        "title": "Implement Analytics and Monitoring",
+        "description": "Add analytics tracking for tenant flow performance and user behavior",
+        "status": "pending",
+        "priority": "low",
+        "dependencies": [
+          11
+        ],
+        "details": "Implement event tracking for registration steps, error rates, completion rates, and user journey analytics",
+        "testStrategy": "Verify analytics data accuracy and usefulness for optimization"
+      },
+      {
+        "id": 25,
+        "title": "Conduct User Acceptance Testing",
+        "description": "Test the complete tenant flow with real users",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          19,
+          20,
+          21,
+          22
+        ],
+        "details": "Organize user testing sessions with landlords and tenants to validate the complete signup and onboarding experience",
+        "testStrategy": "Collect user feedback and measure success metrics defined in PRD"
+      }
+    ],
+    "metadata": {
+      "projectName": "PropAgentic Tenant Signup Flow Audit & Improvement",
+      "createdAt": "2024-12-28",
+      "version": "1.0.0",
+      "totalTasks": 25,
+      "description": "Comprehensive audit and improvement of PropAgentic's tenant signup flow to address identified gaps and create a unified, seamless user experience",
+      "created": "2025-06-24T18:44:15.107Z",
+      "updated": "2025-06-24T19:51:57.586Z"
+    }
+  }
+}

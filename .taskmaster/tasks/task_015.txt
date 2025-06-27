@@ -1,0 +1,11 @@
+# Task ID: 15
+# Title: Add QR Code Integration to Registration
+# Status: pending
+# Dependencies: 4
+# Priority: medium
+# Description: Allow tenants to scan QR codes during registration to auto-fill invite codes
+# Details:
+Integrate QRScanner component into registration flow, auto-populate invite code field, and handle QR code validation
+
+# Test Strategy:
+Test QR code scanning during registration with valid and invalid codes

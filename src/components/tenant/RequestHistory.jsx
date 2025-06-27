@@ -2,13 +2,33 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import RequestCard from './RequestCard';
 import { format } from 'date-fns';
+import { toast } from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
+import maintenanceRequestService from '../../services/maintenanceRequestService';
 
 const RequestHistory = ({ tickets, loading, filter }) => {
   const [expandedTicketId, setExpandedTicketId] = useState(null);
+  const { currentUser } = useAuth();
 
   // Toggle expanded ticket
   const toggleExpand = (ticketId) => {
     setExpandedTicketId(expandedTicketId === ticketId ? null : ticketId);
+  };
+
+  // Handle delete request
+  const handleDeleteRequest = async (requestId) => {
+    if (!currentUser) {
+      toast.error('You must be logged in to delete requests');
+      return;
+    }
+
+    try {
+      await maintenanceRequestService.deleteMaintenanceRequest(requestId, currentUser.uid);
+      toast.success('Maintenance request deleted successfully');
+    } catch (error) {
+      console.error('Error deleting maintenance request:', error);
+      toast.error('Failed to delete maintenance request. Please try again.');
+    }
   };
 
   if (loading) {
@@ -43,6 +63,7 @@ const RequestHistory = ({ tickets, loading, filter }) => {
           ticket={ticket} 
           expanded={expandedTicketId === ticket.id}
           toggleExpand={() => toggleExpand(ticket.id)}
+          onDelete={handleDeleteRequest}
         />
       ))}
     </div>

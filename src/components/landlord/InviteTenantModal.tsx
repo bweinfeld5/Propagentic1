@@ -9,6 +9,7 @@ import Button from '../ui/Button';
 import { auth } from '../../firebase/config';
 import inviteService from '../../services/firestore/inviteService';
 import { QRCodeDisplay } from '../qr/QRCodeDisplay';
+import inviteCodeService from '../../services/unifiedInviteCodeService';
 
 interface Property {
   id: string;
@@ -38,13 +39,16 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
   const [email, setEmail] = useState<string>('');
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>(initialPropertyId || '');
   const [selectedPropertyName, setSelectedPropertyName] = useState<string>(initialPropertyName || '');
+  const [landlordName, setLandlordName] = useState<string>('');
+  const [unitId, setUnitId] = useState<string>('');
+  const [unitNumber, setUnitNumber] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [inviteSuccess, setInviteSuccess] = useState<boolean>(false);
   const [inviteCode, setInviteCode] = useState<string>('');
-  const [inviteId, setInviteId] = useState<string>('');
-  const [inviteLink, setInviteLink] = useState<string>('');
-  const [showQRCode, setShowQRCode] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'info' | 'qr'>('info');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<{ type: string; message: string } | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -54,9 +58,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
       setErrors({});
       setInviteSuccess(false);
       setInviteCode('');
-      setInviteId('');
-      setInviteLink('');
-      setShowQRCode(false);
+      setActiveTab('info');
     }
   }, [isOpen, initialPropertyId, initialPropertyName]);
 
@@ -94,78 +96,50 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-        toast.error('You must be logged in to send invitations');
+    
+    if (!selectedPropertyId || !email) {
+      toast.error('Please fill in all required fields');
         return;
     }
 
-    if (!validateForm()) return;
-
     setLoading(true);
     
-    const property = properties.find(p => p.id === selectedPropertyId);
-    const propertyNameForInvite = property?.nickname || property?.name || property?.streetAddress || selectedPropertyName || 'Unknown Property';
-    
     try {
-      // Use WORKING inviteService.ts (same logic as working browser tests)
-      console.log(`Using working inviteService to send invitation to ${email} for property ${selectedPropertyId}`);
-      
-      const inviteId = await inviteService.createInvite({
-        tenantEmail: email,
+      // Create the invite using the working inviteService
+      const inviteData = {
+        tenantEmail: email.trim(),
         propertyId: selectedPropertyId,
-        landlordId: currentUser.uid,
-        propertyName: propertyNameForInvite,
-        landlordName: currentUser.displayName || currentUser.email || 'Property Manager'
-      });
-      
-      setInviteSuccess(true);
-      setInviteId(inviteId);
-      
-      // Enhanced success toast message
-      toast.success(
-        `🎉 Invitation sent to ${email}!\nThey'll receive an email with instructions to join ${propertyNameForInvite}.`,
-        {
-          duration: 5000,
-          style: {
-            background: '#10B981',
-            color: '#FFFFFF',
-            padding: '16px',
-            borderRadius: '8px',
-          },
-        }
-      );
-      
-      if (onInviteSuccess) {
-        onInviteSuccess();
+        landlordId: auth.currentUser?.uid || '',
+        propertyName: selectedPropertyName || 'Property',
+        landlordName: landlordName.trim() || auth.currentUser?.displayName || 'Landlord',
+        unitId: unitId?.trim() || undefined,
+        unitNumber: unitNumber?.trim() || undefined
+      };
 
-      }
+      console.log('Creating invite with data:', inviteData);
+      const shortCode = await inviteService.createInvite(inviteData);
+      
+      console.log('✅ Invite created successfully with short code:', shortCode);
+        setInviteSuccess(true);
+      setInviteCode(shortCode);
+      
+      toast.success(`Invitation sent successfully! Tenant can use code: ${shortCode}`);
+        
+        if (onInviteSuccess) {
+          onInviteSuccess();
+        }
       
     } catch (error: any) {
-      console.error('Error sending invitation:', error);
-      const errorMessage = error.message || 'Failed to send invitation. Please try again.';
-      
-      // Enhanced error toast message
-      toast.error(
-        `❌ Failed to send invitation: ${errorMessage}`,
-        {
-          duration: 6000,
-          style: {
-            background: '#EF4444',
-            color: '#FFFFFF',
-            padding: '16px',
-            borderRadius: '8px',
-          },
-        }
-      );
+      console.error('Error creating invite:', error);
+      toast.error(error.message || 'Failed to send invitation. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(`${label} copied to clipboard!`);
+  const getInviteUrl = () => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/invite?code=${inviteCode}`;
   };
 
   return (
@@ -224,104 +198,41 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                             <h3 className="text-lg font-medium text-green-800">Success!</h3>
                             <div className="mt-2 text-sm text-green-700">
                               <p>An invitation has been sent to <span className="font-semibold">{email}</span> for <span className="font-semibold">{selectedPropertyName}</span>.</p>
-                              <p className="mt-1">They'll receive an email with instructions on how to join your property.</p>
+                              <p className="mt-1">They can join by email or by scanning the QR code below.</p>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Invite Code and Link */}
-                      <div className="space-y-4">
-                        {/* Invite Code */}
-                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                          <p className="text-sm font-medium text-gray-700 mb-2">Invite Code:</p>
-                          <div className="flex items-center space-x-2">
-                            <div className="bg-white rounded-lg px-4 py-2 font-mono text-lg text-center border border-gray-300 flex-1">
-                              {inviteCode}
-                            </div>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => copyToClipboard(inviteCode, 'Invite code')}
-                              className="!p-2"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                              </svg>
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Invite Link */}
-                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                          <p className="text-sm font-medium text-gray-700 mb-2">Direct Invite Link:</p>
-                          <div className="flex items-center space-x-2">
-                            <div className="bg-white rounded-lg px-3 py-2 text-sm text-blue-600 border border-gray-300 flex-1 overflow-hidden">
-                              <LinkIcon className="inline w-4 h-4 mr-1" />
-                              <span className="truncate">{inviteLink}</span>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => copyToClipboard(inviteLink, 'Invite link')}
-                              className="!p-2"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                              </svg>
-                            </Button>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-2">
-                            Share this link with the tenant for direct access
-                          </p>
-                        </div>
-
-                        {/* QR Code Button */}
-                        <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="text-sm font-semibold text-blue-800 flex items-center">
-                                <QrCodeIcon className="h-5 w-5 mr-2" />
-                                QR Code
-                              </h4>
-                              <p className="text-xs text-blue-600 mt-1">
-                                Generate a QR code for easy property access
-                              </p>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => setShowQRCode(!showQRCode)}
-                              className="text-blue-600 border-blue-300 hover:bg-blue-100"
-                            >
-                              {showQRCode ? 'Hide' : 'Show'} QR Code
-                            </Button>
-                          </div>
-                          
-                          {showQRCode && (
-                            <div className="mt-4 p-4 bg-white rounded-lg border border-blue-200">
-                              <div className="relative">
-                                <QRCodeDisplay 
-                                  inviteCode={inviteCode}
-                                  propertyName={selectedPropertyName}
-                                  size={200}
-                                />
-                                {/* Coming Soon Overlay */}
-                                <div className="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                                  <div className="text-center">
-                                    <div className="bg-blue-100 rounded-full p-3 mx-auto mb-3 w-fit">
-                                      <QrCodeIcon className="h-8 w-8 text-blue-600" />
-                                    </div>
-                                    <p className="text-lg font-semibold text-gray-800">QR Code Coming Soon!</p>
-                                    <p className="text-sm text-gray-600 mt-1">This feature will be available when the Firebase server is live</p>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                      {/* Tabs for Info and QR Code */}
+                      <div className="border-b border-gray-200">
+                        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                          <button
+                            onClick={() => setActiveTab('info')}
+                            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                              activeTab === 'info'
+                                ? 'border-orange-500 text-orange-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                          >
+                            Next Steps
+                          </button>
+                          <button
+                            onClick={() => setActiveTab('qr')}
+                            className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                              activeTab === 'qr'
+                                ? 'border-orange-500 text-orange-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                          >
+                            <QrCodeIcon className="w-4 h-4" />
+                            QR Code
+                          </button>
+                        </nav>
                       </div>
 
+                      {activeTab === 'info' ? (
+                        <>
                       {/* Next Steps */}
                       <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
                         <h4 className="text-sm font-semibold text-blue-800 mb-3 flex items-center">
@@ -335,18 +246,92 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                           </li>
                           <li className="flex items-start">
                             <span className="text-blue-500 mr-2">•</span>
-                            They can use the code or link to join
+                            They'll create an account (if they don't have one)
                           </li>
                           <li className="flex items-start">
                             <span className="text-blue-500 mr-2">•</span>
-                            They'll create an account (if needed)
+                            They'll get access to submit maintenance requests
                           </li>
                           <li className="flex items-start">
                             <span className="text-blue-500 mr-2">•</span>
-                            Once connected, they can submit maintenance requests
+                            You'll be able to communicate directly through the platform
                           </li>
                         </ul>
                       </div>
+
+                      {/* Show invite ID if available */}
+                          {inviteCode && (
+                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                              <p className="text-sm font-medium text-gray-700 mb-2">Invitation Code:</p>
+                          <div className="bg-white rounded-lg px-3 py-2 font-mono text-sm text-center border border-gray-300">
+                                {inviteCode}
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2 text-center">
+                                The tenant can use this code to accept the invitation manually.
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        /* QR Code Tab */
+                        <div className="space-y-4">
+                          <div className="text-center">
+                            <h4 className="text-lg font-semibold text-gray-900 mb-2">Quick Join QR Code</h4>
+                            <p className="text-sm text-gray-600 mb-4">
+                              Tenant can scan this code with their phone to join instantly
+                            </p>
+                            
+                            {/* QR Code Display */}
+                            <div className="flex justify-center">
+                              <div className="relative">
+                                <QRCodeDisplay 
+                                  inviteCode={inviteCode}
+                                  propertyName={selectedPropertyName}
+                                  size={200}
+                                  includeText={true}
+                                  downloadable={true}
+                                  style="branded"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+                            <h5 className="font-semibold text-orange-900 mb-2">How to use the QR code:</h5>
+                            <ul className="text-sm text-orange-800 space-y-1">
+                              <li className="flex items-start">
+                                <span className="text-orange-500 mr-2">•</span>
+                                Show this QR code to your tenant in person
+                              </li>
+                              <li className="flex items-start">
+                                <span className="text-orange-500 mr-2">•</span>
+                                They scan it with their phone camera
+                              </li>
+                              <li className="flex items-start">
+                                <span className="text-orange-500 mr-2">•</span>
+                                They'll be taken directly to the acceptance page
+                              </li>
+                              <li className="flex items-start">
+                                <span className="text-orange-500 mr-2">•</span>
+                                No need to type codes or check email
+                              </li>
+                            </ul>
+                          </div>
+
+                          <div className="text-center">
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(getInviteUrl());
+                                toast.success('Invite link copied to clipboard!');
+                              }}
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                            >
+                              <LinkIcon className="w-4 h-4" />
+                              Copy Invite Link
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
                       <div className="flex gap-3 pt-4">
                         <Button
@@ -364,11 +349,9 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                             setEmail('');
                             setInviteSuccess(false);
                             setInviteCode('');
-                            setInviteId('');
-                            setInviteLink('');
-                            setShowQRCode(false);
                             setSelectedPropertyId(initialPropertyId || '');
                             setSelectedPropertyName(initialPropertyName || '');
+                            setActiveTab('info');
                           }}
                           className="flex-1"
                         >
@@ -389,19 +372,19 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                             <ul className="text-sm text-blue-700 space-y-1">
                               <li className="flex items-start">
                                 <span className="text-blue-500 mr-2">•</span>
-                                We'll send a professional email invitation
+                                We'll send a professional email invitation to the tenant
                               </li>
                               <li className="flex items-start">
                                 <span className="text-blue-500 mr-2">•</span>
-                                They'll receive a unique invitation code and link
+                                They'll receive a unique invitation code
                               </li>
                               <li className="flex items-start">
                                 <span className="text-blue-500 mr-2">•</span>
-                                The tenant can accept via email or use the code/link
+                                The tenant can accept directly from the email or enter the code manually
                               </li>
                               <li className="flex items-start">
                                 <span className="text-blue-500 mr-2">•</span>
-                                QR codes will be available when Firebase is live
+                                Once accepted, they'll have access to submit maintenance requests
                               </li>
                             </ul>
                           </div>

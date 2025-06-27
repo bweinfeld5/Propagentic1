@@ -152,14 +152,14 @@ export const determineUserRoute = (currentUser, userProfile) => {
   // Needs onboarding
   if (validation.needsOnboarding) {
     const onboardingRoutes = {
-      landlord: '/landlord-onboarding',
-      contractor: '/contractor-onboarding',
-      tenant: '/onboarding'
+      landlord: '/onboarding/landlord',
+      contractor: '/onboarding/contractor',
+      tenant: '/onboarding/tenant'
     };
     
     return {
       action: 'redirect',
-      path: onboardingRoutes[validation.role] || '/onboarding',
+      path: onboardingRoutes[validation.role] || '/onboarding/tenant',
       reason: 'needs_onboarding'
     };
   }

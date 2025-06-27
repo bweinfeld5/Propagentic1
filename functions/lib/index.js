@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.simpleTest = exports.testPing = exports.testSendGrid = exports.sendEmail = exports.sendInviteCodeEmail = exports.sendPropertyInviteEmail = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
+exports.tenantLeaveProperty = exports.removeTenantFromLandlord = exports.acceptTenantInvite = exports.generateInviteCode = exports.simpleTest = exports.testPing = exports.testSendGrid = exports.sendEmail = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 // Initialize Firebase Admin SDK
@@ -61,10 +61,6 @@ Object.defineProperty(exports, "sendInviteEmail", { enumerable: true, get: funct
 // Import and export notification trigger functions  
 const inviteTriggers_1 = require("./inviteTriggers");
 Object.defineProperty(exports, "createNotificationOnInvite", { enumerable: true, get: function () { return inviteTriggers_1.createNotificationOnInvite; } });
-Object.defineProperty(exports, "sendPropertyInviteEmail", { enumerable: true, get: function () { return inviteTriggers_1.sendPropertyInviteEmail; } });
-// Import and export invite code email trigger
-const inviteCodeEmailTrigger_1 = require("./inviteCodeEmailTrigger");
-Object.defineProperty(exports, "sendInviteCodeEmail", { enumerable: true, get: function () { return inviteCodeEmailTrigger_1.sendInviteCodeEmail; } });
 // Import and export SendGrid email functions
 const sendgridEmailService_1 = require("./sendgridEmailService");
 Object.defineProperty(exports, "sendEmail", { enumerable: true, get: function () { return sendgridEmailService_1.sendEmail; } });
@@ -74,5 +70,17 @@ Object.defineProperty(exports, "testSendGrid", { enumerable: true, get: function
 Object.defineProperty(exports, "testPing", { enumerable: true, get: function () { return testSendGrid_1.testPing; } });
 const simpleTest_1 = require("./simpleTest");
 Object.defineProperty(exports, "simpleTest", { enumerable: true, get: function () { return simpleTest_1.simpleTest; } });
-console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, invite code emails, SendGrid, tests).");
+// Import and export invite code generation function (landlord functionality)
+const inviteCodeModule = require('./inviteCode.js');
+exports.generateInviteCode = inviteCodeModule.generateInviteCode;
+// Import and export tenant invite acceptance function (HTTP function with CORS)
+const acceptTenantInvite_1 = require("./acceptTenantInvite");
+Object.defineProperty(exports, "acceptTenantInvite", { enumerable: true, get: function () { return acceptTenantInvite_1.acceptTenantInvite; } });
+// Import and export tenant removal function
+const removeTenantFromLandlord_1 = require("./removeTenantFromLandlord");
+Object.defineProperty(exports, "removeTenantFromLandlord", { enumerable: true, get: function () { return removeTenantFromLandlord_1.removeTenantFromLandlord; } });
+// Import and export tenant leave property function
+const tenantLeaveProperty_1 = require("./tenantLeaveProperty");
+Object.defineProperty(exports, "tenantLeaveProperty", { enumerable: true, get: function () { return tenantLeaveProperty_1.tenantLeaveProperty; } });
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, invite code generation, tenant invite acceptance, tenant leave property).");
 //# sourceMappingURL=index.js.map

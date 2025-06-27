@@ -136,26 +136,21 @@ const SignupForm = ({ initialRole, isPremium }) => {
       // Use the register function from AuthContext
       console.log('Attempting to register user with email:', email);
       const userCredential = await register(email, password, userType, isPremium);
-      console.log('User registered successfully');
-      
-      // Fetch user profile data to ensure it's loaded in context
-      console.log('Fetching user profile data...');
-      await fetchUserProfile(userCredential.user.uid);
-      console.log('User profile data loaded');
+      console.log('User registered successfully:', userCredential.user.uid);
       
       // Set success state
       setSuccess(true);
       
-      // Redirect based on user type
-      console.log('Redirecting to onboarding based on user type:', userType);
+      // Redirect directly to onboarding - no email verification required
+      console.log('Redirecting to onboarding');
+      const userProfile = await fetchUserProfile();
+      const onboardingRoute = userProfile.userType === 'landlord'
+        ? '/onboarding/landlord'
+        : userProfile.userType === 'contractor'
+        ? '/onboarding/contractor'
+        : '/onboarding/tenant';
       setTimeout(() => {
-        if (userType === 'landlord') {
-          navigate('/landlord-onboarding');
-        } else if (userType === 'contractor') {
-          navigate('/contractor-onboarding');
-        } else {
-          navigate('/onboarding');
-        }
+        navigate(onboardingRoute);
       }, 1000); // Short delay to show success state
       
     } catch (error) {
@@ -183,7 +178,7 @@ const SignupForm = ({ initialRole, isPremium }) => {
       
       {success && (
         <div className="bg-success-subtle dark:bg-success-darkSubtle border-l-4 border-success text-green-700 dark:text-emerald-300 p-4 mb-4 rounded-md" role="alert">
-          <p>Account created successfully! Redirecting...</p>
+          <p>Account created successfully! Redirecting you to complete your profile...</p>
         </div>
       )}
       

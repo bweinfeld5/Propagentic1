@@ -110,7 +110,7 @@ const baseUserConverter: FirestoreDataConverter<BaseUser> = {
       phone: data.phone,
       avatar: data.avatar,
       status: data.status || 'active',
-      emailVerified: data.emailVerified || false,
+      emailVerified: data.emailVerified ?? true,
       onboardingComplete: data.onboardingComplete || false,
       profileComplete: data.profileComplete || false,
       createdAt: convertTimestamp(data.createdAt),
@@ -444,6 +444,7 @@ const propertyConverter: FirestoreDataConverter<Property> = {
       landlordName: data.landlordName,
       description: data.description,
       amenities: data.amenities || [],
+      tenants: data.tenants || [], // Array of tenant user IDs
       units: (data.units || []).map((unit: any) => ({
         unitId: unit.unitId || unit.id,
         unitNumber: unit.unitNumber || unit.number,

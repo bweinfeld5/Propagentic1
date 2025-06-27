@@ -156,7 +156,8 @@ const GlassyHeader = () => {
       return (
         <header
           ref={headerRef}
-          className="flex justify-between items-center p-4 bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-700 sticky top-0 z-10"
+          className="dashboard-header flex justify-between items-center p-4 bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-700 sticky top-0 z-10"
+          style={{ backgroundColor: 'white', opacity: 1 }}
         >
           {/* Left side: Page title */}
           <div className="flex items-center">
@@ -379,6 +380,11 @@ const GlassyHeader = () => {
       );
     }
   };
+
+  // Skip header entirely for AI chat (after all hooks have been called)
+  if (location.pathname === '/maintenance/ai-chat') {
+    return null;
+  }
 
   return (
     <UIComponentErrorBoundary componentName="GlassyHeader">

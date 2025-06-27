@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
-import { db } from '../../firebase/config';
 import {
   HomeIcon,
   BuildingOfficeIcon,
@@ -20,20 +18,18 @@ import {
   CloudArrowUpIcon,
   PencilIcon,
   TrashIcon,
-  EyeIcon,
-  ClockIcon,
-  TicketIcon
+  EyeIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useDemoMode } from '../../context/DemoModeContext';
 import dataService from '../../services/dataService';
+import landlordProfileService from '../../services/firestore/landlordProfileService';
 import { MaintenanceStatus } from '../../models';
 import CommunicationCenter from '../../components/communication/CommunicationCenter';
 import InviteTenantModal from '../../components/landlord/InviteTenantModal';
 import AddPropertyModal from '../../components/landlord/AddPropertyModal';
 import EditPropertyModal from '../../components/landlord/EditPropertyModal';
-import Button from '../../components/ui/Button';
-import StatusPill from '../../components/ui/StatusPill';
+import AcceptedTenantsSection from '../../components/landlord/AcceptedTenantsSection.jsx';
 
 // Phase 1.2 Components
 import GlobalSearch from '../../components/search/GlobalSearch';
@@ -83,11 +79,19 @@ interface Tenant {
   lastName?: string;
   email: string;
   phoneNumber?: string;
+  phone?: string;
   status?: string;
   propertyId?: string;
   propertyName?: string;
+  propertyAddress?: string;
   leaseStart?: string;
   leaseEnd?: string;
+  joinedDate?: Date | string;
+  inviteMethod?: string;
+  notes?: string;
+  acceptedAt?: Date | string;
+  inviteCode?: string;
+  unitNumber?: string;
   [key: string]: any; // For additional flexible properties
 }
 
@@ -131,15 +135,10 @@ const LandlordDashboard: React.FC = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [landlordStats, setLandlordStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [propertiesLoaded, setPropertiesLoaded] = useState<boolean>(false);
-  
-  // Maintenance history state (completed tickets)
-  const [completedTickets, setCompletedTickets] = useState<Ticket[]>([]);
-  const [completedLoading, setCompletedLoading] = useState<boolean>(true);
-  const [completedError, setCompletedError] = useState<string | null>(null);
-  const [displayedCompletedCount, setDisplayedCompletedCount] = useState<number>(5);
   
   // Phase 1.2 State
   const [currentView, setCurrentView] = useState<string>('dashboard');
@@ -152,99 +151,6 @@ const LandlordDashboard: React.FC = () => {
   const [showAddPropertyModal, setShowAddPropertyModal] = useState<boolean>(false);
   const [showEditPropertyModal, setShowEditPropertyModal] = useState<boolean>(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
-
-  // Load completed maintenance tickets
-  const loadCompletedTickets = async (): Promise<void> => {
-    if (!currentUser) return;
-    
-    try {
-      setCompletedLoading(true);
-      setCompletedError(null);
-      
-      // Get properties for the current landlord
-      const props = await dataService.getPropertiesForCurrentLandlord();
-      const propertyIds = props.map((p: Property) => p.id);
-      
-      if (propertyIds.length === 0) {
-        // No properties means no completed tickets - this is normal, not an error
-        setCompletedTickets([]);
-        setCompletedLoading(false);
-        return;
-      }
-
-      // Query for completed tickets
-      const queryablePropertyIds = propertyIds.slice(0, 10); // Firestore limit
-      
-      // Build the query more carefully to avoid potential index issues
-      const completedTicketsQuery = query(
-        collection(db, 'tickets'),
-        where('propertyId', 'in', queryablePropertyIds),
-        where('status', 'in', ['completed', 'resolved', 'closed']),
-        orderBy('createdAt', 'desc')
-      );
-
-      // Set up real-time listener for completed tickets
-      onSnapshot(completedTicketsQuery, (snapshot) => {
-        const completedTicketsData = snapshot.docs.map(doc => {
-          const property = props.find((p: Property) => p.id === doc.data().propertyId);
-          return {
-            id: doc.id,
-            ...doc.data(),
-            createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : new Date(),
-            completedAt: doc.data().completedAt?.toDate ? doc.data().completedAt.toDate() : null,
-            propertyName: property?.name || 'Unknown'
-          };
-        });
-        console.log('Completed tickets data received:', completedTicketsData.length);
-        setCompletedTickets(completedTicketsData);
-        setCompletedLoading(false);
-        // Note: Empty array is normal - don't set error for empty results
-      }, (err) => {
-        console.error('Error fetching completed tickets:', err);
-        
-        // For most common scenarios (no completed tickets, permissions, missing indexes), 
-        // show empty state rather than error to provide better UX
-        if (err.code === 'failed-precondition' || // Missing index
-            err.code === 'permission-denied' ||    // Permission issues
-            err.code === 'unavailable' ||          // Service unavailable
-            err.message.includes('index')) {       // Index related errors
-          console.log('Showing empty state instead of error for:', err.code || err.message);
-          setCompletedTickets([]);
-          setCompletedError(null); // Clear any previous errors
-        } else {
-          // Only show error for unexpected/critical failures
-          setCompletedError('Unable to load maintenance history. Please try again later.');
-        }
-        setCompletedLoading(false);
-      });
-
-    } catch (error: any) {
-      console.error('Error setting up completed tickets listener:', error);
-      // Be more specific about errors to avoid false error messages
-      if (error.message.includes('permission') || error.message.includes('Firestore')) {
-        setCompletedError('Database connection issue. Maintenance history unavailable.');
-      } else {
-        setCompletedError('Unable to load maintenance history.');
-      }
-      setCompletedLoading(false);
-    }
-  };
-
-  // Handle completed ticket selection
-  const handleCompletedTicketSelect = (ticket: Ticket): void => {
-    console.log("Selected Completed Ticket:", ticket);
-    alert(`Selected completed ticket: ${ticket.id} - ${ticket.description?.substring(0, 30)}... Detail view not implemented yet.`);
-  };
-
-  // Handle show more completed tickets
-  const handleShowMoreCompleted = (): void => {
-    setDisplayedCompletedCount(prev => prev + 5);
-  };
-
-  // Handle show less completed tickets
-  const handleShowLessCompleted = (): void => {
-    setDisplayedCompletedCount(5);
-  };
 
   const loadDashboardData = async (): Promise<void> => {
     if (!currentUser) return;
@@ -287,25 +193,52 @@ const LandlordDashboard: React.FC = () => {
       const ticketsData = await dataService.getTicketsForCurrentUser();
       setTickets(ticketsData);
 
-      // Load completed maintenance tickets separately
-      await loadCompletedTickets();
-
-      // Load tenants data for all properties (gracefully handle failures)
-      if (properties.length > 0) {
-        const allTenants: Tenant[] = [];
-        for (const property of properties) {
-          if (property.id) {
-            try {
+      // Load landlord profile data and accepted tenants
+      try {
+        const [acceptedTenants, stats] = await Promise.all([
+          landlordProfileService.getAcceptedTenantsWithDetails(currentUser.uid),
+          landlordProfileService.getLandlordStatistics(currentUser.uid)
+        ]);
+        
+        console.log('Loaded accepted tenants:', acceptedTenants.length);
+        console.log('Loaded landlord stats:', stats);
+        
+        // Map the accepted tenants to match our Tenant interface
+        const mappedTenants: Tenant[] = acceptedTenants.map((tenant: any) => ({
+          id: tenant.tenantId || tenant.id,
+          email: tenant.email,
+          name: tenant.name,
+          displayName: tenant.displayName,
+          phoneNumber: tenant.phone,
+          phone: tenant.phone,
+          status: tenant.status || 'active',
+          propertyId: tenant.propertyId,
+          propertyName: tenant.propertyName,
+          propertyAddress: tenant.propertyAddress,
+          joinedDate: tenant.joinedDate || tenant.acceptedAt,
+          inviteMethod: tenant.inviteMethod,
+          notes: tenant.notes,
+          acceptedAt: tenant.acceptedAt,
+          inviteCode: tenant.inviteCode,
+          unitNumber: tenant.unitNumber,
+          ...tenant // Include any additional properties
+        }));
+        
+        setTenants(mappedTenants);
+        setLandlordStats(stats);
+      } catch (profileError) {
+        console.error('Error loading landlord profile data:', profileError);
+        // Fallback to original tenant loading method
+        if (properties.length > 0) {
+          const allTenants: Tenant[] = [];
+          for (const property of properties) {
+            if (property.id) {
               const propertyTenants = await dataService.getTenantsForProperty(property.id);
               allTenants.push(...propertyTenants);
-            } catch (tenantError) {
-              console.warn(`Could not load tenants for property ${property.id}:`, tenantError);
-              // Continue without failing the entire dashboard load
-              // This is normal if no tenants exist yet or permissions are not set up
             }
           }
+          setTenants(allTenants);
         }
-        setTenants(allTenants);
       }
       
     } catch (error: any) {
@@ -667,6 +600,28 @@ const LandlordDashboard: React.FC = () => {
     <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Add invitation statistics section if we have landlord stats */}
+        {landlordStats && landlordStats.totalInvitesSent > 0 && (
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 shadow-sm lg:col-span-4">
+            <div className="text-center">
+              <h4 className="font-semibold text-blue-900 mb-2">Invitation Statistics</h4>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <div className="font-bold text-blue-700">{landlordStats.totalInvitesSent}</div>
+                  <div className="text-blue-600">Invites Sent</div>
+                </div>
+                <div>
+                  <div className="font-bold text-blue-700">{landlordStats.totalInvitesAccepted}</div>
+                  <div className="text-blue-600">Accepted</div>
+                </div>
+                <div>
+                  <div className="font-bold text-blue-700">{Math.round(landlordStats.inviteAcceptanceRate)}%</div>
+                  <div className="text-blue-600">Success Rate</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="bg-gradient-to-br from-white to-orange-50 p-6 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
@@ -682,13 +637,13 @@ const LandlordDashboard: React.FC = () => {
         <div className="bg-gradient-to-br from-white to-orange-50 p-6 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Units</p>
+              <p className="text-sm text-gray-600">Active Tenants</p>
               <p className="text-2xl font-bold text-gray-900">
-                {properties.reduce((sum, p) => sum + safeNumber(p.units, 1), 0)}
+                {landlordStats?.totalTenants || tenants.length}
               </p>
             </div>
             <div className="p-3 bg-orange-100 rounded-lg">
-              <HomeIcon className="w-6 h-6 text-orange-600" />
+              <UsersIcon className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>
@@ -696,18 +651,15 @@ const LandlordDashboard: React.FC = () => {
         <div className="bg-gradient-to-br from-white to-orange-50 p-6 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Occupancy Rate</p>
+              <p className="text-sm text-gray-600">Invite Success Rate</p>
               <p className="text-2xl font-bold text-gray-900">
-                {properties.length > 0 
-                  ? Math.round(
-                      (properties.reduce((sum, p) => sum + safeNumber(p.occupiedUnits), 0) / 
-                       properties.reduce((sum, p) => sum + safeNumber(p.units, 1), 0)) * 100
-                    )
+                {landlordStats?.inviteAcceptanceRate 
+                  ? Math.round(landlordStats.inviteAcceptanceRate)
                   : 0}%
               </p>
             </div>
             <div className="p-3 bg-orange-100 rounded-lg">
-              <UsersIcon className="w-6 h-6 text-orange-600" />
+              <ChartBarIcon className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>
@@ -730,37 +682,46 @@ const LandlordDashboard: React.FC = () => {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Properties</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Accepted Tenants</h3>
           <div className="space-y-3">
-            {properties.slice(0, 3).map((property) => {
-              const units = safeNumber(property.units, 1);
-              const occupiedUnits = safeNumber(property.occupiedUnits, 0);
-              const occupancyRate = units > 0 ? Math.round((occupiedUnits / units) * 100) : 0;
-              
-              return (
-                <div key={property.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-white rounded-lg border border-orange-100">
-                  <div>
-                    <div className="font-medium text-gray-900">{getPropertyName(property)}</div>
-                    <div className="text-sm text-gray-600">{formatAddress(property)}</div>
+            {tenants.slice(0, 3).map((tenant) => (
+              <div key={tenant.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-white rounded-lg border border-orange-100">
+                <div>
+                  <div className="font-medium text-gray-900">
+                    {tenant.displayName || tenant.name || tenant.email}
                   </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-orange-600">
-                      {occupancyRate}%
-                    </div>
-                    <div className="text-xs text-gray-500">occupied</div>
-                  </div>
+                  <div className="text-sm text-gray-600">{tenant.propertyName}</div>
+                  {tenant.inviteCode && (
+                    <div className="text-xs text-gray-500">Code: {tenant.inviteCode}</div>
+                  )}
                 </div>
-              );
-            })}
-            {properties.length === 0 && (
+                <div className="text-right">
+                  <div className="font-semibold text-orange-600">
+                    {(() => {
+                      const joinDate = tenant.acceptedAt || tenant.joinedDate;
+                      if (joinDate) {
+                        try {
+                          return new Date(joinDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        } catch (e) {
+                          return 'Recent';
+                        }
+                      }
+                      return 'Recent';
+                    })()}
+                  </div>
+                  <div className="text-xs text-gray-500">joined</div>
+                </div>
+              </div>
+            ))}
+            {tenants.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                <BuildingOfficeIcon className="w-12 h-12 mx-auto mb-2 text-orange-300" />
-                <p>No properties found</p>
+                <UsersIcon className="w-12 h-12 mx-auto mb-2 text-orange-300" />
+                <p>No tenants have accepted invites yet</p>
                 <button
-                  onClick={() => setShowAddPropertyModal(true)}
+                  onClick={() => setShowInviteTenantModal(true)}
                   className="mt-2 text-orange-600 hover:text-orange-700 text-sm font-medium"
                 >
-                  Add your first property
+                  Send your first invite
                 </button>
               </div>
             )}
@@ -945,91 +906,27 @@ const LandlordDashboard: React.FC = () => {
 
   const renderTenantsView = (): JSX.Element => (
     <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
-      <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
-        <div className="p-6 border-b border-orange-100">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Tenant Management</h3>
-            <button
-              onClick={() => setShowInviteTenantModal(true)}
-              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
-            >
-              <UserGroupIcon className="w-4 h-4" />
-              Invite Tenant
-            </button>
-          </div>
-        </div>
-        
-        <div className="p-6">
-          {tenants.length === 0 ? (
-            <div className="text-center py-12">
-              <UsersIcon className="w-16 h-16 mx-auto mb-4 text-orange-300" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Tenants Found</h3>
-              <p className="text-gray-600 mb-6">
-                Start by inviting tenants to your properties to manage leases and communications.
-              </p>
-              <button
-                onClick={() => setShowInviteTenantModal(true)}
-                className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
-              >
-                <UserGroupIcon className="w-5 h-5" />
-                Invite First Tenant
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {tenants.map((tenant) => (
-                <div key={tenant.id} className="p-4 border border-orange-200 rounded-lg hover:border-orange-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-white transition-all">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <UsersIcon className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900">
-                          {tenant.displayName || tenant.name || tenant.email}
-                        </h4>
-                        <p className="text-sm text-gray-600">{tenant.email}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Property: {tenant.propertyName || 'Not assigned'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        tenant.status === 'active' 
-                          ? 'bg-green-100 text-green-800' 
-                          : tenant.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {tenant.status || 'pending'}
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {tenant.leaseStart && tenant.leaseEnd 
-                          ? `Lease: ${tenant.leaseStart} - ${tenant.leaseEnd}`
-                          : 'No lease info'
-                        }
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Add Tenant Button */}
+      <div className="mb-6 flex justify-end">
+        <button
+          onClick={() => setShowInviteTenantModal(true)}
+          className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
+        >
+          <UserGroupIcon className="w-4 h-4" />
+          Invite Tenant
+        </button>
       </div>
+      
+      {/* Enhanced Tenants Section */}
+      <AcceptedTenantsSection properties={properties} />
     </div>
   );
 
   const renderMaintenanceView = (): JSX.Element => (
     <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
-      {/* Active Maintenance Tickets Section */}
-      <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow mb-8">
+      <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
         <div className="p-6 border-b border-orange-100">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-            <TicketIcon className="w-6 h-6 mr-2 text-orange-600" />
-            Maintenance Tickets
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900">Maintenance Requests</h3>
         </div>
         
         <div className="p-6">
@@ -1091,102 +988,6 @@ const LandlordDashboard: React.FC = () => {
                   </div>
                 </div>
               ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Maintenance History Section */}
-      <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
-        <div className="p-6 border-b border-orange-100">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-            <ClockIcon className="w-6 h-6 mr-2 text-green-600" />
-            Maintenance History
-          </h3>
-        </div>
-
-        <div className="p-6">
-          {completedLoading && (
-            <div className="text-center py-8">
-              <p className="text-gray-600">Loading maintenance history...</p>
-            </div>
-          )}
-          
-          {!completedLoading && completedError && (
-            <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md">
-              <p className="text-sm text-red-700">Error: {completedError}</p>
-            </div>
-          )}
-          
-          {!completedLoading && !completedError && completedTickets.length === 0 && (
-            <div className="text-center py-12">
-              <ClockIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Completed Maintenance Yet</h3>
-              <p className="text-gray-600">
-                Completed maintenance requests will appear here once contractors finish their work.
-              </p>
-            </div>
-          )}
-          
-          {!completedLoading && !completedError && completedTickets.length > 0 && (
-            <div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-orange-200">
-                  <thead className="bg-orange-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Issue</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Property</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Submitted</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Completed</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                      <th className="relative px-6 py-3"><span className="sr-only">View</span></th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-orange-100">
-                    {completedTickets.slice(0, displayedCompletedCount).map(ticket => (
-                      <tr key={ticket.id} className="hover:bg-orange-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" title={ticket.description}>
-                          {ticket.description?.substring(0, 50)}{ticket.description && ticket.description.length > 50 ? '...' : ''}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {ticket.propertyName || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {ticket.createdAt ? new Date(ticket.createdAt.toString()).toLocaleDateString() : 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {ticket.completedAt ? new Date(ticket.completedAt.toString()).toLocaleDateString() : 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <StatusPill status={(ticket.status as MaintenanceStatus) || 'completed'} />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <Button variant="ghost" size="xs" onClick={() => handleCompletedTicketSelect(ticket)}>
-                            View
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* Show More / Show Less Controls */}
-              {completedTickets.length > displayedCompletedCount && (
-                <div className="mt-4 text-center">
-                  <Button variant="ghost" size="sm" onClick={handleShowMoreCompleted}>
-                    Show More ({completedTickets.length - displayedCompletedCount} remaining)
-                  </Button>
-                </div>
-              )}
-              
-              {displayedCompletedCount > 5 && completedTickets.length <= displayedCompletedCount && (
-                <div className="mt-4 text-center">
-                  <Button variant="ghost" size="sm" onClick={handleShowLessCompleted}>
-                    Show Less
-                  </Button>
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -1333,7 +1134,7 @@ const LandlordDashboard: React.FC = () => {
           properties={properties as any}
           onInviteSuccess={() => {
             setShowInviteTenantModal(false);
-            // Refresh tenants data
+            // Refresh dashboard data to get updated landlord profile stats
             loadDashboardData();
           }}
         />
@@ -1352,7 +1153,7 @@ const LandlordDashboard: React.FC = () => {
       )}
 
               {/* Edit Property Modal */}
-        {showEditPropertyModal && editingProperty && (
+        {showEditPropertyModal && (
           <EditPropertyModal
             isOpen={showEditPropertyModal}
             onClose={() => {
@@ -1377,3 +1178,4 @@ const LandlordDashboard: React.FC = () => {
 };
 
 export default LandlordDashboard;
+

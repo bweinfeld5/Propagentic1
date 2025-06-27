@@ -38,12 +38,8 @@ import { sendInviteEmail } from './invites';
 export { sendInviteEmail };
 
 // Import and export notification trigger functions  
-import { createNotificationOnInvite, sendPropertyInviteEmail } from './inviteTriggers';
-export { createNotificationOnInvite, sendPropertyInviteEmail };
-
-// Import and export invite code email trigger
-import { sendInviteCodeEmail } from './inviteCodeEmailTrigger';
-export { sendInviteCodeEmail };
+import { createNotificationOnInvite } from './inviteTriggers';
+export { createNotificationOnInvite };
 
 // Import and export SendGrid email functions
 import { sendEmail } from './sendgridEmailService';
@@ -54,4 +50,20 @@ import { testSendGrid, testPing } from './testSendGrid';
 import { simpleTest } from './simpleTest';
 export { testSendGrid, testPing, simpleTest };
 
-console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, invite code emails, SendGrid, tests).");
+// Import and export invite code generation function (landlord functionality)
+const inviteCodeModule = require('./inviteCode.js');
+export const generateInviteCode = inviteCodeModule.generateInviteCode;
+
+// Import and export tenant invite acceptance function (HTTP function with CORS)
+import { acceptTenantInvite } from './acceptTenantInvite';
+export { acceptTenantInvite };
+
+// Import and export tenant removal function
+import { removeTenantFromLandlord } from './removeTenantFromLandlord';
+export { removeTenantFromLandlord };
+
+// Import and export tenant leave property function
+import { tenantLeaveProperty } from './tenantLeaveProperty';
+export { tenantLeaveProperty };
+
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, invite code generation, tenant invite acceptance, tenant leave property).");

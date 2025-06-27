@@ -158,7 +158,7 @@ const useKeyboardShortcuts = ({
         
       // Navigation
       case 'g+d':
-        navigate('/dashboard');
+        navigate('/dashboard'); // Role-based redirect handled by RoleBasedRedirect
         break;
       case 'g+p':
         navigate('/properties');

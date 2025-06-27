@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { doc, updateDoc, addDoc, collection, serverTimestamp, arrayUnion } from 'firebase/firestore';
+import { doc, updateDoc, addDoc, collection, serverTimestamp, arrayUnion, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import onboardingProgressService from '../../services/onboardingProgressService';
 import HomeNavLink from '../layout/HomeNavLink';
+// Import progress components
+import ProgressRecoveryBanner from './ProgressRecoveryBanner';
+import AutoSaveForm from './AutoSaveForm';
 
 const LandlordOnboarding = () => {
   const { currentUser, userProfile, fetchUserProfile } = useAuth();
@@ -12,6 +16,19 @@ const LandlordOnboarding = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Progress tracking state
+  const [progressSummary, setProgressSummary] = useState(null);
+  const [showRecoveryBanner, setShowRecoveryBanner] = useState(false);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [progressLoading, setProgressLoading] = useState(false);
+  const [stepCompletion, setStepCompletion] = useState({
+    1: false, // Profile Information
+    2: false, // Property Details
+    3: false, // Business Details
+    4: false, // Tenant Invitation
+    5: false, // Confirmation
+  });
   const [formData, setFormData] = useState({
     // Profile
     firstName: '',
@@ -63,6 +80,44 @@ const LandlordOnboarding = () => {
     }
   }, [currentUser, userProfile, navigate]);
 
+  // Load saved progress on component mount
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    // Cleanup expired progress first
+    onboardingProgressService.cleanupExpiredProgress();
+    
+    // Check for recoverable progress
+    if (onboardingProgressService.hasRecoverableProgress(currentUser.uid, 'landlord')) {
+      const summary = onboardingProgressService.getProgressSummary(currentUser.uid, 'landlord');
+      setProgressSummary(summary);
+      setShowRecoveryBanner(true);
+    }
+  }, [currentUser]);
+
+  // Create auto-save function
+  const autoSave = React.useMemo(() => {
+    if (!currentUser || !autoSaveEnabled) return null;
+    return onboardingProgressService.createAutoSaver(currentUser.uid, 'landlord', 2000);
+  }, [currentUser, autoSaveEnabled]);
+
+  // Auto-save progress when form data or step changes
+  useEffect(() => {
+    if (!currentUser || !autoSave) return;
+    
+    const progressData = {
+      currentStep,
+      totalSteps: 5,
+      formData,
+      stepCompletion,
+      onboardingType: 'landlord'
+    };
+    
+    if (onboardingProgressService.validateProgressData(progressData)) {
+      autoSave(progressData);
+    }
+  }, [currentStep, formData, stepCompletion, currentUser, autoSave]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -76,9 +131,74 @@ const LandlordOnboarding = () => {
     }
   };
 
+  // Handle progress recovery
+  const handleRestoreProgress = async () => {
+    if (!currentUser || !progressSummary) return;
+    
+    setProgressLoading(true);
+    try {
+      // Restore form data and step completion
+      if (progressSummary.formData) {
+        setFormData(progressSummary.formData);
+      }
+      if (progressSummary.stepCompletion) {
+        setStepCompletion(progressSummary.stepCompletion);
+      }
+      setCurrentStep(progressSummary.step);
+      
+      // Hide recovery banner
+      setShowRecoveryBanner(false);
+      setProgressSummary(null);
+    } catch (error) {
+      console.error('Failed to restore progress:', error);
+      setError('Failed to restore your progress. Please try again.');
+    } finally {
+      setProgressLoading(false);
+    }
+  };
+
+  // Handle discarding saved progress
+  const handleDiscardProgress = () => {
+    if (!currentUser) return;
+    
+    onboardingProgressService.clearProgress(currentUser.uid, 'landlord');
+    setShowRecoveryBanner(false);
+    setProgressSummary(null);
+    
+    // Reset to initial state
+    setCurrentStep(1);
+    setStepCompletion({
+      1: false,
+      2: false,
+      3: false,
+      4: false,
+      5: false,
+    });
+  };
+
+  // Manual save progress function for AutoSaveForm
+  const handleManualSave = async (data) => {
+    if (!currentUser) return;
+    
+    const progressData = {
+      currentStep,
+      totalSteps: 5,
+      formData: data || formData,
+      stepCompletion,
+      onboardingType: 'landlord'
+    };
+    
+    return onboardingProgressService.saveProgress(currentUser.uid, 'landlord', progressData);
+  };
+
   const handleNext = () => {
     if (validateStep()) {
       setError('');
+      // Mark current step as complete
+      setStepCompletion(prev => ({
+        ...prev,
+        [currentStep]: true
+      }));
       setCurrentStep(prev => prev + 1);
     }
   };
@@ -169,7 +289,11 @@ const LandlordOnboarding = () => {
     try {
       console.log('Starting landlord onboarding submission for user:', currentUser.uid);
       
+      // Create a batch to write all documents atomically
+      const batch = writeBatch(db);
+      
       // 1. Create Property Document
+      const propertyRef = doc(collection(db, 'properties'));
       const propertyData = {
         nickname: formData.propertyNickname || formData.streetAddress,
         streetAddress: formData.streetAddress,
@@ -185,42 +309,72 @@ const LandlordOnboarding = () => {
         // Add invited tenant email if provided
         ...(formData.tenantEmail && { invitedTenantEmail: formData.tenantEmail })
       };
-      const propertyRef = await addDoc(collection(db, 'properties'), propertyData);
-      console.log('Property document created with ID: ', propertyRef.id);
+      batch.set(propertyRef, propertyData);
 
       // 2. Update User Document
       const userDocRef = doc(db, 'users', currentUser.uid);
       const userData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        name: `${formData.firstName} ${formData.lastName}`, // Add full name field for easier display
+        name: `${formData.firstName} ${formData.lastName}`,
         phoneNumber: formData.phoneNumber,
         businessName: formData.businessName || '',
         preferredContactMethod: formData.preferredContactMethod,
         yearsInBusiness: formData.yearsInBusiness,
         totalProperties: formData.totalProperties,
         managementSoftware: formData.managementSoftware,
-        userType: 'landlord', // Ensure userType is set to landlord
-        onboardingComplete: true, // Mark onboarding as complete
+        userType: 'landlord',
+        onboardingComplete: true,
         updatedAt: serverTimestamp(),
-        properties: arrayUnion(propertyRef.id), // Use arrayUnion to safely add the property
+        properties: arrayUnion(propertyRef.id),
       };
-      
-      console.log('Updating user document with data:', userData);
-      await updateDoc(userDocRef, userData);
-      console.log('User document updated successfully.');
-      
-      // TODO: Handle Tenant Invite logic if needed (e.g., send email, create invite record)
+      batch.set(userDocRef, userData, { merge: true });
+
+      // 3. Create Landlord Profile Document (THIS IS THE FIX!)
+      const landlordProfileRef = doc(db, 'landlordProfiles', currentUser.uid);
+      const landlordProfileData = {
+        uid: currentUser.uid,
+        landlordId: currentUser.uid,
+        userId: currentUser.uid,
+        displayName: `${formData.firstName} ${formData.lastName}`,
+        email: currentUser.email,
+        phoneNumber: formData.phoneNumber || '',
+        businessName: formData.businessName || '',
+        
+        // Core arrays as per specification
+        acceptedTenants: [],
+        properties: [propertyRef.id],
+        invitesSent: [],
+        contractors: [],
+        
+        // Enhanced tracking
+        acceptedTenantDetails: [],
+        
+        // Statistics
+        totalInvitesSent: 0,
+        totalInvitesAccepted: 0,
+        inviteAcceptanceRate: 0,
+        
+        // Timestamps
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+      batch.set(landlordProfileRef, landlordProfileData);
+
+      // Execute the batch write
+      await batch.commit();
+      console.log('Landlord onboarding complete - users, properties, and landlordProfiles documents created');
+
+      // TODO: Handle Tenant Invite logic if needed
       if (formData.tenantEmail) {
         console.log(`Tenant invite email: ${formData.tenantEmail} for property ${propertyRef.id}`);
-        // Implement actual invite sending/tracking here
       }
 
       // Refresh the user profile before redirecting
       const updatedProfile = await fetchUserProfile(currentUser.uid);
       console.log('Landlord onboarding complete, refreshed profile:', updatedProfile);
       
-      // 3. Redirect to Landlord Dashboard
+      // Redirect to Landlord Dashboard
       console.log('Redirecting to landlord dashboard...');
       navigate('/landlord/dashboard');
 
@@ -232,29 +386,81 @@ const LandlordOnboarding = () => {
     }
   };
 
-  // Progress indicator with orange theme
+  // Enhanced progress indicator with detailed information
   const ProgressIndicator = () => {
+    const completionPercentage = onboardingProgressService.calculateCompletionPercentage(
+      currentStep, 
+      5, 
+      stepCompletion
+    );
+
+    const stepTitles = {
+      1: 'Profile',
+      2: 'Property', 
+      3: 'Business',
+      4: 'Tenant Invite',
+      5: 'Complete'
+    };
+
     return (
-      <div className="mb-8 flex justify-center">
-        <div className="flex items-center">
-          {[1, 2, 3, 4, 5].map((step) => (
-            <React.Fragment key={step}>
-              <div 
-                className={`rounded-full h-8 w-8 flex items-center justify-center border-2 text-sm font-medium
-                  ${currentStep >= step 
-                    ? 'border-orange-500 bg-orange-500 text-white' 
-                    : 'border-gray-300 text-gray-400'}`}
-              >
-                {step}
-              </div>
-              {step < 5 && (
+      <div className="mb-8">
+        {/* Step progress circles */}
+        <div className="flex justify-center mb-4">
+          <div className="flex items-center">
+            {[1, 2, 3, 4, 5].map((step) => (
+              <React.Fragment key={step}>
                 <div 
-                  className={`w-10 h-1 mx-1 
-                    ${currentStep > step ? 'bg-orange-500' : 'bg-gray-300'}`}
-                />
-              )}
-            </React.Fragment>
-          ))}
+                  className={`rounded-full h-8 w-8 flex items-center justify-center border-2 text-sm font-medium transition-all duration-200
+                    ${currentStep >= step 
+                      ? 'border-orange-500 bg-orange-500 text-white' 
+                      : 'border-gray-300 text-gray-400'}`}
+                  title={stepTitles[step]}
+                >
+                  {stepCompletion[step] ? (
+                    <svg className="h-4 w-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                      <path d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    step
+                  )}
+                </div>
+                {step < 5 && (
+                  <div 
+                    className={`w-10 h-1 mx-1 transition-all duration-200
+                      ${currentStep > step ? 'bg-orange-500' : 'bg-gray-300'}`}
+                  />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+
+        {/* Progress summary */}
+        <div className="text-center space-y-2">
+          <div className="text-sm text-gray-600">
+            Step {currentStep} of 5 • {stepTitles[currentStep]}
+          </div>
+          
+          {/* Completion percentage bar */}
+          <div className="max-w-md mx-auto">
+            <div className="flex justify-between text-xs text-gray-500 mb-1">
+              <span>Progress</span>
+              <span>{completionPercentage}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${completionPercentage}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Estimated time remaining */}
+          {currentStep < 5 && (
+            <div className="text-xs text-gray-500">
+              Estimated time: {5 - currentStep} steps remaining
+            </div>
+          )}
         </div>
       </div>
     );
@@ -660,6 +866,16 @@ const LandlordOnboarding = () => {
               <p className="text-gray-600">Let's get your first property set up in the system</p>
             </div>
 
+            {/* Progress Recovery Banner */}
+            {showRecoveryBanner && progressSummary && (
+              <ProgressRecoveryBanner
+                progressSummary={progressSummary}
+                onRestore={handleRestoreProgress}
+                onDiscard={handleDiscardProgress}
+                isLoading={progressLoading}
+              />
+            )}
+
             <ProgressIndicator />
 
             {/* Error message */}
@@ -669,8 +885,15 @@ const LandlordOnboarding = () => {
               </div>
             )}
 
-            {/* Step content */}
-            <form onSubmit={currentStep === 5 ? handleSubmit : (e) => e.preventDefault()}>
+            {/* Auto-save form wrapper */}
+            <AutoSaveForm
+              formData={formData}
+              onSave={handleManualSave}
+              debounceMs={2000}
+              showSaveIndicator={autoSaveEnabled && currentStep > 1}
+            >
+              {/* Step content */}
+              <form onSubmit={currentStep === 5 ? handleSubmit : (e) => e.preventDefault()}>
               {renderStepContent()}
 
               {/* Navigation buttons */}
@@ -725,6 +948,7 @@ const LandlordOnboarding = () => {
                 )}
               </div>
             </form>
+            </AutoSaveForm>
           </div>
         </div>
       </div>

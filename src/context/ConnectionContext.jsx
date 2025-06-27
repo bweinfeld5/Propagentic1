@@ -64,10 +64,9 @@ export const ConnectionProvider = ({ children }) => {
     try {
       const startTime = Date.now();
       
-      // Use Firebase's REST API endpoint for a lightweight check
-      const response = await fetch('https://www.googleapis.com/identitytoolkit/v3/relyingparty/getAccountInfo', {
+      // Use a simple HEAD request to your own domain or a reliable CDN
+      const response = await fetch('https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js', {
         method: 'HEAD',
-        mode: 'no-cors',
         cache: 'no-cache'
       });
       

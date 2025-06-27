@@ -28,7 +28,7 @@ const ContractorProfilePage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between">
         <h1 className="text-2xl font-semibold text-slate-800">My Profile</h1>
         <button
-          onClick={() => navigate('/contractor')}
+          onClick={() => navigate('/contractor/dashboard')}
           className="mt-2 sm:mt-0 inline-flex items-center text-sm text-slate-600 hover:text-teal-600"
         >
           <svg className="h-5 w-5 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">

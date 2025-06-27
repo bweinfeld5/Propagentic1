@@ -6,6 +6,7 @@ import { getAuthErrorMessage } from '../utils/authHelpers';
 import GoogleSignInButton from '../components/auth/GoogleSignInButton';
 import TenantInviteForm from '../components/tenant/TenantInviteForm';
 
+
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -111,35 +112,32 @@ const LoginPage = () => {
       const userRole = userProfile.userType || userProfile.role;
       
       // Redirect based on user type
-      if (userRole) {
-        let redirectPath = '';
-        
-        switch(userRole) {
-          case 'tenant':
-            redirectPath = '/tenant/dashboard';
-            break;
-          case 'landlord':
-            redirectPath = '/landlord/dashboard';
-            break;
-          case 'contractor':
-            redirectPath = '/contractor/dashboard';
-            break;
-          default:
-            redirectPath = '/dashboard';
+              // Redirect based on user type
+        if (userRole) {
+          switch(userRole) {
+            case 'tenant':
+              navigate('/tenant/dashboard');
+              break;
+            case 'landlord':
+              navigate('/landlord/dashboard');
+              break;
+            case 'contractor':
+              navigate('/contractor/dashboard');
+              break;
+            default:
+              navigate('/dashboard');
+          }
+        } else {
+          navigate('/dashboard');
         }
-        
-        navigate(redirectPath);
-      } else {
-        navigate('/dashboard');
+      } catch (error) {
+        console.error('Login Error:', error);
+        const errorCode = error.code || 'unknown';
+        setError(getErrorMessage(errorCode));
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Login Error:', error);
-      const errorCode = error.code || 'unknown';
-      setError(getErrorMessage(errorCode));
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
   // Load remembered email on component mount
   useEffect(() => {

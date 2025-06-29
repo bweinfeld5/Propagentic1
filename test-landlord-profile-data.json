@@ -1,0 +1,29 @@
+{
+  "uid": "YD0UFdvja7lqBvJIcmgW",
+  "landlordId": "YD0UFdvja7lqBvJIcmgW",
+  "userId": "YD0UFdvja7lqBvJIcmgW",
+  "displayName": "Test Landlord McProperty",
+  "email": "test-landlord@propagentic-demo.com",
+  "phoneNumber": "+1 (555) 123-4567",
+  "businessName": "PropAgentic Test Properties LLC",
+  "acceptedTenants": ["tenant-001"],
+  "properties": ["test-property-1", "test-property-2"],
+  "invitesSent": ["invite-123", "invite-456", "invite-789"],
+  "contractors": ["contractor-1", "contractor-2"],
+  "acceptedTenantDetails": [
+    {
+      "tenantId": "tenant-001",
+      "propertyId": "test-property-1",
+      "inviteId": "invite-123",
+      "inviteCode": "ABC12345",
+      "unitNumber": "Unit 101",
+      "acceptedAt": "2024-01-15T10:30:00.000Z",
+      "status": "active"
+    }
+  ],
+  "totalInvitesSent": 3,
+  "totalInvitesAccepted": 1,
+  "inviteAcceptanceRate": 33,
+  "createdAt": "2024-01-10T09:00:00.000Z",
+  "updatedAt": "2024-01-15T10:30:00.000Z"
+} 

@@ -215,6 +215,7 @@ export interface Property {
   description?: string;
   amenities: string[];
   units: Unit[];
+  tenants: string[]; // Array of tenant user IDs
   rules: PropertyRule[];
   emergencyInfo: EmergencyInfo;
   maintenanceInfo: MaintenanceInfo;

@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.assignContractorToRequest = exports.tenantLeaveProperty = exports.removeTenantFromLandlord = exports.acceptTenantInvite = exports.generateInviteCode = exports.sendTestSMS = exports.sendContractorWelcomeSMS = exports.simpleTest = exports.testPing = exports.testSendGrid = exports.sendEmail = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
+exports.sendPasswordReset = exports.sendInvitationEmail = exports.deleteUser = exports.updateUser = exports.createUser = exports.fixSuperAdminPermissions = exports.upgradeSuperAdmin = exports.assignContractorToRequest = exports.tenantLeaveProperty = exports.removeTenantFromLandlord = exports.acceptTenantInvite = exports.generateInviteCode = exports.sendTestSMS = exports.sendContractorWelcomeSMS = exports.simpleTest = exports.testPing = exports.testSendGrid = exports.sendEmail = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 // Initialize Firebase Admin SDK
@@ -89,5 +89,18 @@ Object.defineProperty(exports, "tenantLeaveProperty", { enumerable: true, get: f
 // Import and export contractor assignment function
 const assignContractorToRequest_1 = require("./assignContractorToRequest");
 Object.defineProperty(exports, "assignContractorToRequest", { enumerable: true, get: function () { return assignContractorToRequest_1.assignContractorToRequest; } });
-console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, SMS notifications, invite code generation, tenant invite acceptance, tenant leave property, contractor assignment).");
+// Import and export super admin upgrade function
+const upgradeSuperAdmin_1 = require("./upgradeSuperAdmin");
+Object.defineProperty(exports, "upgradeSuperAdmin", { enumerable: true, get: function () { return upgradeSuperAdmin_1.upgradeSuperAdmin; } });
+// Import and export super admin permissions fix function
+const fixSuperAdminPermissions_1 = require("./fixSuperAdminPermissions");
+Object.defineProperty(exports, "fixSuperAdminPermissions", { enumerable: true, get: function () { return fixSuperAdminPermissions_1.fixSuperAdminPermissions; } });
+// Import and export admin user management functions
+const adminUserManagement_1 = require("./adminUserManagement");
+Object.defineProperty(exports, "createUser", { enumerable: true, get: function () { return adminUserManagement_1.createUser; } });
+Object.defineProperty(exports, "updateUser", { enumerable: true, get: function () { return adminUserManagement_1.updateUser; } });
+Object.defineProperty(exports, "deleteUser", { enumerable: true, get: function () { return adminUserManagement_1.deleteUser; } });
+Object.defineProperty(exports, "sendInvitationEmail", { enumerable: true, get: function () { return adminUserManagement_1.sendInvitationEmail; } });
+Object.defineProperty(exports, "sendPasswordReset", { enumerable: true, get: function () { return adminUserManagement_1.sendPasswordReset; } });
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, SMS notifications, invite code generation, tenant invite acceptance, tenant leave property, contractor assignment, super admin upgrade, admin user management, super admin permissions fix).");
 //# sourceMappingURL=index.js.map

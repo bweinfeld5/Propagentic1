@@ -291,7 +291,7 @@ const TenantDashboard: React.FC = () => {
       />
       
       {/* Header Bar with filter options */}
-      <HeaderBar filter={filter} setFilter={setFilter} />
+      <HeaderBar />
       
       {/* Mobile Notification Button */}
       <div className="md:hidden fixed bottom-4 right-4 z-20">

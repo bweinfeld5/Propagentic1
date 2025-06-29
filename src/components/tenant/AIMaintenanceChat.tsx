@@ -1,6 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, Wrench, Zap, Wind, Home, Shield, Bug, Sparkles, MoreHorizontal, User, LayoutDashboard } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { 
+  doc, 
+  getDoc, 
+  setDoc, 
+  updateDoc, 
+  arrayUnion, 
+  serverTimestamp,
+  collection,
+  query,
+  where,
+  getDocs
+} from 'firebase/firestore';
+import { db } from '../../firebase/config';
+import toast from 'react-hot-toast';
 
 // Mock message type
 interface MockMessage {
@@ -87,22 +102,232 @@ const MOCK_AI_RESPONSES = [
 
 const AIMaintenanceChat: React.FC = () => {
   const navigate = useNavigate();
+  const { currentUser, userProfile } = useAuth();
   const [input, setInput] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<'category' | 'chat'>('category');
   const [messages, setMessages] = useState<MockMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [maintenanceRequestId, setMaintenanceRequestId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleCategorySelect = (categoryId: string) => {
+  // Function to check for existing recent maintenance requests (idempotency)
+  const findRecentMaintenanceRequest = async (tenantId: string, withinMinutes: number = 5): Promise<string | null> => {
+    try {
+      const cutoffTime = new Date(Date.now() - withinMinutes * 60 * 1000);
+      
+      const requestsRef = collection(db, 'maintenanceRequests');
+      const q = query(
+        requestsRef,
+        where('tenantId', '==', tenantId),
+        where('timestamp', '>=', cutoffTime),
+        where('createdVia', '==', 'ai_chat')
+      );
+      
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        // Return the most recent one
+        const requests = snapshot.docs.map(doc => ({
+          id: doc.id,
+          timestamp: doc.data().timestamp
+        }));
+        
+        requests.sort((a, b) => {
+          const aTime = a.timestamp?.toDate?.() || new Date(0);
+          const bTime = b.timestamp?.toDate?.() || new Date(0);
+          return bTime.getTime() - aTime.getTime();
+        });
+        
+        return requests[0].id;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ [AIChat] Error finding recent request:', error);
+      return null;
+    }
+  };
+
+  // Function to get tenant's properties
+  const getTenantProperties = async (tenantId: string): Promise<any[]> => {
+    const properties: any[] = [];
+    
+    try {
+      // Check new tenantProfiles structure first
+      const tenantProfileRef = doc(db, 'tenantProfiles', tenantId);
+      const tenantProfileSnap = await getDoc(tenantProfileRef);
+      
+      if (tenantProfileSnap.exists()) {
+        const tenantProfile = tenantProfileSnap.data();
+        const propertyIds = tenantProfile.properties || [];
+        
+        console.log('🔍 [AIChat] Found property IDs in tenant profile:', propertyIds);
+        
+        // Fetch each property
+        for (const propertyId of propertyIds) {
+          try {
+            const propertyRef = doc(db, 'properties', propertyId);
+            const propertySnap = await getDoc(propertyRef);
+            
+            if (propertySnap.exists()) {
+              properties.push({
+                id: propertySnap.id,
+                ...propertySnap.data()
+              });
+            }
+          } catch (error) {
+            console.warn('⚠️ [AIChat] Failed to fetch property:', propertyId, error);
+          }
+        }
+      } else {
+        // Fallback to legacy user profile structure
+        console.log('🔍 [AIChat] No tenant profile found, checking legacy structure');
+        const userRef = doc(db, 'users', tenantId);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          if (userData.propertyId) {
+            try {
+              const propertyRef = doc(db, 'properties', userData.propertyId);
+              const propertySnap = await getDoc(propertyRef);
+              
+              if (propertySnap.exists()) {
+                properties.push({
+                  id: propertySnap.id,
+                  ...propertySnap.data()
+                });
+              }
+            } catch (error) {
+              console.warn('⚠️ [AIChat] Failed to fetch legacy property:', userData.propertyId, error);
+            }
+          }
+        }
+      }
+      
+      return properties;
+    } catch (error) {
+      console.error('❌ [AIChat] Error getting tenant properties:', error);
+      return [];
+    }
+  };
+
+  // Function to create maintenance request when tenant starts AI chat
+  const createMaintenanceRequest = async (category: any): Promise<string | null> => {
+    if (!currentUser) {
+      console.error('❌ [AIChat] No authenticated user');
+      return null;
+    }
+
+    try {
+      console.log('🔍 [AIChat] Creating maintenance request for category:', category.name);
+      
+      // Check for existing recent request to ensure idempotency
+      const recentRequestId = await findRecentMaintenanceRequest(currentUser.uid, 5);
+      if (recentRequestId) {
+        console.log('✅ [AIChat] Found recent request within 5 minutes:', recentRequestId);
+        return recentRequestId;
+      }
+
+      // Get tenant information
+      const tenantName = userProfile?.displayName || userProfile?.firstName || userProfile?.name || currentUser.displayName || 'Unknown Tenant';
+      const tenantEmail = userProfile?.email || currentUser.email || '';
+
+      // Get tenant's properties
+      const properties = await getTenantProperties(currentUser.uid);
+      if (properties.length === 0) {
+        console.warn('⚠️ [AIChat] No properties found for tenant:', currentUser.uid);
+        // Still create the request, but it won't be associated with a property
+      }
+
+      // Create the maintenance request
+      const requestRef = doc(collection(db, 'maintenanceRequests'));
+      const requestId = requestRef.id;
+
+      const chatSessionId = `ai-chat-${currentUser.uid}-${Date.now()}`;
+
+      const requestData = {
+        tenantId: currentUser.uid,
+        tenantName,
+        tenantEmail,
+        chatSessionId,
+        propertyId: properties[0]?.id || null,
+        landlordId: properties[0]?.landlordId || null,
+        timestamp: serverTimestamp(),
+        status: 'pending',
+        issueType: category.id,
+        category: category.name,
+        description: `AI Chat initiated for ${category.name}: ${category.description}`,
+        images: [],
+        createdVia: 'ai_chat',
+        aiChatCategory: category.id,
+        aiChatCategoryName: category.name
+      };
+
+      await setDoc(requestRef, requestData);
+      console.log('✅ [AIChat] Maintenance request created:', requestId);
+
+      // Associate with properties
+      if (properties.length > 0) {
+        for (const property of properties) {
+          try {
+            const propertyRef = doc(db, 'properties', property.id);
+            await updateDoc(propertyRef, {
+              maintenanceRequests: arrayUnion(requestId),
+              updatedAt: serverTimestamp()
+            });
+            
+            console.log('✅ [AIChat] Request linked to property:', property.id);
+          } catch (error) {
+            console.warn('⚠️ [AIChat] Failed to link request to property:', property.id, error);
+            // Continue with other properties even if one fails
+          }
+        }
+      }
+
+      return requestId;
+
+    } catch (error) {
+      console.error('❌ [AIChat] Error creating maintenance request:', error);
+      // Gracefully handle errors - don't prevent chat from continuing
+      return null;
+    }
+  };
+
+  const handleCategorySelect = async (categoryId: string) => {
     const category = MAINTENANCE_CATEGORIES.find(cat => cat.id === categoryId);
-    if (category) {
+    if (!category) return;
+
+    if (!currentUser) {
+      toast.error('Please log in to submit a maintenance request');
+      return;
+    }
+
       setSelectedCategory(categoryId);
       setCurrentStep('chat');
+    
+    // **NEW: Create maintenance request when tenant selects category**
+    try {
+      console.log('🔍 [AIChat] Creating maintenance request for selected category...');
+      const requestId = await createMaintenanceRequest(category);
+      
+      if (requestId) {
+        setMaintenanceRequestId(requestId);
+        console.log('✅ [AIChat] Maintenance request created:', requestId);
+        toast.success(`Maintenance request created for ${category.name}`);
+      } else {
+        console.log('⚠️ [AIChat] No new request created (may have existing recent request)');
+        toast('Continuing with existing maintenance request', { icon: '🔄' });
+      }
+    } catch (error) {
+      console.error('❌ [AIChat] Failed to create maintenance request:', error);
+      toast.error('Failed to create maintenance request, but you can continue chatting');
+      // Continue with chat even if maintenance request creation fails
+    }
       
       // Add initial user message about the selected category
       const userMessage: MockMessage = {
@@ -122,7 +347,6 @@ const AIMaintenanceChat: React.FC = () => {
         };
         setMessages(prev => [...prev, aiMessage]);
       }, 1000);
-    }
   };
 
   const handleSend = async () => {
@@ -251,6 +475,11 @@ const AIMaintenanceChat: React.FC = () => {
             <div className="bg-orange-600 text-white px-4 py-2 rounded-full flex items-center gap-2">
               {selectedCategoryData.icon}
               {selectedCategoryData.name}
+              {maintenanceRequestId && (
+                <span className="ml-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                  Request Created
+                </span>
+              )}
             </div>
           </div>
 

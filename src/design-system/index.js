@@ -10,8 +10,8 @@ export { default as tokens } from './tokens';
 // Export responsive utilities
 export * from './responsive.jsx';
 
-// Export dark mode utilities
-export * from './dark-mode.jsx';
+// Export theme utilities (light mode only)
+export { useTheme, ThemeProvider, darkModeClasses } from './dark-mode.jsx';
 
 // Export accessibility utilities
 export * from './accessibility.jsx';
@@ -64,7 +64,6 @@ import tokens from './tokens';
 export { colors, typography, spacing, shadows, borderRadius } from './tokens';
 export { useBreakpoint, useMediaQuery, Container, ResponsiveGrid } from './responsive.jsx';
 export { Skeleton, Spinner, LoadingState } from './loading-states.jsx';
-export { useTheme, ThemeToggle, darkModeClasses } from './dark-mode.jsx';
 export { 
   useKeyboardNavigation, 
   useFocusManagement, 
@@ -243,6 +242,13 @@ export { default as PropertyForm } from '../components/landlord/PropertyForm.jsx
 export { default as PropertyList } from '../components/landlord/PropertyList.jsx';
 export { default as PropertyDetails } from '../components/landlord/PropertyDetails.jsx';
 export { default as PropertyDashboard } from '../components/landlord/PropertyDashboard.jsx';
+
+// Design system capabilities
+export const designSystemFeatures = {
+  // ... existing features ...
+  themeSupport: true, // Light mode only
+  // ... existing features ...
+};
 
 // Default export for convenience
 export default {

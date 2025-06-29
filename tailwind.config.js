@@ -2,7 +2,6 @@ const defaultTheme = require('tailwindcss/defaultTheme');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: ['class', '[data-theme="dark"]'],
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
     "./public/index.html"
@@ -44,8 +43,6 @@ module.exports = {
         background: {
           DEFAULT: defaultTheme.colors.white, // Light mode base (#FFFFFF)
           subtle: '#F9FAFB',                 // Light mode subtle sections (neutral-50)
-          dark: '#111827',                    // Dark mode base (neutral-900)
-          darkSubtle: '#1F2937',              // Dark mode subtle sections (neutral-800)
         },
         content: {
           DEFAULT: '#1F2937',        // Light mode primary text (neutral-800)

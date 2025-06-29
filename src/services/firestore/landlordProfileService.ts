@@ -6,7 +6,9 @@ import {
   where, 
   getDocs,
   updateDoc,
-  serverTimestamp 
+  serverTimestamp,
+  runTransaction,
+  arrayRemove
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { LandlordProfile, AcceptedTenantRecord } from '../../models/LandlordProfile';
@@ -199,6 +201,71 @@ export const getTenantsByProperty = async (landlordId: string, propertyId: strin
 };
 
 /**
+ * Remove a tenant from landlord profile and property units
+ */
+export const removeTenant = async (landlordId: string, tenantId: string, propertyId: string): Promise<void> => {
+  if (!landlordId || !tenantId || !propertyId) {
+    throw new Error("Landlord ID, Tenant ID, and Property ID are required.");
+  }
+
+  const landlordProfileRef = doc(db, 'landlordProfiles', landlordId);
+  const propertyRef = doc(db, 'properties', propertyId);
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      // --- READ PHASE ---
+      // All reads must happen BEFORE any writes.
+      const landlordDoc = await transaction.get(landlordProfileRef);
+      const propertyDoc = await transaction.get(propertyRef);
+
+      if (!landlordDoc.exists()) {
+        throw new Error("Landlord profile not found.");
+      }
+
+      // --- WRITE PHASE ---
+      // Now we can safely perform all our write operations.
+      const landlordData = landlordDoc.data();
+      
+      // Find the specific tenant record to remove from the detailed list.
+      const tenantRecordToRemove = landlordData.acceptedTenantDetails?.find(
+        (record: AcceptedTenantRecord) => record.tenantId === tenantId && record.propertyId === propertyId
+      );
+
+      // 1. Update the landlord's profile.
+      // We use arrayRemove to safely remove elements from arrays.
+      transaction.update(landlordProfileRef, {
+        acceptedTenants: arrayRemove(tenantId),
+        acceptedTenantDetails: tenantRecordToRemove ? arrayRemove(tenantRecordToRemove) : undefined,
+        totalInvitesAccepted: landlordData.totalInvitesAccepted > 0 ? landlordData.totalInvitesAccepted - 1 : 0,
+        updatedAt: serverTimestamp()
+      });
+
+      // 2. Update the property document.
+      if (propertyDoc.exists()) {
+        const propertyData = propertyDoc.data();
+        // Find which unit the tenant is in and remove them.
+        for (const unitId in propertyData.units) {
+          const unit = propertyData.units[unitId];
+          if (unit.tenants?.includes(tenantId)) {
+            const updatePath = `units.${unitId}.tenants`;
+            transaction.update(propertyRef, {
+              [updatePath]: arrayRemove(tenantId)
+            });
+            break; // Assume tenant is only in one unit per property.
+          }
+        }
+      } else {
+        console.warn(`Property with ID ${propertyId} not found during tenant removal.`);
+      }
+    });
+    console.log(`Successfully removed tenant ${tenantId} from landlord ${landlordId}`);
+  } catch (error) {
+    console.error('Error in removeTenant transaction:', error);
+    throw error; // Re-throw the error to be caught by the calling UI.
+  }
+};
+
+/**
  * Export default service object
  */
 const landlordProfileService = {
@@ -206,7 +273,8 @@ const landlordProfileService = {
   getAcceptedTenantsWithDetails,
   getLandlordStatistics,
   updateLandlordProfile,
-  getTenantsByProperty
+  getTenantsByProperty,
+  removeTenant
 };
 
 export default landlordProfileService; 

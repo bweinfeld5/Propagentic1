@@ -1,25 +1,120 @@
+
+# Final Fix: Correcting the Tenant Invitation Logic
+
+## 1. Problem Diagnosis
+
+The root cause of the invitation failure is twofold:
+1.  **Incorrect Frontend Payload:** The service layer at `src/services/firestore/inviteService.ts` was not sending the `unitId` to the backend.
+2.  **Non-Atomic Backend Transaction:** The cloud function `acceptTenantInvite.ts` was performing database writes outside of a transaction, leading to data inconsistency and unhandled errors when one of the writes failed.
+
+This guide provides a definitive, two-part solution to fix the entire flow.
+
+---
+
+## 2. Part 1: Fix the Frontend Service Payload
+
+This is the first critical fix. We must ensure the `unitId` is sent to the backend.
+
+**File to Modify:** `src/services/firestore/inviteService.ts`
+
+### Step 2.1: Update the `acceptTenantInvite` Function
+Replace the entire `acceptTenantInvite` function with this corrected version. This version now accepts an object containing the `unitId` and correctly includes it in the body of the request sent to the backend.
+
+```typescript
+// Replace the existing acceptTenantInvite function with this one.
+export const acceptTenantInvite = async (payload: { inviteCode: string; unitId?: string }): Promise<{
+  success: boolean;
+  message: string;
+  propertyId?: string;
+  propertyAddress?: string;
+}> => {
+  try {
+    if (!payload.inviteCode) {
+      return { success: false, message: 'Invite code is required' };
+    }
+
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      return { success: false, message: 'User must be authenticated' };
+    }
+
+    const token = await currentUser.getIdToken();
+
+    // The backend URL for the HTTP function
+    const functionUrl = 'https://us-central1-propagentic.cloudfunctions.net/acceptTenantInvite';
+
+    console.log(`Calling acceptTenantInvite function at ${functionUrl} with payload:`, payload);
+
+    const response = await fetch(functionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      // Ensure the entire payload, including unitId, is sent
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Error response from acceptTenantInvite:', data);
+      return {
+        success: false,
+        message: data.message || `HTTP Error: ${response.status}`
+      };
+    }
+
+    return {
+      success: data.success || true,
+      message: data.message || 'Successfully joined property!',
+      propertyId: data.propertyId,
+      propertyAddress: data.propertyAddress
+    };
+
+  } catch (error) {
+    console.error('Fatal error calling acceptTenantInvite:', error);
+    return {
+      success: false,
+      message: 'A network or unexpected error occurred. Please try again.'
+    };
+  }
+};
+```
+
+### Step 2.2: Update the Frontend Components (Verification)
+Ensure that the components calling this service are passing the full payload object.
+
+**File to check:** `src/components/auth/InviteCodeWall.tsx` (and the other two invite modals)
+**Verify this line exists in the `handleInviteValidated` function:**
+```typescript
+const result = await inviteService.acceptTenantInvite({
+  inviteCode: propertyInfo.inviteCode,
+  unitId: propertyInfo.unitId 
+});
+```
+
+---
+
+## 3. Part 2: Fix the Backend Transaction Logic
+
+This is the second critical fix. We will rewrite the backend function to be robust and atomic.
+
+**File to Modify:** `functions/src/acceptTenantInvite.ts`
+
+**Replace the entire content of the file** with the following corrected and hardened code. This new version validates all data *before* the transaction and performs all writes *inside* the transaction, preventing data inconsistencies.
+
+```typescript
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import * as corsLib from "cors";
 
-// Initialize admin if not already initialized
 if (!admin.apps.length) {
   admin.initializeApp();
 }
-
 const db = admin.firestore();
-const cors = corsLib.default({ origin: true }); // Allow all origins during development
+const cors = corsLib({ origin: true });
 
-/**
- * Firebase HTTP Function: acceptTenantInvite
- * 
- * Allows a tenant to accept an invite from a landlord using an 8-character alphanumeric invite code.
- * This is a clean, simple implementation that replaces the over-engineered system.
- * Converted from callable function to HTTP function with CORS support.
- * 
- * @param {functions.Request} req - HTTP request with body: { inviteCode: string, unitId: string }
- * @param {functions.Response} res - HTTP response
- */
 export const acceptTenantInvite = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     if (req.method !== "POST") {
@@ -51,7 +146,7 @@ export const acceptTenantInvite = functions.https.onRequest((req, res) => {
 
       const inviteDoc = inviteQuery.docs[0];
       const invite = inviteDoc.data();
-      if (invite.status !== 'pending' && invite.status !== 'sent') {
+      if (invite.status !== 'pending') {
         return res.status(400).json({ success: false, message: `This invite has already been ${invite.status}.` });
       }
 
@@ -76,7 +171,7 @@ export const acceptTenantInvite = functions.https.onRequest((req, res) => {
       // --- 2. ATOMIC TRANSACTION (All Writes) ---
       await db.runTransaction(async (transaction) => {
         const landlordDoc = await transaction.get(landlordProfileRef);
-        if (!landlordDoc.exists) {
+        if (!landlordDoc.exists()) {
           throw new Error("Landlord profile could not be found.");
         }
 
@@ -87,18 +182,11 @@ export const acceptTenantInvite = functions.https.onRequest((req, res) => {
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        // b. Update Tenant Profile: Add property to tenant's properties array and set address
-        const tenantUpdateData: any = {
+        // b. Update Tenant Profile: Add property to tenant's properties array
+        transaction.update(tenantProfileRef, {
           properties: admin.firestore.FieldValue.arrayUnion(invite.propertyId),
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        };
-
-        // Set tenant's address to the property address
-        if (propertyData.address) {
-          tenantUpdateData.address = propertyData.address;
-        }
-
-        transaction.update(tenantProfileRef, tenantUpdateData);
+        });
 
         // c. Update Landlord Profile: Add tenant to accepted lists
         const acceptedTenantRecord = {
@@ -133,4 +221,5 @@ export const acceptTenantInvite = functions.https.onRequest((req, res) => {
       return res.status(500).json({ success: false, message: error.message || "An internal error occurred." });
     }
   });
-}); 
+});
+```

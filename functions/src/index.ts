@@ -70,4 +70,8 @@ export { removeTenantFromLandlord };
 import { tenantLeaveProperty } from './tenantLeaveProperty';
 export { tenantLeaveProperty };
 
-console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, SMS notifications, invite code generation, tenant invite acceptance, tenant leave property).");
+// Import and export contractor assignment function
+import { assignContractorToRequest } from './assignContractorToRequest';
+export { assignContractorToRequest };
+
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, SMS notifications, invite code generation, tenant invite acceptance, tenant leave property, contractor assignment).");

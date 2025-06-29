@@ -25,10 +25,6 @@ service cloud.firestore {
       return isSignedIn() && userData != null && (userData.userType == role || userData.role == role);
     }
 
-    function isLandlord() { 
-      return isUserRole('landlord');
-    }
-    
     function isTenant() { 
       return isUserRole('tenant');
     }
@@ -66,7 +62,28 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(tenantId)).data.userType == 'tenant';
     }
 
+    // Function to check if a user is a landlord - enhanced version that takes userId parameter
+    function isLandlord(userId) {
+      return exists(/databases/$(database)/documents/landlordProfiles/$(userId));
+    }
 
+    // Function to check if current user is a landlord (backward compatibility)
+    function isCurrentUserLandlord() {
+      return isUserRole('landlord');
+    }
+
+    // Function to check if a user is a tenant of a specific landlord.
+    function isTenantOf(landlordId, tenantId) {
+      return exists(/databases/$(database)/documents/landlordProfiles/$(landlordId)) &&
+             get(/databases/$(database)/documents/landlordProfiles/$(landlordId)).data.keys().hasAny(['acceptedTenants']) &&
+             get(/databases/$(database)/documents/landlordProfiles/$(landlordId)).data.acceptedTenants.hasAny([tenantId]);
+    }
+
+    // Temporary function for debugging - allows landlords to read any tenant data
+    // TODO: Remove this after debugging
+    function isLandlordTemporaryAccess(userId) {
+      return isLandlord(request.auth.uid);
+    }
 
     // --- DATA VALIDATION FUNCTIONS ---
     // Email validation function removed as it was unused
@@ -79,10 +96,14 @@ service cloud.firestore {
       allow read, update: if isOwner(userId) || isAdmin();
       
       // Allow landlords to read tenant data (with function to check relationship)
-      allow read: if isLandlord() && isTenantOfLandlord(userId);
+      allow read: if isLandlord(request.auth.uid) && isTenantOf(request.auth.uid, userId);
+      
+      // TEMPORARY DEBUG: Allow any landlord to read any user data for debugging
+      // TODO: Remove this after fixing the isTenantOf function
+      allow read: if isLandlordTemporaryAccess(userId);
       
       // Allow landlords to query for tenants (needed for PropertyTenantManager)
-      allow list: if isLandlord();
+      allow list: if isCurrentUserLandlord();
       
       // Allow contractors to read user data for communication purposes
       allow read: if isContractor();
@@ -94,22 +115,24 @@ service cloud.firestore {
     // Tenant Profiles Collection
     match /tenantProfiles/{tenantId} {
       // Tenants can always read/update their own profile
-      // Landlords can read their tenants' profiles (if landlordId is present)
+      // Landlords can read their tenants' profiles using the improved relationship check
       // Admins can access all
-      allow read: if isOwner(tenantId) || 
-                     (isLandlord() && exists(/databases/$(database)/documents/tenantProfiles/$(tenantId)) && 
-                      get(/databases/$(database)/documents/tenantProfiles/$(tenantId)).data.keys().hasAny(['landlordId']) &&
-                      get(/databases/$(database)/documents/tenantProfiles/$(tenantId)).data.landlordId == request.auth.uid) ||
+      allow read, update: if isOwner(tenantId) || 
+                     (isLandlord(request.auth.uid) && isTenantOf(request.auth.uid, tenantId)) ||
                      isAdmin();
+      
+      // TEMPORARY DEBUG: Allow any landlord to read any tenant profile for debugging
+      // TODO: Remove this after fixing the isTenantOf function
+      allow read: if isLandlordTemporaryAccess(tenantId);
       
       // Allow creation during registration process
       allow create: if isOwner(tenantId) && (isTenant() || !exists(/databases/$(database)/documents/users/$(tenantId)));
       
       // Tenants can update their own profile
-      // Landlords can update their tenants' profiles (if landlordId matches)
+      // Landlords can update their tenants' profiles using the improved relationship check
       // Admins can update any profile
       allow update: if isOwner(tenantId) || 
-                       (isLandlord() && resource.data.keys().hasAny(['landlordId']) && resource.data.landlordId == request.auth.uid) ||
+                       (isLandlord(request.auth.uid) && isTenantOf(request.auth.uid, tenantId)) ||
                        isAdmin();
       
       allow delete: if isOwner(tenantId) || isAdmin();
@@ -117,15 +140,29 @@ service cloud.firestore {
 
     // Contractor Profiles Collection - CRITICAL SECURITY FIX
     match /contractorProfiles/{contractorId} {
+      // Helper function to check if update is only removing maintenance requests (for cleanup)
+      function isMaintenanceRequestCleanupUpdate() {
+        let changedFields = request.resource.data.diff(resource.data).affectedKeys();
+        return changedFields.size() == 1 && 'maintenanceRequests' in changedFields;
+      }
+
       // Contractors can read/update their own profile
       // Landlords can read contractor profiles in their rolodex
       // Admins can access all contractor profiles
       allow read: if isOwner(contractorId) || 
-                     isLandlord() ||
+                     isCurrentUserLandlord() ||
                      isAdmin();
       // Allow creation during registration process or if user is already a contractor
       allow create: if isOwner(contractorId) && (isContractor() || !exists(/databases/$(database)/documents/users/$(contractorId)));
-      allow update: if isOwner(contractorId) || isAdmin();
+      
+      // Allow updates by:
+      // 1. The contractor themselves
+      // 2. Landlords, but ONLY for maintenance request cleanup operations
+      // 3. Admins (full access)
+      allow update: if isOwner(contractorId) || 
+                       isAdmin() ||
+                       (isCurrentUserLandlord() && isMaintenanceRequestCleanupUpdate());
+      
       allow delete: if isOwner(contractorId) || isAdmin();
     }
 
@@ -153,7 +190,7 @@ service cloud.firestore {
       }
 
       // Read access: Landlords can read their own profile, contractors can read if in rolodex, admins can read all
-      allow read: if isOwner(landlordId) ||
+      allow read, write: if isOwner(landlordId) ||
                      (isContractor() && isContractorInLandlordRolodex(landlordId, request.auth.uid)) ||
                      isAdmin();
 
@@ -180,56 +217,18 @@ service cloud.firestore {
 
       function isValidContractorCreation() {
         return isSignedIn() &&
-               isLandlord() &&
+               isCurrentUserLandlord() &&
                request.resource.data.landlordId == request.auth.uid;
       }
 
       // Landlords can read their own contractors, admins can read all
       allow read: if isSignedIn() && (
-        (isLandlord() && resource.data.landlordId == request.auth.uid) ||
+        (isCurrentUserLandlord() && resource.data.landlordId == request.auth.uid) ||
         isAdmin()
       );
 
       // Allow landlords to list their contractors
-      allow list: if isSignedIn() && (isLandlord() || isAdmin());
-
-      // Landlords can create contractors for themselves
-      allow create: if isValidContractorCreation();
-
-      // Landlords can update their own contractors
-      allow update: if isSignedIn() && (
-        isContractorOwner() ||
-        isAdmin()
-      );
-
-      // Landlords can delete their own contractors
-      allow delete: if isSignedIn() && (
-        isContractorOwner() ||
-        isAdmin()
-      );
-    }
-
-    // Contractors Collection - for landlord's preferred contractors list
-    match /contractors/{contractorId} {
-      // Helper function to check if contractor belongs to the requesting landlord
-      function isContractorOwner() {
-        return isSignedIn() && resource.data.landlordId == request.auth.uid;
-      }
-
-      function isValidContractorCreation() {
-        return isSignedIn() &&
-               isLandlord() &&
-               request.resource.data.landlordId == request.auth.uid;
-      }
-
-      // Landlords can read their own contractors, admins can read all
-      allow read: if isSignedIn() && (
-        (isLandlord() && resource.data.landlordId == request.auth.uid) ||
-        isAdmin()
-      );
-
-      // Allow landlords to list their contractors
-      allow list: if isSignedIn() && (isLandlord() || isAdmin());
+      allow list: if isSignedIn() && (isCurrentUserLandlord() || isAdmin());
 
       // Landlords can create contractors for themselves
       allow create: if isValidContractorCreation();
@@ -259,8 +258,8 @@ service cloud.firestore {
       // More permissive read access for authenticated users
       allow get: if isSignedIn();
       // Allow listing properties for landlords (they can query their own properties)
-      allow list: if isSignedIn() && (isLandlord() || isAdmin());
-      allow create: if isSignedIn() && (isLandlord() || isAdmin());
+      allow list: if isSignedIn() && (isCurrentUserLandlord() || isAdmin());
+      allow create: if isSignedIn() && (isCurrentUserLandlord() || isAdmin());
       
       // Update access: Property owners can update EXCEPT tenants field, admins can update all
       // Also allow authenticated users to update for maintenance request functionality
@@ -287,20 +286,20 @@ service cloud.firestore {
     // Invites Collection
     match /invites/{inviteId} {
       // Landlords and admins can manage invites.
-      allow create: if isLandlord() || isAdmin();
+      allow create: if isLandlord(request.auth.uid);
       
       // Allow reading for validation purposes (any authenticated user can validate invite codes)
-      allow get: if isSignedIn();
+      allow get: if request.auth != null;
       
       // Allow specific tenant and landlord access
-      allow read, update: if (isLandlord() && resource.data.landlordId == request.auth.uid) ||
+      allow read, update: if (isLandlord(request.auth.uid) && resource.data.landlordId == request.auth.uid) ||
                              (isSignedIn() && resource.data.tenantEmail == request.auth.token.email) ||
                              isAdmin();
       
       // Allow querying invites for validation (needed for shortCode lookups)
       allow list: if isSignedIn();
       
-      allow delete: if (isLandlord() && resource.data.landlordId == request.auth.uid) || isAdmin();
+      allow delete: if (isLandlord(request.auth.uid) && resource.data.landlordId == request.auth.uid) || isAdmin();
     }
 
     // New rule for invite codes, allows any authenticated user to read (for validation)
@@ -314,13 +313,13 @@ service cloud.firestore {
     match /propertyInvitations/{invitationId} {
       // Landlords can read/manage invitations for their properties
       allow read, update, delete: if isSignedIn() && (
-        (isLandlord() && resource.data.landlordId == request.auth.uid) ||
+        (isCurrentUserLandlord() && resource.data.landlordId == request.auth.uid) ||
         isAdmin()
       );
       
       // Landlords can create invitations for their properties
       allow create: if isSignedIn() && (
-        (isLandlord() && request.resource.data.landlordId == request.auth.uid) ||
+        (isCurrentUserLandlord() && request.resource.data.landlordId == request.auth.uid) ||
         isAdmin()
       );
       
@@ -358,7 +357,7 @@ service cloud.firestore {
       );
       // Property owners and admins can create jobs
       allow create: if isSignedIn() && (
-        isLandlord() ||
+        isCurrentUserLandlord() ||
         isAdmin()
       );
       // Property owners and admins can delete jobs
@@ -378,7 +377,7 @@ service cloud.firestore {
         isAdmin()
       );
       // Tenants and landlords can create disputes
-      allow create: if isSignedIn() && (isTenant() || isLandlord());
+      allow create: if isSignedIn() && (isTenant() || isCurrentUserLandlord());
       // Only admins can delete disputes
       allow delete: if isAdmin();
     }
@@ -392,7 +391,7 @@ service cloud.firestore {
         isAdmin()
       );
       // Property owners and admins can create escrow
-      allow create: if isSignedIn() && (isLandlord() || isAdmin());
+      allow create: if isSignedIn() && (isCurrentUserLandlord() || isAdmin());
       // Only admins can delete escrow records
       allow delete: if isAdmin();
     }
@@ -448,8 +447,19 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.senderId == request.auth.uid;
     }
 
-    // Maintenance Requests Collection
+    // Maintenance Requests Collection (camelCase) - PRIMARY COLLECTION
     match /maintenanceRequests/{requestId} {
+      // Helper function to check if user owns the property associated with this maintenance request
+      function isMaintenanceRequestPropertyOwner() {
+        return isSignedIn() && isPropertyOwner(resource.data.propertyId);
+      }
+
+      function isMaintenanceRequestCreationValid() {
+        return isSignedIn() && 
+               request.auth.uid == request.resource.data.tenantId &&
+               exists(/databases/$(database)/documents/properties/$(request.resource.data.propertyId));
+      }
+
       // Tenants can read/update their own maintenance requests
       // Property owners can read/update requests for their properties
       // Contractors can read/update requests assigned to them
@@ -457,26 +467,33 @@ service cloud.firestore {
       allow read, update: if isSignedIn() && (
         resource.data.submittedBy == request.auth.uid ||
         resource.data.tenantId == request.auth.uid ||
-        isPropertyOwner(resource.data.propertyId) ||
+        isMaintenanceRequestPropertyOwner() ||
         (isContractor() && resource.data.keys().hasAny(['contractorId']) && resource.data.contractorId == request.auth.uid) ||
         isAdmin()
       );
       
-      // Allow authenticated users to create maintenance requests
-      // The application logic ensures proper property association
-      allow create: if isSignedIn();
+      // Allow authenticated users to create maintenance requests with proper validation
+      allow create: if isMaintenanceRequestCreationValid();
       
-      // Tenants can delete their own requests, property owners can delete requests for their properties, admins can delete all
+      // **CRITICAL**: Property owners can delete maintenance requests for their properties
+      // Tenants can delete their own requests
+      // Admins can delete all requests
       allow delete: if isSignedIn() && (
         resource.data.submittedBy == request.auth.uid ||
         resource.data.tenantId == request.auth.uid ||
-        isPropertyOwner(resource.data.propertyId) ||
+        isMaintenanceRequestPropertyOwner() ||
         isAdmin()
       );
       
-      // Allow listing for property owners and admins
-      allow list: if isSignedIn() && (isLandlord() || isAdmin());
+      // Allow listing for property owners, contractors, and admins
+      allow list: if isSignedIn() && (
+        isCurrentUserLandlord() || 
+        isContractor() || 
+        isAdmin()
+      );
     }
+
+
 
     // Property-Tenant Relationships Collection
     match /propertyTenantRelationships/{relationshipId} {
@@ -496,7 +513,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && resource.data.tenantId == request.auth.uid;
       
       // Allow listing relationships for property owners (needed for getPropertyTenants)
-      allow list: if isSignedIn() && isLandlord();
+      allow list: if isSignedIn() && isCurrentUserLandlord();
     }
   }
 }

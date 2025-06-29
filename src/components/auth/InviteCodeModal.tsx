@@ -40,7 +40,10 @@ const InviteCodeModal: React.FC<InviteCodeModalProps> = ({
       console.log('🔄 Accepting tenant invite for user:', currentUser.uid);
       
       // Call the new acceptTenantInvite service
-      const result = await inviteService.acceptTenantInvite(propertyInfo.inviteCode);
+      const result = await inviteService.acceptTenantInvite({
+        inviteCode: propertyInfo.inviteCode,
+        unitId: propertyInfo.unitId || undefined
+      });
       
       if (result.success) {
         toast.success(`Successfully joined ${result.propertyAddress || 'property'}!`);

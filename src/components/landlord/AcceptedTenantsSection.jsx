@@ -21,41 +21,9 @@ import { useAuth } from '../../context/AuthContext';
 import landlordProfileService from '../../services/firestore/landlordProfileService';
 import toast from 'react-hot-toast';
 
-interface Property {
-  id: string;
-  name?: string;
-  nickname?: string;
-  title?: string;
-  address?: string | {
-    street?: string;
-    city?: string;
-    state?: string;
-    zip?: string;
-  };
-  street?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
-  zip?: string;
-  propertyType?: string;
-  status?: string;
-  monthlyRent?: number;
-  rentAmount?: number;
-  monthlyRevenue?: number;
-  isOccupied?: boolean;
-  occupiedUnits?: number;
-  units?: number;
-  updatedAt?: Date;
-  lastUpdated?: Date;
-  type?: string;
-  [key: string]: any;
-}
+// Property interface handled by parent component
 
-interface AcceptedTenantsSectionProps {
-  properties?: Property[];
-}
-
-const AcceptedTenantsSection: React.FC<AcceptedTenantsSectionProps> = ({ properties = [] }) => {
+const AcceptedTenantsSection = ({ properties = [] }) => {
   const { currentUser } = useAuth();
   const [tenants, setTenants] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -160,7 +128,8 @@ const AcceptedTenantsSection: React.FC<AcceptedTenantsSectionProps> = ({ propert
               basicTenantRecord.phone = userData.phoneNumber;
             }
           } catch (permissionError) {
-            console.warn(`Permission denied accessing user ${tenantRecord.tenantId}, using basic data`);
+            // Permission denied is expected behavior - landlords can't read all tenant data
+            // Using basic data instead (no console warning needed)
           }
 
           try {
@@ -169,9 +138,14 @@ const AcceptedTenantsSection: React.FC<AcceptedTenantsSectionProps> = ({ propert
               const tenantProfileData = tenantProfileDoc.data();
               basicTenantRecord.name = tenantProfileData.fullName || basicTenantRecord.name;
               basicTenantRecord.phone = tenantProfileData.phoneNumber || basicTenantRecord.phone;
+              // Use tenant profile address if it exists and property address as fallback
+              if (tenantProfileData.address) {
+                basicTenantRecord.tenantAddress = tenantProfileData.address;
+              }
             }
           } catch (permissionError) {
-            console.warn(`Permission denied accessing tenant profile ${tenantRecord.tenantId}, using basic data`);
+            // Permission denied is expected behavior - landlords can't read all tenant data
+            // Using basic data instead (no console warning needed)
           }
 
           tenantDetails.push(basicTenantRecord);
@@ -292,21 +266,16 @@ const AcceptedTenantsSection: React.FC<AcceptedTenantsSectionProps> = ({ propert
 
     setIsRemoving(true);
     try {
-      // Call cloud function to remove tenant
-      const functions = getFunctions();
-      const removeTenant = httpsCallable(functions, 'removeTenantFromLandlord');
-      
-      const payload = {
+      // Use the local landlord profile service with fixed transaction logic
+      console.log('🚀 Calling landlordProfileService.removeTenant with:', {
         landlordId,
         tenantId,
         propertyId
-      };
-
-      console.log('🚀 Calling removeTenantFromLandlord with payload:', payload);
+      });
       
-      await removeTenant(payload);
+      await landlordProfileService.removeTenant(landlordId, tenantId, propertyId);
 
-      console.log('✅ Tenant removed successfully');
+      console.log('✅ Tenant removed successfully using local service');
 
       // Refresh tenants list
       await loadAcceptedTenants();
@@ -321,17 +290,71 @@ const AcceptedTenantsSection: React.FC<AcceptedTenantsSectionProps> = ({ propert
     }
   };
 
+  // Helper function to safely format an address
+  const formatAddress = (address) => {
+    if (!address) return 'Address not available';
+    
+    // If address is already a string, return it
+    if (typeof address === 'string') {
+      return address;
+    }
+    
+    // If address is an object, construct the address string
+    if (typeof address === 'object' && address) {
+      const parts = [
+        address.street,
+        address.city, 
+        address.state,
+        address.zip || address.zipCode
+      ].filter(Boolean); // filter(Boolean) removes any null/undefined/empty parts
+      
+      return parts.length > 0 ? parts.join(', ') : 'Address not complete';
+    }
+    
+    // Fallback for any other unexpected type
+    return 'Invalid address format';
+  };
+
   // Format date helper
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Unknown';
+  const formatDate = (dateValue) => {
+    if (!dateValue) return 'Unknown';
+    
     try {
-      return new Date(dateString).toLocaleDateString('en-US', {
+      let date;
+      
+      // Handle Firestore Timestamp objects
+      if (dateValue && typeof dateValue.toDate === 'function') {
+        date = dateValue.toDate();
+      }
+      // Handle Date objects
+      else if (dateValue instanceof Date) {
+        date = dateValue;
+      }
+      // Handle string dates
+      else if (typeof dateValue === 'string') {
+        date = new Date(dateValue);
+      }
+      // Handle epoch timestamps
+      else if (typeof dateValue === 'number') {
+        date = new Date(dateValue);
+      }
+      else {
+        return 'Unknown';
+      }
+      
+      // Check if the resulting date is valid
+      if (isNaN(date.getTime())) {
+        return 'Unknown';
+      }
+      
+      return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
       });
     } catch (e) {
-      return 'Invalid date';
+      console.warn('Date formatting error:', e, 'Input:', dateValue);
+      return 'Unknown';
     }
   };
 
@@ -519,10 +542,26 @@ const AcceptedTenantsSection: React.FC<AcceptedTenantsSectionProps> = ({ propert
                         </div>
                       )}
 
-                      {tenant.propertyAddress && (
+                      {(tenant.tenantAddress || tenant.propertyAddress) && (
                         <div className="flex items-center text-sm text-gray-600">
                           <MapPinIcon className="w-4 h-4 mr-2 text-gray-400" />
-                          {tenant.propertyAddress}
+                          <div>
+                            {tenant.tenantAddress && (
+                              <div className="font-medium">
+                                {formatAddress(tenant.tenantAddress)}
+                              </div>
+                            )}
+                            {tenant.propertyAddress && tenant.tenantAddress !== tenant.propertyAddress && (
+                              <div className="text-xs text-gray-500">
+                                Property: {formatAddress(tenant.propertyAddress)}
+                              </div>
+                            )}
+                            {!tenant.tenantAddress && tenant.propertyAddress && (
+                              <div>
+                                {formatAddress(tenant.propertyAddress)}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>

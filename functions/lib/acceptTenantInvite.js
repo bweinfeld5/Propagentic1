@@ -50,199 +50,104 @@ const cors = corsLib.default({ origin: true }); // Allow all origins during deve
  * This is a clean, simple implementation that replaces the over-engineered system.
  * Converted from callable function to HTTP function with CORS support.
  *
- * @param {functions.Request} req - HTTP request with body: { inviteCode: string }
+ * @param {functions.Request} req - HTTP request with body: { inviteCode: string, unitId: string }
  * @param {functions.Response} res - HTTP response
  */
 exports.acceptTenantInvite = functions.https.onRequest((req, res) => {
     cors(req, res, async () => {
+        var _a, _b, _c;
         if (req.method !== "POST") {
-            return res.status(405).send("Method Not Allowed");
+            return res.status(405).send({ success: false, message: "Method Not Allowed" });
+        }
+        const { inviteCode, unitId } = req.body;
+        const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split("Bearer ")[1];
+        if (!token) {
+            return res.status(401).json({ success: false, message: "Unauthorized: Missing token." });
+        }
+        if (!inviteCode || !unitId) {
+            return res.status(400).json({ success: false, message: "Invite code and unit ID are required." });
         }
         try {
-            const { inviteCode } = req.body;
-            // Extract and verify Bearer token
-            const authHeader = req.headers.authorization || "";
-            const token = authHeader.startsWith("Bearer ") ? authHeader.split("Bearer ")[1] : null;
-            if (!token) {
-                return res.status(401).json({
-                    success: false,
-                    error: "unauthenticated",
-                    message: "Unauthorized: Missing token."
-                });
-            }
-            // Verify the Firebase ID token
-            let decodedToken;
-            try {
-                decodedToken = await admin.auth().verifyIdToken(token);
-            }
-            catch (error) {
-                functions.logger.error("Invalid token:", error);
-                return res.status(401).json({
-                    success: false,
-                    error: "unauthenticated",
-                    message: "Invalid authentication token."
-                });
-            }
+            const decodedToken = await admin.auth().verifyIdToken(token);
             const uid = decodedToken.uid;
-            // Validate input
-            if (!inviteCode || typeof inviteCode !== 'string') {
-                return res.status(400).json({
-                    success: false,
-                    error: "invalid-argument",
-                    message: "inviteCode must be a non-empty string."
-                });
-            }
-            // Normalize invite code to uppercase
             const normalizedInviteCode = inviteCode.trim().toUpperCase();
-            // Validate invite code format (8 alphanumeric characters)
-            const codeRegex = /^[A-Z0-9]{8}$/;
-            if (!codeRegex.test(normalizedInviteCode)) {
-                return res.status(400).json({
-                    success: false,
-                    error: "invalid-argument",
-                    message: "Invalid invite code format. Code must be 8 alphanumeric characters."
-                });
-            }
-            functions.logger.info(`Starting invite acceptance for user ${uid} with code ${normalizedInviteCode}`);
-            // Step 1: Fetch the tenant profile using the authenticated user's uid
-            const tenantProfileRef = db.collection('tenantProfiles').doc(uid);
-            const tenantProfileDoc = await tenantProfileRef.get();
-            if (!tenantProfileDoc.exists) {
-                functions.logger.error(`Tenant profile not found for uid: ${uid}`);
-                return res.status(404).json({
-                    success: false,
-                    error: "not-found",
-                    message: "Tenant profile not found. Please complete your profile setup first."
-                });
-            }
-            const tenantProfile = tenantProfileDoc.data();
-            functions.logger.info(`Found tenant profile for uid: ${uid}`);
-            // Step 2: Search for the invite by shortCode
-            const inviteQuery = await db.collection('invites')
-                .where('shortCode', '==', normalizedInviteCode)
-                .limit(1)
-                .get();
+            functions.logger.info(`Starting invite acceptance for user ${uid} with code ${normalizedInviteCode} for unit ${unitId}`);
+            // --- 1. VALIDATION (Outside Transaction) ---
+            const inviteQuery = await db.collection('invites').where('shortCode', '==', normalizedInviteCode).limit(1).get();
             if (inviteQuery.empty) {
-                functions.logger.warn(`Invalid invite code attempted: ${normalizedInviteCode}`);
-                return res.status(400).json({
-                    success: false,
-                    error: "invalid-argument",
-                    message: "Invalid invite code."
-                });
+                return res.status(404).json({ success: false, message: "Invalid invite code." });
             }
             const inviteDoc = inviteQuery.docs[0];
             const invite = inviteDoc.data();
-            const propertyId = invite.propertyId;
-            functions.logger.info(`Found invite for property: ${propertyId}`);
-            // Step 3: Verify that the property exists
-            const propertyRef = db.collection('properties').doc(propertyId);
+            if (invite.status !== 'pending' && invite.status !== 'sent') {
+                return res.status(400).json({ success: false, message: `This invite has already been ${invite.status}.` });
+            }
+            const propertyRef = db.collection('properties').doc(invite.propertyId);
             const propertyDoc = await propertyRef.get();
             if (!propertyDoc.exists) {
-                functions.logger.error(`Property not found: ${propertyId}`);
-                return res.status(404).json({
-                    success: false,
-                    error: "not-found",
-                    message: "Property does not exist."
-                });
+                return res.status(404).json({ success: false, message: "The associated property does not exist." });
             }
-            const property = propertyDoc.data();
-            functions.logger.info(`Verified property exists: ${propertyId}`);
-            // Step 4: Check if tenant is already linked to this property
-            const currentProperties = tenantProfile.properties || [];
-            if (currentProperties.includes(propertyId)) {
-                functions.logger.warn(`Tenant ${uid} already linked to property ${propertyId}`);
-                return res.status(409).json({
-                    success: false,
-                    error: "already-exists",
-                    message: "Tenant already linked to this property."
-                });
+            const propertyData = propertyDoc.data();
+            const unit = (_b = propertyData.units) === null || _b === void 0 ? void 0 : _b[unitId];
+            if (!unit) {
+                return res.status(404).json({ success: false, message: `Unit ${unitId} not found on property.` });
             }
-            // Step 5: Add the property to the tenant's properties array
-            const updatedProperties = [...currentProperties, propertyId];
-            await tenantProfileRef.update({
-                properties: updatedProperties,
-                updatedAt: admin.firestore.FieldValue.serverTimestamp()
-            });
-            functions.logger.info(`Successfully linked tenant ${uid} to property ${propertyId}`);
-            // Step 6: Update landlord profile with accepted tenant (NEW)
-            const landlordId = invite.landlordId;
-            const landlordProfileRef = db.collection('landlordProfiles').doc(landlordId);
+            if ((((_c = unit.tenants) === null || _c === void 0 ? void 0 : _c.length) || 0) >= unit.capacity) {
+                return res.status(409).json({ success: false, message: "This unit is at full capacity." });
+            }
+            const tenantProfileRef = db.collection('tenantProfiles').doc(uid);
+            const landlordProfileRef = db.collection('landlordProfiles').doc(invite.landlordId);
+            // --- 2. ATOMIC TRANSACTION (All Writes) ---
             await db.runTransaction(async (transaction) => {
                 const landlordDoc = await transaction.get(landlordProfileRef);
-                // Create accepted tenant record
+                if (!landlordDoc.exists) {
+                    throw new Error("Landlord profile could not be found.");
+                }
+                // a. Update Property: Add tenant to the unit's tenants array
+                const unitTenantsPath = `units.${unitId}.tenants`;
+                transaction.update(propertyRef, {
+                    [unitTenantsPath]: admin.firestore.FieldValue.arrayUnion(uid),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+                // b. Update Tenant Profile: Add property to tenant's properties array and set address
+                const tenantUpdateData = {
+                    properties: admin.firestore.FieldValue.arrayUnion(invite.propertyId),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                };
+                // Set tenant's address to the property address
+                if (propertyData.address) {
+                    tenantUpdateData.address = propertyData.address;
+                }
+                transaction.update(tenantProfileRef, tenantUpdateData);
+                // c. Update Landlord Profile: Add tenant to accepted lists
                 const acceptedTenantRecord = {
                     tenantId: uid,
-                    propertyId: propertyId,
+                    propertyId: invite.propertyId,
+                    unitId: unitId,
                     inviteId: inviteDoc.id,
                     inviteCode: normalizedInviteCode,
                     tenantEmail: invite.tenantEmail || '',
-                    unitNumber: invite.unitNumber || null,
                     acceptedAt: admin.firestore.FieldValue.serverTimestamp(),
-                    inviteType: 'code'
                 };
-                if (!landlordDoc.exists) {
-                    // Create new landlord profile
-                    transaction.set(landlordProfileRef, {
-                        uid: landlordId,
-                        landlordId: landlordId,
-                        userId: landlordId,
-                        email: invite.landlordEmail || '',
-                        displayName: invite.landlordName || '',
-                        phoneNumber: '',
-                        businessName: '',
-                        acceptedTenants: [uid],
-                        properties: [propertyId],
-                        invitesSent: [inviteDoc.id],
-                        contractors: [],
-                        acceptedTenantDetails: [acceptedTenantRecord],
-                        totalInvitesSent: 1,
-                        totalInvitesAccepted: 1,
-                        inviteAcceptanceRate: 100,
-                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                    });
-                    functions.logger.info(`Created new landlord profile for ${landlordId}`);
-                }
-                else {
-                    // Update existing landlord profile
-                    const currentData = landlordDoc.data() || {};
-                    const currentAccepted = currentData.totalInvitesAccepted || 0;
-                    const currentSent = currentData.totalInvitesSent || 0;
-                    const newAccepted = currentAccepted + 1;
-                    const newRate = currentSent > 0 ? Math.round((newAccepted / currentSent) * 100) : 100;
-                    transaction.update(landlordProfileRef, {
-                        acceptedTenants: admin.firestore.FieldValue.arrayUnion(uid),
-                        acceptedTenantDetails: admin.firestore.FieldValue.arrayUnion(acceptedTenantRecord),
-                        totalInvitesAccepted: admin.firestore.FieldValue.increment(1),
-                        inviteAcceptanceRate: newRate,
-                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                    });
-                    functions.logger.info(`Updated landlord profile for ${landlordId}, new acceptance rate: ${newRate}%`);
-                }
-                // Step 7: Add tenant to property tenants array
-                transaction.update(propertyRef, {
-                    tenants: admin.firestore.FieldValue.arrayUnion(uid),
+                transaction.update(landlordProfileRef, {
+                    acceptedTenants: admin.firestore.FieldValue.arrayUnion(uid),
+                    acceptedTenantDetails: admin.firestore.FieldValue.arrayUnion(acceptedTenantRecord),
+                    totalInvitesAccepted: admin.firestore.FieldValue.increment(1),
                     updatedAt: admin.firestore.FieldValue.serverTimestamp()
                 });
-                functions.logger.info(`Added tenant ${uid} to property ${propertyId} tenants array`);
+                // d. Update Invite: Mark as accepted
+                transaction.update(inviteDoc.ref, {
+                    status: 'accepted',
+                    tenantId: uid,
+                    acceptedAt: admin.firestore.FieldValue.serverTimestamp()
+                });
             });
-            functions.logger.info(`Successfully updated landlord profile for ${landlordId} with accepted tenant ${uid}`);
-            // Return success response
-            return res.status(200).json({
-                success: true,
-                message: "Successfully joined property!",
-                propertyId: propertyId,
-                propertyAddress: property.address || property.streetAddress || "Unknown address"
-            });
+            functions.logger.info(`Successfully completed invite acceptance for user ${uid}`);
+            return res.status(200).json({ success: true, message: "Successfully joined property!" });
         }
         catch (error) {
-            // Log unexpected errors and return generic error
-            functions.logger.error("Unexpected error in acceptTenantInvite:", error);
-            return res.status(500).json({
-                success: false,
-                error: "internal",
-                message: "An internal error occurred while processing the invite."
-            });
+            functions.logger.error("Error in acceptTenantInvite:", error);
+            return res.status(500).json({ success: false, message: error.message || "An internal error occurred." });
         }
     });
 });

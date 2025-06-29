@@ -1,10 +1,11 @@
-import { 
+import {
   collection, 
   doc, 
   getDoc, 
   getDocs, 
   setDoc, 
   updateDoc,
+  deleteDoc,
   query,
   where,
   orderBy,
@@ -25,7 +26,8 @@ import {
   arrayRemove,
   increment,
   or,
-  and
+  and,
+  documentId
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { 
@@ -59,7 +61,7 @@ import {
 } from '../../models/converters';
 
 // Collection references with converters
-const requestsCollection = collection(db, 'maintenance_requests').withConverter(maintenanceRequestConverter);
+const requestsCollection = collection(db, 'maintenanceRequests').withConverter(maintenanceRequestConverter);
 const bulkOperationsCollection = collection(db, 'bulk_operations').withConverter(bulkOperationConverter);
 const requestTemplatesCollection = collection(db, 'request_templates').withConverter(requestTemplateConverter);
 const contractorRatingsCollection = collection(db, 'contractor_ratings').withConverter(contractorRatingConverter);
@@ -498,6 +500,44 @@ export async function getMaintenanceMetrics(
     };
 }
 
+/**
+ * Fetches multiple maintenance requests from a list of IDs.
+ * @param {string[]} requestIds - An array of maintenance request document IDs.
+ * @returns {Promise<any[]>} A promise that resolves to an array of maintenance request objects.
+ */
+export async function getMaintenanceRequestsByIds(requestIds: string[]): Promise<any[]> {
+  if (!requestIds || requestIds.length === 0) {
+    return [];
+  }
+
+  // Firestore 'in' queries are limited to 30 items. 
+  // We'll process the IDs in chunks to handle any number of requests.
+  const chunks = [];
+  for (let i = 0; i < requestIds.length; i += 30) {
+    chunks.push(requestIds.slice(i, i + 30));
+  }
+
+  const allRequests: any[] = [];
+  for (const chunk of chunks) {
+    try {
+      const q = query(
+        collection(db, 'maintenanceRequests'),
+        where(documentId(), 'in', chunk)
+      );
+      const querySnapshot = await getDocs(q);
+      
+      querySnapshot.forEach(doc => {
+        allRequests.push({ id: doc.id, ...doc.data() });
+      });
+    } catch (error) {
+      console.error("Error fetching maintenance requests chunk: ", error);
+      // Continue with other chunks even if one fails
+    }
+  }
+  
+  return allRequests;
+}
+
 // Helper functions for metrics calculation (can be moved to a separate file)
 function calculateAverageResponseTime(requests: MaintenanceRequest[]): number {
     // Implementation
@@ -530,10 +570,54 @@ function calculateContractorPerformance(requests: MaintenanceRequest[]): any[] {
     return [];
 }
 
+/**
+ * Delete a maintenance request by ID
+ */
+export async function deleteMaintenanceRequest(requestId: string): Promise<void> {
+  try {
+    return await runTransaction(db, async (transaction) => {
+      // Get the request first to check if it exists and get its propertyId
+      const requestRef = doc(requestsCollection, requestId);
+      const requestDoc = await transaction.get(requestRef);
+      
+      if (!requestDoc.exists()) {
+        throw new Error('Maintenance request not found');
+      }
+      
+      const requestData = requestDoc.data();
+      
+      // Delete the maintenance request document
+      transaction.delete(requestRef);
+      
+      // Remove from property's active requests if it exists
+      if (requestData.propertyId) {
+        const propertyRef = doc(db, 'properties', requestData.propertyId);
+        transaction.update(propertyRef, {
+          activeRequests: arrayRemove(requestId),
+          updatedAt: serverTimestamp()
+        });
+      }
+      
+      // If the request was assigned to a contractor, remove it from their list
+      if (requestData.contractorId) {
+        const contractorRef = doc(db, 'contractorProfiles', requestData.contractorId);
+        transaction.update(contractorRef, {
+          maintenanceRequests: arrayRemove(requestId)
+        });
+      }
+    });
+  } catch (error) {
+    console.error('Error deleting maintenance request:', error);
+    throw new Error(`Failed to delete maintenance request: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
 export const maintenanceService = {
   // Core CRUD operations
   getMaintenanceRequest,
+  getMaintenanceRequestsByIds,
   createMaintenanceRequest,
+  deleteMaintenanceRequest,
   searchMaintenanceRequests,
   updateMaintenanceRequestStatus,
   

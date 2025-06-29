@@ -45,7 +45,7 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
     country: 'United States',
     
     // Step 3: Property Details
-    units: 1,
+    units: 1, // Keep for compatibility, but will be replaced by unitsData
     bedrooms: 1,
     bathrooms: 1,
     squareFootage: '',
@@ -119,6 +119,9 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
   // Additional state for invite management
   const [inviteStatus, setInviteStatus] = useState({});
   const [createdProperty, setCreatedProperty] = useState(null);
+  
+  // Units management state
+  const [unitsData, setUnitsData] = useState([{ name: '', capacity: 1 }]);
 
   // Form steps configuration
   const steps = [
@@ -205,6 +208,28 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
     }
   };
 
+  // Units management functions
+  const handleUnitChange = (index, field, value) => {
+    const newUnits = [...unitsData];
+    newUnits[index][field] = value;
+    setUnitsData(newUnits);
+    // Update the total units count for compatibility
+    updateFormData('units', newUnits.length);
+  };
+
+  const addUnit = () => {
+    setUnitsData([...unitsData, { name: '', capacity: 1 }]);
+    updateFormData('units', unitsData.length + 1);
+  };
+
+  const removeUnit = (index) => {
+    if (unitsData.length > 1) { // Ensure at least one unit remains
+      const newUnits = unitsData.filter((_, i) => i !== index);
+      setUnitsData(newUnits);
+      updateFormData('units', newUnits.length);
+    }
+  };
+
   // Validate current step
   const validateStep = (step) => {
     const newErrors = {};
@@ -221,7 +246,19 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
         if (!formData.zipCode.trim()) newErrors.zipCode = 'ZIP code is required';
         break;
       case 3:
-        if (formData.units < 1) newErrors.units = 'At least 1 unit is required';
+        // Validate units
+        const validUnits = unitsData.filter(unit => unit.name && unit.name.trim());
+        if (validUnits.length === 0) {
+          newErrors.units = 'At least one unit with a name is required';
+        } else {
+          // Check for duplicate unit names
+          const unitNames = validUnits.map(unit => unit.name.trim().toLowerCase());
+          const duplicates = unitNames.filter((name, index) => unitNames.indexOf(name) !== index);
+          if (duplicates.length > 0) {
+            newErrors.units = 'Unit names must be unique';
+          }
+        }
+        
         if (formData.bedrooms < 0) newErrors.bedrooms = 'Bedrooms cannot be negative';
         if (formData.bathrooms < 0) newErrors.bathrooms = 'Bathrooms cannot be negative';
         break;
@@ -390,6 +427,17 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
       console.warn('Could not determine climate zone:', error);
     }
 
+    // Transform units array into the map structure
+    const unitsMap = unitsData.reduce((acc, unit) => {
+      if (unit.name && unit.name.trim()) { // Only add units with a name
+        acc[unit.name.trim()] = {
+          capacity: parseInt(unit.capacity) || 1,
+          tenants: [] // Always starts empty
+        };
+      }
+      return acc;
+    }, {});
+
     // Prepare property data for Firebase
     return {
       // Basic information
@@ -411,7 +459,8 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
       zipCode: formData.zipCode,
       
       // Property details
-      units: parseInt(formData.units),
+      units: unitsMap, // NEW: Units as a map with capacity and tenants
+      unitCount: Object.keys(unitsMap).length, // For compatibility/easy counting
       bedrooms: parseInt(formData.bedrooms),
       bathrooms: parseInt(formData.bathrooms),
       squareFootage: formData.squareFootage ? parseInt(formData.squareFootage) : null,
@@ -539,6 +588,7 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
       setErrors({});
       setInviteStatus({});
       setCreatedProperty(null);
+      setUnitsData([{ name: '', capacity: 1 }]); // Reset units data
       setFormData({
         // Step 1: Basic Information
         name: '',
@@ -951,26 +1001,65 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
   function renderPropertyDetails() {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Units *
-            </label>
-            <input
-              type="number"
-              min="1"
-              value={formData.units}
-              onChange={(e) => updateFormData('units', e.target.value)}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors ${
-                errors.units ? 'border-red-300' : 'border-gray-300'
-              }`}
-            />
-            {errors.units && <p className="mt-1 text-sm text-red-600">{errors.units}</p>}
+        {/* Units Management Section */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Property Units * <span className="text-xs text-gray-500">(Define each unit and its tenant capacity)</span>
+          </label>
+          <div className="space-y-3">
+            {unitsData.map((unit, index) => (
+              <div key={index} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                <div className="flex-grow">
+                  <input
+                    type="text"
+                    placeholder="Unit name (e.g., 101, A, Penthouse)"
+                    value={unit.name}
+                    onChange={(e) => handleUnitChange(index, 'name', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  />
+                </div>
+                <div className="w-24">
+                  <input
+                    type="number"
+                    placeholder="Capacity"
+                    value={unit.capacity}
+                    min="1"
+                    max="10"
+                    onChange={(e) => handleUnitChange(index, 'capacity', parseInt(e.target.value, 10) || 1)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeUnit(index)}
+                  disabled={unitsData.length === 1}
+                  className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Remove unit"
+                >
+                  <XMarkIcon className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addUnit}
+              className="w-full py-2 px-4 border border-orange-300 text-orange-700 rounded-lg hover:bg-orange-50 transition-colors flex items-center justify-center gap-2"
+            >
+              <PlusIcon className="w-4 h-4" />
+              Add Another Unit
+            </button>
           </div>
+          {errors.units && <p className="mt-1 text-sm text-red-600">{errors.units}</p>}
+          <p className="mt-2 text-xs text-gray-500">
+            Each unit can hold multiple tenants up to its capacity. You can invite tenants to specific units later.
+          </p>
+        </div>
 
+        {/* Property Details */}
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Bedrooms
+              Bedrooms (per unit average)
             </label>
             <input
               type="number"
@@ -986,7 +1075,7 @@ const AddPropertyModal = ({ isOpen, onClose, onPropertyAdded }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Bathrooms
+              Bathrooms (per unit average)
             </label>
             <input
               type="number"

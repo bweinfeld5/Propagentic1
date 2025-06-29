@@ -10,6 +10,7 @@ import { auth } from '../../firebase/config';
 import inviteService from '../../services/firestore/inviteService';
 import { QRCodeDisplay } from '../qr/QRCodeDisplay';
 import inviteCodeService from '../../services/inviteCodeService';
+import { getPropertyById } from '../../services/firestore/propertyService';
 
 interface Property {
   id: string;
@@ -24,6 +25,7 @@ interface InviteTenantModalProps {
   onClose: () => void;
   propertyId?: string;
   propertyName?: string;
+  initialUnitId?: string;
   properties?: Property[];
   onInviteSuccess?: () => void;
 }
@@ -33,6 +35,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
   onClose,
   propertyId: initialPropertyId,
   propertyName: initialPropertyName,
+  initialUnitId,
   properties = [],
   onInviteSuccess,
 }) => {
@@ -49,27 +52,76 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
   const [activeTab, setActiveTab] = useState<'info' | 'qr'>('info');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<{ type: string; message: string } | null>(null);
+  
+  // Units management state
+  const [propertyUnits, setPropertyUnits] = useState<{ [key: string]: { capacity: number; tenants: string[] } }>({});
+  const [selectedUnit, setSelectedUnit] = useState<string>('');
+  const [isLoadingUnits, setIsLoadingUnits] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen) {
       setEmail('');
       setSelectedPropertyId(initialPropertyId || '');
       setSelectedPropertyName(initialPropertyName || '');
+      setSelectedUnit(initialUnitId || '');
+      setPropertyUnits({});
       setErrors({});
       setInviteSuccess(false);
       setInviteCode('');
       setActiveTab('info');
     }
-  }, [isOpen, initialPropertyId, initialPropertyName]);
+  }, [isOpen, initialPropertyId, initialPropertyName, initialUnitId]);
+
+  // Handle property selection and fetch units
+  const handlePropertySelect = async (propertyId: string) => {
+    setSelectedPropertyId(propertyId);
+    setSelectedUnit(''); // Reset unit selection
+    setPropertyUnits({}); // Reset units
+    
+    if (!propertyId) {
+      setSelectedPropertyName('');
+      return;
+    }
+    
+    // Update property name
+    const property = properties.find(p => p.id === propertyId);
+    if (property) {
+      setSelectedPropertyName(property.nickname || property.name || property.streetAddress || 'Unknown Property');
+    }
+    
+    // Fetch property details including units
+    setIsLoadingUnits(true);
+    try {
+      const propertyDoc = await getPropertyById(propertyId);
+      const propertyData = propertyDoc as any; // Cast to any to handle new units structure
+      if (propertyData && propertyData.units) {
+        setPropertyUnits(propertyData.units);
+        console.log('Loaded units for property:', propertyData.units);
+      } else {
+        console.log('No units found for property or property not found');
+        setPropertyUnits({});
+      }
+    } catch (error) {
+      console.error('Error fetching property units:', error);
+      toast.error('Failed to load property units');
+      setPropertyUnits({});
+    } finally {
+      setIsLoadingUnits(false);
+    }
+  };
 
   useEffect(() => {
     if (selectedPropertyId) {
-      const property = properties.find(p => p.id === selectedPropertyId);
-      if (property) {
-        setSelectedPropertyName(property.nickname || property.name || property.streetAddress || 'Unknown Property');
-      }
+      handlePropertySelect(selectedPropertyId);
     }
-  }, [selectedPropertyId, properties]);
+  }, [selectedPropertyId]);
+
+  // Set initial unit after units are loaded
+  useEffect(() => {
+    if (initialUnitId && propertyUnits && Object.keys(propertyUnits).length > 0 && Object.keys(propertyUnits).includes(initialUnitId)) {
+      setSelectedUnit(initialUnitId);
+    }
+  }, [propertyUnits, initialUnitId]);
 
   const validateForm = () => {
     try {
@@ -99,7 +151,25 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
     
     if (!selectedPropertyId || !email) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    // Add final validation to prevent submitting an invite for a full unit
+    if (selectedUnit && propertyUnits[selectedUnit]) {
+      const unit = propertyUnits[selectedUnit];
+      if ((unit.tenants?.length || 0) >= unit.capacity) {
+        toast.error(`Unit ${selectedUnit} is at full capacity and cannot accept new tenants.`);
+        setLoading(false); // Ensure loading state is reset
+        return; // Stop the submission
+      }
+    }
+
+    // Validate unit selection and capacity
+    if (Object.keys(propertyUnits).length > 0) { // Only validate if property has units
+      if (!selectedUnit) {
+        toast.error('Please select a unit for this tenant');
         return;
+      }
     }
 
     setLoading(true);
@@ -112,8 +182,8 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
         landlordId: auth.currentUser?.uid || '',
         propertyName: selectedPropertyName || 'Property',
         landlordName: landlordName.trim() || auth.currentUser?.displayName || 'Landlord',
-        unitId: unitId?.trim() || undefined,
-        unitNumber: unitNumber?.trim() || undefined
+        unitId: selectedUnit || undefined,
+        unitNumber: selectedUnit || undefined // For now, use unit name as unit number
       };
 
       console.log('Creating invite with data:', inviteData);
@@ -351,6 +421,8 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                             setInviteCode('');
                             setSelectedPropertyId(initialPropertyId || '');
                             setSelectedPropertyName(initialPropertyName || '');
+                            setSelectedUnit(initialUnitId || '');
+                            setPropertyUnits({});
                             setActiveTab('info');
                           }}
                           className="flex-1"
@@ -407,7 +479,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                                   errors.propertyId ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
                                 }`}
                                 value={selectedPropertyId}
-                                onChange={(e) => setSelectedPropertyId(e.target.value)}
+                                onChange={(e) => handlePropertySelect(e.target.value)}
                               >
                                 <option value="">Choose a property...</option>
                                 {properties.map((prop) => (
@@ -422,6 +494,73 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                             </div>
                           )}
                         </div>
+
+                        {/* Unit Selection - Only show if property is selected and has units */}
+                        {selectedPropertyId && (
+                          <div>
+                            <label htmlFor="unit" className="block text-sm font-semibold text-gray-700 mb-2">
+                              Select Unit
+                            </label>
+                            {isLoadingUnits ? (
+                              <div className="flex items-center justify-center py-4 bg-gray-50 rounded-xl border border-gray-200">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500"></div>
+                                <span className="ml-2 text-sm text-gray-600">Loading units...</span>
+                              </div>
+                            ) : Object.keys(propertyUnits).length === 0 ? (
+                              <div className="text-sm text-gray-500 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                                <p className="text-yellow-800">⚠️ This property doesn't have units configured yet.</p>
+                                <p className="text-yellow-700 mt-1">You can still send the invitation, but consider adding units to better manage tenants.</p>
+                              </div>
+                            ) : (
+                              <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                  <BuildingOfficeIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                                </div>
+                                <select
+                                  id="unit"
+                                  className={`block w-full pl-10 pr-4 py-3 text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors ${
+                                    errors.selectedUnit ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                                  }`}
+                                  value={selectedUnit}
+                                  onChange={(e) => setSelectedUnit(e.target.value)}
+                                >
+                                  <option value="">Choose a unit...</option>
+                                  {Object.entries(propertyUnits).map(([unitId, unitData]) => {
+                                    const isFull = (unitData.tenants?.length || 0) >= unitData.capacity;
+                                    const occupancyText = `${unitData.tenants?.length || 0} / ${unitData.capacity}`;
+                                    
+                                    return (
+                                      <option key={unitId} value={unitId} disabled={isFull}>
+                                        Unit {unitId} ({occupancyText}) {isFull ? "- Full" : ""}
+                                      </option>
+                                    );
+                                  })}
+                                </select>
+                                {errors.selectedUnit && <p className="mt-2 text-sm text-red-600">{errors.selectedUnit}</p>}
+                                
+                                {/* Unit capacity info */}
+                                {selectedUnit && propertyUnits[selectedUnit] && (
+                                  <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <BuildingOfficeIcon className="w-5 h-5 text-blue-600" />
+                                      </div>
+                                      <p className="text-sm text-blue-800">
+                                        <span className="font-medium">Unit {selectedUnit}:</span> {' '}
+                                        {propertyUnits[selectedUnit].tenants.length} of {propertyUnits[selectedUnit].capacity} tenants
+                                        {propertyUnits[selectedUnit].tenants.length < propertyUnits[selectedUnit].capacity ? (
+                                          <span className="text-green-600 ml-2">✓ Available</span>
+                                        ) : (
+                                          <span className="text-red-600 ml-2">⚠️ At capacity</span>
+                                        )}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
 
                         <div>
                           <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -459,7 +598,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({
                             type="submit"
                             variant="primary"
                             isLoading={loading}
-                            disabled={loading || !email || !selectedPropertyId}
+                            disabled={loading || !email || !selectedPropertyId || (Object.keys(propertyUnits).length > 0 && !selectedUnit)}
                             className="flex-1"
                           >
                             {loading ? 'Sending...' : 'Send Invitation'}

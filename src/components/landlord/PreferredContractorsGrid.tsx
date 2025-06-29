@@ -11,10 +11,13 @@ import contractorService from '../../services/contractorService';
 import toast from 'react-hot-toast';
 
 interface PreferredContractorsGridProps {
-  landlordId: string;
+  contractors: any[]; // It will now receive contractors as a prop
   onAddContractor: () => void;
   onEditContractor: (contractor: any) => void;
   onRateContractor: (contractor: any) => void;
+  onRemoveContractor: (contractorId: string) => void;
+  isLoading: boolean; // Receive loading state as a prop
+  onRefresh?: () => void; // Optional refresh callback for error handling
 }
 
 /**
@@ -28,51 +31,23 @@ interface PreferredContractorsGridProps {
  * @param {function} onRateContractor - Callback to rate contractor
  */
 const PreferredContractorsGrid: React.FC<PreferredContractorsGridProps> = ({ 
-  landlordId, 
+  contractors,
   onAddContractor, 
   onEditContractor, 
-  onRateContractor 
+  onRateContractor,
+  onRemoveContractor,
+  isLoading,
+  onRefresh
 }) => {
-  const [contractors, setContractors] = useState<any[]>([]);
   const [filteredContractors, setFilteredContractors] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedTrade, setSelectedTrade] = useState<string>('all');
-
-  // Load contractors on component mount
-  useEffect(() => {
-    if (landlordId) {
-      loadContractors();
-    }
-  }, [landlordId]);
 
   // Filter contractors when search term or trade filter changes
   useEffect(() => {
     filterContractors();
   }, [contractors, searchTerm, selectedTrade]);
-
-  const loadContractors = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const result = await contractorService.getContractors(landlordId);
-      
-      if (result.success && result.data) {
-        setContractors(result.data);
-      } else {
-        setError(result.error || 'Failed to load contractors');
-        setContractors([]); // Set empty array on error
-      }
-    } catch (err) {
-      console.error('Error loading contractors:', err);
-      setError('Failed to load contractors');
-      setContractors([]); // Set empty array on error
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filterContractors = (): void => {
     let filtered = [...contractors];
@@ -98,22 +73,6 @@ const PreferredContractorsGrid: React.FC<PreferredContractorsGridProps> = ({
     setFilteredContractors(filtered);
   };
 
-  const handleRemoveContractor = async (contractorId: string): Promise<void> => {
-    try {
-      const result = await contractorService.removeContractor(contractorId);
-      
-      if (result.success) {
-        toast.success('Contractor removed successfully');
-        loadContractors(); // Reload to update the list
-      } else {
-        toast.error(result.error || 'Failed to remove contractor');
-      }
-    } catch (err) {
-      console.error('Error removing contractor:', err);
-      toast.error('Failed to remove contractor');
-    }
-  };
-
   // Get unique trades from all contractors for filter dropdown
   const availableTrades: string[] = useMemo(() => {
     const trades = new Set<string>();
@@ -125,7 +84,12 @@ const PreferredContractorsGrid: React.FC<PreferredContractorsGridProps> = ({
     return Array.from(trades).sort();
   }, [contractors]);
 
-  if (loading) {
+  // Handle contractor removal
+  const handleRemoveContractor = (contractorId: string): void => {
+    onRemoveContractor(contractorId);
+  };
+
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mb-4"></div>
@@ -139,12 +103,14 @@ const PreferredContractorsGrid: React.FC<PreferredContractorsGridProps> = ({
       <div className="flex flex-col items-center justify-center py-12">
         <ExclamationCircleIcon className="w-12 h-12 text-red-500 mb-4" />
         <p className="text-red-600 text-center">{error}</p>
-        <button
-          onClick={loadContractors}
-          className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-        >
-          Try Again
-        </button>
+        {onRefresh && (
+          <button
+            onClick={onRefresh}
+            className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            Try Again
+          </button>
+        )}
       </div>
     );
   }

@@ -70,4 +70,28 @@ export { removeTenantFromLandlord };
 import { tenantLeaveProperty } from './tenantLeaveProperty';
 export { tenantLeaveProperty };
 
-console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, SMS notifications, invite code generation, tenant invite acceptance, tenant leave property).");
+// Import and export super admin upgrade function
+import { upgradeSuperAdmin } from './upgradeSuperAdmin';
+export { upgradeSuperAdmin };
+
+// Import and export super admin permissions fix function
+import { fixSuperAdminPermissions } from './fixSuperAdminPermissions';
+export { fixSuperAdminPermissions };
+
+// Import and export admin user management functions
+import { 
+  createUser, 
+  updateUser, 
+  deleteUser, 
+  sendInvitationEmail, 
+  sendPasswordReset 
+} from './adminUserManagement';
+export { 
+  createUser, 
+  updateUser, 
+  deleteUser, 
+  sendInvitationEmail, 
+  sendPasswordReset 
+};
+
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, SMS notifications, invite code generation, tenant invite acceptance, tenant leave property, super admin upgrade, admin user management, super admin permissions fix).");

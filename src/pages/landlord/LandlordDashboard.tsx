@@ -994,6 +994,8 @@ const LandlordDashboard: React.FC = () => {
           <PreferredContractorsGrid
             landlordId={currentUser?.uid || ''}
             onAddContractor={handleAddContractor}
+            onEditContractor={handleEditContractor}
+            onRateContractor={handleRateContractor}
           />
         </div>
         

@@ -227,6 +227,7 @@ const createDemoProperties = async () => {
         updatedAt: serverTimestamp(),
         status: 'active',
         tenantIds: [], // Initialize empty tenant list
+        maintenanceRequests: [], // Initialize empty maintenance requests list
         features: {
           furnished: false,
           parking: propertyData.amenities.includes('Parking') || propertyData.amenities.includes('Garage'),

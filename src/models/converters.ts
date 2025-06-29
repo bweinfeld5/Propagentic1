@@ -279,6 +279,7 @@ export function createNewProperty(
     unitList,
     tenantIds: [],
     tenants: [], // Array of tenant user IDs
+    maintenanceRequests: [], // Array of maintenance request IDs
     activeRequests: [],
     createdAt: serverTimestamp() as Timestamp
   };

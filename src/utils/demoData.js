@@ -20,6 +20,7 @@ export const demoProperties = [
     occupiedUnits: 19,
     landlordId: 'landlord-001',
     tenants: ['tenant-001', 'tenant-002', 'tenant-003'],
+    maintenanceRequests: ['ticket-001', 'ticket-004'],
     createdAt: new Date(2023, 0, 15)
   },
   {
@@ -37,6 +38,7 @@ export const demoProperties = [
     occupiedUnits: 13,
     landlordId: 'landlord-001',
     tenants: ['tenant-004', 'tenant-005'],
+    maintenanceRequests: ['ticket-002'],
     createdAt: new Date(2023, 2, 10)
   },
   {
@@ -54,6 +56,7 @@ export const demoProperties = [
     occupiedUnits: 8,
     landlordId: 'landlord-001',
     tenants: ['tenant-006'],
+    maintenanceRequests: ['ticket-003'],
     createdAt: new Date(2023, 4, 22)
   }
 ];

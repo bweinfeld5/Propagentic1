@@ -107,10 +107,28 @@ const AuthPage = () => {
         // Get the user role from either userType or role field for backwards compatibility
         const userRole = userProfile?.userType || userProfile?.role;
         
-        // Redirect based on user type
+        // Debug login redirect
+        console.log('AuthPage - User Role Check:', {
+          userEmail: userProfile.email,
+          userRole,
+          userProfileRole: userProfile.role,
+          userProfileType: userProfile.userType
+        });
+
+        // Check for admin users first (prioritize admin)
+        const isAdmin = userProfile.role === 'admin' || userProfile.role === 'super_admin' || 
+                       userProfile.userType === 'admin' || userProfile.userType === 'super_admin';
+        
+        if (isAdmin) {
+          console.log('AuthPage - Redirecting admin to /admin/dashboard');
+          navigate('/admin/dashboard');
+          return; // Stop execution here for admin users
+        } 
+        
+        // For non-admin users, redirect based on user type
         if (userRole) {
           const redirectPath = `/${userRole}/dashboard`;
-          console.log(`LoginPage - Redirecting to: ${redirectPath}`);
+          console.log(`AuthPage - Redirecting to: ${redirectPath}`);
           
           switch(userRole) {
             case 'tenant':
@@ -126,7 +144,7 @@ const AuthPage = () => {
               navigate('/dashboard');
           }
         } else {
-          console.log('LoginPage - No userType or role found, redirecting to default dashboard');
+          console.log('AuthPage - No userType or role found, redirecting to default dashboard');
           navigate('/dashboard');
         }
       } catch (error) {

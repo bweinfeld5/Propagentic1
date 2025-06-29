@@ -137,6 +137,7 @@
     "stream-http": "^3.2.0",
     "tailwind-merge": "^3.3.1",
     "tryer": "^1.0.1",
+    "twilio": "^5.7.1",
     "underscore": "1.13.6",
     "url": "^0.11.4",
     "uuid": "^11.1.0",

@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.tenantLeaveProperty = exports.removeTenantFromLandlord = exports.acceptTenantInvite = exports.generateInviteCode = exports.sendTestSMS = exports.sendContractorWelcomeSMS = exports.simpleTest = exports.testPing = exports.testSendGrid = exports.sendEmail = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
+exports.assignContractorToRequest = exports.tenantLeaveProperty = exports.removeTenantFromLandlord = exports.acceptTenantInvite = exports.generateInviteCode = exports.sendTestSMS = exports.sendContractorWelcomeSMS = exports.simpleTest = exports.testPing = exports.testSendGrid = exports.sendEmail = exports.createNotificationOnInvite = exports.sendInviteEmail = exports.classifyMaintenanceRequest = exports.addContractorToRolodex = exports.rejectPropertyInvite = exports.acceptPropertyInvite = exports.sendPropertyInvite = exports.ping = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 // Initialize Firebase Admin SDK
@@ -86,5 +86,8 @@ Object.defineProperty(exports, "removeTenantFromLandlord", { enumerable: true, g
 // Import and export tenant leave property function
 const tenantLeaveProperty_1 = require("./tenantLeaveProperty");
 Object.defineProperty(exports, "tenantLeaveProperty", { enumerable: true, get: function () { return tenantLeaveProperty_1.tenantLeaveProperty; } });
-console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, SMS notifications, invite code generation, tenant invite acceptance, tenant leave property).");
+// Import and export contractor assignment function
+const assignContractorToRequest_1 = require("./assignContractorToRequest");
+Object.defineProperty(exports, "assignContractorToRequest", { enumerable: true, get: function () { return assignContractorToRequest_1.assignContractorToRequest; } });
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, SMS notifications, invite code generation, tenant invite acceptance, tenant leave property, contractor assignment).");
 //# sourceMappingURL=index.js.map

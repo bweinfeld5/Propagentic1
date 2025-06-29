@@ -5,6 +5,8 @@
 import { ContractorProfile } from '../../models/schema';
 import { StandardContractorService } from '../base/StandardContractorService';
 import { ServiceMigrationUtility } from '../base/ServiceMigrationUtility';
+import { doc, getDoc, collection, query, where, getDocs, documentId } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 
 // Create instance of the new standardized service
 const standardContractorService = new StandardContractorService();
@@ -139,6 +141,63 @@ export async function getRecommendedContractors(
   });
   return ServiceMigrationUtility.toLegacyFormat(result);
 }
+
+/**
+ * Fetches multiple contractor documents from the 'contractors' collection using a list of IDs.
+ * @param {string[]} contractorIds - An array of contractor document IDs.
+ * @returns {Promise<any[]>} A promise that resolves to an array of contractor objects.
+ */
+export const getContractorsByIds = async (contractorIds: string[]): Promise<any[]> => {
+  // If there are no IDs, return an empty array immediately.
+  if (!contractorIds || contractorIds.length === 0) {
+    return [];
+  }
+
+  const contractors: any[] = [];
+  // Firestore 'in' queries are limited to 30 items. Process in chunks if necessary.
+  const chunks = [];
+  for (let i = 0; i < contractorIds.length; i += 30) {
+    chunks.push(contractorIds.slice(i, i + 30));
+  }
+
+  try {
+    for (const chunk of chunks) {
+      if (chunk.length === 0) continue;
+      
+      // Query the 'contractors' collection.
+      const q = query(collection(db, 'contractors'), where(documentId(), 'in', chunk));
+      const querySnapshot = await getDocs(q);
+      
+      querySnapshot.forEach((doc) => {
+        contractors.push({ id: doc.id, ...doc.data() });
+      });
+    }
+    console.log(`Successfully fetched ${contractors.length} contractor profiles.`);
+    return contractors;
+
+  } catch (error) {
+    console.error("Error fetching contractors by IDs:", error);
+    // Return an empty array in case of an error to prevent crashes.
+    return [];
+  }
+};
+
+// You may need to add this service to the default export if one exists
+const contractorService = {
+  // ... any existing functions
+  getContractorsByIds,
+  getContractorProfileById,
+  getLandlordContractors,
+  searchContractors,
+  updateContractorProfile,
+  addContractorToRolodex,
+  removeContractorFromRolodex,
+  updateContractorAvailability,
+  updateContractorSkills,
+  getRecommendedContractors,
+};
+
+export default contractorService;
 
 /**
  * RECOMMENDED: Export the new standardized service for new code

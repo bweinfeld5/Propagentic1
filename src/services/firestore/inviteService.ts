@@ -408,18 +408,17 @@ export const validateInviteCode = async (code: string): Promise<{
 /**
  * Accept a tenant invite using the new HTTP Cloud Function
  */
-export const acceptTenantInvite = async (inviteCode: string): Promise<{
+export const acceptTenantInvite = async (payload: { inviteCode: string; unitId?: string }): Promise<{
   success: boolean;
   message: string;
   propertyId?: string;
   propertyAddress?: string;
 }> => {
   try {
-    if (!inviteCode) {
+    if (!payload.inviteCode) {
       return { success: false, message: 'Invite code is required' };
     }
 
-    // Get the current user's ID token
     const currentUser = auth.currentUser;
     if (!currentUser) {
       return { success: false, message: 'User must be authenticated' };
@@ -427,22 +426,28 @@ export const acceptTenantInvite = async (inviteCode: string): Promise<{
 
     const token = await currentUser.getIdToken();
 
-    // Call the HTTP Cloud Function
-    const response = await fetch('https://us-central1-propagentic.cloudfunctions.net/acceptTenantInvite', {
+    // The backend URL for the HTTP function
+    const functionUrl = 'https://us-central1-propagentic.cloudfunctions.net/acceptTenantInvite';
+
+    console.log(`Calling acceptTenantInvite function at ${functionUrl} with payload:`, payload);
+
+    const response = await fetch(functionUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ inviteCode }),
+      // Ensure the entire payload, including unitId, is sent
+      body: JSON.stringify(payload),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
+      console.error('Error response from acceptTenantInvite:', data);
       return {
         success: false,
-        message: data.message || `HTTP ${response.status}: ${response.statusText}`
+        message: data.message || `HTTP Error: ${response.status}`
       };
     }
 
@@ -454,10 +459,10 @@ export const acceptTenantInvite = async (inviteCode: string): Promise<{
     };
 
   } catch (error) {
-    console.error('Error accepting tenant invite:', error);
+    console.error('Fatal error calling acceptTenantInvite:', error);
     return {
       success: false,
-      message: 'Failed to join property. Please try again.'
+      message: 'A network or unexpected error occurred. Please try again.'
     };
   }
 };

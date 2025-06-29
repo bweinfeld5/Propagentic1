@@ -52,7 +52,10 @@ const TenantInviteModal: React.FC<TenantInviteModalProps> = ({
       console.log('🔄 Accepting tenant invite for user:', currentUser.uid);
       
       // Call the new acceptTenantInvite service
-      const result = await inviteService.acceptTenantInvite(validatedProperty.inviteCode);
+      const result = await inviteService.acceptTenantInvite({
+        inviteCode: validatedProperty.inviteCode,
+        unitId: validatedProperty.unitId || undefined
+      });
       
       if (result.success) {
         // Refresh user data to get updated profile with property

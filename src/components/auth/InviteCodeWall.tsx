@@ -58,7 +58,10 @@ const InviteCodeWall: React.FC<InviteCodeWallProps> = ({ onInviteValidated }) =>
       console.log('🔄 Accepting tenant invite for user:', currentUser.uid);
       
       // Call the new acceptTenantInvite service
-      const result = await inviteService.acceptTenantInvite(propertyInfo.inviteCode);
+      const result = await inviteService.acceptTenantInvite({
+        inviteCode: propertyInfo.inviteCode,
+        unitId: propertyInfo.unitId || undefined 
+      });
       
       if (result.success) {
         console.log('✅ Tenant invite accepted successfully');

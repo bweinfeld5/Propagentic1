@@ -25,6 +25,13 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useDemoMode } from '../../context/DemoModeContext';
 import dataService from '../../services/dataService';
 import landlordProfileService from '../../services/firestore/landlordProfileService';
+import { getPropertyById } from '../../services/firestore/propertyService';
+import maintenanceService from '../../services/firestore/maintenanceService';
+import contractorService from '../../services/firestore/contractorService';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { toast } from 'react-hot-toast';
+import { getDoc, doc } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 import CommunicationCenter from '../../components/communication/CommunicationCenter';
 import InviteTenantModal from '../../components/landlord/InviteTenantModal';
 import AddPropertyModal from '../../components/landlord/AddPropertyModal';
@@ -33,6 +40,7 @@ import AcceptedTenantsSection from '../../components/landlord/AcceptedTenantsSec
 import PreferredContractorsGrid from '../../components/landlord/PreferredContractorsGrid';
 import AddContractorModal from '../../components/landlord/AddContractorModal';
 import SMSTestPanel from '../../components/landlord/SMSTestPanel';
+import UnitCard from '../../components/landlord/UnitCard';
 
 // Phase 1.2 Components
 import GlobalSearch from '../../components/search/GlobalSearch';
@@ -67,7 +75,12 @@ interface Property {
   monthlyRevenue?: number;
   isOccupied?: boolean;
   occupiedUnits?: number;
-  units?: number;
+  units?: {
+    [unitId: string]: {
+      capacity: number;
+      tenants: string[];
+    };
+  } | number; // Keep backward compatibility with old number format
   updatedAt?: Date;
   lastUpdated?: Date;
   type?: string;
@@ -143,6 +156,20 @@ const LandlordDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [propertiesLoaded, setPropertiesLoaded] = useState<boolean>(false);
   
+  // Add new state for maintenance requests with detailed information
+  const [maintenanceRequests, setMaintenanceRequests] = useState<any[]>([]);
+  const [isLoadingMaintenance, setIsLoadingMaintenance] = useState<boolean>(false);
+  
+  // Add new state for contractors and assignment tracking
+  const [contractors, setContractors] = useState<any[]>([]);
+  const [isAssigning, setIsAssigning] = useState<string | null>(null); // To track which request is being updated
+  
+  // Add state for tenant information caching
+  const [tenantCache, setTenantCache] = useState<{[tenantId: string]: any}>({});
+  const [enhancedTickets, setEnhancedTickets] = useState<any[]>([]);
+  const [hoveredTicket, setHoveredTicket] = useState<string | null>(null);
+  const [deletingTicket, setDeletingTicket] = useState<string | null>(null);
+  
   // Phase 1.2 State
   const [currentView, setCurrentView] = useState<string>('dashboard');
   const [showGlobalSearch, setShowGlobalSearch] = useState<boolean>(false);
@@ -155,9 +182,84 @@ const LandlordDashboard: React.FC = () => {
   const [showEditPropertyModal, setShowEditPropertyModal] = useState<boolean>(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   
+  // State for pre-filling invite modal
+  const [prefilledInviteData, setPrefilledInviteData] = useState<{
+    propertyId?: string;
+    propertyName?: string;
+    unitId?: string;
+  }>({});
+  
   // Contractor modal state
   const [showAddContractorModal, setShowAddContractorModal] = useState<boolean>(false);
   const [editingContractor, setEditingContractor] = useState<any>(null);
+
+  // Efficient batch fetching of maintenance requests when properties change
+  useEffect(() => {
+    const fetchMaintenanceRequests = async () => {
+      if (properties.length === 0) {
+        setTickets([]);
+        setMaintenanceRequests([]);
+        return;
+      }
+
+      setIsLoadingMaintenance(true);
+
+      // Step 1: Aggregate all maintenance request IDs from all properties
+      const requestIds = properties.flatMap(p => (p as any).maintenanceRequests || []);
+      
+      if (requestIds.length === 0) {
+        setTickets([]);
+        setMaintenanceRequests([]);
+        setIsLoadingMaintenance(false);
+        return;
+      }
+
+      console.log(`Found ${requestIds.length} maintenance request IDs to fetch.`);
+
+      try {
+        // Step 2: Fetch all requests in a single, efficient batch
+        const fetchedRequests = await maintenanceService.getMaintenanceRequestsByIds(requestIds);
+        
+        // Step 3: Map fetched data to the 'Ticket' interface and add property names
+        const ticketsData = fetchedRequests.map((request: any) => {
+          const property = properties.find(p => (p as any).maintenanceRequests?.includes(request.id));
+          const propertyData = property as any;
+          
+          return {
+            ...request,
+            propertyName: propertyData ? (propertyData.name || propertyData.nickname || formatAddress(propertyData)) : 'Unknown Property',
+            propertyAddress: propertyData ? (typeof propertyData.address === 'string' 
+              ? propertyData.address 
+              : `${propertyData.address?.street || ''} ${propertyData.address?.city || ''}`.trim() || 
+                `${propertyData.street || ''} ${propertyData.city || ''}`.trim() || 
+                'Address not available') : 'Address not available'
+          };
+        });
+
+        console.log(`Successfully fetched ${ticketsData.length} maintenance tickets.`);
+        
+        // Sort by creation date (newest first)
+        const sortedTickets = ticketsData.sort((a: any, b: any) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateB - dateA;
+        });
+        
+        setTickets(sortedTickets);
+        setMaintenanceRequests(sortedTickets);
+
+      } catch (error) {
+        console.error("Error fetching maintenance requests in batch: ", error);
+        setError("Failed to load maintenance requests. Please check permissions and network.");
+        setTickets([]); // Clear tickets on error
+        setMaintenanceRequests([]);
+      } finally {
+        setIsLoadingMaintenance(false);
+      }
+    };
+
+    fetchMaintenanceRequests();
+  }, [properties]); // This effect runs whenever the 'properties' state changes
 
   const loadDashboardData = async (): Promise<void> => {
     if (!currentUser) return;
@@ -196,9 +298,7 @@ const LandlordDashboard: React.FC = () => {
         }
       );
 
-      // Load maintenance tickets
-      const ticketsData = await dataService.getTicketsForCurrentUser();
-      setTickets(ticketsData);
+      // Maintenance requests will be loaded via useEffect when properties change
 
       // Load landlord profile data and accepted tenants
       try {
@@ -259,6 +359,69 @@ const LandlordDashboard: React.FC = () => {
     loadDashboardData();
   }, [currentUser, isDemoMode]);
 
+  // Fetch contractors when component loads
+  useEffect(() => {
+    const loadContractors = async () => {
+      if (currentUser) {
+        console.log("STEP 1: Fetching landlord profile for landlord:", currentUser.uid);
+        try {
+          const landlordProfile = await landlordProfileService.getLandlordProfile(currentUser.uid);
+          const contractorIds = landlordProfile?.contractors || [];
+          
+          console.log(`STEP 2: Found ${contractorIds.length} contractor IDs in profile.`);
+
+          if (contractorIds.length > 0) {
+            // Use the new service function to get full contractor profiles
+            console.log("STEP 3: Fetching full profiles for contractor IDs...");
+            const fetchedContractors = await contractorService.getContractorsByIds(contractorIds);
+            setContractors(fetchedContractors);
+          } else {
+            // If there are no contractor IDs, ensure the state is an empty array.
+            setContractors([]);
+          }
+        } catch (error) {
+          console.error("Error loading contractors:", error);
+          toast.error("Could not load your list of contractors.");
+          setContractors([]); // Reset state on error
+        }
+      }
+    };
+    loadContractors();
+  }, [currentUser]);
+
+  // Enhance tickets with tenant information when tickets change
+  useEffect(() => {
+    const enhanceTicketsWithTenantInfo = async () => {
+      if (tickets.length === 0) {
+        setEnhancedTickets([]);
+        return;
+      }
+
+      const enhanced = await Promise.all(
+        tickets.map(async (ticket) => {
+          let tenantInfo = { name: 'Unknown Tenant', email: '', phone: '' };
+          
+          if (ticket.tenantId) {
+            tenantInfo = await fetchTenantInfo(ticket.tenantId);
+          } else if (ticket.submittedBy) {
+            tenantInfo = await fetchTenantInfo(ticket.submittedBy);
+          }
+
+          return {
+            ...ticket,
+            tenantInfo
+          };
+        })
+      );
+
+      setEnhancedTickets(enhanced);
+    };
+
+    enhanceTicketsWithTenantInfo();
+  }, [tickets, tenantCache]);
+
+  // Maintenance requests are now automatically loaded when properties change
+
   // Handle property edit
   const handleEditProperty = (property: Property): void => {
     setEditingProperty(property);
@@ -307,10 +470,163 @@ const LandlordDashboard: React.FC = () => {
     console.log('Rate contractor:', contractor);
   };
 
+  const handleRemoveContractor = async (contractorId: string): Promise<void> => {
+    try {
+      // TODO: Implement contractor removal logic
+      console.log('Remove contractor:', contractorId);
+      // For now, remove from local state
+      setContractors(prev => prev.filter(c => c.id !== contractorId));
+      toast.success('Contractor removed successfully');
+    } catch (error) {
+      console.error('Error removing contractor:', error);
+      toast.error('Failed to remove contractor');
+    }
+  };
+
   const handleContractorSuccess = (): void => {
     // Refresh contractor data if needed
     setShowAddContractorModal(false);
     setEditingContractor(null);
+  };
+
+  const handleRefreshContractors = (): void => {
+    // Refresh contractors by re-fetching them
+    if (currentUser) {
+      const fetchContractors = async () => {
+        try {
+          const landlordProfile = await landlordProfileService.getLandlordProfile(currentUser.uid);
+          const contractorIds = landlordProfile?.contractors || [];
+
+          if (contractorIds.length > 0) {
+            const fetchedContractors = await contractorService.getContractorsByIds(contractorIds);
+            setContractors(fetchedContractors);
+          } else {
+            setContractors([]);
+          }
+        } catch (error) {
+          console.error("Error fetching contractors:", error);
+          toast.error("Could not load your list of contractors.");
+        }
+      };
+      fetchContractors();
+    }
+  };
+
+  // Handle empty slot click to open invite modal with pre-filled data
+  const handleEmptySlotClick = (propertyId: string, propertyName: string, unitId: string): void => {
+    setPrefilledInviteData({
+      propertyId,
+      propertyName,
+      unitId
+    });
+    setShowInviteTenantModal(true);
+  };
+
+  // Helper function to fetch tenant information
+  const fetchTenantInfo = async (tenantId: string) => {
+    if (tenantCache[tenantId]) {
+      return tenantCache[tenantId];
+    }
+
+    try {
+      // Try to get tenant profile first
+      const tenantProfileDoc = await getDoc(doc(db, 'tenantProfiles', tenantId));
+      let tenantInfo: any = {};
+
+      if (tenantProfileDoc.exists()) {
+        const tenantProfileData = tenantProfileDoc.data();
+        tenantInfo = {
+          name: tenantProfileData.fullName || tenantProfileData.name,
+          email: tenantProfileData.email,
+          phone: tenantProfileData.phoneNumber,
+          ...tenantProfileData
+        };
+      }
+
+      // Fallback to users collection if tenant profile doesn't have all info
+      const userDoc = await getDoc(doc(db, 'users', tenantId));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        tenantInfo = {
+          ...tenantInfo,
+          name: tenantInfo.name || userData.displayName || userData.name || `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
+          email: tenantInfo.email || userData.email,
+          phone: tenantInfo.phone || userData.phoneNumber,
+        };
+      }
+
+      // Fallback to email if no name found
+      if (!tenantInfo.name && tenantInfo.email) {
+        tenantInfo.name = tenantInfo.email.split('@')[0];
+      }
+
+      // Cache the result
+      setTenantCache(prev => ({
+        ...prev,
+        [tenantId]: tenantInfo
+      }));
+
+      return tenantInfo;
+    } catch (error) {
+      console.error(`Error fetching tenant info for ${tenantId}:`, error);
+      return { name: 'Unknown Tenant', email: '', id: tenantId };
+    }
+  };
+
+  // Handle contractor assignment to maintenance request
+  const handleAssignContractor = async (requestId: string, contractorId: string) => {
+    if (!window.confirm("Are you sure you want to assign this contractor?")) {
+      return;
+    }
+
+    setIsAssigning(requestId);
+    const toastId = toast.loading('Assigning contractor...');
+
+    try {
+      const functions = getFunctions();
+      const assignContractor = httpsCallable(functions, 'assignContractorToRequest');
+      
+      await assignContractor({ requestId, contractorId });
+
+      toast.success('Contractor assigned successfully!', { id: toastId });
+
+      // Refresh the dashboard data to show the change
+      loadDashboardData();
+
+    } catch (error: any) {
+      console.error("Error assigning contractor:", error);
+      toast.error(`Assignment failed: ${error.message}`, { id: toastId });
+    } finally {
+      setIsAssigning(null);
+    }
+  };
+
+  // Handle deleting a maintenance request
+  const handleDeleteMaintenanceRequest = async (requestId: string, requestTitle: string) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete the maintenance request "${requestTitle}"?\n\nThis action cannot be undone.`
+    );
+    
+    if (!confirmed) return;
+
+    setDeletingTicket(requestId);
+    const toastId = toast.loading('Deleting maintenance request...');
+
+    try {
+      // Delete from Firestore
+      await maintenanceService.deleteMaintenanceRequest(requestId);
+      
+      // Update local state
+      setTickets(prev => prev.filter(ticket => ticket.id !== requestId));
+      setEnhancedTickets(prev => prev.filter(ticket => ticket.id !== requestId));
+      
+      toast.success('Maintenance request deleted successfully!', { id: toastId });
+    } catch (error: any) {
+      console.error("Error deleting maintenance request:", error);
+      toast.error(`Failed to delete request: ${error.message}`, { id: toastId });
+    } finally {
+      setDeletingTicket(null);
+    }
   };
 
   // Handle bulk operations
@@ -410,6 +726,26 @@ const LandlordDashboard: React.FC = () => {
       view: 'import'
     }
   ];
+
+  // Add this helper function inside the LandlordDashboard component
+  const getOccupancyDetails = (property: Property) => {
+    if (!property.units || typeof property.units !== 'object' || Object.keys(property.units).length === 0) {
+      return {
+        totalUnits: 0,
+        occupiedTenants: 0,
+        totalCapacity: 0,
+        occupancyPercentage: 0,
+      };
+    }
+
+    const units = Object.values(property.units);
+    const totalUnits = units.length;
+    const occupiedTenants = units.reduce((sum, unit) => sum + (unit.tenants?.length || 0), 0);
+    const totalCapacity = units.reduce((sum, unit) => sum + (unit.capacity || 0), 0);
+    const occupancyPercentage = totalCapacity > 0 ? Math.round((occupiedTenants / totalCapacity) * 100) : 0;
+
+    return { totalUnits, occupiedTenants, totalCapacity, occupancyPercentage };
+  };
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -664,28 +1000,6 @@ const LandlordDashboard: React.FC = () => {
     <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Add invitation statistics section if we have landlord stats */}
-        {landlordStats && landlordStats.totalInvitesSent > 0 && (
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 shadow-sm lg:col-span-4">
-            <div className="text-center">
-              <h4 className="font-semibold text-blue-900 mb-2">Invitation Statistics</h4>
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div>
-                  <div className="font-bold text-blue-700">{landlordStats.totalInvitesSent}</div>
-                  <div className="text-blue-600">Invites Sent</div>
-                </div>
-                <div>
-                  <div className="font-bold text-blue-700">{landlordStats.totalInvitesAccepted}</div>
-                  <div className="text-blue-600">Accepted</div>
-                </div>
-                <div>
-                  <div className="font-bold text-blue-700">{Math.round(landlordStats.inviteAcceptanceRate)}%</div>
-                  <div className="text-blue-600">Success Rate</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
         <div className="bg-gradient-to-br from-white to-orange-50 p-6 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
@@ -715,15 +1029,15 @@ const LandlordDashboard: React.FC = () => {
         <div className="bg-gradient-to-br from-white to-orange-50 p-6 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Invite Success Rate</p>
+              <p className="text-sm text-gray-600">Active Maintenance Requests</p>
               <p className="text-2xl font-bold text-gray-900">
-                {landlordStats?.inviteAcceptanceRate 
-                  ? Math.round(landlordStats.inviteAcceptanceRate)
-                  : 0}%
+                {maintenanceRequests.filter(request => 
+                  request.status !== 'completed' && request.status !== 'cancelled'
+                ).length}
               </p>
             </div>
             <div className="p-3 bg-orange-100 rounded-lg">
-              <ChartBarIcon className="w-6 h-6 text-orange-600" />
+              <WrenchScrewdriverIcon className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>
@@ -746,7 +1060,7 @@ const LandlordDashboard: React.FC = () => {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Accepted Tenants</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Tenants</h3>
           <div className="space-y-3">
             {tenants.slice(0, 3).map((tenant) => (
               <div key={tenant.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-white rounded-lg border border-orange-100">
@@ -754,7 +1068,9 @@ const LandlordDashboard: React.FC = () => {
                   <div className="font-medium text-gray-900">
                     {tenant.displayName || tenant.name || tenant.email}
                   </div>
-                  <div className="text-sm text-gray-600">{tenant.propertyName}</div>
+                  <div className="text-sm text-gray-600">
+                    {tenant.propertyName}{tenant.unitNumber ? ` • Unit ${tenant.unitNumber}` : ''}
+                  </div>
                   {tenant.inviteCode && (
                     <div className="text-xs text-gray-500">Code: {tenant.inviteCode}</div>
                   )}
@@ -762,10 +1078,36 @@ const LandlordDashboard: React.FC = () => {
                 <div className="text-right">
                   <div className="font-semibold text-orange-600">
                     {(() => {
-                      const joinDate = tenant.acceptedAt || tenant.joinedDate;
+                      const joinDate: any = tenant.acceptedAt || tenant.joinedDate;
                       if (joinDate) {
                         try {
-                          return new Date(joinDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                          let date;
+                          // Handle Firestore Timestamp objects
+                          if (joinDate && typeof joinDate.toDate === 'function') {
+                            date = joinDate.toDate();
+                          }
+                          // Handle Date objects
+                          else if (joinDate instanceof Date) {
+                            date = joinDate;
+                          }
+                          // Handle string dates
+                          else if (typeof joinDate === 'string') {
+                            date = new Date(joinDate);
+                          }
+                          // Handle epoch timestamps
+                          else if (typeof joinDate === 'number') {
+                            date = new Date(joinDate);
+                          }
+                          else {
+                            return 'Recent';
+                          }
+                          
+                          // Check if the resulting date is valid
+                          if (isNaN(date.getTime())) {
+                            return 'Recent';
+                          }
+                          
+                          return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         } catch (e) {
                           return 'Recent';
                         }
@@ -887,8 +1229,7 @@ const LandlordDashboard: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {properties.map((property) => {
-                const units = safeNumber(property.units, 1);
-                const occupiedUnits = safeNumber(property.occupiedUnits, 0);
+                const { totalUnits, occupiedTenants, totalCapacity, occupancyPercentage } = getOccupancyDetails(property);
                 const monthlyRevenue = safeNumber(property.monthlyRevenue || property.monthlyRent, 0);
                 
                 return (
@@ -925,13 +1266,13 @@ const LandlordDashboard: React.FC = () => {
                       <div className="flex items-center gap-4">
                         <div className="text-right">
                           <div className="font-semibold text-gray-900">
-                            {occupiedUnits}/{units} units
+                            {occupiedTenants}/{totalCapacity} Occupied
                           </div>
                           <div className="text-sm text-gray-600">
-                            ${monthlyRevenue.toLocaleString()}/month
+                            {totalUnits} {totalUnits === 1 ? 'Unit' : 'Units'}
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
-                            {units > 0 ? Math.round((occupiedUnits / units) * 100) : 0}% occupied
+                            {occupancyPercentage}% occupied
                           </div>
                         </div>
                         <div className="flex items-center gap-2 ml-4">
@@ -958,6 +1299,23 @@ const LandlordDashboard: React.FC = () => {
                         </div>
                       </div>
                     </div>
+
+                    {/* Render the units for this property */}
+                    {property.units && typeof property.units === 'object' && Object.keys(property.units).length > 0 && (
+                      <div className="mt-2">
+                        {Object.entries(property.units).map(([unitId, unitData]) => (
+                          <UnitCard
+                            key={unitId}
+                            unitId={unitId}
+                            unitData={unitData}
+                            allTenants={tenants}
+                            propertyId={property.id}
+                            propertyName={getPropertyName(property)}
+                            onEmptySlotClick={handleEmptySlotClick}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -973,7 +1331,10 @@ const LandlordDashboard: React.FC = () => {
       {/* Add Tenant Button */}
       <div className="mb-6 flex justify-end">
         <button
-          onClick={() => setShowInviteTenantModal(true)}
+          onClick={() => {
+            setPrefilledInviteData({}); // Clear any pre-filled data
+            setShowInviteTenantModal(true);
+          }}
           className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
         >
           <UserGroupIcon className="w-4 h-4" />
@@ -982,7 +1343,7 @@ const LandlordDashboard: React.FC = () => {
       </div>
       
       {/* Enhanced Tenants Section */}
-      <AcceptedTenantsSection properties={properties} />
+      <AcceptedTenantsSection properties={properties as any} />
     </div>
   );
 
@@ -992,10 +1353,13 @@ const LandlordDashboard: React.FC = () => {
         {/* Main contractors grid - takes up 2 columns on large screens */}
         <div className="lg:col-span-2">
           <PreferredContractorsGrid
-            landlordId={currentUser?.uid || ''}
+            contractors={contractors}
             onAddContractor={handleAddContractor}
             onEditContractor={handleEditContractor}
             onRateContractor={handleRateContractor}
+            onRemoveContractor={handleRemoveContractor}
+            isLoading={isLoading}
+            onRefresh={handleRefreshContractors}
           />
         </div>
         
@@ -1007,78 +1371,304 @@ const LandlordDashboard: React.FC = () => {
     </div>
   );
 
-  const renderMaintenanceView = (): JSX.Element => (
-    <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
-      <div className="bg-gradient-to-br from-white to-orange-50 rounded-xl border border-orange-100 shadow-sm hover:shadow-lg transition-shadow">
-        <div className="p-6 border-b border-orange-100">
-          <h3 className="text-lg font-semibold text-gray-900">Maintenance Requests</h3>
-        </div>
-        
-        <div className="p-6">
-          {tickets.length === 0 ? (
-            <div className="text-center py-12">
-              <WrenchScrewdriverIcon className="w-16 h-16 mx-auto mb-4 text-orange-300" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Maintenance Requests</h3>
-              <p className="text-gray-600">
-                Maintenance requests from tenants will appear here for tracking and management.
-              </p>
+  const renderMaintenanceView = (): JSX.Element => {
+    const ongoingTickets = enhancedTickets.filter(t => t.status === 'pending' || t.status === 'in-progress');
+    const finishedTickets = enhancedTickets.filter(t => t.status === 'completed' || t.status === 'closed');
+
+    const formatDate = (date: any) => {
+      if (!date) return 'Unknown';
+      try {
+        let dateObj;
+        if (date.toDate && typeof date.toDate === 'function') {
+          dateObj = date.toDate();
+        } else if (date.seconds) {
+          dateObj = new Date(date.seconds * 1000);
+        } else {
+          dateObj = new Date(date);
+        }
+        return dateObj.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        });
+      } catch {
+        return 'Unknown';
+      }
+    };
+
+    const getPriorityColor = (priority: string) => {
+      switch (priority?.toLowerCase()) {
+        case 'high':
+        case 'urgent':
+          return 'border-red-200 bg-gradient-to-br from-red-50 to-red-100';
+        case 'medium':
+          return 'border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100';
+        case 'low':
+          return 'border-green-200 bg-gradient-to-br from-green-50 to-green-100';
+        default:
+          return 'border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100';
+      }
+    };
+
+    const getStatusColor = (status: string) => {
+      switch (status?.toLowerCase()) {
+        case 'pending':
+          return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        case 'in-progress':
+          return 'bg-blue-100 text-blue-800 border-blue-200';
+        case 'completed':
+          return 'bg-green-100 text-green-800 border-green-200';
+        case 'closed':
+          return 'bg-gray-100 text-gray-800 border-gray-200';
+        default:
+          return 'bg-orange-100 text-orange-800 border-orange-200';
+      }
+    };
+
+    return (
+      <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Ongoing Section */}
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+                <WrenchScrewdriverIcon className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Ongoing Requests</h3>
+              <span className="px-3 py-1 text-sm font-medium bg-orange-100 text-orange-800 rounded-full">
+                {ongoingTickets.length}
+              </span>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {tickets.map((ticket) => (
-                <div key={ticket.id} className="p-4 border border-orange-200 rounded-lg hover:border-orange-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-white transition-all">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        ticket.priority === 'high' 
-                          ? 'bg-red-100'
-                          : ticket.priority === 'medium'
-                          ? 'bg-yellow-100'
-                          : 'bg-green-100'
-                      }`}>
-                        <WrenchScrewdriverIcon className={`w-5 h-5 ${
-                          ticket.priority === 'high' 
-                            ? 'text-red-600'
-                            : ticket.priority === 'medium'
-                            ? 'text-yellow-600'
-                            : 'text-green-600'
-                        }`} />
+            
+            {ongoingTickets.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-xl border border-orange-200 shadow-sm">
+                <WrenchScrewdriverIcon className="w-16 h-16 mx-auto mb-4 text-orange-300" />
+                <p className="text-gray-600 font-medium">No ongoing maintenance requests</p>
+                <p className="text-sm text-gray-500 mt-1">New requests from tenants will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {ongoingTickets.map((ticket) => (
+                  <div 
+                    key={ticket.id} 
+                    className={`relative border-2 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 ${getPriorityColor(ticket.priority)}`}
+                    onMouseEnter={() => setHoveredTicket(ticket.id)}
+                    onMouseLeave={() => setHoveredTicket(null)}
+                  >
+                    {/* Header */}
+                    <div className="p-5 border-b border-orange-200/50">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-gray-900 text-lg mb-1">
+                            {ticket.title || 'Maintenance Request'}
+                          </h4>
+                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <span className="flex items-center gap-1">
+                              <HomeIcon className="w-4 h-4" />
+                              {ticket.propertyName}
+                            </span>
+                            {ticket.unitNumber && (
+                              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                                Unit {ticket.unitNumber}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-3 py-1 text-xs font-bold rounded-full border ${getStatusColor(ticket.status)}`}>
+                            {(ticket.status || 'pending').toUpperCase()}
+                          </span>
+                          
+                          {/* Delete button - appears on hover */}
+                          {(hoveredTicket === ticket.id || deletingTicket === ticket.id) && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteMaintenanceRequest(ticket.id, ticket.title || 'Maintenance Request');
+                              }}
+                              disabled={deletingTicket === ticket.id}
+                              className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
+                              title="Delete maintenance request"
+                            >
+                              {deletingTicket === ticket.id ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              ) : (
+                                <TrashIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900">
-                          {ticket.title || ticket.description || 'Maintenance Request'}
-                        </h4>
-                        <p className="text-sm text-gray-600">
-                          {ticket.propertyName || 'Property'} • {ticket.category || 'General'}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {ticket.createdAt ? new Date(ticket.createdAt.toString()).toLocaleDateString() : ''}
-                        </p>
+
+                      {/* Tenant Info */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                          <UserIcon className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">{ticket.tenantInfo?.name || 'Unknown Tenant'}</p>
+                          {ticket.tenantInfo?.email && (
+                            <p className="text-xs text-gray-500">{ticket.tenantInfo.email}</p>
+                          )}
+                        </div>
+                        <div className="ml-auto text-right">
+                          <p className="text-xs text-gray-500">Created</p>
+                          <p className="text-sm font-medium text-gray-700">{formatDate(ticket.createdAt)}</p>
+                        </div>
                       </div>
+
+                      {/* Description */}
+                      {ticket.description && (
+                        <div className="bg-white/60 rounded-lg p-3 border border-orange-100">
+                          <p className="text-sm text-gray-700 leading-relaxed">{ticket.description}</p>
+                        </div>
+                      )}
                     </div>
-                    <div className="text-right">
-                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        ticket.status === 'completed' 
-                          ? 'bg-green-100 text-green-800' 
-                          : ticket.status === 'in-progress'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {ticket.status || 'pending'}
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Priority: {ticket.priority || 'medium'}
-                      </p>
+
+                    {/* Assignment Section */}
+                    <div className="p-5">
+                      {ticket.status === 'pending' && (
+                        <div>
+                          <label htmlFor={`assign-${ticket.id}`} className="block text-sm font-bold text-gray-800 mb-2">
+                            Assign Contractor
+                          </label>
+                          <div className="flex gap-3">
+                            <select
+                              id={`assign-${ticket.id}`}
+                              disabled={isAssigning === ticket.id || contractors.length === 0}
+                              onChange={(e) => e.target.value && handleAssignContractor(ticket.id, e.target.value)}
+                              className="flex-1 border-2 border-orange-200 rounded-lg shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <option value="">
+                                {contractors.length === 0 ? 'No contractors found' : 'Select a contractor...'}
+                              </option>
+                              {/* This maps over the `contractors` array from the component's state */}
+                              {contractors.map(contractor => (
+                                <option key={contractor.id} value={contractor.id}>
+                                  {contractor.name || contractor.businessName || contractor.email}
+                                </option>
+                              ))}
+                            </select>
+                            {isAssigning === ticket.id && (
+                              <div className="flex items-center px-3">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-500"></div>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-600 mt-2 flex items-center gap-1">
+                            <span className="w-1 h-1 bg-orange-500 rounded-full"></span>
+                            Status will become "in-progress" upon assignment
+                          </p>
+                        </div>
+                      )}
+                      {ticket.status === 'in-progress' && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <p className="text-sm font-bold text-blue-900 mb-1">Assigned Contractor</p>
+                          <p className="text-blue-800">
+                            {contractors.find(c => c.id === ticket.contractorId)?.name || 'Unknown Contractor'}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Finished Section */}
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                <DocumentTextIcon className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Completed Requests</h3>
+              <span className="px-3 py-1 text-sm font-medium bg-green-100 text-green-800 rounded-full">
+                {finishedTickets.length}
+              </span>
             </div>
-          )}
+            
+            {finishedTickets.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-xl border border-green-200 shadow-sm">
+                <DocumentTextIcon className="w-16 h-16 mx-auto mb-4 text-green-300" />
+                <p className="text-gray-600 font-medium">No completed requests</p>
+                <p className="text-sm text-gray-500 mt-1">Finished work will be tracked here</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {finishedTickets.map((ticket) => (
+                  <div 
+                    key={ticket.id} 
+                    className="relative border-2 border-green-200 rounded-xl shadow-sm bg-gradient-to-br from-green-50 to-green-100 opacity-90"
+                    onMouseEnter={() => setHoveredTicket(ticket.id)}
+                    onMouseLeave={() => setHoveredTicket(null)}
+                  >
+                    <div className="p-5">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-gray-800 mb-1">{ticket.title || 'Maintenance Request'}</h4>
+                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <span className="flex items-center gap-1">
+                              <HomeIcon className="w-4 h-4" />
+                              {ticket.propertyName}
+                            </span>
+                            {ticket.unitNumber && (
+                              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                                Unit {ticket.unitNumber}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-3 py-1 text-xs font-bold rounded-full border ${getStatusColor(ticket.status)}`}>
+                            {(ticket.status || 'completed').toUpperCase()}
+                          </span>
+                          
+                          {/* Delete button - appears on hover */}
+                          {(hoveredTicket === ticket.id || deletingTicket === ticket.id) && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteMaintenanceRequest(ticket.id, ticket.title || 'Maintenance Request');
+                              }}
+                              disabled={deletingTicket === ticket.id}
+                              className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
+                              title="Delete maintenance request"
+                            >
+                              {deletingTicket === ticket.id ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              ) : (
+                                <TrashIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full flex items-center justify-center">
+                            <UserIcon className="w-3 h-3 text-white" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">
+                            {ticket.tenantInfo?.name || 'Unknown Tenant'}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500">Completed</p>
+                          <p className="text-sm font-medium text-gray-700">{formatDate(ticket.updatedAt)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderDocumentsView = (): JSX.Element => (
     <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
@@ -1215,10 +1805,17 @@ const LandlordDashboard: React.FC = () => {
       {showInviteTenantModal && (
         <InviteTenantModal
           isOpen={showInviteTenantModal}
-          onClose={() => setShowInviteTenantModal(false)}
+          onClose={() => {
+            setShowInviteTenantModal(false);
+            setPrefilledInviteData({}); // Clear pre-filled data when closing
+          }}
+          propertyId={prefilledInviteData.propertyId}
+          propertyName={prefilledInviteData.propertyName}
+          initialUnitId={prefilledInviteData.unitId}
           properties={properties as any}
           onInviteSuccess={() => {
             setShowInviteTenantModal(false);
+            setPrefilledInviteData({}); // Clear pre-filled data on success
             // Refresh dashboard data to get updated landlord profile stats
             loadDashboardData();
           }}

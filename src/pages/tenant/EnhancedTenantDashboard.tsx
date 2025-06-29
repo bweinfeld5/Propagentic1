@@ -25,6 +25,7 @@ import { db } from '../../firebase/config';
 import { collection, query, where, orderBy, onSnapshot, getDocs, doc, getDoc } from 'firebase/firestore';
 import EmptyStateCard from '../../components/EmptyStateCard';
 import InvitationBanner from '../../components/InvitationBanner';
+
 import { Skeleton } from '../../components/ui/Skeleton';
 import UnifiedHeader from '../../components/layout/UnifiedHeader';
 import NotificationPanel from '../../components/layout/NotificationPanel';
@@ -33,6 +34,7 @@ import dataService from '../../services/dataService';
 
 import EnhancedRequestHistory from '../../components/tenant/EnhancedRequestHistory';
 import DashboardOverview from '../../components/tenant/DashboardOverview';
+import '../../utils/debugMaintenanceRequests'; // Make debug tools available
 
 interface Ticket {
   id: string;
@@ -75,34 +77,37 @@ const DEMO_TICKETS: Ticket[] = [
     id: 'demo-1',
     issueTitle: 'Leaky faucet in kitchen',
     description: 'The kitchen faucet has been dripping constantly for the past week.',
-    status: 'open',
+    status: 'pending',
     urgency: 'medium',
     category: 'plumbing',
     location: 'Kitchen',
     createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    submittedBy: 'demo-user'
+    submittedBy: 'demo-user',
+    source: 'tickets'
   },
   {
     id: 'demo-2',
-    issueTitle: 'AC not cooling properly',
-    description: 'The air conditioning unit is running but not cooling the apartment effectively.',
+    issueTitle: 'AI Chat: HVAC Issue',
+    description: 'The air conditioning unit is running but not cooling the apartment effectively. Created via AI chat interface.',
     status: 'in_progress',
     urgency: 'high',
     category: 'hvac',
     location: 'Living Room',
     createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    submittedBy: 'demo-user'
+    submittedBy: 'demo-user',
+    source: 'maintenanceRequests'
   },
   {
     id: 'demo-3',
     issueTitle: 'Broken cabinet door',
     description: 'The cabinet door under the bathroom sink fell off its hinges.',
-    status: 'resolved',
+    status: 'completed',
     urgency: 'low',
     category: 'structural',
     location: 'Bathroom',
     createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-    submittedBy: 'demo-user'
+    submittedBy: 'demo-user',
+    source: 'tickets'
   }
 ];
 
@@ -136,6 +141,8 @@ const EnhancedTenantDashboard: React.FC = () => {
   // Demo mode flag
   const [isDemoMode, setIsDemoMode] = useState(false);
 
+
+
   // Redirect if not authenticated or not a tenant
   useEffect(() => {
     if (!currentUser) {
@@ -159,6 +166,13 @@ const EnhancedTenantDashboard: React.FC = () => {
 
   // Fetch tenant data (invites and properties)
   useEffect(() => {
+    console.log('🔄 [DEBUG] useEffect(fetchTenantData) triggered - dependencies changed');
+    console.log('🔄 [DEBUG] Dependencies:', { 
+      currentUser: currentUser?.uid, 
+      userProfile: userProfile?.userType,
+      navigate: !!navigate 
+    });
+    
     const fetchTenantData = async () => {
       console.log('🔍 [DEBUG] Starting fetchTenantData');
       console.log('🔍 [DEBUG] Current User:', currentUser?.uid);
@@ -168,6 +182,20 @@ const EnhancedTenantDashboard: React.FC = () => {
         console.log('❌ [DEBUG] No current user, redirecting to login');
         navigate('/login');
         return;
+      }
+
+      // Check if user is a tenant for debugging
+      const isTenant = userProfile?.userType === 'tenant' || userProfile?.role === 'tenant';
+      console.log('🔍 [DEBUG] User type check:', { 
+        userType: userProfile?.userType, 
+        role: userProfile?.role, 
+        isTenant 
+      });
+      
+      if (!isTenant) {
+        console.log('✅ [DEBUG] Not a tenant');
+      } else {
+        console.log('🔍 [DEBUG] User is a tenant, will check property status');
       }
       
       setIsLoading(true);
@@ -204,8 +232,12 @@ const EnhancedTenantDashboard: React.FC = () => {
           
           if (propertyIds.length === 0) {
             console.log('⚠️  [DEBUG] No properties found in tenant profile');
+            console.log('🔧 [DEBUG] CLEARING tenantProperties (no properties in profile)');
             setTenantProperties([]);
             setIsDemoMode(false); // Don't use demo mode if profile exists but no properties
+            
+            // TenantInviteGuard will handle showing invite modal
+            console.log('🔍 [DEBUG] No properties in tenant profile - TenantInviteGuard will handle invite modal');
           } else {
             // Fetch all property documents using Promise.all for efficiency
             console.log(`🔍 [DEBUG] Fetching ${propertyIds.length} properties...`);
@@ -260,17 +292,30 @@ const EnhancedTenantDashboard: React.FC = () => {
             
             // Show both valid properties and error messages
             const allPropertiesWithErrors = properties; // Include both valid and error properties
+            console.log('🔧 [DEBUG] Setting tenantProperties to:', allPropertiesWithErrors);
             setTenantProperties(allPropertiesWithErrors);
             
+            console.log('🔍 [DEBUG] Property analysis:', {
+              totalProperties: properties.length,
+              validProperties: validProperties.length,
+              errorProperties: errorProperties.length,
+              isTenant,
+              propertyIds
+            });
+
             if (validProperties.length > 0) {
               setIsDemoMode(false);
+              console.log('✅ [DEBUG] Valid properties found - TenantInviteGuard will handle invite modal logic');
             } else if (errorProperties.length > 0) {
               // All properties had errors - show error state but not demo mode
               setIsDemoMode(false);
+              console.log('❌ [DEBUG] All properties have errors - TenantInviteGuard will handle invite modal logic');
             } else {
               console.log('⚠️  [DEBUG] No valid properties loaded, using empty state');
+              console.log('🔧 [DEBUG] CLEARING tenantProperties (no valid properties)');
               setTenantProperties([]);
               setIsDemoMode(false);
+              console.log('🔍 [DEBUG] No properties found - TenantInviteGuard will handle invite modal');
             }
           }
         } else {
@@ -283,17 +328,23 @@ const EnhancedTenantDashboard: React.FC = () => {
           const property = await dataService.getPropertyById(userProfile.propertyId);
           if (property) {
               console.log('✅ [DEBUG] Legacy property loaded:', property);
+            console.log('🔧 [DEBUG] Setting tenantProperties to legacy property:', [property]);
             setTenantProperties([property]);
               setIsDemoMode(false);
+              console.log('✅ [DEBUG] Legacy property found - TenantInviteGuard will handle invite modal logic');
             } else {
               console.log('❌ [DEBUG] Legacy property fetch failed, showing empty state');
+              console.log('🔧 [DEBUG] CLEARING tenantProperties (legacy property fetch failed)');
               setTenantProperties([]);
               setIsDemoMode(false);
+              console.log('🔍 [DEBUG] Legacy property fetch failed - TenantInviteGuard will handle invite modal');
             }
           } else {
             console.log('⚠️  [DEBUG] No tenant profile and no legacy propertyId, showing empty state');
+            console.log('🔧 [DEBUG] CLEARING tenantProperties (no tenant profile and no legacy propertyId)');
             setTenantProperties([]);
             setIsDemoMode(false);
+            console.log('🔍 [DEBUG] No properties found - TenantInviteGuard will handle invite modal');
           }
         }
         
@@ -302,17 +353,38 @@ const EnhancedTenantDashboard: React.FC = () => {
         console.log('⚠️  [DEBUG] Falling back to demo mode due to error');
         // Only use demo mode as last resort
         setIsDemoMode(true);
+        console.log('🔧 [DEBUG] Setting tenantProperties to DEMO_PROPERTY:', [DEMO_PROPERTY]);
         setTenantProperties([DEMO_PROPERTY]);
         setIsError(false);
+        console.log('🔍 [DEBUG] Demo mode - TenantInviteGuard will handle invite modal logic');
       } finally {
         setIsLoading(false);
+        // Final debug log to see the state
+        setTimeout(() => {
+          console.log('🔍 [DEBUG] Final state after data fetch:', {
+            tenantPropertiesCount: tenantProperties.length,
+            isDemoMode,
+            isTenant: userProfile?.userType === 'tenant' || userProfile?.role === 'tenant'
+          });
+        }, 100);
       }
     };
     
     fetchTenantData();
   }, [currentUser, userProfile, navigate]);
 
-  // Fetch maintenance tickets
+  // Additional debugging effect to track state changes
+  useEffect(() => {
+    console.log('🔄 [DEBUG] tenantProperties state changed:', {
+      count: tenantProperties.length,
+      properties: tenantProperties.map(p => ({ id: p.id, hasError: !!p.error })),
+      timestamp: new Date().toISOString()
+    });
+  }, [tenantProperties]);
+
+
+
+  // Fetch maintenance tickets from both collections
   useEffect(() => {
     if (!currentUser || !userProfile) return;
 
@@ -327,34 +399,197 @@ const EnhancedTenantDashboard: React.FC = () => {
           return;
         }
         
-        const ticketsRef = collection(db, 'tickets');
-        const q = query(
-          ticketsRef,
-          where('submittedBy', '==', currentUser.uid),
-          orderBy('createdAt', 'desc')
-        );
+        const unsubscribers: Array<() => void> = [];
+        let allTickets: Ticket[] = [];
         
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-          const ticketsList = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            createdAt: doc.data().createdAt?.toDate()
-          })) as Ticket[];
-          setTickets(ticketsList);
+        // Function to merge and update tickets
+        const updateTicketsList = () => {
+          // Sort by creation date, most recent first
+          const sortedTickets = allTickets.sort((a, b) => {
+            const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return bTime - aTime;
+          });
+          setTickets(sortedTickets);
           setTicketsLoading(false);
           setPermissionError(false);
-        }, (error) => {
-          console.error('Permission error fetching tickets:', error);
-          setPermissionError(true);
-          setTicketsLoading(false);
-          // Use demo tickets on permission error
-          setTickets(DEMO_TICKETS);
-          setIsDemoMode(true);
-        });
+        };
         
-        return () => unsubscribe();
+        // 1. Listen to 'tickets' collection (legacy maintenance requests)
+        try {
+          const ticketsRef = collection(db, 'tickets');
+          const ticketsQuery = query(
+            ticketsRef,
+            where('submittedBy', '==', currentUser.uid),
+            orderBy('createdAt', 'desc')
+          );
+          
+          const ticketsUnsubscribe = onSnapshot(ticketsQuery, (snapshot) => {
+            const ticketsList = snapshot.docs.map(doc => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                status: data.status || 'pending',
+                submittedBy: data.submittedBy || currentUser.uid,
+                issueTitle: data.issueTitle || 'Maintenance Request',
+                description: data.description || 'No description provided',
+                createdAt: data.createdAt?.toDate?.() || data.createdAt || new Date(),
+                category: data.category,
+                urgency: data.urgency,
+                location: data.location,
+                photoUrl: data.photoUrl,
+                photoUrls: data.photoUrls,
+                bestTimeToContact: data.bestTimeToContact,
+                accessInstructions: data.accessInstructions,
+                updatedAt: data.updatedAt?.toDate?.() || data.updatedAt,
+                source: 'tickets', // Track source collection
+                ...data // Include any additional fields
+              };
+            }) as Ticket[];
+            
+            // Update tickets from 'tickets' collection
+            allTickets = allTickets.filter(t => t.source !== 'tickets').concat(ticketsList);
+            updateTicketsList();
+            console.log('📊 [Dashboard] Loaded', ticketsList.length, 'tickets from tickets collection');
+          }, (error) => {
+            console.warn('Error fetching from tickets collection:', error);
+          });
+          
+          unsubscribers.push(ticketsUnsubscribe);
+        } catch (error) {
+          console.warn('Failed to set up tickets collection listener:', error);
+        }
+        
+        // 2. Get maintenance requests from tenant's properties
+        const fetchMaintenanceRequestsFromProperties = async () => {
+          try {
+            console.log('🔍 [Dashboard] Fetching maintenance requests from tenant properties...');
+            
+            // Get tenant profile to find their properties
+            const tenantProfileRef = doc(db, 'tenantProfiles', currentUser.uid);
+            const tenantProfileSnap = await getDoc(tenantProfileRef);
+            
+            if (!tenantProfileSnap.exists()) {
+              console.log('📊 [Dashboard] No tenant profile found, checking legacy user profile...');
+              
+              // Fallback to legacy user profile
+              const userRef = doc(db, 'users', currentUser.uid);
+              const userSnap = await getDoc(userRef);
+              
+              if (userSnap.exists() && userSnap.data().propertyId) {
+                const propertyRef = doc(db, 'properties', userSnap.data().propertyId);
+                const propertySnap = await getDoc(propertyRef);
+                
+                if (propertySnap.exists()) {
+                  const propertyData = propertySnap.data();
+                  const requestIds = propertyData.maintenanceRequests || [];
+                  console.log('📊 [Dashboard] Found', requestIds.length, 'maintenance request IDs from legacy property');
+                  await fetchMaintenanceRequestsByIds(requestIds);
+                }
+              }
+              return;
+            }
+            
+            const tenantProfile = tenantProfileSnap.data();
+            const propertyIds = tenantProfile.properties || [];
+            console.log('📊 [Dashboard] Found', propertyIds.length, 'properties in tenant profile');
+            
+            if (propertyIds.length === 0) {
+              console.log('📊 [Dashboard] No properties found for tenant');
+              return;
+            }
+            
+            // Get all maintenance request IDs from all properties
+            const allMaintenanceRequestIds: string[] = [];
+            
+            for (const propertyId of propertyIds) {
+              try {
+                const propertyRef = doc(db, 'properties', propertyId);
+                const propertySnap = await getDoc(propertyRef);
+                
+                if (propertySnap.exists()) {
+                  const propertyData = propertySnap.data();
+                  const requestIds = propertyData.maintenanceRequests || [];
+                  allMaintenanceRequestIds.push(...requestIds);
+                  console.log('📊 [Dashboard] Property', propertyId, 'has', requestIds.length, 'maintenance requests');
+                }
+              } catch (error) {
+                console.warn('❌ [Dashboard] Failed to fetch property:', propertyId, error);
+              }
+            }
+            
+            console.log('📊 [Dashboard] Total maintenance request IDs found:', allMaintenanceRequestIds.length);
+            
+            if (allMaintenanceRequestIds.length > 0) {
+              await fetchMaintenanceRequestsByIds(allMaintenanceRequestIds);
+            }
+            
+          } catch (error) {
+            console.error('❌ [Dashboard] Error fetching maintenance requests from properties:', error);
+          }
+        };
+        
+        // Helper function to fetch maintenance requests by their IDs
+        const fetchMaintenanceRequestsByIds = async (requestIds: string[]) => {
+          try {
+            console.log('📊 [Dashboard] Fetching', requestIds.length, 'maintenance requests by ID...');
+            
+            const maintenanceRequests: any[] = [];
+            
+            // Fetch each maintenance request individually
+            for (const requestId of requestIds) {
+              try {
+                const requestRef = doc(db, 'maintenanceRequests', requestId);
+                const requestSnap = await getDoc(requestRef);
+                
+                if (requestSnap.exists()) {
+                  const data = requestSnap.data();
+                  
+                  // Convert to ticket format for consistency
+                  const ticket = {
+                    id: requestSnap.id,
+                    issueTitle: data.title || data.issueType || data.category || 'Maintenance Request',
+                    description: data.description || 'No description provided',
+                    status: data.status || 'pending',
+                    createdAt: data.timestamp?.toDate?.() || new Date(data.timestamp) || new Date(),
+                    submittedBy: data.tenantId || currentUser.uid,
+                    category: data.category || data.issueType || 'general',
+                    urgency: data.priority || 'medium',
+                    photoUrls: data.images || [],
+                    source: 'maintenanceRequests', // Track source collection
+                    originalData: data
+                  };
+                  
+                  maintenanceRequests.push(ticket);
+                } else {
+                  console.warn('📊 [Dashboard] Maintenance request not found:', requestId);
+                }
+              } catch (error) {
+                console.warn('❌ [Dashboard] Failed to fetch maintenance request:', requestId, error);
+              }
+            }
+            
+            console.log('📊 [Dashboard] Successfully fetched', maintenanceRequests.length, 'maintenance requests');
+            
+            // Update tickets from maintenance requests
+            allTickets = allTickets.filter(t => t.source !== 'maintenanceRequests').concat(maintenanceRequests as Ticket[]);
+            updateTicketsList();
+            
+          } catch (error) {
+            console.error('❌ [Dashboard] Error in fetchMaintenanceRequestsByIds:', error);
+          }
+        };
+        
+        // Initial fetch of maintenance requests from properties
+        fetchMaintenanceRequestsFromProperties();
+        
+        // Return cleanup function
+        return () => {
+          unsubscribers.forEach(unsubscribe => unsubscribe());
+        };
+        
       } catch (error) {
-        console.error('Error setting up tickets listener:', error);
+        console.error('Error setting up maintenance requests listeners:', error);
         setTicketsLoading(false);
         setPermissionError(true);
         // Use demo tickets on error
@@ -363,7 +598,12 @@ const EnhancedTenantDashboard: React.FC = () => {
       }
     };
     
-    fetchTickets();
+    const cleanup = fetchTickets();
+    return () => {
+      if (cleanup && typeof cleanup.then === 'function') {
+        cleanup.then(cleanupFn => cleanupFn && cleanupFn());
+      }
+    };
   }, [currentUser, userProfile, isDemoMode]);
 
   const handleAcceptInvite = async (inviteId: string) => {
@@ -393,6 +633,8 @@ const EnhancedTenantDashboard: React.FC = () => {
   const handleBackToOverview = () => {
     setCurrentView('overview');
   };
+
+
 
   const handleRequestSuccess = () => {
     toast.success('Maintenance request submitted successfully!');
@@ -432,8 +674,8 @@ const EnhancedTenantDashboard: React.FC = () => {
   // Option 1: Executive Precision - Premium Modern Design (Enhanced)
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Enhanced Sidebar with Glassmorphism */}
-      <div className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-white/95 backdrop-blur-sm border-r border-gray-200 h-full transition-all duration-300 shadow-xl`}>
+      {/* Enhanced Sidebar */}
+      <div className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-white border-r border-gray-200 h-full transition-all duration-300 shadow-xl`}>
         {/* Logo Section with Gradient */}
         <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-amber-50">
           <div className="flex items-center gap-3">
@@ -808,19 +1050,37 @@ const EnhancedTenantDashboard: React.FC = () => {
                               <div key={ticket.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                                 <div className="flex items-start justify-between">
                                   <div className="flex-1">
-                                    <h4 className="font-medium text-gray-900">{ticket.issueTitle}</h4>
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h4 className="font-medium text-gray-900">{ticket.issueTitle}</h4>
+                                      {(ticket as any).source === 'maintenanceRequests' && (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                          <Sparkles className="w-3 h-3 mr-1" />
+                                          AI Chat
+                                        </span>
+                                      )}
+                                    </div>
                                     <p className="text-sm text-gray-600 mt-1">{ticket.description}</p>
                                     <div className="flex items-center gap-4 mt-2">
                                       <span className={`text-xs px-2 py-1 rounded-full ${
-                                        ticket.status === 'resolved' ? 'bg-green-100 text-green-700' :
-                                        ticket.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                                        'bg-yellow-100 text-yellow-700'
+                                        ticket.status === 'resolved' || ticket.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                        ticket.status === 'in_progress' || ticket.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
+                                        ticket.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                        'bg-gray-100 text-gray-700'
                                       }`}>
                                         {ticket.status.replace('_', ' ').toUpperCase()}
                                       </span>
                                       <span className="text-xs text-gray-500">
                                         {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : 'No date'}
                                       </span>
+                                      {ticket.urgency && (
+                                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                          ticket.urgency === 'high' ? 'bg-red-100 text-red-700' :
+                                          ticket.urgency === 'medium' ? 'bg-orange-100 text-orange-700' :
+                                          'bg-blue-100 text-blue-700'
+                                        }`}>
+                                          {ticket.urgency.toUpperCase()}
+                                        </span>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
@@ -911,6 +1171,8 @@ const EnhancedTenantDashboard: React.FC = () => {
         isOpen={notificationPanelOpen} 
         onClose={() => setNotificationPanelOpen(false)} 
       />
+      
+
       
       <Toaster 
         position="top-right"

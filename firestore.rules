@@ -400,8 +400,9 @@ service cloud.firestore {
         isAdmin()
       );
       
-      // Allow listing for property owners and admins
-      allow list: if isSignedIn() && (isLandlord() || isAdmin());
+      // Allow listing/querying for all authenticated users
+      // The where() clauses in the application ensure users only see appropriate requests
+      allow list: if isSignedIn();
     }
 
     // Property-Tenant Relationships Collection

@@ -182,7 +182,7 @@ function App() {
       <div className={`transition-all duration-1000 ease-in-out ${
         showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
       }`}>
-        <ThemeProvider defaultTheme="system">
+        <ThemeProvider defaultTheme="light">
           <AuthProvider>
             <PreLaunchGuard>
               <ConnectionProvider>

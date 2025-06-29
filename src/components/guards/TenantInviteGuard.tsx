@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useLocation } from 'react-router-dom';
 import InviteCodeModal from '../auth/InviteCodeModal';
-import { shouldAllowAppAccess, isTenantNeedingInvite } from '../../utils/tenantValidation';
+import { shouldAllowAppAccess, isTenantNeedingInvite, isTenantNeedingInviteAsync } from '../../utils/tenantValidation';
 
 interface TenantInviteGuardProps {
   children: React.ReactNode;
@@ -45,8 +45,8 @@ const TenantInviteGuard: React.FC<TenantInviteGuardProps> = ({ children }) => {
         return;
       }
 
-      // Check if tenant needs invite code
-      const needsInvite = isTenantNeedingInvite(userProfile);
+      // Check if tenant needs invite code (using new async function that checks tenantProfiles)
+      const needsInvite = await isTenantNeedingInviteAsync(userProfile, currentUser);
       const allowAccess = shouldAllowAppAccess(userProfile);
 
       console.log('TenantInviteGuard check:', {
@@ -56,7 +56,8 @@ const TenantInviteGuard: React.FC<TenantInviteGuardProps> = ({ children }) => {
         landlordId: userProfile.landlordId,
         needsInvite,
         allowAccess,
-        isTestMode
+        isTestMode,
+        checkedTenantProfiles: true
       });
 
       setShouldShowModal(needsInvite);

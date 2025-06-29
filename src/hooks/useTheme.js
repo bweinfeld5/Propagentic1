@@ -1,49 +1,38 @@
 import { useState, useEffect, useCallback } from 'react';
 
 const useTheme = () => {
-  // Initialize state, trying to read from localStorage first, then system preference, then default to light
-  const [theme, setTheme] = useState(() => {
-    if (typeof window === 'undefined') {
-      // Default theme for SSR or build-time rendering
-      return 'light';
-    }
-    const storedTheme = localStorage.getItem('theme');
-    if (storedTheme) {
-      return storedTheme;
-    }
-    // Check system preference
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return prefersDark ? 'dark' : 'light';
-  });
+  // Always return light mode - no theme switching
+  const [theme] = useState('light');
 
-  // Effect to apply the theme class to the root element and update localStorage
+  // Effect to ensure document is always in light mode
   useEffect(() => {
-    const root = window.document.documentElement; // Get the <html> element
-    root.classList.remove('light', 'dark'); // Remove previous theme class
-    root.classList.add(theme); // Add the current theme class
-    localStorage.setItem('theme', theme); // Persist the theme choice
-  }, [theme]); // Re-run only when the theme state changes
-
-  // Function to toggle the theme
-  const toggleTheme = useCallback(() => {
-    setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
+    const root = window.document.documentElement;
+    root.classList.remove('dark');
+    root.classList.add('light');
+    
+    // Clear any dark mode preference from localStorage
+    localStorage.setItem('theme', 'light');
   }, []);
 
-  // Optional: Listen for system preference changes
+  // No-op function - theme toggling disabled
+  const toggleTheme = useCallback(() => {
+    // Do nothing - always stay in light mode
+  }, []);
+
+  // Optional: Listen for system preference changes but ignore them
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     
     const handleChange = (e) => {
-      // Optionally update the theme if the user hasn't explicitly set one
-      // For simplicity, we currently rely on the initial check and manual toggle
-      // console.log('System theme changed:', e.matches ? 'dark' : 'light');
+      // Do nothing - always stay in light mode regardless of system preference
     };
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  return [theme, toggleTheme];
+  // Always return light mode
+  return ['light', toggleTheme];
 };
 
 export default useTheme; 

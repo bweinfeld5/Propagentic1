@@ -9,9 +9,20 @@ import {
   FunnelIcon,
   ChevronDownIcon,
   ChatBubbleLeftRightIcon,
-  WrenchScrewdriverIcon
+  WrenchScrewdriverIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import { format, formatDistanceToNow, isToday, isYesterday, isThisWeek } from 'date-fns';
+import { 
+  doc, 
+  deleteDoc, 
+  getDoc, 
+  updateDoc, 
+  arrayRemove 
+} from 'firebase/firestore';
+import { db } from '../../firebase/config';
+import { useAuth } from '../../context/AuthContext.jsx';
+import toast from 'react-hot-toast';
 
 interface Ticket {
   id: string;
@@ -98,16 +109,136 @@ const EnhancedRequestHistory: React.FC<EnhancedRequestHistoryProps> = ({
   loading,
   filter
 }) => {
+  const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [urgencyFilter, setUrgencyFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   const [expandedTicket, setExpandedTicket] = useState<string | null>(null);
+  const [deletingTickets, setDeletingTickets] = useState<Set<string>>(new Set());
+  const [localTickets, setLocalTickets] = useState<Ticket[]>(tickets);
+
+  // Sync local tickets with prop tickets
+  React.useEffect(() => {
+    setLocalTickets(tickets);
+  }, [tickets]);
+
+  // Delete maintenance request function
+  const deleteMaintenanceRequest = async (ticket: Ticket) => {
+    if (!currentUser) {
+      toast.error('You must be logged in to delete requests');
+      return;
+    }
+
+    const ticketId = ticket.id;
+    
+    try {
+      // Track deleting state
+      setDeletingTickets(prev => new Set(prev).add(ticketId));
+      
+      // Optimistic UI update - remove from local state immediately
+      console.log('🗑️ [Delete] Starting optimistic UI update for ticket:', ticketId);
+      setLocalTickets(prev => {
+        const filtered = prev.filter(t => t.id !== ticketId);
+        console.log('🗑️ [Delete] Removed ticket from local state. Remaining tickets:', filtered.length);
+        return filtered;
+      });
+      
+      console.log('🗑️ [Delete] Starting deletion for ticket:', ticketId);
+
+      // Only delete from maintenanceRequests collection if it's from that source
+      if ((ticket as any).source === 'maintenanceRequests') {
+        console.log('🗑️ [Delete] Deleting from maintenanceRequests collection...');
+        
+        // 1. Delete the maintenance request document
+        const requestRef = doc(db, 'maintenanceRequests', ticketId);
+        await deleteDoc(requestRef);
+        console.log('✅ [Delete] Deleted from maintenanceRequests collection:', ticketId);
+
+        // 2. Remove from all associated properties
+        await removeFromProperties(ticketId);
+      } else {
+        // Delete from tickets collection
+        console.log('🗑️ [Delete] Deleting from tickets collection...');
+        const ticketRef = doc(db, 'tickets', ticketId);
+        await deleteDoc(ticketRef);
+        console.log('✅ [Delete] Deleted from tickets collection:', ticketId);
+      }
+      
+      console.log('✅ [Delete] Successfully completed deletion for ticket:', ticketId);
+      toast.success('Maintenance request deleted successfully');
+      
+    } catch (error) {
+      console.error('❌ [Delete] Error deleting maintenance request:', error);
+      
+      // Restore the ticket to local state on error
+      console.log('🔄 [Delete] Restoring ticket to local state due to error');
+      setLocalTickets(prev => [...prev, ticket].sort((a, b) => {
+        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bTime - aTime;
+      }));
+      
+      toast.error('Failed to delete maintenance request. Please try again.');
+    } finally {
+      setDeletingTickets(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(ticketId);
+        return newSet;
+      });
+    }
+  };
+
+  // Helper function to remove request ID from properties
+  const removeFromProperties = async (requestId: string) => {
+    try {
+      console.log('🗑️ [Delete] Removing request from tenant properties...');
+      
+      // Get tenant profile to find their properties
+      const tenantProfileRef = doc(db, 'tenantProfiles', currentUser!.uid);
+      const tenantProfileSnap = await getDoc(tenantProfileRef);
+      
+      let propertyIds: string[] = [];
+      
+      if (tenantProfileSnap.exists()) {
+        const tenantProfile = tenantProfileSnap.data();
+        propertyIds = tenantProfile.properties || [];
+        console.log('🗑️ [Delete] Found', propertyIds.length, 'properties in tenant profile');
+      } else {
+        // Fallback to legacy user profile
+        const userRef = doc(db, 'users', currentUser!.uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists() && userSnap.data().propertyId) {
+          propertyIds = [userSnap.data().propertyId];
+          console.log('🗑️ [Delete] Found legacy property ID:', propertyIds[0]);
+        }
+      }
+      
+      // Remove request ID from each property's maintenanceRequests array
+      for (const propertyId of propertyIds) {
+        try {
+          const propertyRef = doc(db, 'properties', propertyId);
+          await updateDoc(propertyRef, {
+            maintenanceRequests: arrayRemove(requestId)
+          });
+          console.log('✅ [Delete] Removed request from property:', propertyId);
+        } catch (error) {
+          console.warn('⚠️ [Delete] Failed to remove request from property:', propertyId, error);
+          // Continue with other properties even if one fails
+        }
+      }
+      
+    } catch (error) {
+      console.error('❌ [Delete] Error removing request from properties:', error);
+      throw error; // Re-throw to trigger the error handling in the main function
+    }
+  };
 
   // Filter and sort tickets
   const filteredAndSortedTickets = useMemo(() => {
-    let filtered = tickets;
+    let filtered = localTickets;
 
     // Apply search filter
     if (searchTerm) {
@@ -165,17 +296,17 @@ const EnhancedRequestHistory: React.FC<EnhancedRequestHistoryProps> = ({
     });
 
     return sorted;
-  }, [tickets, searchTerm, statusFilter, urgencyFilter, categoryFilter, filter, sortBy]);
+  }, [localTickets, searchTerm, statusFilter, urgencyFilter, categoryFilter, filter, sortBy]);
 
-  // Get unique categories from tickets
+  // Get unique categories from local tickets
   const availableCategories = useMemo(() => {
     const categories = Array.from(new Set(
-      tickets
+      localTickets
         .map(t => t.category)
         .filter((category): category is string => Boolean(category))
     ));
     return categories.sort();
-  }, [tickets]);
+  }, [localTickets]);
 
   // Format date for display
   const formatDate = (date: Date) => {
@@ -226,7 +357,7 @@ const EnhancedRequestHistory: React.FC<EnhancedRequestHistoryProps> = ({
           Request History
         </h2>
         <p className="text-teal-100 text-sm mt-1">
-          {filteredAndSortedTickets.length} of {tickets.length} requests
+          {filteredAndSortedTickets.length} of {localTickets.length} requests
         </p>
       </div>
 
@@ -319,7 +450,7 @@ const EnhancedRequestHistory: React.FC<EnhancedRequestHistoryProps> = ({
             <ChatBubbleLeftRightIcon className="w-12 h-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No requests found</h3>
             <p className="text-gray-500">
-              {tickets.length === 0 
+              {localTickets.length === 0 
                 ? "You haven't submitted any maintenance requests yet."
                 : "Try adjusting your filters to see more requests."
               }
@@ -331,13 +462,35 @@ const EnhancedRequestHistory: React.FC<EnhancedRequestHistoryProps> = ({
               const statusConfig = STATUS_CONFIG[ticket.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.pending_classification;
               const urgencyConfig = URGENCY_CONFIG[ticket.urgency as keyof typeof URGENCY_CONFIG] || URGENCY_CONFIG.medium;
               const isExpanded = expandedTicket === ticket.id;
+              const isDeleting = deletingTickets.has(ticket.id);
 
               return (
-                <div key={ticket.id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                <div key={ticket.id} className={`border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all duration-200 group relative ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}>
+                  {/* Delete Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteMaintenanceRequest(ticket);
+                    }}
+                    className={`absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-all duration-200 p-2 rounded-full text-white shadow-lg hover:shadow-xl ${
+                      isDeleting 
+                        ? 'bg-gray-500 cursor-not-allowed' 
+                        : 'bg-red-500 hover:bg-red-600 transform hover:scale-105'
+                    }`}
+                    disabled={isDeleting}
+                    title={isDeleting ? "Deleting..." : "Delete maintenance request"}
+                  >
+                    {isDeleting ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <TrashIcon className="w-4 h-4" />
+                    )}
+                  </button>
+
                   {/* Main Content */}
                   <div
-                    className="p-4 cursor-pointer"
-                    onClick={() => toggleExpanded(ticket.id)}
+                    className="p-4 cursor-pointer pr-16"
+                    onClick={() => !isDeleting && toggleExpanded(ticket.id)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
@@ -387,12 +540,14 @@ const EnhancedRequestHistory: React.FC<EnhancedRequestHistoryProps> = ({
                         </div>
                       </div>
 
-                      {/* Expand Arrow */}
-                      <ChevronDownIcon 
-                        className={`w-5 h-5 text-gray-400 transition-transform ${
-                          isExpanded ? 'transform rotate-180' : ''
-                        }`}
-                      />
+                      {/* Expand Arrow - positioned to avoid delete button */}
+                      <div className="mr-12">
+                        <ChevronDownIcon 
+                          className={`w-5 h-5 text-gray-400 transition-transform ${
+                            isExpanded ? 'transform rotate-180' : ''
+                          }`}
+                        />
+                      </div>
                     </div>
                   </div>
 

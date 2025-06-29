@@ -50,6 +50,10 @@ import { testSendGrid, testPing } from './testSendGrid';
 import { simpleTest } from './simpleTest';
 export { testSendGrid, testPing, simpleTest };
 
+// Import and export SMS notification functions
+import { sendContractorWelcomeSMS, sendTestSMS } from './smsService';
+export { sendContractorWelcomeSMS, sendTestSMS };
+
 // Import and export invite code generation function (landlord functionality)
 const inviteCodeModule = require('./inviteCode.js');
 export const generateInviteCode = inviteCodeModule.generateInviteCode;
@@ -58,4 +62,12 @@ export const generateInviteCode = inviteCodeModule.generateInviteCode;
 import { acceptTenantInvite } from './acceptTenantInvite';
 export { acceptTenantInvite };
 
-console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, invite code generation, tenant invite acceptance).");
+// Import and export tenant removal function
+import { removeTenantFromLandlord } from './removeTenantFromLandlord';
+export { removeTenantFromLandlord };
+
+// Import and export tenant leave property function
+import { tenantLeaveProperty } from './tenantLeaveProperty';
+export { tenantLeaveProperty };
+
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, SMS notifications, invite code generation, tenant invite acceptance, tenant leave property).");

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { doc, updateDoc, addDoc, collection, serverTimestamp, arrayUnion } from 'firebase/firestore';
+import { doc, updateDoc, addDoc, collection, serverTimestamp, arrayUnion, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import onboardingProgressService from '../../services/onboardingProgressService';
 import HomeNavLink from '../layout/HomeNavLink';
@@ -289,7 +289,11 @@ const LandlordOnboarding = () => {
     try {
       console.log('Starting landlord onboarding submission for user:', currentUser.uid);
       
+      // Create a batch to write all documents atomically
+      const batch = writeBatch(db);
+      
       // 1. Create Property Document
+      const propertyRef = doc(collection(db, 'properties'));
       const propertyData = {
         nickname: formData.propertyNickname || formData.streetAddress,
         streetAddress: formData.streetAddress,
@@ -305,42 +309,72 @@ const LandlordOnboarding = () => {
         // Add invited tenant email if provided
         ...(formData.tenantEmail && { invitedTenantEmail: formData.tenantEmail })
       };
-      const propertyRef = await addDoc(collection(db, 'properties'), propertyData);
-      console.log('Property document created with ID: ', propertyRef.id);
+      batch.set(propertyRef, propertyData);
 
       // 2. Update User Document
       const userDocRef = doc(db, 'users', currentUser.uid);
       const userData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        name: `${formData.firstName} ${formData.lastName}`, // Add full name field for easier display
+        name: `${formData.firstName} ${formData.lastName}`,
         phoneNumber: formData.phoneNumber,
         businessName: formData.businessName || '',
         preferredContactMethod: formData.preferredContactMethod,
         yearsInBusiness: formData.yearsInBusiness,
         totalProperties: formData.totalProperties,
         managementSoftware: formData.managementSoftware,
-        userType: 'landlord', // Ensure userType is set to landlord
-        onboardingComplete: true, // Mark onboarding as complete
+        userType: 'landlord',
+        onboardingComplete: true,
         updatedAt: serverTimestamp(),
-        properties: arrayUnion(propertyRef.id), // Use arrayUnion to safely add the property
+        properties: arrayUnion(propertyRef.id),
       };
-      
-      console.log('Updating user document with data:', userData);
-      await updateDoc(userDocRef, userData);
-      console.log('User document updated successfully.');
-      
-      // TODO: Handle Tenant Invite logic if needed (e.g., send email, create invite record)
+      batch.set(userDocRef, userData, { merge: true });
+
+      // 3. Create Landlord Profile Document (THIS IS THE FIX!)
+      const landlordProfileRef = doc(db, 'landlordProfiles', currentUser.uid);
+      const landlordProfileData = {
+        uid: currentUser.uid,
+        landlordId: currentUser.uid,
+        userId: currentUser.uid,
+        displayName: `${formData.firstName} ${formData.lastName}`,
+        email: currentUser.email,
+        phoneNumber: formData.phoneNumber || '',
+        businessName: formData.businessName || '',
+        
+        // Core arrays as per specification
+        acceptedTenants: [],
+        properties: [propertyRef.id],
+        invitesSent: [],
+        contractors: [],
+        
+        // Enhanced tracking
+        acceptedTenantDetails: [],
+        
+        // Statistics
+        totalInvitesSent: 0,
+        totalInvitesAccepted: 0,
+        inviteAcceptanceRate: 0,
+        
+        // Timestamps
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+      batch.set(landlordProfileRef, landlordProfileData);
+
+      // Execute the batch write
+      await batch.commit();
+      console.log('Landlord onboarding complete - users, properties, and landlordProfiles documents created');
+
+      // TODO: Handle Tenant Invite logic if needed
       if (formData.tenantEmail) {
         console.log(`Tenant invite email: ${formData.tenantEmail} for property ${propertyRef.id}`);
-        // Implement actual invite sending/tracking here
       }
 
       // Refresh the user profile before redirecting
       const updatedProfile = await fetchUserProfile(currentUser.uid);
       console.log('Landlord onboarding complete, refreshed profile:', updatedProfile);
       
-      // 3. Redirect to Landlord Dashboard
+      // Redirect to Landlord Dashboard
       console.log('Redirecting to landlord dashboard...');
       navigate('/landlord/dashboard');
 

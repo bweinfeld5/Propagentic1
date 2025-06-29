@@ -836,6 +836,8 @@ const EnhancedTenantDashboard: React.FC = () => {
             </div>
           )}
 
+
+
           {/* Invitation Banners */}
           {pendingInvites.length > 0 && currentView === 'overview' && (
             <div className="p-6 pb-0">

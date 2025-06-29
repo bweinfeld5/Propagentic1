@@ -56,16 +56,7 @@
         }
       ]
     },
-    {
-      "collectionGroup": "inviteCodes",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "code",
-          "order": "ASCENDING"
-        }
-      ]
-    },
+
     {
       "collectionGroup": "inviteCodes",
       "queryScope": "COLLECTION",
@@ -150,6 +141,52 @@
       "fields": [
         {
           "fieldPath": "landlordId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "role",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "role",
           "order": "ASCENDING"
         },
         {

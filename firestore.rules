@@ -51,7 +51,11 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isUserRole('admin');
+      return isUserRole('admin') || isUserRole('super_admin');
+    }
+
+    function isSuperAdmin() {
+      return isUserRole('super_admin');
     }
 
     function isContractorInLandlordRolodex(landlordId, contractorId) {
@@ -82,13 +86,16 @@ service cloud.firestore {
       allow read: if isLandlord() && isTenantOfLandlord(userId);
       
       // Allow landlords to query for tenants (needed for PropertyTenantManager)
-      allow list: if isLandlord();
+      allow list: if isLandlord() || isAdmin();
       
       // Allow contractors to read user data for communication purposes
       allow read: if isContractor();
       
-      // Anyone can create a user account
-      allow create: if isSignedIn();
+      // Anyone can create a user account, admins can create any user
+      allow create: if isSignedIn() || isAdmin();
+      
+      // Admins can delete users
+      allow delete: if isAdmin();
     }
 
     // Tenant Profiles Collection
@@ -495,6 +502,42 @@ service cloud.firestore {
         isContractorOwner() ||
         isAdmin()
       );
+    }
+
+    // Audit Logs Collection - for admin activity tracking
+    match /auditLogs/{logId} {
+      // Only admins can read audit logs
+      allow read, list: if isAdmin();
+      
+      // Only cloud functions and admins can write audit logs
+      allow create, update: if isAdmin();
+      
+      // Only super admins can delete audit logs
+      allow delete: if isSuperAdmin();
+    }
+
+    // System Alerts Collection - for admin monitoring
+    match /systemAlerts/{alertId} {
+      // Only admins can access system alerts
+      allow read, list, create, update: if isAdmin();
+      
+      // Only super admins can delete system alerts
+      allow delete: if isSuperAdmin();
+    }
+
+    // User Profiles Collection - for admin user management
+    match /userProfiles/{userId} {
+      // Users can read/update their own profile, admins can access all
+      allow read, update: if isOwner(userId) || isAdmin();
+      
+      // Admins can list all user profiles
+      allow list: if isAdmin();
+      
+      // Users can create their own profile, admins can create any profile
+      allow create: if isOwner(userId) || isAdmin();
+      
+      // Admins can delete user profiles
+      allow delete: if isAdmin();
     }
   }
 }

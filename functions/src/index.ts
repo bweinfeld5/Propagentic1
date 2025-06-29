@@ -70,4 +70,8 @@ export { removeTenantFromLandlord };
 import { tenantLeaveProperty } from './tenantLeaveProperty';
 export { tenantLeaveProperty };
 
-console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, SMS notifications, invite code generation, tenant invite acceptance, tenant leave property).");
+// Import and export super admin upgrade function
+import { upgradeSuperAdmin } from './upgradeSuperAdmin';
+export { upgradeSuperAdmin };
+
+console.log("✅ Essential functions loaded (ping, property invites, AI classification, email invites, notifications, SendGrid, tests, SMS notifications, invite code generation, tenant invite acceptance, tenant leave property, super admin upgrade).");

@@ -43,10 +43,12 @@ const RegisterPage = lazy(() => import('./pages/RegisterPage.jsx'));
 const ForgotPassword = lazy(() => import('./components/auth/ForgotPassword.jsx'));
 const TenantDashboard = lazy(() => import('./pages/tenant/EnhancedTenantDashboard.tsx'));
 const LandlordDashboard = lazy(() => import('./pages/landlord/LandlordDashboard.tsx'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboardPage.tsx'));
 const LandlordDashboardDemo = lazy(() => import('./pages/LandlordDashboardDemoPage.jsx'));
 const ContractorDashboard = lazy(() => import('./components/contractor/EnhancedContractorDashboard'));
 const ContractorDashboardDemo = lazy(() => import('./pages/ContractorDashboardDemo.jsx'));
 const OriginalContractorDashboard = lazy(() => import('./components/contractor/ContractorDashboard.jsx'));
+const ContractorDashboardMVP = lazy(() => import('./pages/contractor/ContractorDashboardPage.tsx'));
 const ContractorMessagesPage = lazy(() => import('./pages/contractor/ContractorMessagesPage.tsx'));
 const ContractorProfilePage = lazy(() => import('./pages/ContractorProfilePage.jsx'));
 const JobHistoryPage = lazy(() => import('./pages/JobHistoryPage.jsx'));
@@ -100,8 +102,30 @@ const RoleBasedRedirect = () => {
       return; 
     }
     setProfileLoading(false);
+    
+    // Check for admin roles first (prioritize role field, then userType)
+    const isAdmin = userProfile.role === 'admin' || userProfile.role === 'super_admin' || 
+                   userProfile.userType === 'admin' || userProfile.userType === 'super_admin';
+    
+    // Debug logging for admin account (temporary)
+    console.log('RoleBasedRedirect Debug:', {
+      email: userProfile.email,
+      role: userProfile.role,
+      userType: userProfile.userType,
+      isAdmin,
+      currentPath: window.location.pathname
+    });
+    
+    // Handle admin users (they bypass onboarding and go straight to admin dashboard)
+    if (isAdmin) {
+      console.log('Redirecting admin user to /admin/dashboard');
+      navigate('/admin/dashboard');
+      return;
+    }
+    
     const userRole = userProfile.userType || userProfile.role;
     const onboardingComplete = userProfile.onboardingComplete;
+    
     if (!onboardingComplete) {
       switch (userRole) {
         case 'landlord': navigate('/onboarding/landlord'); break;
@@ -236,10 +260,13 @@ function App() {
                                 <Route path="/tenant/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={75}><TenantDashboard /></ProfileCompletionGuard></PrivateRoute>} />
                                 <Route path="/landlord/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={85}><LandlordDashboard /></ProfileCompletionGuard></PrivateRoute>} />
                                 <Route path="/contractor/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={90}><ContractorDashboard /></ProfileCompletionGuard></PrivateRoute>} />
+                                <Route path="/admin" element={<PrivateRoute><Navigate to="/admin/dashboard" replace /></PrivateRoute>} />
+                                <Route path="/admin/dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
                                 <Route path="/contractor/messages" element={<PrivateRoute><ContractorMessagesPage /></PrivateRoute>} />
                                 <Route path="/contractor/profile" element={<PrivateRoute><ContractorProfilePage /></PrivateRoute>} />
                                 <Route path="/contractor/history" element={<PrivateRoute><JobHistoryPage /></PrivateRoute>} />
                                 <Route path="/contractor/dashboard/enhanced" element={<ContractorDashboardDemo />} />
+                                <Route path="/contractor/dashboard/mvp" element={<ContractorDashboardMVP />} />
                                 <Route path="/contractor/dashboard/original" element={<PrivateRoute><OriginalContractorDashboard /></PrivateRoute>} />
                                 <Route path="/maintenance/new" element={<PrivateRoute><MaintenanceSurvey /></PrivateRoute>} />
                                 <Route path="/maintenance/enhanced" element={<PrivateRoute><EnhancedMaintenancePage /></PrivateRoute>} />

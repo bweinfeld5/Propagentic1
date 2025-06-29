@@ -95,25 +95,39 @@ const LoginPage = () => {
       // Get the user role from either userType or role field for backwards compatibility
       const userRole = userProfile.userType || userProfile.role;
       
-      // Redirect based on user type
-              // Redirect based on user type
-        if (userRole) {
-          switch(userRole) {
-            case 'tenant':
-              navigate('/tenant/dashboard');
-              break;
-            case 'landlord':
-              navigate('/landlord/dashboard');
-              break;
-            case 'contractor':
-              navigate('/contractor/dashboard');
-              break;
-            default:
-              navigate('/dashboard');
-          }
-        } else {
-          navigate('/dashboard');
+      // Debug login redirect
+      console.log('LoginPage - User Role Check:', {
+        userEmail: userProfile.email,
+        userRole,
+        userProfileRole: userProfile.role,
+        userProfileType: userProfile.userType
+      });
+
+      // Check for admin users first (prioritize admin)
+      const isAdmin = userProfile.role === 'admin' || userProfile.role === 'super_admin' || 
+                     userProfile.userType === 'admin' || userProfile.userType === 'super_admin';
+      
+      if (isAdmin) {
+        console.log('LoginPage - Redirecting admin to /admin/dashboard');
+        navigate('/admin/dashboard');
+      } else if (userRole) {
+        // Redirect based on user type for non-admin users
+        switch(userRole) {
+          case 'tenant':
+            navigate('/tenant/dashboard');
+            break;
+          case 'landlord':
+            navigate('/landlord/dashboard');
+            break;
+          case 'contractor':
+            navigate('/contractor/dashboard');
+            break;
+          default:
+            navigate('/dashboard');
         }
+      } else {
+        navigate('/dashboard');
+      }
       } catch (error) {
         console.error('Login Error:', error);
         const errorCode = error.code || 'unknown';

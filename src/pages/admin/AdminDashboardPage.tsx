@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import AdminLayout from '../../components/admin/AdminLayout';
 import UserManagementPanel from '../../components/admin/UserManagementPanel';
+import PropertyManagementPanel from '../../components/admin/PropertyManagementPanel';
 import AuditLogsTable from '../../components/admin/AuditLogsTable';
 import SystemConfigPanel from '../../components/admin/SystemConfigPanel';
 import AdminStatsCards from '../../components/admin/AdminStatsCards';
@@ -99,7 +100,7 @@ const SuperAdminUpgrade: React.FC = () => {
     );
   }
 
-  // Only show for admin users
+  // Only show for admin users who are not yet super admins
   if (userProfile?.role !== 'admin') {
     return null;
   }
@@ -431,12 +432,7 @@ const AdminDashboardPage: React.FC = () => {
         return <UserManagementPanel roleFilter="contractor" />;
       
       case 'properties':
-        return (
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Property Oversight</h3>
-            <p className="text-gray-600">Property management overview coming soon...</p>
-          </div>
-        );
+        return <PropertyManagementPanel />;
       
       case 'audit':
         return <AuditLogsTable />;

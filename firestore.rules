@@ -14,15 +14,20 @@ service cloud.firestore {
     
     function getUserDataSafe() {
       // Safe version that doesn't fail if document doesn't exist
+      // Check both users and userProfiles collections
       return exists(/databases/$(database)/documents/users/$(request.auth.uid)) ? 
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data : 
-             null;
+             (exists(/databases/$(database)/documents/userProfiles/$(request.auth.uid)) ? 
+              get(/databases/$(database)/documents/userProfiles/$(request.auth.uid)).data : 
+              null);
     }
 
     function isUserRole(role) {
-      // Check both 'userType' and 'role' fields for broader compatibility
-      let userData = getUserDataSafe();
-      return isSignedIn() && userData != null && (userData.userType == role || userData.role == role);
+      // First check custom claims from Firebase Auth token (most reliable)
+      return (isSignedIn() && request.auth.token.keys().hasAny(['role']) && request.auth.token.role == role) ||
+             (isSignedIn() && request.auth.token.keys().hasAny(['userType']) && request.auth.token.userType == role) ||
+             // Fallback to Firestore document data (for backwards compatibility)
+             (isSignedIn() && getUserDataSafe() != null && (getUserDataSafe().userType == role || getUserDataSafe().role == role));
     }
 
     function isLandlord() { 
@@ -225,15 +230,28 @@ service cloud.firestore {
       }
 
       // Allow individual document reads for property owners, managers, tenants, and admins
-      // More permissive read access for authenticated users
-      allow get: if isSignedIn();
-      // Allow listing properties for landlords (they can query their own properties)
+      // Admins can read any property for oversight, landlords can read their own properties
+      allow get: if isSignedIn() && (
+        isAdmin() || 
+        isPropertyOwner(propertyId) ||
+        isPropertyManager(propertyId)
+      );
+      
+      // Allow listing properties for landlords (their own) and admins (all properties)
       allow list: if isSignedIn() && (isLandlord() || isAdmin());
+      
+      // Property creation access
       allow create: if isSignedIn() && (isLandlord() || isAdmin());
       
       // Update access: Property owners can update EXCEPT tenants field, admins can update all
       // Also allow authenticated users to update for maintenance request functionality
-      allow update: if isSignedIn();
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        isPropertyOwner(propertyId) ||
+        isPropertyManager(propertyId)
+      );
+      
+      // Delete access: Property owners and admins can delete
       allow delete: if isSignedIn() && (isPropertyOwner(propertyId) || isAdmin());
     }
 

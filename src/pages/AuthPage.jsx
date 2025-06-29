@@ -122,8 +122,11 @@ const AuthPage = () => {
         if (isAdmin) {
           console.log('AuthPage - Redirecting admin to /admin/dashboard');
           navigate('/admin/dashboard');
-        } else if (userRole) {
-          // Redirect based on user type for non-admin users
+          return; // Stop execution here for admin users
+        } 
+        
+        // For non-admin users, redirect based on user type
+        if (userRole) {
           const redirectPath = `/${userRole}/dashboard`;
           console.log(`AuthPage - Redirecting to: ${redirectPath}`);
           

@@ -112,7 +112,9 @@ const AuditLogsTable: React.FC<AuditLogsTableProps> = ({
         return {
           id: doc.id,
           ...data,
-          timestamp: data.timestamp?.toDate() || new Date(),
+          timestamp: (data.timestamp && typeof data.timestamp.toDate === 'function') 
+            ? data.timestamp.toDate() 
+            : new Date(),
         } as AuditLog;
       });
 

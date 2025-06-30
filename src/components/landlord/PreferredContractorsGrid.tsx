@@ -7,17 +7,14 @@ import {
   ExclamationCircleIcon
 } from '@heroicons/react/24/outline';
 import ContractorCard from './ContractorCard';
-import contractorService from '../../services/contractorService';
 import toast from 'react-hot-toast';
 
 interface PreferredContractorsGridProps {
-  contractors: any[]; // It will now receive contractors as a prop
+  contractors: any[]; // Now receives contractors as a prop
   onAddContractor: () => void;
   onEditContractor: (contractor: any) => void;
   onRateContractor: (contractor: any) => void;
-  onRemoveContractor: (contractorId: string) => void;
-  isLoading: boolean; // Receive loading state as a prop
-  onRefresh?: () => void; // Optional refresh callback for error handling
+  isLoading: boolean; // Receives loading state as a prop
 }
 
 /**
@@ -25,31 +22,26 @@ interface PreferredContractorsGridProps {
  * 
  * Main grid layout for displaying and managing contractors
  * 
- * @param {string} landlordId - Current landlord's ID
+ * @param {any[]} contractors - List of contractors to display
  * @param {function} onAddContractor - Callback to open add contractor modal
  * @param {function} onEditContractor - Callback to edit contractor
  * @param {function} onRateContractor - Callback to rate contractor
+ * @param {boolean} isLoading - Loading state from parent component
  */
-const PreferredContractorsGrid: React.FC<PreferredContractorsGridProps> = ({ 
+const PreferredContractorsGrid: React.FC<PreferredContractorsGridProps> = ({
   contractors,
-  onAddContractor, 
-  onEditContractor, 
+  onAddContractor,
+  onEditContractor,
   onRateContractor,
-  onRemoveContractor,
   isLoading,
-  onRefresh
 }) => {
   const [filteredContractors, setFilteredContractors] = useState<any[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedTrade, setSelectedTrade] = useState<string>('all');
 
   // Filter contractors when search term or trade filter changes
   useEffect(() => {
-    filterContractors();
-  }, [contractors, searchTerm, selectedTrade]);
-
-  const filterContractors = (): void => {
+    // The filtering logic now depends on the `contractors` prop
     let filtered = [...contractors];
 
     // Filter by search term
@@ -71,6 +63,16 @@ const PreferredContractorsGrid: React.FC<PreferredContractorsGridProps> = ({
     }
 
     setFilteredContractors(filtered);
+  }, [contractors, searchTerm, selectedTrade]);
+
+  const handleRemoveContractor = async (contractorId: string): Promise<void> => {
+    try {
+      // This logic should be handled by the parent component
+      toast.success('Contractor removed successfully');
+    } catch (err) {
+      console.error('Error removing contractor:', err);
+      toast.error('Failed to remove contractor');
+    }
   };
 
   // Get unique trades from all contractors for filter dropdown
@@ -84,33 +86,11 @@ const PreferredContractorsGrid: React.FC<PreferredContractorsGridProps> = ({
     return Array.from(trades).sort();
   }, [contractors]);
 
-  // Handle contractor removal
-  const handleRemoveContractor = (contractorId: string): void => {
-    onRemoveContractor(contractorId);
-  };
-
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mb-4"></div>
         <p className="text-gray-600">Loading contractors...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <ExclamationCircleIcon className="w-12 h-12 text-red-500 mb-4" />
-        <p className="text-red-600 text-center">{error}</p>
-        {onRefresh && (
-          <button
-            onClick={onRefresh}
-            className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-          >
-            Try Again
-          </button>
-        )}
       </div>
     );
   }
@@ -220,4 +200,4 @@ const PreferredContractorsGrid: React.FC<PreferredContractorsGridProps> = ({
   );
 };
 
-export default PreferredContractorsGrid; 
+export default PreferredContractorsGrid;

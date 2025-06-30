@@ -120,10 +120,14 @@ interface Ticket {
   category?: string;
   propertyId?: string;
   propertyName?: string;
-  createdAt?: Date | string;
-  updatedAt?: Date | string;
+  timestamp?: Date | string | any; // Main date field for maintenance requests
+  createdAt?: Date | string; // Legacy field, may not be used
+  updatedAt?: Date | string; // Legacy field, may not be used
   submittedBy?: string;
   assignedTo?: string;
+  contractorId?: string;
+  tenantInfo?: any;
+  unitNumber?: string;
   [key: string]: any; // For additional flexible properties
 }
 
@@ -1354,12 +1358,10 @@ const LandlordDashboard: React.FC = () => {
         <div className="lg:col-span-2">
           <PreferredContractorsGrid
             contractors={contractors}
+            isLoading={isLoading}
             onAddContractor={handleAddContractor}
             onEditContractor={handleEditContractor}
             onRateContractor={handleRateContractor}
-            onRemoveContractor={handleRemoveContractor}
-            isLoading={isLoading}
-            onRefresh={handleRefreshContractors}
           />
         </div>
         
@@ -1375,58 +1377,8 @@ const LandlordDashboard: React.FC = () => {
     const ongoingTickets = enhancedTickets.filter(t => t.status === 'pending' || t.status === 'in-progress');
     const finishedTickets = enhancedTickets.filter(t => t.status === 'completed' || t.status === 'closed');
 
-    const formatDate = (date: any) => {
-      if (!date) return 'Unknown';
-      try {
-        let dateObj;
-        if (date.toDate && typeof date.toDate === 'function') {
-          dateObj = date.toDate();
-        } else if (date.seconds) {
-          dateObj = new Date(date.seconds * 1000);
-        } else {
-          dateObj = new Date(date);
-        }
-        return dateObj.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
-        });
-      } catch {
-        return 'Unknown';
-      }
-    };
-
-    const getPriorityColor = (priority: string) => {
-      switch (priority?.toLowerCase()) {
-        case 'high':
-        case 'urgent':
-          return 'border-red-200 bg-gradient-to-br from-red-50 to-red-100';
-        case 'medium':
-          return 'border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100';
-        case 'low':
-          return 'border-green-200 bg-gradient-to-br from-green-50 to-green-100';
-        default:
-          return 'border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100';
-      }
-    };
-
-    const getStatusColor = (status: string) => {
-      switch (status?.toLowerCase()) {
-        case 'pending':
-          return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-        case 'in-progress':
-          return 'bg-blue-100 text-blue-800 border-blue-200';
-        case 'completed':
-          return 'bg-green-100 text-green-800 border-green-200';
-        case 'closed':
-          return 'bg-gray-100 text-gray-800 border-gray-200';
-        default:
-          return 'bg-orange-100 text-orange-800 border-orange-200';
-      }
-    };
-
     return (
-      <div className="p-6 bg-gradient-to-br from-orange-50 via-white to-orange-100 min-h-full">
+      <div className="p-6 bg-gray-50 min-h-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Ongoing Section */}
           <div>
@@ -1451,7 +1403,7 @@ const LandlordDashboard: React.FC = () => {
                 {ongoingTickets.map((ticket) => (
                   <div 
                     key={ticket.id} 
-                    className={`relative border-2 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 ${getPriorityColor(ticket.priority)}`}
+                    className={`relative border-2 rounded-xl shadow-sm hover:shadow-md transition-all duration-200`}
                     onMouseEnter={() => setHoveredTicket(ticket.id)}
                     onMouseLeave={() => setHoveredTicket(null)}
                   >
@@ -1475,7 +1427,7 @@ const LandlordDashboard: React.FC = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className={`px-3 py-1 text-xs font-bold rounded-full border ${getStatusColor(ticket.status)}`}>
+                          <span className={`px-3 py-1 text-xs font-bold rounded-full border`}>
                             {(ticket.status || 'pending').toUpperCase()}
                           </span>
                           
@@ -1513,7 +1465,7 @@ const LandlordDashboard: React.FC = () => {
                         </div>
                         <div className="ml-auto text-right">
                           <p className="text-xs text-gray-500">Created</p>
-                          <p className="text-sm font-medium text-gray-700">{formatDate(ticket.createdAt)}</p>
+                          <p className="text-sm font-medium text-gray-700">{formatFirestoreDate(ticket.timestamp)}</p>
                         </div>
                       </div>
 
@@ -1539,10 +1491,7 @@ const LandlordDashboard: React.FC = () => {
                               onChange={(e) => e.target.value && handleAssignContractor(ticket.id, e.target.value)}
                               className="flex-1 border-2 border-orange-200 rounded-lg shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              <option value="">
-                                {contractors.length === 0 ? 'No contractors found' : 'Select a contractor...'}
-                              </option>
-                              {/* This maps over the `contractors` array from the component's state */}
+                              <option value="">{contractors.length === 0 ? 'No contractors available' : 'Select a contractor...'}</option>
                               {contractors.map(contractor => (
                                 <option key={contractor.id} value={contractor.id}>
                                   {contractor.name || contractor.businessName || contractor.email}
@@ -1620,7 +1569,7 @@ const LandlordDashboard: React.FC = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className={`px-3 py-1 text-xs font-bold rounded-full border ${getStatusColor(ticket.status)}`}>
+                          <span className={`px-3 py-1 text-xs font-bold rounded-full border`}>
                             {(ticket.status || 'completed').toUpperCase()}
                           </span>
                           
@@ -1656,7 +1605,7 @@ const LandlordDashboard: React.FC = () => {
                         </div>
                         <div className="text-right">
                           <p className="text-xs text-gray-500">Completed</p>
-                          <p className="text-sm font-medium text-gray-700">{formatDate(ticket.updatedAt)}</p>
+                          <p className="text-sm font-medium text-gray-700">{formatDate(ticket.timestamp)}</p>
                         </div>
                       </div>
                     </div>
@@ -1679,6 +1628,54 @@ const LandlordDashboard: React.FC = () => {
       </div>
     </div>
   );
+
+  // Helper function to format Firestore timestamp
+  const formatFirestoreDate = (dateInput: any): string => {
+    if (!dateInput) return 'Date not available';
+    if (typeof dateInput.toDate === 'function') {
+      return dateInput.toDate().toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric'
+      });
+    }
+    if (dateInput instanceof Date) {
+      return dateInput.toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric'
+      });
+    }
+    if (typeof dateInput === 'string') {
+      const date = new Date(dateInput);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric', month: 'short', day: 'numeric'
+        });
+      }
+    }
+    return 'Invalid Date';
+  };
+
+  // Helper function to format regular dates
+  const formatDate = (dateInput: any): string => {
+    if (!dateInput) return 'Date not available';
+    if (dateInput instanceof Date) {
+      return dateInput.toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric'
+      });
+    }
+    if (typeof dateInput.toDate === 'function') {
+      return dateInput.toDate().toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric'
+      });
+    }
+    if (typeof dateInput === 'string') {
+      const date = new Date(dateInput);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric', month: 'short', day: 'numeric'
+        });
+      }
+    }
+    return 'Date not available';
+  };
 
   // Helper function to safely render address
   const formatAddress = (property: Property): string => {

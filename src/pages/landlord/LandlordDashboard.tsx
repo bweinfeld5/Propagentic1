@@ -24,7 +24,6 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useDemoMode } from '../../context/DemoModeContext';
 import dataService from '../../services/dataService';
 import landlordProfileService from '../../services/firestore/landlordProfileService';
-import { MaintenanceStatus } from '../../models';
 import CommunicationCenter from '../../components/communication/CommunicationCenter';
 import InviteTenantModal from '../../components/landlord/InviteTenantModal';
 import AddPropertyModal from '../../components/landlord/AddPropertyModal';

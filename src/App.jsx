@@ -51,11 +51,11 @@ const ContractorMessagesPage = lazy(() => import('./pages/contractor/ContractorM
 const ContractorProfilePage = lazy(() => import('./pages/ContractorProfilePage.jsx'));
 const JobHistoryPage = lazy(() => import('./pages/JobHistoryPage.jsx'));
 const PricingPage = lazy(() => import('./pages/PricingPage.jsx'));
-const OnboardingSurvey = lazy(() => import('./components/onboarding/OnboardingSurvey.jsx'));
-const LandlordOnboarding = lazy(() => import('./components/onboarding/LandlordOnboarding.jsx'));
+const OnboardingSurvey = lazy(() => import('./components/onboarding/TenantOnboardingWizard.jsx'));
+const LandlordOnboarding = lazy(() => import('./components/onboarding/LandlordOnboardingWizard.jsx'));
 const ContractorOnboardingPage = lazy(() => import('./pages/ContractorOnboardingPage.jsx'));
-// New onboarding components
-const TenantOnboarding = lazy(() => import('./components/onboarding/TenantOnboarding.jsx'));
+// Legacy onboarding components
+const LandlordOnboardingLegacy = lazy(() => import('./components/onboarding/LandlordOnboarding.jsx'));
 const LandlordOnboardingNew = lazy(() => import('./components/onboarding/LandlordOnboardingNew.jsx'));
 const ContractorOnboardingNew = lazy(() => import('./components/onboarding/ContractorOnboardingNew.jsx'));
 const SVGTest = lazy(() => import('./components/branding/SVGTest'));

@@ -59,6 +59,7 @@ import {
   photoDocumentationConverter,
   timeTrackingConverter
 } from '../../models/converters';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 // Collection references with converters
 const requestsCollection = collection(db, 'maintenanceRequests').withConverter(maintenanceRequestConverter);
@@ -207,11 +208,20 @@ export function subscribeToMaintenanceRequests(
   onError?: (error: FirestoreError) => void
 ): () => void {
   try {
+    // Validate filters
+    if (!filters || typeof filters !== 'object') {
+      console.warn('Invalid filters provided to subscribeToMaintenanceRequests');
+      if (onError) {
+        onError(new Error('Invalid filters') as FirestoreError);
+      }
+      return () => {};
+    }
+
     // Build query constraints
     const constraints: QueryConstraint[] = [];
     
     // Property filter (most common filter, so it goes first for efficiency)
-    if (filters.propertyIds && filters.propertyIds.length > 0) {
+    if (filters.propertyIds && Array.isArray(filters.propertyIds) && filters.propertyIds.length > 0) {
       if (filters.propertyIds.length === 1) {
         constraints.push(where('propertyId', '==', filters.propertyIds[0]));
       } else {
@@ -231,26 +241,26 @@ export function subscribeToMaintenanceRequests(
     }
     
     // User-specific filters
-    if (filters.tenantId) {
+    if (filters.tenantId && typeof filters.tenantId === 'string') {
       constraints.push(where('tenantId', '==', filters.tenantId));
     }
     
-    if (filters.contractorId) {
+    if (filters.contractorId && typeof filters.contractorId === 'string') {
       constraints.push(where('contractorId', '==', filters.contractorId));
     }
 
     // Status filter
-    if (filters.status && filters.status.length > 0) {
+    if (filters.status && Array.isArray(filters.status) && filters.status.length > 0) {
         constraints.push(where('status', 'in', filters.status));
     }
 
     // Priority filter
-    if (filters.priority && filters.priority.length > 0) {
+    if (filters.priority && Array.isArray(filters.priority) && filters.priority.length > 0) {
         constraints.push(where('priority', 'in', filters.priority));
     }
 
     // Category filter
-    if (filters.category && filters.category.length > 0) {
+    if (filters.category && Array.isArray(filters.category) && filters.category.length > 0) {
         constraints.push(where('category', 'in', filters.category));
     }
 
@@ -259,9 +269,9 @@ export function subscribeToMaintenanceRequests(
       constraints.push(where('isEmergency', '==', filters.isEmergency));
     }
 
-    // Add limit
-    if (filters.limit) {
-      constraints.push(limit(filters.limit));
+    // Add limit with validation
+    if (filters.limit && typeof filters.limit === 'number' && filters.limit > 0) {
+      constraints.push(limit(Math.min(filters.limit, 1000))); // Cap at 1000 for safety
     }
 
     // Create query
@@ -270,8 +280,22 @@ export function subscribeToMaintenanceRequests(
     // Set up snapshot listener
     return onSnapshot(q, 
       (snapshot: QuerySnapshot<MaintenanceRequest>) => {
-        const requests = snapshot.docs.map(doc => doc.data());
-        callback(requests);
+        try {
+          const requests = snapshot.docs.map(doc => {
+            try {
+              return doc.data();
+            } catch (docError) {
+              console.warn('Error processing document:', doc.id, docError);
+              return null;
+            }
+          }).filter(Boolean); // Filter out null values
+          callback(requests as MaintenanceRequest[]);
+        } catch (snapshotError) {
+          console.error('Error processing snapshot:', snapshotError);
+          if (onError) {
+            onError(snapshotError as FirestoreError);
+          }
+        }
       },
       (error: FirestoreError) => {
         console.error('Error in maintenance request listener:', error);
@@ -598,12 +622,36 @@ export async function deleteMaintenanceRequest(requestId: string): Promise<void>
         });
       }
       
-      // If the request was assigned to a contractor, remove it from their list
+      // If the request was assigned to a contractor, remove it from their contractorProfile
       if (requestData.contractorId) {
-        const contractorRef = doc(db, 'contractorProfiles', requestData.contractorId);
-        transaction.update(contractorRef, {
-          maintenanceRequests: arrayRemove(requestId)
-        });
+        const contractorProfileRef = doc(db, 'contractorProfiles', requestData.contractorId);
+        const contractorProfileDoc = await transaction.get(contractorProfileRef);
+        
+        if (contractorProfileDoc.exists()) {
+          const contractorData = contractorProfileDoc.data();
+          
+          // Remove from both legacy field and new contracts structure
+          const updateData: any = {
+            maintenanceRequests: arrayRemove(requestId), // Legacy field
+            updatedAt: serverTimestamp()
+          };
+          
+          // Remove from appropriate contracts array
+          if (contractorData.contracts) {
+            const contracts = contractorData.contracts;
+            if (contracts.pending?.includes(requestId)) {
+              updateData['contracts.pending'] = arrayRemove(requestId);
+            }
+            if (contracts.ongoing?.includes(requestId)) {
+              updateData['contracts.ongoing'] = arrayRemove(requestId);
+            }
+            if (contracts.finished?.includes(requestId)) {
+              updateData['contracts.finished'] = arrayRemove(requestId);
+            }
+          }
+          
+          transaction.update(contractorProfileRef, updateData);
+        }
       }
     });
   } catch (error) {
@@ -631,13 +679,237 @@ export const maintenanceService = {
   getMaintenanceMetrics,
   
   // Contractor / Landlord / Tenant real-time subscriptions (stubs)
-  subscribeToContractorJobs: async (
+  subscribeToContractorJobsByStatus: (
+    contractorId: string,
+    onUpdate: (jobsByStatus: { pending: MaintenanceRequest[], ongoing: MaintenanceRequest[], finished: MaintenanceRequest[] }, available: MaintenanceRequest[]) => void,
+    onError?: (error: any) => void
+  ): (() => void) => {
+    try {
+      console.log('🔍 MaintenanceService - Subscribing to contractor jobs by status for:', contractorId);
+      
+      let jobsByStatus: { pending: MaintenanceRequest[], ongoing: MaintenanceRequest[], finished: MaintenanceRequest[] } = {
+        pending: [],
+        ongoing: [],
+        finished: []
+      };
+      let availableRequests: MaintenanceRequest[] = [];
+
+      // Subscribe to contractor profile document to get contracts structure
+      const contractorProfileRef = doc(db, 'contractorProfiles', contractorId);
+      const unsubscribeContractorJobs = onSnapshot(contractorProfileRef, async (contractorProfileDoc) => {
+        try {
+          if (contractorProfileDoc.exists()) {
+            const contractorProfileData = contractorProfileDoc.data();
+            const contracts = contractorProfileData.contracts || { pending: [], ongoing: [], finished: [] };
+            
+            console.log('🔍 MaintenanceService - Contractor profile contracts received:', {
+              contractorId,
+              pending: contracts.pending?.length || 0,
+              ongoing: contracts.ongoing?.length || 0,
+              finished: contracts.finished?.length || 0,
+              contracts
+            });
+
+            // Fetch maintenance request details for all contract arrays
+            const [pendingRequests, ongoingRequests, finishedRequests] = await Promise.all([
+              contracts.pending?.length > 0 ? getMaintenanceRequestsByIds(contracts.pending) : [],
+              contracts.ongoing?.length > 0 ? getMaintenanceRequestsByIds(contracts.ongoing) : [],
+              contracts.finished?.length > 0 ? getMaintenanceRequestsByIds(contracts.finished) : []
+            ]);
+
+            jobsByStatus = {
+              pending: pendingRequests || [],
+              ongoing: ongoingRequests || [],
+              finished: finishedRequests || []
+            };
+
+            console.log('🔍 MaintenanceService - Fetched job details by status:', {
+              pendingJobs: jobsByStatus.pending.length,
+              ongoingJobs: jobsByStatus.ongoing.length,
+              finishedJobs: jobsByStatus.finished.length,
+              pendingIds: jobsByStatus.pending.map(j => j.id),
+              ongoingIds: jobsByStatus.ongoing.map(j => j.id),
+              finishedIds: jobsByStatus.finished.map(j => j.id)
+            });
+
+            // Call the update function with categorized data
+            onUpdate(jobsByStatus, availableRequests);
+          } else {
+            console.log('🔍 MaintenanceService - Contractor profile document not found:', contractorId);
+            jobsByStatus = { pending: [], ongoing: [], finished: [] };
+            onUpdate(jobsByStatus, availableRequests);
+          }
+        } catch (error) {
+          console.error('🔍 MaintenanceService - Error processing contractor jobs by status:', error);
+          if (onError) onError(error);
+        }
+      }, (error) => {
+        console.error('🔍 MaintenanceService - Contractor profile snapshot error:', error);
+        if (onError) onError(error);
+      });
+      
+      // Subscribe to available jobs (jobs that are unassigned)
+      const unsubscribeAvailable = subscribeToMaintenanceRequests(
+        {
+          status: ['pending'],
+          limit: 20
+        },
+        (available) => {
+          console.log('🔍 MaintenanceService - Available jobs received:', {
+            count: available.length,
+            jobs: available.map(j => ({ 
+              id: j.id, 
+              status: j.status, 
+              contractorId: j.contractorId,
+              title: j.title,
+              description: j.description?.substring(0, 50) 
+            }))
+          });
+          
+          // Filter out any requests that might already be assigned to this contractor
+          availableRequests = available.filter(req => 
+            !req.contractorId || req.contractorId !== contractorId
+          );
+          
+          console.log('🔍 MaintenanceService - Filtered available jobs:', {
+            originalCount: available.length,
+            filteredCount: availableRequests.length
+          });
+          
+          // Call update with current job status categories and new available jobs
+          onUpdate(jobsByStatus, availableRequests);
+        },
+        onError
+      );
+      
+      // Return a combined unsubscribe function
+      return () => {
+        unsubscribeContractorJobs();
+        unsubscribeAvailable();
+      };
+    } catch (error) {
+      console.error('Error subscribing to contractor jobs by status:', error);
+      if (onError) onError(error);
+      return () => {};
+    }
+  },
+  subscribeToContractorJobs: (
     contractorId: string,
     onUpdate: (assigned: MaintenanceRequest[], available: MaintenanceRequest[]) => void,
     onError?: (error: any) => void
-  ): Promise<() => void> => {
-    console.warn('subscribeToContractorJobs stub called');
-    return () => {};
+  ): (() => void) => {
+    try {
+      console.log('🔍 MaintenanceService - Subscribing to contractor jobs for:', contractorId);
+      
+      let allJobsByStatus: { pending: MaintenanceRequest[], ongoing: MaintenanceRequest[], finished: MaintenanceRequest[] } = {
+        pending: [],
+        ongoing: [],
+        finished: []
+      };
+      let availableRequests: MaintenanceRequest[] = [];
+
+      // Subscribe to contractor profile document to get contracts structure
+      const contractorProfileRef = doc(db, 'contractorProfiles', contractorId);
+      const unsubscribeContractorJobs = onSnapshot(contractorProfileRef, async (contractorProfileDoc) => {
+        try {
+          if (contractorProfileDoc.exists()) {
+            const contractorProfileData = contractorProfileDoc.data();
+            const contracts = contractorProfileData.contracts || { pending: [], ongoing: [], finished: [] };
+            
+            console.log('🔍 MaintenanceService - Contractor profile contracts received:', {
+              contractorId,
+              pending: contracts.pending?.length || 0,
+              ongoing: contracts.ongoing?.length || 0,
+              finished: contracts.finished?.length || 0,
+              contracts
+            });
+
+            // Fetch maintenance request details for all contract arrays
+            const [pendingRequests, ongoingRequests, finishedRequests] = await Promise.all([
+              contracts.pending?.length > 0 ? getMaintenanceRequestsByIds(contracts.pending) : [],
+              contracts.ongoing?.length > 0 ? getMaintenanceRequestsByIds(contracts.ongoing) : [],
+              contracts.finished?.length > 0 ? getMaintenanceRequestsByIds(contracts.finished) : []
+            ]);
+
+            allJobsByStatus = {
+              pending: pendingRequests || [],
+              ongoing: ongoingRequests || [],
+              finished: finishedRequests || []
+            };
+
+            console.log('🔍 MaintenanceService - Fetched job details:', {
+              pendingJobs: allJobsByStatus.pending.length,
+              ongoingJobs: allJobsByStatus.ongoing.length,
+              finishedJobs: allJobsByStatus.finished.length,
+              pendingIds: allJobsByStatus.pending.map(j => j.id),
+              ongoingIds: allJobsByStatus.ongoing.map(j => j.id),
+              finishedIds: allJobsByStatus.finished.map(j => j.id)
+            });
+
+            // Combine all assigned jobs for backward compatibility
+            const assignedJobs = [...allJobsByStatus.pending, ...allJobsByStatus.ongoing, ...allJobsByStatus.finished];
+            
+            // Call the update function with new data
+            onUpdate(assignedJobs, availableRequests);
+          } else {
+            console.log('🔍 MaintenanceService - Contractor profile document not found:', contractorId);
+            allJobsByStatus = { pending: [], ongoing: [], finished: [] };
+            onUpdate([], availableRequests);
+          }
+        } catch (error) {
+          console.error('🔍 MaintenanceService - Error processing contractor jobs:', error);
+          if (onError) onError(error);
+        }
+      }, (error) => {
+        console.error('🔍 MaintenanceService - Contractor profile snapshot error:', error);
+        if (onError) onError(error);
+      });
+      
+      // Subscribe to available jobs (jobs that are unassigned)
+      const unsubscribeAvailable = subscribeToMaintenanceRequests(
+        {
+          status: ['pending'],
+          limit: 20
+        },
+        (available) => {
+          console.log('🔍 MaintenanceService - Available jobs received:', {
+            count: available.length,
+            jobs: available.map(j => ({ 
+              id: j.id, 
+              status: j.status, 
+              contractorId: j.contractorId,
+              title: j.title,
+              description: j.description?.substring(0, 50) 
+            }))
+          });
+          
+          // Filter out any requests that might already be assigned to this contractor
+          availableRequests = available.filter(req => 
+            !req.contractorId || req.contractorId !== contractorId
+          );
+          
+          console.log('🔍 MaintenanceService - Filtered available jobs:', {
+            originalCount: available.length,
+            filteredCount: availableRequests.length
+          });
+          
+          // Call update with current assigned jobs and new available jobs
+          const assignedJobs = [...allJobsByStatus.pending, ...allJobsByStatus.ongoing, ...allJobsByStatus.finished];
+          onUpdate(assignedJobs, availableRequests);
+        },
+        onError
+      );
+      
+      // Return a combined unsubscribe function
+      return () => {
+        unsubscribeContractorJobs();
+        unsubscribeAvailable();
+      };
+    } catch (error) {
+      console.error('Error subscribing to contractor jobs:', error);
+      if (onError) onError(error);
+      return () => {};
+    }
   },
   subscribeToLandlordRequests: async (
     landlordId: string,
@@ -656,13 +928,56 @@ export const maintenanceService = {
     return () => {};
   },
   assignContractor: async (requestId: string, contractorId: string): Promise<void> => {
-    console.warn('assignContractor stub called');
-  },
-  declineJob: async (requestId: string, contractorId: string, reason: string): Promise<void> => {
-    console.warn('declineJob stub called');
+    try {
+      const functions = getFunctions();
+      const assignContractorFunction = httpsCallable(functions, 'assignContractorToRequest');
+      
+      await assignContractorFunction({ requestId, contractorId });
+      console.log(`Successfully assigned contractor ${contractorId} to request ${requestId}`);
+    } catch (error) {
+      console.error('Error assigning contractor:', error);
+      throw new Error(`Failed to assign contractor: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   },
   acceptJob: async (requestId: string, contractorId: string): Promise<void> => {
-    console.warn('acceptJob stub called');
+    try {
+      await updateMaintenanceRequestStatus(
+        requestId,
+        'in-progress',
+        contractorId,
+        'contractor',
+        'Job accepted by contractor'
+      );
+      console.log(`Contractor ${contractorId} accepted job ${requestId}`);
+    } catch (error) {
+      console.error('Error accepting job:', error);
+      throw new Error(`Failed to accept job: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  },
+  declineJob: async (requestId: string, contractorId: string, reason: string): Promise<void> => {
+    try {
+      // Update status back to pending and add note about decline
+      await updateMaintenanceRequestStatus(
+        requestId,
+        'pending',
+        contractorId,
+        'contractor',
+        `Job declined by contractor. Reason: ${reason}`,
+        { contractorId: undefined } // Remove contractor assignment
+      );
+      
+      // Remove contractorId from the request
+      const requestRef = doc(requestsCollection, requestId);
+      await updateDoc(requestRef, {
+        contractorId: null,
+        assignedDate: null
+      });
+      
+      console.log(`Contractor ${contractorId} declined job ${requestId}`);
+    } catch (error) {
+      console.error('Error declining job:', error);
+      throw new Error(`Failed to decline job: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   },
   startJob: async (requestId: string, contractorId: string): Promise<void> => {
     console.warn('startJob stub called');

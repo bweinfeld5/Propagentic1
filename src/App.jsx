@@ -62,7 +62,7 @@ const BlueprintTest = lazy(() => import('./components/testing/BlueprintTest'));
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
 const ContractorEstimateReadinessDemo = lazy(() => import('./components/landlord/ContractorEstimateReadinessDemo.jsx'));
 const EmailVerificationTest = lazy(() => import('./pages/EmailVerificationTest.jsx'));
-const UserProfilePage = lazy(() => import('./pages/UserProfilePage.tsx'));
+const UserProfilePage = lazy(() => import('./pages/ProfilePage.jsx'));
 
 // Route Guards
 const PrivateRoute = ({ children }) => {

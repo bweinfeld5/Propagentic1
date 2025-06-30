@@ -30,6 +30,11 @@ import maintenanceService from '../../services/firestore/maintenanceService';
 import contractorService from '../../services/firestore/contractorService';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { toast } from 'react-hot-toast';
+import { debugMaintenancePermissions, printDebugResults } from '../../utils/maintenancePermissionDebugger';
+// Load console debugging tools in development
+if (process.env.NODE_ENV === 'development') {
+  import('../../utils/consoleDebugger');
+}
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import CommunicationCenter from '../../components/communication/CommunicationCenter';
@@ -627,9 +632,48 @@ const LandlordDashboard: React.FC = () => {
       toast.success('Maintenance request deleted successfully!', { id: toastId });
     } catch (error: any) {
       console.error("Error deleting maintenance request:", error);
-      toast.error(`Failed to delete request: ${error.message}`, { id: toastId });
+      
+      // If deletion fails, run diagnostic
+      console.log("🔍 Running permission diagnostic...");
+      try {
+        const debugResults = await debugMaintenancePermissions(requestId);
+        printDebugResults(debugResults);
+        
+        // Show more helpful error message based on debug results
+        const hasPropertyOwnershipIssue = !debugResults.propertyOwnership.ownsProperty;
+        const hasRoleIssue = !debugResults.userRole.isLandlord;
+        
+        if (hasPropertyOwnershipIssue) {
+          toast.error(`Permission denied: You don't own the property associated with this request. Property owner: ${debugResults.propertyOwnership.landlordId}`, { id: toastId });
+        } else if (hasRoleIssue) {
+          toast.error(`Permission denied: Your account role is '${debugResults.userRole.userType}' but needs to be 'landlord'`, { id: toastId });
+        } else {
+          toast.error(`Failed to delete request: ${error.message}. Check console for detailed permissions analysis.`, { id: toastId });
+        }
+      } catch (debugError) {
+        toast.error(`Failed to delete request: ${error.message}`, { id: toastId });
+      }
     } finally {
       setDeletingTicket(null);
+    }
+  };
+
+  // Debug function for permission troubleshooting
+  const handleDebugPermissions = async (requestId: string) => {
+    const toastId = toast.loading('Running permission diagnostic...');
+    try {
+      const debugResults = await debugMaintenancePermissions(requestId);
+      printDebugResults(debugResults);
+      
+      if (debugResults.maintenanceRequest.canDelete) {
+        toast.success('✅ Permissions look good! Check console for details.', { id: toastId });
+      } else {
+        const issues = debugResults.recommendations.filter(r => r.startsWith('❌')).length;
+        toast.error(`❌ Found ${issues} permission issue(s). Check console for details.`, { id: toastId });
+      }
+    } catch (error) {
+      console.error('Debug failed:', error);
+      toast.error('Debug diagnostic failed. Check console.', { id: toastId });
     }
   };
 
@@ -1431,23 +1475,38 @@ const LandlordDashboard: React.FC = () => {
                             {(ticket.status || 'pending').toUpperCase()}
                           </span>
                           
-                          {/* Delete button - appears on hover */}
+                          {/* Debug and Delete buttons - appear on hover */}
                           {(hoveredTicket === ticket.id || deletingTicket === ticket.id) && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteMaintenanceRequest(ticket.id, ticket.title || 'Maintenance Request');
-                              }}
-                              disabled={deletingTicket === ticket.id}
-                              className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
-                              title="Delete maintenance request"
-                            >
-                              {deletingTicket === ticket.id ? (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                              ) : (
-                                <TrashIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                              )}
-                            </button>
+                            <div className="flex items-center gap-2">
+                              {/* Debug permissions button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDebugPermissions(ticket.id);
+                                }}
+                                className="p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-md transition-all duration-200 group"
+                                title="Debug delete permissions"
+                              >
+                                <EyeIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                              </button>
+                              
+                              {/* Delete button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteMaintenanceRequest(ticket.id, ticket.title || 'Maintenance Request');
+                                }}
+                                disabled={deletingTicket === ticket.id}
+                                className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
+                                title="Delete maintenance request"
+                              >
+                                {deletingTicket === ticket.id ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                ) : (
+                                  <TrashIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                )}
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -1573,23 +1632,38 @@ const LandlordDashboard: React.FC = () => {
                             {(ticket.status || 'completed').toUpperCase()}
                           </span>
                           
-                          {/* Delete button - appears on hover */}
+                          {/* Debug and Delete buttons - appear on hover */}
                           {(hoveredTicket === ticket.id || deletingTicket === ticket.id) && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteMaintenanceRequest(ticket.id, ticket.title || 'Maintenance Request');
-                              }}
-                              disabled={deletingTicket === ticket.id}
-                              className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
-                              title="Delete maintenance request"
-                            >
-                              {deletingTicket === ticket.id ? (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                              ) : (
-                                <TrashIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                              )}
-                            </button>
+                            <div className="flex items-center gap-2">
+                              {/* Debug permissions button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDebugPermissions(ticket.id);
+                                }}
+                                className="p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-md transition-all duration-200 group"
+                                title="Debug delete permissions"
+                              >
+                                <EyeIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                              </button>
+                              
+                              {/* Delete button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteMaintenanceRequest(ticket.id, ticket.title || 'Maintenance Request');
+                                }}
+                                disabled={deletingTicket === ticket.id}
+                                className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
+                                title="Delete maintenance request"
+                              >
+                                {deletingTicket === ticket.id ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                ) : (
+                                  <TrashIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                )}
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>

@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateContractorJobStatus = exports.assignContractorToRequest = void 0;
+exports.updateContractorJobStatus = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const admin = __importStar(require("firebase-admin"));
 const logger = __importStar(require("firebase-functions/logger"));
@@ -41,76 +41,6 @@ if (!admin.apps.length) {
     admin.initializeApp();
 }
 const db = admin.firestore();
-exports.assignContractorToRequest = (0, https_1.onCall)(async (request) => {
-    // 1. Authentication & Validation
-    if (!request.auth) {
-        throw new https_1.HttpsError('unauthenticated', 'The function must be called while authenticated.');
-    }
-    const landlordId = request.auth.uid;
-    const { requestId, contractorId } = request.data;
-    if (!requestId || !contractorId) {
-        throw new https_1.HttpsError('invalid-argument', 'The function must be called with "requestId" and "contractorId" arguments.');
-    }
-    logger.info(`Assigning contractor ${contractorId} to request ${requestId} by landlord ${landlordId}`);
-    // 2. Define Document References - UPDATED to use contractorProfiles
-    const requestRef = db.collection('maintenanceRequests').doc(requestId);
-    const contractorProfileRef = db.collection('contractorProfiles').doc(contractorId);
-    try {
-        // 3. Perform all updates in a single atomic transaction
-        await db.runTransaction(async (transaction) => {
-            // READ PHASE: Perform all reads first.
-            const requestDoc = await transaction.get(requestRef);
-            if (!requestDoc.exists) {
-                throw new https_1.HttpsError('not-found', 'Maintenance request not found.');
-            }
-            const contractorProfileDoc = await transaction.get(contractorProfileRef);
-            if (!contractorProfileDoc.exists) {
-                throw new https_1.HttpsError('not-found', 'Contractor profile not found.');
-            }
-            // WRITE PHASE: Perform all writes now.
-            // a. Update the maintenance request document
-            transaction.update(requestRef, {
-                contractorId: contractorId,
-                status: 'in-progress', // Set status to 'in-progress' upon assignment
-                updatedAt: admin.firestore.FieldValue.serverTimestamp()
-            });
-            // b. Update the contractor profile with the new contract
-            const contractorProfileData = contractorProfileDoc.data();
-            // Check if the contractor profile has the new contracts structure
-            if (contractorProfileData && contractorProfileData.contracts) {
-                // Use the new contracts structure - add to pending array
-                transaction.update(contractorProfileRef, {
-                    'contracts.pending': admin.firestore.FieldValue.arrayUnion(requestId),
-                    // Also maintain backward compatibility with the old field
-                    maintenanceRequests: admin.firestore.FieldValue.arrayUnion(requestId),
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                });
-            }
-            else {
-                // Initialize the contracts structure and add the request
-                transaction.update(contractorProfileRef, {
-                    contracts: {
-                        pending: [requestId],
-                        ongoing: [],
-                        finished: []
-                    },
-                    // Also maintain backward compatibility with the old field
-                    maintenanceRequests: admin.firestore.FieldValue.arrayUnion(requestId),
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                });
-            }
-        });
-        logger.info(`Successfully assigned contractor ${contractorId} to request ${requestId}`);
-        return { success: true, message: "Contractor assigned successfully." };
-    }
-    catch (error) {
-        console.error("Error assigning contractor:", error);
-        if (error instanceof https_1.HttpsError) {
-            throw error;
-        }
-        throw new https_1.HttpsError('internal', 'An internal error occurred while assigning the contractor.');
-    }
-});
 /**
  * Update contractor job status - move jobs between pending, ongoing, and finished
  */
@@ -199,4 +129,4 @@ exports.updateContractorJobStatus = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('internal', 'An internal error occurred while updating job status.');
     }
 });
-//# sourceMappingURL=assignContractorToRequest.js.map
+//# sourceMappingURL=updateContractorJobStatus.js.map

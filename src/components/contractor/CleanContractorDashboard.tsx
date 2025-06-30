@@ -11,6 +11,9 @@ import {
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext';
+import ContractorJobAssignments from './ContractorJobAssignments';
+import { maintenanceService } from '../../services/firestore/maintenanceService';
+import { MaintenanceRequest } from '../../models/MaintenanceRequest';
 
 interface ContractorStats {
   newJobs: number;
@@ -30,29 +33,118 @@ const CleanContractorDashboard: React.FC = () => {
     weeklyEarnings: 0,
     monthlyEarnings: 0
   });
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - replace with real data fetching
+  // Real data fetching for stats
   useEffect(() => {
-    setStats({
-      newJobs: 0,
-      activeJobs: 0,
-      completedThisMonth: 0,
-      weeklyEarnings: 0,
-      monthlyEarnings: 0
-    });
-  }, []);
+    if (!currentUser?.uid) {
+      setLoading(false);
+      return;
+    }
+
+    const contractorId = currentUser.uid;
+    let unsubscribe: (() => void) | null = null;
+
+    try {
+      // Subscribe to contractor jobs to calculate stats
+      unsubscribe = maintenanceService.subscribeToContractorJobs(
+        contractorId,
+        (assignedJobs: MaintenanceRequest[], availableJobs: MaintenanceRequest[]) => {
+          try {
+            // Calculate stats from real data with safety checks
+            const newJobs = Array.isArray(availableJobs) ? availableJobs.length : 0;
+            const activeJobs = Array.isArray(assignedJobs) 
+              ? assignedJobs.filter((job: MaintenanceRequest) => 
+                  job && (job.status === 'assigned' || job.status === 'in-progress')
+                ).length 
+              : 0;
+            
+            // Calculate completed this month
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            const completedThisMonth = Array.isArray(assignedJobs) 
+              ? assignedJobs.filter((job: MaintenanceRequest) => {
+                  if (!job || job.status !== 'completed' || !job.completedDate) return false;
+                  try {
+                    const completedDate = job.completedDate instanceof Date 
+                      ? job.completedDate 
+                      : (job.completedDate as any).toDate 
+                        ? (job.completedDate as any).toDate() 
+                        : new Date(job.completedDate);
+                    return completedDate.getMonth() === currentMonth && 
+                           completedDate.getFullYear() === currentYear;
+                  } catch (dateError) {
+                    console.warn('Error processing completion date:', dateError);
+                    return false;
+                  }
+                }).length
+              : 0;
+
+            // Calculate estimated earnings (this is a simple calculation, adjust as needed)
+            const weeklyEarnings = Array.isArray(assignedJobs)
+              ? assignedJobs
+                  .filter((job: MaintenanceRequest) => job && job.estimatedCost && job.status === 'completed')
+                  .reduce((total: number, job: MaintenanceRequest) => total + (job.estimatedCost || 0), 0)
+              : 0;
+
+            setStats({
+              newJobs,
+              activeJobs,
+              completedThisMonth,
+              weeklyEarnings,
+              monthlyEarnings: weeklyEarnings * 4 // Simple estimate
+            });
+            setLoading(false);
+          } catch (error) {
+            console.error('Error calculating stats:', error);
+            setLoading(false);
+          }
+        },
+        (error: any) => {
+          console.error('Error loading contractor stats:', error);
+          setLoading(false);
+        }
+      );
+    } catch (error) {
+      console.error('Error setting up stats subscription:', error);
+      setLoading(false);
+    }
+
+    return () => {
+      try {
+        if (unsubscribe) {
+          unsubscribe();
+        }
+      } catch (error) {
+        console.error('Error during stats cleanup:', error);
+      }
+    };
+  }, [currentUser?.uid]);
+
+  // Keep existing useEffect as fallback
+  useEffect(() => {
+    if (!currentUser?.uid) {
+      setStats({
+        newJobs: 0,
+        activeJobs: 0,
+        completedThisMonth: 0,
+        weeklyEarnings: 0,
+        monthlyEarnings: 0
+      });
+    }
+  }, [currentUser?.uid]);
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: ChartBarIcon },
-    { id: 'jobs', label: 'Job Assignments', icon: ClipboardDocumentListIcon },
+    { id: 'jobs', label: 'My Assignments', icon: ClipboardDocumentListIcon },
     { id: 'verification', label: 'Document Verification', icon: DocumentCheckIcon },
     { id: 'notifications', label: 'Notifications', icon: BellIcon }
   ];
 
   const quickActions = [
     {
-      title: 'View Jobs',
-      subtitle: 'Check new assignments',
+      title: 'View Assignments',
+      subtitle: 'Check my assignments',
       icon: ClipboardDocumentListIcon,
       action: () => setActiveTab('jobs')
     },
@@ -286,14 +378,7 @@ const CleanContractorDashboard: React.FC = () => {
         )}
 
         {activeTab === 'jobs' && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Job Assignments</h2>
-            <div className="text-center py-12">
-              <ClipboardDocumentListIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No job assignments at the moment</p>
-              <p className="text-sm text-gray-400 mt-2">New assignments will appear here</p>
-            </div>
-          </div>
+          <ContractorJobAssignments />
         )}
 
         {activeTab === 'verification' && (

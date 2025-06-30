@@ -22,7 +22,8 @@ import {
   EmergencyContact,
   DocumentReference,
   UserPreferences,
-  NotificationPreferences
+  NotificationPreferences,
+  UserRole
 } from './tenantSchema';
 
 import { createTypedConverter, safeCast } from '../utils/TypeUtils';
@@ -99,11 +100,22 @@ const baseUserConverter: FirestoreDataConverter<BaseUser> = {
   ): BaseUser {
     const data = snapshot.data(options);
     
+    // Determine role - do NOT default to 'tenant' if missing
+    const role = data.role || data.userType;
+    const userType = data.userType || data.role;
+    
+    // If neither role nor userType exists, log an error but don't crash
+    if (!role && !userType) {
+      console.error(`User ${snapshot.id} has no role or userType field:`, data);
+      // Instead of defaulting to 'tenant', throw an error or use a special value
+      throw new Error(`User ${snapshot.id} is missing both role and userType fields`);
+    }
+    
     return safeCast<BaseUser>({
       uid: snapshot.id,
       email: data.email || '',
-      role: data.role || data.userType || 'tenant',
-      userType: data.userType || data.role || 'tenant',
+      role: role,
+      userType: userType,
       name: data.name || `${data.firstName || ''} ${data.lastName || ''}`.trim(),
       firstName: data.firstName,
       lastName: data.lastName,

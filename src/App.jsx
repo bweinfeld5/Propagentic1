@@ -66,6 +66,7 @@ const UserProfilePage = lazy(() => import('./pages/UserProfilePage.tsx'));
 const ContractorRegistrationPage = lazy(() => import('./pages/ContractorRegistrationPage.tsx'));
 const EnhancedContractorRegistrationPage = lazy(() => import('./pages/EnhancedContractorRegistrationPage.tsx'));
 const LandlordWaitlistPage = lazy(() => import('./pages/LandlordWaitlistPage.tsx'));
+const StripeMcpDashboard = lazy(() => import('./components/admin/StripeMcpDashboard.tsx'));
 
 // Route Guards
 const PrivateRoute = ({ children }) => {
@@ -287,6 +288,7 @@ function App() {
                                 <Route path="/contractor/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={90}><ContractorDashboard /></ProfileCompletionGuard></PrivateRoute>} />
                                 <Route path="/admin" element={<PrivateRoute><Navigate to="/admin/dashboard" replace /></PrivateRoute>} />
                                 <Route path="/admin/dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+                                <Route path="/admin/stripe-mcp" element={<PrivateRoute><StripeMcpDashboard /></PrivateRoute>} />
                                 <Route path="/u/profile" element={<PrivateRoute><UserProfilePage /></PrivateRoute>} />
                                 <Route path="/contractor/messages" element={<PrivateRoute><ContractorMessagesPage /></PrivateRoute>} />
                                 <Route path="/contractor/profile" element={<PrivateRoute><ContractorProfilePage /></PrivateRoute>} />

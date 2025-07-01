@@ -66,6 +66,24 @@ try {
   console.error('❌ Failed to load acceptTenantInvite function:', error.message);
 }
 
+// Contractor Assignment functions (Job Status Tracking)
+try {
+  const assignContractorFunctions = require('./lib/assignContractorToRequest');
+  exports.assignContractorToRequest = assignContractorFunctions.assignContractorToRequest;
+  console.log('✅ Loaded contractor assignment function');
+} catch (error) {
+  console.error('❌ Failed to load contractor assignment function:', error.message);
+}
+
+// Contractor Job Status Update function (separate file)
+try {
+  const updateJobStatusFunctions = require('./lib/updateContractorJobStatus');
+  exports.updateContractorJobStatus = updateJobStatusFunctions.updateContractorJobStatus;
+  console.log('✅ Loaded contractor job status update function');
+} catch (error) {
+  console.error('❌ Failed to load contractor job status update function:', error.message);
+}
+
 // Notification trigger functions
 try {
   const inviteTriggers = require('./lib/inviteTriggers');

@@ -71,6 +71,15 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(tenantId)).data.userType == 'tenant';
     }
 
+    // Function to check if a user is a tenant of a specific property
+    function isTenantOfProperty(propertyId) {
+      let property = get(/databases/$(database)/documents/properties/$(propertyId)).data;
+      // Check if the current user's UID is in the property's tenants array
+      return isSignedIn() && 
+             property.keys().hasAny(['tenants']) && 
+             request.auth.uid in property.tenants;
+    }
+
     // Function to check if a user is a landlord - enhanced version that takes userId parameter
     function isLandlord(userId) {
       return exists(/databases/$(database)/documents/landlordProfiles/$(userId));
@@ -220,7 +229,7 @@ service cloud.firestore {
       allow write: if false && isRestrictedFieldUpdate();
     }
 
-    // Contractors Collection - for landlord's preferred contractors list
+    // Contractors Collection - for landlord's preferred contractors list and contractor job tracking
     match /contractors/{contractorId} {
       // Helper function to check if contractor belongs to the requesting landlord
       function isContractorOwner() {
@@ -233,25 +242,32 @@ service cloud.firestore {
                request.resource.data.landlordId == request.auth.uid;
       }
 
-      // Landlords can read their own contractors, admins can read all
+      // Helper function to check if this is the contractor themselves
+      function isOwnContractorDocument() {
+        return isSignedIn() && request.auth.uid == contractorId;
+      }
+
+      // Contractors can read their own documents, landlords can read their own contractors, admins can read all
       allow read: if isSignedIn() && (
+        isOwnContractorDocument() ||
         (isCurrentUserLandlord() && resource.data.landlordId == request.auth.uid) ||
         isAdmin()
       );
 
-      // Allow landlords to list their contractors
-      allow list: if isSignedIn() && (isCurrentUserLandlord() || isAdmin());
+      // Allow contractors to list their own documents, landlords to list their contractors, admins to list all
+      allow list: if isSignedIn() && (isContractor() || isCurrentUserLandlord() || isAdmin());
 
       // Landlords can create contractors for themselves
       allow create: if isValidContractorCreation();
 
-      // Landlords can update their own contractors
+      // Contractors can update their own contracts field, landlords can update their own contractors, admins can update all
       allow update: if isSignedIn() && (
+        isOwnContractorDocument() ||
         isContractorOwner() ||
         isAdmin()
       );
 
-      // Landlords can delete their own contractors
+      // Landlords can delete their own contractors, admins can delete any
       allow delete: if isSignedIn() && (
         isContractorOwner() ||
         isAdmin()
@@ -268,14 +284,16 @@ service cloud.firestore {
 
       // Allow individual document reads for property owners, managers, tenants, and admins
       // Admins can read any property for oversight, landlords can read their own properties
+      // Tenants can read properties they are associated with
       allow get: if isSignedIn() && (
         isAdmin() || 
         isPropertyOwner(propertyId) ||
-        isPropertyManager(propertyId)
+        isPropertyManager(propertyId) ||
+        isTenantOfProperty(propertyId)
       );
       
-      // Allow listing properties for landlords (their own) and admins (all properties)
-      allow list: if isSignedIn() && (isLandlord() || isAdmin());
+      // Allow listing properties for landlords (their own), tenants (their properties), and admins (all properties)
+      allow list: if isSignedIn() && (isLandlord() || isTenant() || isAdmin());
       
       // Property creation access
       allow create: if isSignedIn() && (isLandlord() || isAdmin());

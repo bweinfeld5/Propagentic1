@@ -120,6 +120,16 @@ export interface ContractorProfile {
   rating: number; // Average rating (0-5)
   jobsCompleted: number; // Number of jobs completed
   companyName?: string; // Optional company name
+  
+  // Legacy field - maintained for backward compatibility
+  maintenanceRequests?: string[]; // Array of maintenance request IDs (legacy)
+  
+  // New job status tracking structure
+  contracts?: {
+    pending: string[]; // Array of maintenance request IDs in pending status
+    ongoing: string[]; // Array of maintenance request IDs in ongoing status
+    finished: string[]; // Array of maintenance request IDs in finished status
+  };
 }
 
 /**

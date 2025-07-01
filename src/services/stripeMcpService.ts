@@ -99,7 +99,7 @@ export class StripeMcpService {
     productId: string,
     unitAmount: number,
     currency: string = 'usd',
-    recurring?: { interval: 'month' | 'year'; interval_count?: number }
+    recurring?: { interval: string; interval_count?: number }
   ): Partial<StripeMcpPrice> {
     return {
       product: productId,

@@ -394,7 +394,6 @@ const RegisterPage = ({ initialRole, isPremium }) => {
                       className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 ${
                         validationErrors.password ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-gray-50'
                       }`}
-<<<<<<< HEAD
                       placeholder="Min. 8 characters"
                     />
                     <button

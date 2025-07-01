@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Card from '../ui/Card';
+import Card from '../ui/Card.jsx';
 import Button from '../ui/Button';
 import { stripeMcpService, mcpExamples, integrationHelpers, developmentTips } from '../../services/stripeMcpService';
 import { 

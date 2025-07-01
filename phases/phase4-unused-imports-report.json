@@ -1,0 +1,200 @@
+{
+  "timestamp": "2025-07-01T22:00:42.395Z",
+  "summary": {
+    "unusedImports": 29,
+    "duplicateImports": 1,
+    "errors": 0
+  },
+  "results": {
+    "unusedImports": [
+      {
+        "file": "src/App.jsx",
+        "import": "BrowserRouter as Router",
+        "line": 2,
+        "type": "named"
+      },
+      {
+        "file": "src/components/contractor/CompletedJobsHistory.jsx",
+        "import": "MagnifyingGlassIcon as SearchIcon",
+        "line": 3,
+        "type": "named"
+      },
+      {
+        "file": "src/components/contractor/ContractorOverviewCards.jsx",
+        "import": "ClipboardDocumentListIcon as ClipboardListIcon",
+        "line": 2,
+        "type": "named"
+      },
+      {
+        "file": "src/components/contractor/ContractorOverviewCards.jsx",
+        "import": "BoltIcon as LightningBoltIcon",
+        "line": 2,
+        "type": "named"
+      },
+      {
+        "file": "src/components/contractor/ContractorRatingDisplay.jsx",
+        "import": "StarIcon as StarSolidIcon",
+        "line": 12,
+        "type": "named"
+      },
+      {
+        "file": "src/components/contractor/widgets/PerformanceMetrics.jsx",
+        "import": "StarIcon as StarIconSolid",
+        "line": 12,
+        "type": "named"
+      },
+      {
+        "file": "src/components/dashboard/StatsChart.jsx",
+        "import": "Chart as ChartJS",
+        "line": 3,
+        "type": "named"
+      },
+      {
+        "file": "src/components/layout/DashboardLayout.jsx",
+        "import": "NotificationProvider as NotificationCenterProvider",
+        "line": 4,
+        "type": "named"
+      },
+      {
+        "file": "src/components/layout/HomeNavLink.jsx",
+        "import": "NavLink as RouterNavLink",
+        "line": 2,
+        "type": "named"
+      },
+      {
+        "file": "src/components/maintenance/MaintenanceForm.jsx",
+        "import": "v4 as uuidv4",
+        "line": 7,
+        "type": "named"
+      },
+      {
+        "file": "src/components/maintenance/MaintenanceRequestForm.jsx",
+        "import": "v4 as uuidv4",
+        "line": 7,
+        "type": "named"
+      },
+      {
+        "file": "src/components/reports/ReportsModule.jsx",
+        "import": "Chart as ChartJS",
+        "line": 25,
+        "type": "named"
+      },
+      {
+        "file": "src/components/reports/ReportsModule.jsx",
+        "import": "Bar as BarJS",
+        "line": 26,
+        "type": "named"
+      },
+      {
+        "file": "src/components/reports/ReportsModule.jsx",
+        "import": "Pie as PieChartJS",
+        "line": 26,
+        "type": "named"
+      },
+      {
+        "file": "src/components/shared/ProfileNavigation.jsx",
+        "import": "UserIcon as UserIconSolid",
+        "line": 4,
+        "type": "named"
+      },
+      {
+        "file": "src/components/tenant/RequestForm.jsx",
+        "import": "v4 as uuidv4",
+        "line": 5,
+        "type": "named"
+      },
+      {
+        "file": "src/components/ui/ActionFeedback.jsx",
+        "import": "CheckCircleIcon as CheckCircleSolid",
+        "line": 11,
+        "type": "named"
+      },
+      {
+        "file": "src/components/ui/SafeMotion.jsx",
+        "import": "useReducedMotion as useA11yReducedMotion",
+        "line": 11,
+        "type": "named"
+      },
+      {
+        "file": "src/components/ui/SafeMotion.jsx",
+        "import": "safeDelay as utilSafeDelay",
+        "line": 12,
+        "type": "named"
+      },
+      {
+        "file": "src/lib/utils.ts",
+        "import": "type ClassValue",
+        "line": 1,
+        "type": "named"
+      },
+      {
+        "file": "src/services/inviteCodeService.ts",
+        "import": "createInviteCode as createInviteCodeModel",
+        "line": 23,
+        "type": "named"
+      },
+      {
+        "file": "src/components/InvitationBanner.tsx",
+        "import": "InviteCode as Invite",
+        "line": 5,
+        "type": "named"
+      },
+      {
+        "file": "src/components/landlord/ContractorCard.tsx",
+        "import": "StarIcon as StarIconSolid",
+        "line": 12,
+        "type": "named"
+      },
+      {
+        "file": "src/components/maintenance/RequestStatusTracker.tsx",
+        "import": "CheckCircleIcon as CheckCircleSolid",
+        "line": 35,
+        "type": "named"
+      },
+      {
+        "file": "src/components/payments/CreateEscrowModal.tsx",
+        "import": "EscrowMilestone as ServiceEscrowMilestone",
+        "line": 18,
+        "type": "named"
+      },
+      {
+        "file": "src/components/payments/EscrowCard.tsx",
+        "import": "EscrowAccount as ServiceEscrowAccount",
+        "line": 14,
+        "type": "named"
+      },
+      {
+        "file": "src/components/payments/EscrowDashboard.tsx",
+        "import": "EscrowAccount as ServiceEscrowAccount",
+        "line": 22,
+        "type": "named"
+      },
+      {
+        "file": "src/components/payments/PaymentMethodManager.tsx",
+        "import": "PaymentMethod as BasePaymentMethod",
+        "line": 13,
+        "type": "named"
+      },
+      {
+        "file": "src/components/payments/ReleaseRequestModal.tsx",
+        "import": "EscrowAccount as ServiceEscrowAccount",
+        "line": 13,
+        "type": "named"
+      }
+    ],
+    "unusedExports": [],
+    "unusedVariables": [],
+    "duplicateImports": [
+      {
+        "file": "src/services/firestore/contractorService.ts",
+        "import": "StandardContractorService",
+        "module": "../base/StandardContractorService",
+        "lines": [
+          6,
+          302
+        ]
+      }
+    ],
+    "errors": []
+  }
+}

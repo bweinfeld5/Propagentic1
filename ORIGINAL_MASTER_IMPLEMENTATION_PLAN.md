@@ -6,11 +6,11 @@ This master plan consolidates all issues identified across recent audits and doc
 **Sources Analyzed**:
 - `CONTRACTOR_ONBOARDING_AUDIT.md` - Critical data model mismatches
 - `SIGNUP_TO_DASHBOARD_GAPS.md` - Authentication and routing issues  
-- `docs/DATA_MODEL_STANDARDS.md` - Data consistency requirements
-- `docs/FIREBASE_COLLECTIONS_SCHEMA.md` - Database structure
-- `docs/ONBOARDING_IMPLEMENTATION_GUIDE.md` - Detailed fix instructions
-- `docs/SERVICE_LAYER_ARCHITECTURE.md` - Service integration patterns
-- `docs/TESTING_STRATEGY.md` - Testing requirements
+- `docs/architecture/DATA_MODEL_STANDARDS.md` - Data consistency requirements
+- `docs/architecture/FIREBASE_COLLECTIONS_SCHEMA.md` - Database structure
+- `docs/development/ONBOARDING_IMPLEMENTATION_GUIDE.md` - Detailed fix instructions
+- `docs/architecture/SERVICE_LAYER_ARCHITECTURE.md` - Service integration patterns
+- `docs/testing/TESTING_STRATEGY.md` - Testing requirements
 
 ---
 

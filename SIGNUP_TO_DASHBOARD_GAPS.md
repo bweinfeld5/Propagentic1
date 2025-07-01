@@ -184,7 +184,7 @@ const register = async (email, password, userType, isPremium = false) => {
 ---
 
 **Next Steps**: 
-1. Implement contractor profile creation fix (documented in `docs/ONBOARDING_IMPLEMENTATION_GUIDE.md`)
+1. Implement contractor profile creation fix (documented in `docs/development/ONBOARDING_IMPLEMENTATION_GUIDE.md`)
 2. Design and implement email verification flow
 3. Standardize all dashboard route references
 4. Create comprehensive integration tests for the full signup-to-dashboard journey 

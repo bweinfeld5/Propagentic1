@@ -58,7 +58,7 @@ STRIPE_WEBHOOK_SECRET=whsec_YOUR_WEBHOOK_SECRET_HERE
   - Revenue reporting
 - ✅ Development tips and quick links
 
-### 6. Integration Documentation (docs/STRIPE_MCP_INTEGRATION.md)
+### 6. Integration Documentation (docs/api/STRIPE_MCP_INTEGRATION.md)
 - ✅ Comprehensive setup guide
 - ✅ Usage examples for PropAgentic workflows
 - ✅ Troubleshooting guide
@@ -180,7 +180,7 @@ The MCP integration complements your existing Stripe setup:
 
 ## 📚 Resources
 
-- [Stripe MCP Integration Guide](docs/STRIPE_MCP_INTEGRATION.md)
+- [Stripe MCP Integration Guide](docs/api/STRIPE_MCP_INTEGRATION.md)
 - [Stripe Dashboard](https://dashboard.stripe.com/)
 - [Stripe MCP Documentation](https://docs.stripe.com/agents)
 - [Stripe Agent Toolkit](https://github.com/stripe/agent-toolkit)

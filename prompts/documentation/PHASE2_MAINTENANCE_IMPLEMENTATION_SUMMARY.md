@@ -92,7 +92,7 @@ Successfully completed the core Phase 2 maintenance dashboard components for Pro
 - Message history and pagination
 
 ### Firebase Integration Documentation
-**Location**: `docs/FIREBASE_INTEGRATION_SETUP.md`
+**Location**: `docs/deployment/FIREBASE_INTEGRATION_SETUP.md`
 
 **Covers:**
 - Firestore security rules for maintenance collections

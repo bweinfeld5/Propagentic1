@@ -1,0 +1,130 @@
+{
+  "timestamp": "2025-07-01T22:00:42.466Z",
+  "totalFiles": 712,
+  "totalSize": 6533531,
+  "averageLines": 260,
+  "largestFiles": [
+    {
+      "path": "src/components/landlord/AddPropertyModal.jsx",
+      "size": 83348,
+      "lines": 2227,
+      "complexity": 294.5
+    },
+    {
+      "path": "src/services/dataService.js",
+      "size": 82805,
+      "lines": 2486,
+      "complexity": 603.5
+    },
+    {
+      "path": "src/pages/landlord/LandlordDashboard.tsx",
+      "size": 82263,
+      "lines": 1956,
+      "complexity": 357
+    },
+    {
+      "path": "src/pages/tenant/EnhancedTenantDashboard.tsx",
+      "size": 54836,
+      "lines": 1203,
+      "complexity": 176.5
+    },
+    {
+      "path": "src/components/onboarding/ContractorOnboarding.jsx",
+      "size": 45093,
+      "lines": 1167,
+      "complexity": 250.5
+    },
+    {
+      "path": "src/components/landing/sections/WorkflowDemoSection.tsx",
+      "size": 39889,
+      "lines": 767,
+      "complexity": 111
+    },
+    {
+      "path": "src/components/landlord/PropertyDetails.jsx",
+      "size": 38384,
+      "lines": 826,
+      "complexity": 37
+    },
+    {
+      "path": "src/components/onboarding/LandlordOnboarding.jsx",
+      "size": 38015,
+      "lines": 959,
+      "complexity": 169
+    },
+    {
+      "path": "src/components/landing/newComponents/EnhancedInteractiveDemo.jsx",
+      "size": 37570,
+      "lines": 683,
+      "complexity": 134
+    },
+    {
+      "path": "src/services/firestore/maintenanceService.ts",
+      "size": 34792,
+      "lines": 1004,
+      "complexity": 246.5
+    }
+  ],
+  "mostComplexFiles": [
+    {
+      "path": "src/services/dataService.js",
+      "size": 82805,
+      "lines": 2486,
+      "complexity": 603.5
+    },
+    {
+      "path": "src/pages/landlord/LandlordDashboard.tsx",
+      "size": 82263,
+      "lines": 1956,
+      "complexity": 357
+    },
+    {
+      "path": "src/components/landlord/AddPropertyModal.jsx",
+      "size": 83348,
+      "lines": 2227,
+      "complexity": 294.5
+    },
+    {
+      "path": "src/components/onboarding/ContractorOnboarding.jsx",
+      "size": 45093,
+      "lines": 1167,
+      "complexity": 250.5
+    },
+    {
+      "path": "src/services/firestore/maintenanceService.ts",
+      "size": 34792,
+      "lines": 1004,
+      "complexity": 246.5
+    },
+    {
+      "path": "src/hooks/useWebVitals.js",
+      "size": 18916,
+      "lines": 661,
+      "complexity": 213.5
+    },
+    {
+      "path": "src/services/firestore/propertyService.ts",
+      "size": 20550,
+      "lines": 730,
+      "complexity": 186.5
+    },
+    {
+      "path": "src/pages/tenant/EnhancedTenantDashboard.tsx",
+      "size": 54836,
+      "lines": 1203,
+      "complexity": 176.5
+    },
+    {
+      "path": "src/test/accessibility/AccessibilityTestSuite.js",
+      "size": 19065,
+      "lines": 630,
+      "complexity": 176.5
+    },
+    {
+      "path": "src/components/landlord/ContractorEstimateReadinessIndicator.jsx",
+      "size": 24076,
+      "lines": 699,
+      "complexity": 175
+    }
+  ]
+}

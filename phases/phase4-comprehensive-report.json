@@ -1,0 +1,1189 @@
+{
+  "timestamp": "2025-07-01T22:00:42.467Z",
+  "phase": "Phase 4: Unused Code Detection and Removal",
+  "status": "Analysis Complete",
+  "summary": {
+    "unusedFiles": 36,
+    "potentiallyUnusedFiles": 109,
+    "unusedImports": 29,
+    "duplicateImports": 1,
+    "totalDependencies": 131,
+    "totalFiles": 712,
+    "totalCodeSize": 6533531
+  },
+  "individualReports": {
+    "unused-files-report": {
+      "timestamp": "2025-07-01T22:00:42.223Z",
+      "summary": {
+        "totalAnalyzed": 145,
+        "definitelyUnused": 36,
+        "potentiallyUnused": 109,
+        "errors": 0
+      },
+      "results": {
+        "potentiallyUnused": [
+          {
+            "path": "src/hooks/useLoadingStates.js",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/hooks/useOnboardingStatus.js",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/scripts/checkFirestoreRules.js",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/scripts/simpleMail.js",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/test/demoScenarios.js",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/test/paymentSystemTests.js",
+            "references": 1,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/test/runPaymentTests.js",
+            "references": 1,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/utils/errorTracker.js",
+            "references": 1,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/about/StorySection.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/about/TeamSection.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/about/ValuesSection.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/analytics/AdvancedAnalyticsDashboard.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/auth/ForgotPassword.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/auth/SimplifiedSignup.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/communication/RealTimeCommunicationEnhancer.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/contractor/ContractorOverviewCards.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/contractor/ContractorRatingDisplay.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/contractor/widgets/EarningsSummary.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/contractor/widgets/QuickActionsPanel.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/contractor/widgets/RecentMessages.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/contractor/widgets/UpcomingSchedule.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/contractor/widgets/WeatherWidget.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/dashboard/DragDropDashboard.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/debug/UserProfileDebug.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/demo/DemoMetricsOverlay.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/demo/DemoProgressBar.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/demo/DemoTimer.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/demo/Phase3Demo.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/demo/sections/LandlordOnboardingDemo.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/demo/sections/MaintenanceWorkflowDemo.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/demo/sections/TenantInvitationDemo.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/guards/PreLaunchGuard.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/icons/DashboardIcons.jsx",
+            "references": 1,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/landing/ContractorDashboardDemo.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/landing/MobileCTA.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/landing/OnboardingSection.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/landing/TenantDashboardDemo.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/landing/WalkthroughSection.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/landlord/ContractorEstimateReadinessDemo.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/landlord/InviteUserModal.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/landlord/PropertyTable.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/landlord/RequestFeed.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/layout/HeaderBar.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/layout/OnboardingLayout.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/mobile/PWAInstallBanner.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/notifications/NonEmailInvitationSystem.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/onboarding/ContractorOnboardingNew.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/onboarding/EnhancedLandlordOnboarding.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/onboarding/LandlordOnboardingNew.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/onboarding/OnboardingModal.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/reports/ReportsModule.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/search/AdvancedPropertySearch.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/shared/HeroErrorBoundary.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/shared/ProfileNavigation.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/tenant/MaintenanceRequestModal.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/tenant/TenantRequestForm.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/tenant/ui/WaitingCard.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/testing/BlueprintTest.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/AboutPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/AccessibilityDemoPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/admin/SurveyAdminPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/AIExamples.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/AITutorial.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/ContractorOnboardingPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/ContractorProfilePage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/demo/PitchDeckDemo.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/DemoShowcase.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/EmailVerificationTest.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/InternSurveyPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/JobDetailPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/JobHistoryPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/landlord/TenantsPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/LandlordDashboardDemoPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/MaintenanceFormPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/MyMaintenanceRequestsPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/PricingPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/RegisterPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/SettingsPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/SupportPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/TestEmailPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/TestPage.jsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/ui/Button.d.ts",
+            "references": 1,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/models/tenantConverters.ts",
+            "references": 1,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/models/tenantSchema.ts",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/services/dataService.d.ts",
+            "references": 1,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/services/firestore/propertyMaintenanceService.ts",
+            "references": 1,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/services/firestore/userService.ts",
+            "references": 1,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/admin/DocumentVerificationDashboard.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/admin/StripeMcpDashboard.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/contractor/CleanContractorDashboard.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/contractor/widgets/CommunicationPanel.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/contractor/widgets/NotificationsCenter.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/debug/QRCodeInviteTest.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/debug/QuickAuthTest.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/landing/CompetitorComparisonSection.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/landing/MaintenanceWorkflowWalkthrough.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/maintenance/MaintenanceSurvey.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/onboarding/SmartOnboarding.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/tenant/AIMaintenanceChat.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/contractor/ContractorMessagesPage.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/EnhancedContractorRegistrationPage.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/InviteCodeBrowserTest.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/InviteDebugPage.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/InviteValidationTest.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/LandlordWaitlistPage.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/SafeMotionDemo.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/pages/tenant/EnhancedMaintenancePage.tsx",
+            "references": 2,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/branding/AnimatedBlueprintBackground.module.css",
+            "references": 1,
+            "reason": "Very few references found"
+          },
+          {
+            "path": "src/components/search/AdvancedPropertySearch.css",
+            "references": 2,
+            "reason": "Very few references found"
+          }
+        ],
+        "definitelyUnused": [
+          {
+            "path": "src/scripts/adminMailTest.js",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/scripts/find-refresh-imports.js",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/scripts/runTestEmail.js",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/scripts/testDirectEmailSending.js",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/scripts/testEmailSending.js",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/scripts/testWaitlistDirect.js",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/scripts/testWaitlistEmailCJS.js",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/scripts/verify-invite-data.js",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/services/demoDataService.js",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/services/navigationService.js",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/utils/inviteCodeGenerator.js",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/utils/maintenanceUtils.js",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/utils/performance/lazyLoading.js",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/components/landing/newComponents/StickyHeader.jsx",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/components/landlord/PropertyFormValidation.jsx",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/security/SecurityComponents.jsx",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/features/profile/hooks/useProfileState.ts",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/features/profile/schemas/profile.schemas.ts",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/framer-motion.d.ts",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/react-app-env.d.ts",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/schemas/inviteZodSchema.ts",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/scripts/initializeCommunicationDb.ts",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/services/firestore/propertyService.example.ts",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/types/google-maps.d.ts",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/types/react-qr-code.d.ts",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/components/maintenance/RequestStatusTraker.tsx",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/features/profile/components/ActionButtons.tsx",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/features/profile/components/modals/AvatarUploadModal.tsx",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/features/profile/components/modals/ChangePasswordModal.tsx",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/features/profile/components/modals/EditFieldPanel.tsx",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/features/profile/components/tabs/NotificationsTab.tsx",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/features/profile/components/tabs/ProfileTab.tsx",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/features/profile/components/tabs/RoleDetailsTab.tsx",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/features/profile/components/tabs/SecurityTab.tsx",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/styles/pitch-demo.css",
+            "reason": "No references found in codebase"
+          },
+          {
+            "path": "src/styles/theme-cleanup.css",
+            "reason": "No references found in codebase"
+          }
+        ],
+        "errors": []
+      }
+    },
+    "unused-imports-report": {
+      "timestamp": "2025-07-01T22:00:42.395Z",
+      "summary": {
+        "unusedImports": 29,
+        "duplicateImports": 1,
+        "errors": 0
+      },
+      "results": {
+        "unusedImports": [
+          {
+            "file": "src/App.jsx",
+            "import": "BrowserRouter as Router",
+            "line": 2,
+            "type": "named"
+          },
+          {
+            "file": "src/components/contractor/CompletedJobsHistory.jsx",
+            "import": "MagnifyingGlassIcon as SearchIcon",
+            "line": 3,
+            "type": "named"
+          },
+          {
+            "file": "src/components/contractor/ContractorOverviewCards.jsx",
+            "import": "ClipboardDocumentListIcon as ClipboardListIcon",
+            "line": 2,
+            "type": "named"
+          },
+          {
+            "file": "src/components/contractor/ContractorOverviewCards.jsx",
+            "import": "BoltIcon as LightningBoltIcon",
+            "line": 2,
+            "type": "named"
+          },
+          {
+            "file": "src/components/contractor/ContractorRatingDisplay.jsx",
+            "import": "StarIcon as StarSolidIcon",
+            "line": 12,
+            "type": "named"
+          },
+          {
+            "file": "src/components/contractor/widgets/PerformanceMetrics.jsx",
+            "import": "StarIcon as StarIconSolid",
+            "line": 12,
+            "type": "named"
+          },
+          {
+            "file": "src/components/dashboard/StatsChart.jsx",
+            "import": "Chart as ChartJS",
+            "line": 3,
+            "type": "named"
+          },
+          {
+            "file": "src/components/layout/DashboardLayout.jsx",
+            "import": "NotificationProvider as NotificationCenterProvider",
+            "line": 4,
+            "type": "named"
+          },
+          {
+            "file": "src/components/layout/HomeNavLink.jsx",
+            "import": "NavLink as RouterNavLink",
+            "line": 2,
+            "type": "named"
+          },
+          {
+            "file": "src/components/maintenance/MaintenanceForm.jsx",
+            "import": "v4 as uuidv4",
+            "line": 7,
+            "type": "named"
+          },
+          {
+            "file": "src/components/maintenance/MaintenanceRequestForm.jsx",
+            "import": "v4 as uuidv4",
+            "line": 7,
+            "type": "named"
+          },
+          {
+            "file": "src/components/reports/ReportsModule.jsx",
+            "import": "Chart as ChartJS",
+            "line": 25,
+            "type": "named"
+          },
+          {
+            "file": "src/components/reports/ReportsModule.jsx",
+            "import": "Bar as BarJS",
+            "line": 26,
+            "type": "named"
+          },
+          {
+            "file": "src/components/reports/ReportsModule.jsx",
+            "import": "Pie as PieChartJS",
+            "line": 26,
+            "type": "named"
+          },
+          {
+            "file": "src/components/shared/ProfileNavigation.jsx",
+            "import": "UserIcon as UserIconSolid",
+            "line": 4,
+            "type": "named"
+          },
+          {
+            "file": "src/components/tenant/RequestForm.jsx",
+            "import": "v4 as uuidv4",
+            "line": 5,
+            "type": "named"
+          },
+          {
+            "file": "src/components/ui/ActionFeedback.jsx",
+            "import": "CheckCircleIcon as CheckCircleSolid",
+            "line": 11,
+            "type": "named"
+          },
+          {
+            "file": "src/components/ui/SafeMotion.jsx",
+            "import": "useReducedMotion as useA11yReducedMotion",
+            "line": 11,
+            "type": "named"
+          },
+          {
+            "file": "src/components/ui/SafeMotion.jsx",
+            "import": "safeDelay as utilSafeDelay",
+            "line": 12,
+            "type": "named"
+          },
+          {
+            "file": "src/lib/utils.ts",
+            "import": "type ClassValue",
+            "line": 1,
+            "type": "named"
+          },
+          {
+            "file": "src/services/inviteCodeService.ts",
+            "import": "createInviteCode as createInviteCodeModel",
+            "line": 23,
+            "type": "named"
+          },
+          {
+            "file": "src/components/InvitationBanner.tsx",
+            "import": "InviteCode as Invite",
+            "line": 5,
+            "type": "named"
+          },
+          {
+            "file": "src/components/landlord/ContractorCard.tsx",
+            "import": "StarIcon as StarIconSolid",
+            "line": 12,
+            "type": "named"
+          },
+          {
+            "file": "src/components/maintenance/RequestStatusTracker.tsx",
+            "import": "CheckCircleIcon as CheckCircleSolid",
+            "line": 35,
+            "type": "named"
+          },
+          {
+            "file": "src/components/payments/CreateEscrowModal.tsx",
+            "import": "EscrowMilestone as ServiceEscrowMilestone",
+            "line": 18,
+            "type": "named"
+          },
+          {
+            "file": "src/components/payments/EscrowCard.tsx",
+            "import": "EscrowAccount as ServiceEscrowAccount",
+            "line": 14,
+            "type": "named"
+          },
+          {
+            "file": "src/components/payments/EscrowDashboard.tsx",
+            "import": "EscrowAccount as ServiceEscrowAccount",
+            "line": 22,
+            "type": "named"
+          },
+          {
+            "file": "src/components/payments/PaymentMethodManager.tsx",
+            "import": "PaymentMethod as BasePaymentMethod",
+            "line": 13,
+            "type": "named"
+          },
+          {
+            "file": "src/components/payments/ReleaseRequestModal.tsx",
+            "import": "EscrowAccount as ServiceEscrowAccount",
+            "line": 13,
+            "type": "named"
+          }
+        ],
+        "unusedExports": [],
+        "unusedVariables": [],
+        "duplicateImports": [
+          {
+            "file": "src/services/firestore/contractorService.ts",
+            "import": "StandardContractorService",
+            "module": "../base/StandardContractorService",
+            "lines": [
+              6,
+              302
+            ]
+          }
+        ],
+        "errors": []
+      }
+    },
+    "dependencies-analysis": {
+      "total": 131,
+      "dependencies": {
+        "@dnd-kit/core": "^6.3.1",
+        "@dnd-kit/modifiers": "^9.0.0",
+        "@dnd-kit/sortable": "^10.0.0",
+        "@dnd-kit/utilities": "^3.2.2",
+        "@emoji-mart/react": "^1.1.1",
+        "@firebasegen/default-connector": "file:dataconnect-generated/js/default-connector",
+        "@headlessui/react": "^2.2.1",
+        "@heroicons/react": "^2.2.0",
+        "@hookform/resolvers": "^5.1.1",
+        "@sendgrid/mail": "^8.1.5",
+        "@stripe/react-stripe-js": "^3.7.0",
+        "@stripe/stripe-js": "^7.3.0",
+        "@tailwindcss/line-clamp": "^0.4.4",
+        "@types/google.maps": "^3.58.1",
+        "@types/qrcode": "^1.5.5",
+        "@vis.gl/react-google-maps": "^1.5.3",
+        "ajv": "^8.17.1",
+        "assert": "^2.1.0",
+        "babel-plugin-polyfill-corejs2": "^0.4.13",
+        "bfj": "^9.1.2",
+        "chart.js": "^4.4.8",
+        "clsx": "^2.1.1",
+        "cors": "^2.8.5",
+        "date-fns": "^4.1.0",
+        "dotenv": "^16.5.0",
+        "express": "^5.1.0",
+        "firebase": "^11.9.1",
+        "firebase-admin": "^13.4.0",
+        "firebase-functions": "^6.3.2",
+        "framer-motion": "^6.5.1",
+        "gensync": "^1.0.0-beta.2",
+        "html2canvas": "^1.4.1",
+        "https-browserify": "^1.0.0",
+        "intro.js": "^7.2.0",
+        "intro.js-react": "^1.0.0",
+        "jsonpath": "^1.1.1",
+        "jspdf": "^3.0.1",
+        "libphonenumber-js": "^1.12.9",
+        "lodash": "^4.17.21",
+        "lottie-react": "^2.4.1",
+        "lucide-react": "^0.510.0",
+        "nodemailer": "^7.0.3",
+        "openai": "^4.93.0",
+        "papaparse": "^5.5.3",
+        "picomatch": "^4.0.2",
+        "postcss-modules-local-by-default": "^4.2.0",
+        "prop-types": "^15.8.1",
+        "qrcode": "^1.5.4",
+        "react": "^18.3.1",
+        "react-chartjs-2": "^5.3.0",
+        "react-dev-utils": "^12.0.1",
+        "react-device-frame": "^2.1.4",
+        "react-dom": "^18.3.1",
+        "react-dropzone": "^14.3.8",
+        "react-error-boundary": "^4.1.2",
+        "react-hook-form": "^7.59.0",
+        "react-hot-toast": "^2.5.2",
+        "react-intersection-observer": "^9.16.0",
+        "react-qr-code": "^2.0.16",
+        "react-quill": "^2.0.0",
+        "react-router-dom": "^6.3.0",
+        "react-simple-maps": "^1.0.0",
+        "recharts": "^2.15.3",
+        "socket.io-client": "^4.8.1",
+        "sourcemap-codec": "^1.4.8",
+        "stream-http": "^3.2.0",
+        "tailwind-merge": "^3.3.1",
+        "tryer": "^1.0.1",
+        "twilio": "^5.7.1",
+        "underscore": "1.13.6",
+        "url": "^0.11.4",
+        "uuid": "^11.1.0",
+        "xlsx": "^0.18.5",
+        "zod": "^3.25.67",
+        "zustand": "^5.0.6",
+        "@babel/code-frame": "^7.27.1",
+        "@babel/core": "^7.27.1",
+        "@babel/preset-env": "^7.27.2",
+        "@babel/preset-react": "^7.27.1",
+        "@eslint/js": "^9.26.0",
+        "@firebase/testing": "^0.20.11",
+        "@playwright/test": "^1.52.0",
+        "@tailwindcss/aspect-ratio": "^0.4.2",
+        "@tailwindcss/forms": "^0.5.10",
+        "@tailwindcss/typography": "^0.5.16",
+        "@testing-library/dom": "^10.4.0",
+        "@testing-library/jest-dom": "^6.6.3",
+        "@testing-library/react": "^16.3.0",
+        "@testing-library/user-event": "^14.5.2",
+        "@types/aria-query": "^5.0.4",
+        "@types/nodemailer": "^6.4.17",
+        "@types/papaparse": "^5.3.16",
+        "@types/react": "^18.0.28",
+        "@types/react-dom": "^18.0.11",
+        "@types/react-router-dom": "^5.3.3",
+        "@types/semver": "^7.7.0",
+        "@vitejs/plugin-react": "^4.4.1",
+        "@vitest/coverage-v8": "^3.1.4",
+        "@vitest/ui": "^3.1.3",
+        "autoprefixer": "^10.4.21",
+        "buffer": "^6.0.3",
+        "check-types": "^8.0.3",
+        "constants-browserify": "^1.0.0",
+        "cross-env": "^7.0.3",
+        "cross-spawn": "^5.1.0",
+        "crypto-browserify": "^3.12.1",
+        "css-loader": "^7.1.2",
+        "customize-cra": "^1.0.0",
+        "eslint": "^9.26.0",
+        "eslint-plugin-react": "^7.37.5",
+        "file-loader": "^6.2.0",
+        "globals": "^16.1.0",
+        "jest-environment-jsdom": "^29.7.0",
+        "jsdom": "^26.1.0",
+        "loader-utils": "^3.3.1",
+        "os-browserify": "^0.3.0",
+        "path-browserify": "^1.0.1",
+        "playwright": "^1.51.1",
+        "postcss": "^8.5.3",
+        "process": "^0.11.10",
+        "react-app-rewired": "^2.2.1",
+        "react-scripts": "^5.0.1",
+        "rimraf": "^3.0.2",
+        "stream-browserify": "^3.0.0",
+        "style-loader": "^4.0.0",
+        "tailwindcss": "~3.3.0",
+        "ts-jest": "^29.3.3",
+        "typescript": "5.8.3",
+        "typescript-eslint": "^8.32.1",
+        "vitest": "^3.1.4",
+        "vm-browserify": "^1.1.2"
+      }
+    },
+    "complexity-analysis": {
+      "timestamp": "2025-07-01T22:00:42.466Z",
+      "totalFiles": 712,
+      "totalSize": 6533531,
+      "averageLines": 260,
+      "largestFiles": [
+        {
+          "path": "src/components/landlord/AddPropertyModal.jsx",
+          "size": 83348,
+          "lines": 2227,
+          "complexity": 294.5
+        },
+        {
+          "path": "src/services/dataService.js",
+          "size": 82805,
+          "lines": 2486,
+          "complexity": 603.5
+        },
+        {
+          "path": "src/pages/landlord/LandlordDashboard.tsx",
+          "size": 82263,
+          "lines": 1956,
+          "complexity": 357
+        },
+        {
+          "path": "src/pages/tenant/EnhancedTenantDashboard.tsx",
+          "size": 54836,
+          "lines": 1203,
+          "complexity": 176.5
+        },
+        {
+          "path": "src/components/onboarding/ContractorOnboarding.jsx",
+          "size": 45093,
+          "lines": 1167,
+          "complexity": 250.5
+        },
+        {
+          "path": "src/components/landing/sections/WorkflowDemoSection.tsx",
+          "size": 39889,
+          "lines": 767,
+          "complexity": 111
+        },
+        {
+          "path": "src/components/landlord/PropertyDetails.jsx",
+          "size": 38384,
+          "lines": 826,
+          "complexity": 37
+        },
+        {
+          "path": "src/components/onboarding/LandlordOnboarding.jsx",
+          "size": 38015,
+          "lines": 959,
+          "complexity": 169
+        },
+        {
+          "path": "src/components/landing/newComponents/EnhancedInteractiveDemo.jsx",
+          "size": 37570,
+          "lines": 683,
+          "complexity": 134
+        },
+        {
+          "path": "src/services/firestore/maintenanceService.ts",
+          "size": 34792,
+          "lines": 1004,
+          "complexity": 246.5
+        }
+      ],
+      "mostComplexFiles": [
+        {
+          "path": "src/services/dataService.js",
+          "size": 82805,
+          "lines": 2486,
+          "complexity": 603.5
+        },
+        {
+          "path": "src/pages/landlord/LandlordDashboard.tsx",
+          "size": 82263,
+          "lines": 1956,
+          "complexity": 357
+        },
+        {
+          "path": "src/components/landlord/AddPropertyModal.jsx",
+          "size": 83348,
+          "lines": 2227,
+          "complexity": 294.5
+        },
+        {
+          "path": "src/components/onboarding/ContractorOnboarding.jsx",
+          "size": 45093,
+          "lines": 1167,
+          "complexity": 250.5
+        },
+        {
+          "path": "src/services/firestore/maintenanceService.ts",
+          "size": 34792,
+          "lines": 1004,
+          "complexity": 246.5
+        },
+        {
+          "path": "src/hooks/useWebVitals.js",
+          "size": 18916,
+          "lines": 661,
+          "complexity": 213.5
+        },
+        {
+          "path": "src/services/firestore/propertyService.ts",
+          "size": 20550,
+          "lines": 730,
+          "complexity": 186.5
+        },
+        {
+          "path": "src/pages/tenant/EnhancedTenantDashboard.tsx",
+          "size": 54836,
+          "lines": 1203,
+          "complexity": 176.5
+        },
+        {
+          "path": "src/test/accessibility/AccessibilityTestSuite.js",
+          "size": 19065,
+          "lines": 630,
+          "complexity": 176.5
+        },
+        {
+          "path": "src/components/landlord/ContractorEstimateReadinessIndicator.jsx",
+          "size": 24076,
+          "lines": 699,
+          "complexity": 175
+        }
+      ]
+    }
+  },
+  "recommendations": [],
+  "nextSteps": []
+}

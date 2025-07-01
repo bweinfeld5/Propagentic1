@@ -29,7 +29,7 @@ Add a new `tenants` array field to the properties collection and ensure it gets 
   - `src/models/schema.ts` - Add tenants field to Property interface
   - `src/models/tenantSchema.ts` - Update Property interface
   - `src/models/Property.js` - Add tenants to PropertySchema
-  - `docs/FIREBASE_COLLECTIONS_SCHEMA.md` - Document new field
+  - `docs/architecture/FIREBASE_COLLECTIONS_SCHEMA.md` - Document new field
 
 ```typescript
 // Add to Property interface:
@@ -364,8 +364,8 @@ describe('Properties Tenants Field Integration', () => {
 
 #### 5.8.1 Update System Documentation
 - **Files:**
-  - `docs/FIREBASE_COLLECTIONS_SCHEMA.md` - Add tenants field documentation
-  - `docs/INVITE_FLOW_ARCHITECTURE.md` - Update invite flow diagrams
+  - `docs/architecture/FIREBASE_COLLECTIONS_SCHEMA.md` - Add tenants field documentation
+- `docs/architecture/INVITE_FLOW_ARCHITECTURE.md` - Update invite flow diagrams
   - `README.md` - Update data structure overview
 
 #### 5.8.2 Update Code Comments

@@ -99,7 +99,7 @@ const UserMenu = () => {
           {/* Menu Items Section */}
           <div className="py-1" role="none">
             <Link
-              to="/profile"
+              to="/u/profile"
               className="flex items-center px-4 py-2 text-sm text-content-secondary dark:text-content-darkSecondary hover:bg-neutral-100 dark:hover:bg-neutral-700/50 hover:text-content dark:hover:text-content-dark"
               role="menuitem"
               onClick={() => setIsOpen(false)}

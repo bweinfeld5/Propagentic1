@@ -21,6 +21,7 @@ import {
   EyeIcon,
   UserIcon
 } from '@heroicons/react/24/outline';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useDemoMode } from '../../context/DemoModeContext';
 import dataService from '../../services/dataService';
@@ -1766,6 +1767,15 @@ const LandlordDashboard: React.FC = () => {
                 {item.label}
               </button>
             ))}
+            
+            {/* Profile Link - Navigate to Universal Profile Page */}
+            <Link
+              to="/u/profile"
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-white border-t border-orange-100 mt-4 pt-4"
+            >
+              <Cog6ToothIcon className="w-5 h-5" />
+              Profile & Settings
+            </Link>
           </div>
         </nav>
       </div>

@@ -63,6 +63,9 @@ const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
 const ContractorEstimateReadinessDemo = lazy(() => import('./components/landlord/ContractorEstimateReadinessDemo.jsx'));
 const EmailVerificationTest = lazy(() => import('./pages/EmailVerificationTest.jsx'));
 const UserProfilePage = lazy(() => import('./pages/UserProfilePage.tsx'));
+const ContractorRegistrationPage = lazy(() => import('./pages/ContractorRegistrationPage.tsx'));
+const EnhancedContractorRegistrationPage = lazy(() => import('./pages/EnhancedContractorRegistrationPage.tsx'));
+const LandlordWaitlistPage = lazy(() => import('./pages/LandlordWaitlistPage.tsx'));
 
 // Route Guards
 const PrivateRoute = ({ children }) => {
@@ -268,6 +271,9 @@ function App() {
                                 <Route path="/login" element={<LoginPage />} />
                                 <Route path="/register" element={<RegisterPage />} />
                                 <Route path="/signup" element={<RegisterPage />} />
+                                <Route path="/contractor-registration" element={<ContractorRegistrationPage />} />
+                                <Route path="/contractor-registration-enhanced" element={<EnhancedContractorRegistrationPage />} />
+                                <Route path="/landlord-waitlist" element={<LandlordWaitlistPage />} />
                                 <Route path="/onboarding/tenant" element={<PrivateRoute><OnboardingSurvey /></PrivateRoute>} />
                                 <Route path="/onboarding/landlord" element={<PrivateRoute><LandlordOnboarding /></PrivateRoute>} />
                                 <Route path="/onboarding/contractor" element={<PrivateRoute><ContractorOnboardingPage /></PrivateRoute>} />

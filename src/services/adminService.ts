@@ -445,11 +445,15 @@ class AdminService {
   /**
    * Format user display name
    */
-  formatUserName(user: User): string {
+  formatUserName(user?: User): string {
+    if (!user) {
+      return 'Unknown Landlord';
+    }
     if (user.displayName) return user.displayName;
     if (user.firstName && user.lastName) return `${user.firstName} ${user.lastName}`;
     if (user.name) return user.name;
-    return user.email.split('@')[0];
+    if (user.email) return user.email.split('@')[0];
+    return 'Unknown Landlord';
   }
 
   /**
@@ -522,11 +526,17 @@ class AdminService {
         const landlordDocs = await getDocs(query(collection(db, 'users'), where('__name__', 'in', landlordIds)));
         const landlordsMap = new Map(landlordDocs.docs.map(doc => [doc.id, doc.data()]));
 
-        properties = properties.map((prop: any) => ({
-          ...prop,
-          landlordName: this.formatUserName(landlordsMap.get(prop.landlordId) as User) || 'N/A',
-          createdAt: (prop.createdAt as Timestamp)?.toDate ? (prop.createdAt as Timestamp).toDate() : new Date(),
-        }));
+        properties = properties.map((prop: any) => {
+          const landlord = landlordsMap.get(prop.landlordId);
+          if (!landlord) {
+            console.warn(`Property ${prop.id} has a missing or invalid landlordId: ${prop.landlordId}`);
+          }
+          return {
+            ...prop,
+            landlordName: this.formatUserName(landlord as User) || 'N/A',
+            createdAt: (prop.createdAt as Timestamp)?.toDate ? (prop.createdAt as Timestamp).toDate() : new Date(),
+          };
+        });
       } else {
         properties = properties.map((prop: any) => ({
           ...prop,

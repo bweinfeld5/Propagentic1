@@ -5,11 +5,19 @@
 import { ContractorProfile } from '../../models/schema';
 import { StandardContractorService } from '../base/StandardContractorService';
 import { ServiceMigrationUtility } from '../base/ServiceMigrationUtility';
-import { doc, getDoc, collection, query, where, getDocs, documentId } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, documentId, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { ContractorRegistration, ContractorRegistrationFormData, ContractorWaitlistEntry } from '../../models/ContractorRegistration';
 
 // Create instance of the new standardized service
 const standardContractorService = new StandardContractorService();
+
+// List of available trades for validation
+export const availableTrades = [
+  'Plumbing', 'Electrical', 'HVAC', 'Carpentry', 'Painting', 'Roofing',
+  'Flooring', 'Landscaping', 'Appliance Repair', 'General Maintenance',
+  'Pest Control', 'Cleaning Services', 'Handyman Services'
+];
 
 /**
  * LEGACY COMPATIBILITY FUNCTIONS
@@ -182,6 +190,75 @@ export const getContractorsByIds = async (contractorIds: string[]): Promise<any[
   }
 };
 
+/**
+ * Registers a new contractor in Firestore.
+ * Creates a simple registration record for initial contact.
+ * 
+ * @param formData - The contractor registration form data
+ * @returns The ID of the newly created contractor registration document
+ * @throws Throws an error if the Firestore operation fails
+ */
+export const registerContractor = async (
+  formData: ContractorRegistrationFormData
+): Promise<string> => {
+  try {
+    const registrationData: Omit<ContractorRegistration, 'id' | 'createdAt'> = {
+      name: formData.name.trim(),
+      phoneNumber: formData.phoneNumber.trim(),
+      status: 'pending',
+    };
+
+    const docRef = await addDoc(collection(db, 'contractorRegistrations'), {
+      ...registrationData,
+      createdAt: serverTimestamp(),
+    });
+
+    console.log('Contractor registration created with ID:', docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error('Error registering contractor:', error);
+    throw new Error('Failed to register. Please try again later.');
+  }
+};
+
+/**
+ * Registers a contractor for the enhanced waitlist with trade selection and experience.
+ *
+ * @param formData - The contractor's enhanced registration data.
+ * @returns The ID of the newly created document.
+ */
+export const registerContractorForWaitlist = async (
+  formData: Omit<ContractorWaitlistEntry, 'id' | 'createdAt' | 'status' | 'source'>
+): Promise<string> => {
+  try {
+    // Basic validation before Firestore write
+    if (!formData.name || formData.name.length < 2) {
+      throw new Error('Validation Error: Name is required and must be at least 2 characters.');
+    }
+    if (formData.trades.length === 0) {
+      throw new Error('Validation Error: At least one trade must be selected.');
+    }
+
+    const waitlistCollection = collection(db, 'contractorWaitlist');
+
+    const newEntry: Omit<ContractorWaitlistEntry, 'id'> = {
+      ...formData,
+      createdAt: serverTimestamp() as any, // Let Firestore handle the timestamp
+      status: 'pending',
+      source: 'website-registration',
+    };
+
+    const docRef = await addDoc(waitlistCollection, newEntry);
+    console.log('Contractor added to waitlist with ID:', docRef.id);
+    return docRef.id;
+
+  } catch (error) {
+    console.error('Error registering contractor for waitlist:', error);
+    // Re-throw the error to be handled by the calling component
+    throw new Error('Failed to submit registration. Please try again.');
+  }
+};
+
 // You may need to add this service to the default export if one exists
 const contractorService = {
   // ... any existing functions
@@ -195,6 +272,8 @@ const contractorService = {
   updateContractorAvailability,
   updateContractorSkills,
   getRecommendedContractors,
+  registerContractor,
+  registerContractorForWaitlist,
 };
 
 export default contractorService;

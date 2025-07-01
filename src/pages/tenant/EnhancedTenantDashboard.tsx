@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { toast, Toaster } from 'react-hot-toast';
 import { 
   Bell, 
@@ -765,10 +765,13 @@ const EnhancedTenantDashboard: React.FC = () => {
                   <Shield className="w-5 h-5" />
                   <span className="font-medium">Security</span>
                 </button>
-                <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all duration-200">
+                <Link 
+                  to="/u/profile"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all duration-200"
+                >
                   <Settings className="w-5 h-5" />
-                  <span className="font-medium">Settings</span>
-                </button>
+                  <span className="font-medium">Profile & Settings</span>
+                </Link>
                 <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all duration-200">
                   <HelpCircle className="w-5 h-5" />
                   <span className="font-medium">Help & Support</span>

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import Logo from '../../../assets/images/logo.svg';
 
 interface MarketingHeaderProps {
@@ -19,7 +19,9 @@ interface MarketingHeaderProps {
 const MarketingHeader: React.FC<MarketingHeaderProps> = ({ className = '' }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isWaitlistDropdownOpen, setIsWaitlistDropdownOpen] = useState(false);
   const location = useLocation();
+  const waitlistDropdownRef = useRef<HTMLDivElement>(null);
 
   // Track scroll for glassmorphism effect
   useEffect(() => {
@@ -34,7 +36,20 @@ const MarketingHeader: React.FC<MarketingHeaderProps> = ({ className = '' }) => 
   // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    setIsWaitlistDropdownOpen(false);
   }, [location]);
+
+  // Close waitlist dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (waitlistDropdownRef.current && !waitlistDropdownRef.current.contains(event.target as Node)) {
+        setIsWaitlistDropdownOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Navigation items
   const navigationItems = [
@@ -42,6 +57,12 @@ const MarketingHeader: React.FC<MarketingHeaderProps> = ({ className = '' }) => 
     { name: 'Pricing', href: '/pricing', current: location.pathname === '/pricing' },
     { name: 'About', href: '/about', current: location.pathname === '/about' },
     { name: 'Demo', href: '/demo', current: location.pathname === '/demo' },
+  ];
+
+  // Waitlist dropdown items
+  const waitlistItems = [
+    { name: 'Contractor Waitlist', href: '/contractor-registration-enhanced' },
+    { name: 'Landlord Waitlist', href: '/landlord-waitlist' },
   ];
 
   return (
@@ -77,6 +98,32 @@ const MarketingHeader: React.FC<MarketingHeaderProps> = ({ className = '' }) => 
                 )}
               </Link>
             ))}
+            
+            {/* Waitlist Dropdown */}
+            <div className="relative" ref={waitlistDropdownRef}>
+              <button
+                onClick={() => setIsWaitlistDropdownOpen(!isWaitlistDropdownOpen)}
+                className="flex items-center text-sm font-medium text-white/80 hover:text-white transition-colors duration-200"
+              >
+                Waitlist
+                <ChevronDownIcon className={`ml-1 h-4 w-4 transition-transform duration-200 ${isWaitlistDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {isWaitlistDropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  {waitlistItems.map((item) => (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                      onClick={() => setIsWaitlistDropdownOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Auth Buttons - Desktop */}
@@ -129,6 +176,20 @@ const MarketingHeader: React.FC<MarketingHeaderProps> = ({ className = '' }) => 
                   {item.name}
                 </Link>
               ))}
+              
+              {/* Mobile Waitlist Section */}
+              <div className="py-2">
+                <div className="text-white/60 text-xs font-medium uppercase tracking-wide mb-2 px-3">Waitlist</div>
+                {waitlistItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className="block px-3 py-2 rounded-md text-base font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors duration-200"
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
               
               {/* Mobile Auth Buttons */}
               <div className="pt-4 border-t border-white/20 space-y-2">

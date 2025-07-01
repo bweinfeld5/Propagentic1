@@ -167,6 +167,7 @@ export function AuthProvider({ children }) {
   // Fetch user profile data from Firestore with automatic repair
   const fetchUserProfile = async (uid) => {
     try {
+      console.log('=== FETCHING FIRESTORE PROFILE ===');
       console.log('Fetching user profile for uid:', uid);
       setProfileError(null);
       
@@ -175,7 +176,12 @@ export function AuthProvider({ children }) {
       
       if (userDoc.exists()) {
         let profileData = userDoc.data();
-        console.log('Original user profile data:', profileData);
+        console.log('=== FIRESTORE PROFILE FOUND ===');
+        console.log('Email:', profileData.email);
+        console.log('Role:', profileData.role);
+        console.log('UserType:', profileData.userType);
+        console.log('Full Profile Data:', profileData);
+        console.log('===============================');
         
         // Validate and repair profile data
         const validation = validateUserRole(profileData);
@@ -222,12 +228,12 @@ export function AuthProvider({ children }) {
         
         return profileData;
       } else {
-        console.log('No user profile document found for uid:', uid);
+        console.log('❌ NO FIRESTORE PROFILE FOUND for uid:', uid);
         setProfileError('User profile not found');
         return null;
       }
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('❌ ERROR fetching user profile:', error);
       setProfileError(getAuthErrorMessage(error.code));
       return null;
     }
@@ -415,7 +421,14 @@ export function AuthProvider({ children }) {
       clearErrors();
       
       if (user) {
-        console.log('Auth state changed: user is logged in', user.uid);
+        console.log('=== FIREBASE AUTH USER DEBUG ===');
+        console.log('UID:', user.uid);
+        console.log('Email:', user.email);
+        console.log('Display Name:', user.displayName);
+        console.log('Email Verified:', user.emailVerified);
+        console.log('Provider Data:', user.providerData);
+        console.log('===============================');
+        
         setCurrentUser(user);
         await fetchUserProfile(user.uid);
       } else {

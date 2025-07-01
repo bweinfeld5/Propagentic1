@@ -91,6 +91,36 @@
   --chart-color-6: var(--color-success);
   --chart-color-7: var(--color-error);
   --chart-color-8: var(--color-warning);
+
+  /* Primary Brand Colors */
+  --color-orange-primary: #FF6B35;
+  --color-orange-secondary: #FF8C42;
+  
+  /* Light Mode Colors */
+  --color-background: #FFFFFF;
+  --color-surface: #F8FAFC;
+  --color-text-primary: #1A202C;
+  --color-text-secondary: #4A5568;
+  
+  /* Propagentic Legacy Colors */
+  --propagentic-orange: #FF6B35;
+  --propagentic-orange-light: #FF8C42;
+  --propagentic-orange-dark: #E55527;
+  
+  --propagentic-neutral-light: #F7FAFC;
+  --propagentic-neutral: #EDF2F7;
+  --propagentic-neutral-dark: #1A202C;
+  
+  --propagentic-gray-50: #F9FAFB;
+  --propagentic-gray-100: #F3F4F6;
+  --propagentic-gray-200: #E5E7EB;
+  --propagentic-gray-300: #D1D5DB;
+  --propagentic-gray-400: #9CA3AF;
+  --propagentic-gray-500: #6B7280;
+  --propagentic-gray-600: #4B5563;
+  --propagentic-gray-700: #374151;
+  --propagentic-gray-800: #1F2937;
+  --propagentic-gray-900: #111827;
 }
 
 /* Dark mode color overrides */
@@ -117,4 +147,198 @@
   
   --badge-urgent-bg: rgba(153, 27, 27, 0.3); /* red-800 with opacity */
   --badge-urgent-text: #fca5a5; /* red-300 */
+
+  /* Dark Mode Color Overrides */
+  --color-background: #1A202C;
+  --color-surface: #2D3748;
+  --color-text-primary: #F7FAFC;
+  --color-text-secondary: #E2E8F0;
+}
+
+/* Enhanced Dark Mode Typography */
+.dark h1 { 
+  @apply text-white; 
+}
+
+.dark h2 { 
+  @apply text-white; 
+}
+
+.dark h3 { 
+  @apply text-white; 
+}
+
+.dark h4 { 
+  @apply text-gray-100; 
+}
+
+.dark h5 { 
+  @apply text-gray-100; 
+}
+
+.dark h6 { 
+  @apply text-gray-200; 
+}
+
+/* Enhanced Body Text */
+.dark p { 
+  @apply text-gray-300; 
+}
+
+.dark .text-secondary { 
+  @apply text-gray-400; 
+}
+
+.dark .text-muted { 
+  @apply text-gray-500; 
+}
+
+/* Enhanced Link States */
+.dark a:not(.btn):not([class*="bg-"]) {
+  @apply text-orange-400 hover:text-orange-300 transition-colors;
+}
+
+/* Enhanced Form Inputs */
+.dark input,
+.dark textarea,
+.dark select {
+  @apply bg-gray-800 border-gray-600 text-white placeholder-gray-400;
+  @apply focus:border-orange-500 focus:ring-orange-500;
+}
+
+/* Enhanced Card Components */
+.dark .card {
+  @apply bg-gray-800 border-gray-700 shadow-gray-900/50;
+}
+
+.dark .card-elevated {
+  @apply bg-gray-800 border-gray-600 shadow-xl shadow-gray-900/50;
+}
+
+/* Landing Page Specific Dark Mode Fixes */
+
+/* Testimonials Section */
+.dark .testimonials-section {
+  @apply bg-gray-900;
+}
+
+.dark .testimonial-card {
+  @apply bg-gray-800 border-gray-700 shadow-gray-900/50;
+}
+
+/* Workflow Demo Section */
+.dark .workflow-demo,
+.dark .demo-section {
+  @apply bg-gray-900;
+}
+
+.dark .demo-card,
+.dark .workflow-card {
+  @apply bg-gray-800 border-gray-700;
+}
+
+/* Features Section */
+.dark .features-grid .feature-card {
+  @apply bg-gray-800 border-gray-700 hover:bg-gray-700/50;
+}
+
+/* General Section Backgrounds */
+.dark section:not(.hero):not(.cta):not(.footer) {
+  @apply bg-gray-900;
+}
+
+/* Override light backgrounds in dark mode */
+.dark .bg-white {
+  @apply bg-gray-800;
+}
+
+.dark .bg-gray-50 {
+  @apply bg-gray-900;
+}
+
+.dark .bg-gray-100 {
+  @apply bg-gray-800;
+}
+
+/* Text color fixes for better contrast */
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700 {
+  @apply text-gray-100;
+}
+
+.dark .text-gray-600,
+.dark .text-gray-500 {
+  @apply text-gray-300;
+}
+
+/* Preserve Orange Brand Elements */
+.dark .cta-button,
+.dark .orange-button,
+.dark [style*="background-color: #ff6b35"],
+.dark [style*="background: #ff6b35"] {
+  background-color: #FF6B35 !important;
+  color: white !important;
+}
+
+/* Enhanced border colors */
+.dark .border-gray-200 {
+  @apply border-gray-700;
+}
+
+.dark .border-gray-300 {
+  @apply border-gray-600;
+}
+
+/* Enhanced divider colors */
+.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  @apply border-gray-700;
+}
+
+/* Enhanced hover states */
+.dark .hover\:bg-gray-50:hover {
+  @apply bg-gray-800;
+}
+
+.dark .hover\:bg-gray-100:hover {
+  @apply bg-gray-700;
+}
+
+/* Range Slider Styling for Enhanced Contractor Registration */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 5px;
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #f97316;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #f97316;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dark .slider::-webkit-slider-thumb {
+  border: 2px solid #374151;
+}
+
+.dark .slider::-moz-range-thumb {
+  border: 2px solid #374151;
 } 

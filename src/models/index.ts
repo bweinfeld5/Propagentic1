@@ -8,4 +8,5 @@ export * from './MaintenanceRequest';
 export * from './Maintenance';
 export * from './PropertyTenantRelationship';
 export * from './User';
-export * from './Shared'; 
+export * from './Shared';
+export * from './ContractorRegistration'; 

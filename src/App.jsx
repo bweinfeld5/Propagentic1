@@ -62,7 +62,11 @@ const BlueprintTest = lazy(() => import('./components/testing/BlueprintTest'));
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
 const ContractorEstimateReadinessDemo = lazy(() => import('./components/landlord/ContractorEstimateReadinessDemo.jsx'));
 const EmailVerificationTest = lazy(() => import('./pages/EmailVerificationTest.jsx'));
-const UserProfilePage = lazy(() => import('./pages/ProfilePage.jsx'));
+const UserProfilePage = lazy(() => import('./pages/UserProfilePage.tsx'));
+const ContractorRegistrationPage = lazy(() => import('./pages/ContractorRegistrationPage.tsx'));
+const EnhancedContractorRegistrationPage = lazy(() => import('./pages/EnhancedContractorRegistrationPage.tsx'));
+const LandlordWaitlistPage = lazy(() => import('./pages/LandlordWaitlistPage.tsx'));
+const StripeMcpDashboard = lazy(() => import('./components/admin/StripeMcpDashboard.tsx'));
 
 // Route Guards
 const PrivateRoute = ({ children }) => {
@@ -268,6 +272,9 @@ function App() {
                                 <Route path="/login" element={<LoginPage />} />
                                 <Route path="/register" element={<RegisterPage />} />
                                 <Route path="/signup" element={<RegisterPage />} />
+                                <Route path="/contractor-registration" element={<ContractorRegistrationPage />} />
+                                <Route path="/contractor-registration-enhanced" element={<EnhancedContractorRegistrationPage />} />
+                                <Route path="/landlord-waitlist" element={<LandlordWaitlistPage />} />
                                 <Route path="/onboarding/tenant" element={<PrivateRoute><OnboardingSurvey /></PrivateRoute>} />
                                 <Route path="/onboarding/landlord" element={<PrivateRoute><LandlordOnboarding /></PrivateRoute>} />
                                 <Route path="/onboarding/contractor" element={<PrivateRoute><ContractorOnboardingPage /></PrivateRoute>} />
@@ -281,6 +288,7 @@ function App() {
                                 <Route path="/contractor/dashboard" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={90}><ContractorDashboard /></ProfileCompletionGuard></PrivateRoute>} />
                                 <Route path="/admin" element={<PrivateRoute><Navigate to="/admin/dashboard" replace /></PrivateRoute>} />
                                 <Route path="/admin/dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+                                <Route path="/admin/stripe-mcp" element={<PrivateRoute><StripeMcpDashboard /></PrivateRoute>} />
                                 <Route path="/u/profile" element={<PrivateRoute><UserProfilePage /></PrivateRoute>} />
                                 <Route path="/contractor/messages" element={<PrivateRoute><ContractorMessagesPage /></PrivateRoute>} />
                                 <Route path="/contractor/profile" element={<PrivateRoute><ContractorProfilePage /></PrivateRoute>} />

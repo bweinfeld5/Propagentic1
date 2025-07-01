@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { getAuthErrorMessage } from '../utils/authHelpers';
 
 const RegisterPage = ({ initialRole, isPremium }) => {
@@ -31,6 +31,63 @@ const RegisterPage = ({ initialRole, isPremium }) => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  // Password strength calculation
+  const passwordStrength = useMemo(() => {
+    if (!formData.password) return { score: 0, feedback: [], color: 'gray', label: 'Enter password' };
+    
+    let score = 0;
+    const feedback = [];
+    
+    // Length check
+    if (formData.password.length >= 8) {
+      score += 25;
+      feedback.push({ text: 'At least 8 characters', met: true });
+    } else {
+      feedback.push({ text: 'At least 8 characters', met: false });
+    }
+    
+    // Uppercase check
+    if (/[A-Z]/.test(formData.password)) {
+      score += 25;
+      feedback.push({ text: 'Contains uppercase letter', met: true });
+    } else {
+      feedback.push({ text: 'Contains uppercase letter', met: false });
+    }
+    
+    // Lowercase check
+    if (/[a-z]/.test(formData.password)) {
+      score += 25;
+      feedback.push({ text: 'Contains lowercase letter', met: true });
+    } else {
+      feedback.push({ text: 'Contains lowercase letter', met: false });
+    }
+    
+    // Number or special character check
+    if (/[0-9]/.test(formData.password) || /[^A-Za-z0-9]/.test(formData.password)) {
+      score += 25;
+      feedback.push({ text: 'Contains number or special character', met: true });
+    } else {
+      feedback.push({ text: 'Contains number or special character', met: false });
+    }
+    
+    // Determine color and label
+    let color, label;
+    if (score < 50) {
+      color = 'red';
+      label = 'Weak';
+    } else if (score < 75) {
+      color = 'yellow';
+      label = 'Fair';
+    } else if (score < 100) {
+      color = 'blue';
+      label = 'Good';
+    } else {
+      color = 'green';
+      label = 'Strong';
+    }
+    
+    return { score, feedback, color, label };
+  }, [formData.password]);
   // Specialty options for contractors
   const specialtyOptions = [
     { id: 'plumbing', label: 'Plumbing' },
@@ -52,7 +109,8 @@ const RegisterPage = ({ initialRole, isPremium }) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return !emailRegex.test(value) ? 'Please enter a valid email address' : '';
       case 'password':
-        if (value.length < 6) return 'Password must be at least 6 characters';
+        if (value.length < 8) return 'Password must be at least 8 characters';
+        if (passwordStrength.score < 50) return 'Please choose a stronger password';
         return '';
       case 'confirmPassword':
         return value !== formData.password ? 'Passwords do not match' : '';
@@ -61,7 +119,7 @@ const RegisterPage = ({ initialRole, isPremium }) => {
       default:
         return '';
     }
-  }, [formData.password, formData.role]);
+  }, [formData.password, formData.role, passwordStrength.score]);
 
   // Handle input changes with validation
   const handleInputChange = useCallback((field, value) => {
@@ -108,6 +166,11 @@ const RegisterPage = ({ initialRole, isPremium }) => {
     errors.password = validateField('password', formData.password);
     errors.confirmPassword = validateField('confirmPassword', formData.confirmPassword);
     errors.specialties = validateField('specialties', formData.specialties);
+
+    // Additional password strength validation
+    if (passwordStrength.score < 50) {
+      errors.password = 'Please choose a stronger password';
+    }
 
     const hasErrors = Object.values(errors).some(error => error !== '');
     setFormState(prev => ({ ...prev, validationErrors: errors }));
@@ -331,7 +394,8 @@ const RegisterPage = ({ initialRole, isPremium }) => {
                       className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 ${
                         validationErrors.password ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-gray-50'
                       }`}
-                      placeholder="Min. 6 characters"
+<<<<<<< HEAD
+                      placeholder="Min. 8 characters"
                     />
                     <button
                       type="button"
@@ -343,6 +407,50 @@ const RegisterPage = ({ initialRole, isPremium }) => {
                   </div>
                   {validationErrors.password && (
                     <p className="mt-1 text-sm text-red-600">{validationErrors.password}</p>
+                  )}
+                  
+                  {/* Password Strength Indicator */}
+                  {formData.password && (
+                    <div className="mt-3 space-y-2">
+                      {/* Strength Bar */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              passwordStrength.color === 'red' ? 'bg-red-500' :
+                              passwordStrength.color === 'yellow' ? 'bg-yellow-500' :
+                              passwordStrength.color === 'blue' ? 'bg-blue-500' :
+                              'bg-green-500'
+                            }`}
+                            style={{ width: `${passwordStrength.score}%` }}
+                          />
+                        </div>
+                        <span className={`text-xs font-medium ${
+                          passwordStrength.color === 'red' ? 'text-red-600' :
+                          passwordStrength.color === 'yellow' ? 'text-yellow-600' :
+                          passwordStrength.color === 'blue' ? 'text-blue-600' :
+                          'text-green-600'
+                        }`}>
+                          {passwordStrength.label}
+                        </span>
+                      </div>
+                      
+                      {/* Requirements List */}
+                      <div className="space-y-1">
+                        {passwordStrength.feedback.map((item, index) => (
+                          <div key={index} className="flex items-center gap-2 text-xs">
+                            {item.met ? (
+                              <CheckIcon className="h-3 w-3 text-green-500" />
+                            ) : (
+                              <XMarkIcon className="h-3 w-3 text-gray-400" />
+                            )}
+                            <span className={item.met ? 'text-green-600' : 'text-gray-500'}>
+                              {item.text}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
 
@@ -439,8 +547,12 @@ const RegisterPage = ({ initialRole, isPremium }) => {
                 {/* Submit button */}
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white py-3 px-4 rounded-lg font-medium hover:from-orange-700 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-75 disabled:cursor-not-allowed transform transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+                  disabled={loading || passwordStrength.score < 50 || formData.password !== formData.confirmPassword}
+                  className={`w-full py-3 px-4 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transform transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl ${
+                    loading || passwordStrength.score < 50 || formData.password !== formData.confirmPassword
+                      ? 'bg-gray-400 text-gray-700 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-orange-600 to-red-600 text-white hover:from-orange-700 hover:to-red-700'
+                  }`}
                 >
                   {loading ? (
                     <span className="flex items-center justify-center">

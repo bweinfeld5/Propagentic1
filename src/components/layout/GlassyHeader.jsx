@@ -9,7 +9,7 @@ import { useConnection } from '../../context/ConnectionContext';
 import NotificationBell from '../notifications/NotificationBell';
 import NotificationPanel from './NotificationPanel';
 import NotificationErrorBoundary from '../shared/NotificationErrorBoundary';
-import { UserCircleIcon, WifiIcon, SignalSlashIcon, ExclamationTriangleIcon, ArrowLeftOnRectangleIcon } from '@heroicons/react/24/outline';
+import { UserCircleIcon, WifiIcon, SignalSlashIcon, ExclamationTriangleIcon, ArrowLeftOnRectangleIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import Logo from '../../assets/images/logo.svg';
 import './GlassyHeader.css';
 
@@ -40,11 +40,13 @@ const GlassyHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isWaitlistDropdownOpen, setIsWaitlistDropdownOpen] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
   
   // References
   const headerRef = useRef(null);
   const dropdownRef = useRef(null);
+  const waitlistDropdownRef = useRef(null);
   
   // Determine if we're in a dashboard view
   const isDashboardView = location.pathname.includes('/dashboard') || 
@@ -87,11 +89,14 @@ const GlassyHeader = () => {
     return () => window.removeEventListener('resize', updateHeaderHeight);
   }, [mobileMenuOpen, notificationPanelOpen, isProfileOpen]);
 
-  // Close profile dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsProfileOpen(false);
+      }
+      if (waitlistDropdownRef.current && !waitlistDropdownRef.current.contains(event.target)) {
+        setIsWaitlistDropdownOpen(false);
       }
     };
     
@@ -211,7 +216,7 @@ const GlassyHeader = () => {
                   tabIndex="-1"
                 >
                   <Link
-                    to="/profile"
+                    to="/u/profile"
                     className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     role="menuitem"
                     onClick={() => setIsProfileOpen(false)}
@@ -267,6 +272,37 @@ const GlassyHeader = () => {
                 <NavLink to="/propagentic/new">Home</NavLink>
                 <NavLink to="/pricing">Pricing</NavLink>
                 <NavLink to="/about">About</NavLink>
+                
+                {/* Waitlist Dropdown */}
+                <div className="relative" ref={waitlistDropdownRef}>
+                  <button
+                    onClick={() => setIsWaitlistDropdownOpen(!isWaitlistDropdownOpen)}
+                    className="flex items-center text-white text-sm font-medium hover:text-white/80 transition-colors"
+                  >
+                    Waitlist
+                    <ChevronDownIcon className={`ml-1 h-4 w-4 transition-transform ${isWaitlistDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {isWaitlistDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                      <Link
+                        to="/contractor-registration"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setIsWaitlistDropdownOpen(false)}
+                      >
+                        Contractor Waitlist
+                      </Link>
+                      <Link
+                        to="/landlord-waitlist"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setIsWaitlistDropdownOpen(false)}
+                      >
+                        Landlord Waitlist
+                      </Link>
+                    </div>
+                  )}
+                </div>
+                
                 <NavLink to="/demo/pitchdeck">Demo</NavLink>
                 <div className="ml-4 flex items-center space-x-3">
                   {currentUser ? (
@@ -331,6 +367,14 @@ const GlassyHeader = () => {
                 <MobileNavLink to="/propagentic/new" onClick={() => setMobileMenuOpen(false)}>Home</MobileNavLink>
                 <MobileNavLink to="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</MobileNavLink>
                 <MobileNavLink to="/about" onClick={() => setMobileMenuOpen(false)}>About</MobileNavLink>
+                
+                {/* Mobile Waitlist Links */}
+                <div className="py-2">
+                  <div className="text-white/60 text-xs font-medium uppercase tracking-wide mb-2 px-3">Waitlist</div>
+                  <MobileNavLink to="/contractor-registration" onClick={() => setMobileMenuOpen(false)}>Contractor Waitlist</MobileNavLink>
+                  <MobileNavLink to="/landlord-waitlist" onClick={() => setMobileMenuOpen(false)}>Landlord Waitlist</MobileNavLink>
+                </div>
+                
                 <MobileNavLink to="/demo/pitchdeck" onClick={() => setMobileMenuOpen(false)}>Demo</MobileNavLink>
                 <div className="pt-4 flex flex-col space-y-3">
                   {currentUser ? (

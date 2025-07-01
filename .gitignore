@@ -118,4 +118,4 @@ dev-debug.log
 # OS specific
 # Task files
 tasks.json
-tasks/ 
+tasks/ serviceAccountKey.json

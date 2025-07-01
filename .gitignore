@@ -118,4 +118,7 @@ dev-debug.log
 # OS specific
 # Task files
 tasks.json
-tasks/ serviceAccountKey.json
+tasks/
+
+# Service Account Keys (additional security)
+serviceAccountKey.json

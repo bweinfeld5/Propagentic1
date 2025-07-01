@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
+import Card from '../ui/Card';
 import Button from '../ui/Button';
 import { stripeMcpService, mcpExamples, integrationHelpers, developmentTips } from '../../services/stripeMcpService';
 import { 
@@ -45,14 +45,14 @@ const StripeMcpDashboard: React.FC = () => {
     icon: React.ReactNode;
   }> = ({ title, description, prompt, type, icon }) => (
     <Card className="border border-gray-200 dark:border-gray-700">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-100">
+      <div className="pb-3">
+        <div className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
           {icon}
           <span className="ml-2">{title}</span>
-        </CardTitle>
+        </div>
         <p className="text-xs text-gray-600 dark:text-gray-400">{description}</p>
-      </CardHeader>
-      <CardContent className="pt-0">
+      </div>
+      <div className="pt-0">
         <div className="bg-gray-50 dark:bg-gray-800 rounded-md p-3 mb-3">
           <code className="text-xs text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
             {prompt}
@@ -73,19 +73,19 @@ const StripeMcpDashboard: React.FC = () => {
             'Copy Prompt'
           )}
         </Button>
-      </CardContent>
+      </div>
     </Card>
   );
 
   const ConfigurationSection: React.FC = () => (
     <Card className="mb-6">
-      <CardHeader>
-        <CardTitle className="flex items-center text-lg font-semibold">
+      <div>
+        <div className="flex items-center text-lg font-semibold mb-4">
           <CogIcon className="w-5 h-5 mr-2" />
           Configuration Status
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </div>
+      </div>
+      <div>
         {configValidation ? (
           <>
             {configValidation.isValid ? (
@@ -130,7 +130,7 @@ const StripeMcpDashboard: React.FC = () => {
             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
           </div>
         )}
-      </CardContent>
+      </div>
     </Card>
   );
 
@@ -271,13 +271,13 @@ const StripeMcpDashboard: React.FC = () => {
       {/* Development Tips */}
       <section className="mb-8">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg font-semibold">
+          <div>
+            <div className="flex items-center text-lg font-semibold mb-4">
               <InformationCircleIcon className="w-5 h-5 mr-2" />
               Development Tips
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </div>
+          </div>
+          <div>
             <ul className="space-y-2">
               {developmentTips.map((tip, index) => (
                 <li key={index} className="flex items-start">
@@ -286,17 +286,17 @@ const StripeMcpDashboard: React.FC = () => {
                 </li>
               ))}
             </ul>
-          </CardContent>
+          </div>
         </Card>
       </section>
 
       {/* Quick Links */}
       <section>
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">Quick Links</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <div>
+            <div className="text-lg font-semibold mb-4">Quick Links</div>
+          </div>
+          <div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <a
                 href="https://dashboard.stripe.com/test/apikeys"
@@ -329,7 +329,7 @@ const StripeMcpDashboard: React.FC = () => {
                 Integration Guide
               </a>
             </div>
-          </CardContent>
+          </div>
         </Card>
       </section>
     </div>

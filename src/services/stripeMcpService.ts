@@ -24,7 +24,7 @@ export interface StripeMcpPrice {
   currency: string;
   recurring?: {
     interval: string;
-    interval_count: number;
+    interval_count?: number;
   };
 }
 

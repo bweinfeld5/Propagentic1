@@ -6,11 +6,11 @@ import React from 'react';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
-import MaintenanceDashboard from '../../src/components/landlord/MaintenanceDashboard';
-import { AuthContext } from '../../src/context/AuthContext';
+import MaintenanceDashboard from '../../components/landlord/MaintenanceDashboard';
+import { AuthContext } from '../../context/AuthContext';
 
 // Mock Firebase and services
-vi.mock('../../src/services/firestore/maintenanceService', () => ({
+vi.mock('../../services/firestore/maintenanceService', () => ({
   subscribeToMaintenanceRequests: vi.fn(() => () => {}),
   getMaintenanceMetrics: vi.fn(() => Promise.resolve({
     averageResolutionTime: 24,
@@ -109,7 +109,7 @@ describe('MaintenanceDashboard Component', () => {
 
   test('handles error states gracefully', async () => {
     // Mock service to throw error
-    const mockService = await vi.importMock('../../src/services/firestore/maintenanceService');
+    const mockService = await vi.importMock('../../services/firestore/maintenanceService');
     mockService.getMaintenanceMetrics.mockRejectedValueOnce(new Error('Network error'));
     
     renderWithContext(<MaintenanceDashboard />);
@@ -122,7 +122,7 @@ describe('MaintenanceDashboard Component', () => {
 
   test('responds to real-time updates', async () => {
     const mockCallback = vi.fn();
-    const mockService = await vi.importMock('../../src/services/firestore/maintenanceService');
+    const mockService = await vi.importMock('../../services/firestore/maintenanceService');
     
     // Mock subscription that calls callback
     mockService.subscribeToMaintenanceRequests.mockImplementation((filters, callback) => {

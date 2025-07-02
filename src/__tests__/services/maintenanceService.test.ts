@@ -52,13 +52,13 @@ describe('MaintenanceService - Phase 2 Tests', () => {
 
   // Test that the service module loads without error
   test('service module loads successfully', async () => {
-    const { maintenanceService } = await import('../../src/services/firestore/maintenanceService');
+    const { maintenanceService } = await import('../../services/firestore/maintenanceService');
     expect(maintenanceService).toBeDefined();
   });
 
   describe('Real-time Listeners', () => {
     test('subscribeToMaintenanceRequests returns unsubscribe function', async () => {
-      const { maintenanceService } = await import('../../src/services/firestore/maintenanceService');
+      const { maintenanceService } = await import('../../services/firestore/maintenanceService');
       const mockCallback = vi.fn();
       const mockOnError = vi.fn();
       
@@ -72,7 +72,7 @@ describe('MaintenanceService - Phase 2 Tests', () => {
     });
 
     test('contractor job subscriptions work', async () => {
-      const { maintenanceService } = await import('../../src/services/firestore/maintenanceService');
+      const { maintenanceService } = await import('../../services/firestore/maintenanceService');
       const mockCallback = vi.fn();
       
       const unsubscribe = await maintenanceService.subscribeToContractorJobs(
@@ -86,7 +86,7 @@ describe('MaintenanceService - Phase 2 Tests', () => {
 
   describe('Metrics Calculation', () => {
     test('getMaintenanceMetrics returns proper structure', async () => {
-      const { maintenanceService } = await import('../../src/services/firestore/maintenanceService');
+      const { maintenanceService } = await import('../../services/firestore/maintenanceService');
       const metrics = await maintenanceService.getMaintenanceMetrics();
       
       expect(metrics).toHaveProperty('averageResolutionTime');
@@ -99,7 +99,7 @@ describe('MaintenanceService - Phase 2 Tests', () => {
 
   describe('Job Management Stubs', () => {
     test('assignContractor stub works', async () => {
-      const { maintenanceService } = await import('../../src/services/firestore/maintenanceService');
+      const { maintenanceService } = await import('../../services/firestore/maintenanceService');
       
       await expect(
         maintenanceService.assignContractor('req123', 'contractor456')
@@ -107,7 +107,7 @@ describe('MaintenanceService - Phase 2 Tests', () => {
     });
 
     test('acceptJob stub works', async () => {
-      const { maintenanceService } = await import('../../src/services/firestore/maintenanceService');
+      const { maintenanceService } = await import('../../services/firestore/maintenanceService');
       
       await expect(
         maintenanceService.acceptJob('req123', 'contractor456')
@@ -115,7 +115,7 @@ describe('MaintenanceService - Phase 2 Tests', () => {
     });
 
     test('uploadProgressPhotos returns array', async () => {
-      const { maintenanceService } = await import('../../src/services/firestore/maintenanceService');
+      const { maintenanceService } = await import('../../services/firestore/maintenanceService');
       const mockFiles = [new File(['test'], 'test.jpg', { type: 'image/jpeg' })];
       const mockProgress = vi.fn();
       
@@ -131,7 +131,7 @@ describe('MaintenanceService - Phase 2 Tests', () => {
 
   describe('Error Handling', () => {
     test('getMaintenanceRequest handles invalid IDs', async () => {
-      const { maintenanceService } = await import('../../src/services/firestore/maintenanceService');
+      const { maintenanceService } = await import('../../services/firestore/maintenanceService');
       
       const result = await maintenanceService.getMaintenanceRequest('invalid-id');
       expect(result).toBeNull();

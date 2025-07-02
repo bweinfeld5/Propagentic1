@@ -83,7 +83,7 @@ describe('redeemInviteCode Cloud Function Tests', () => {
         }
       });
       
-      const inviteCodeService = await import('../../src/services/inviteCodeService');
+      const inviteCodeService = await import('../../services/inviteCodeService');
       const result = await inviteCodeService.redeemInviteCode(mockInviteCode.code);
       
       expect(result).toBeTruthy();
@@ -94,7 +94,7 @@ describe('redeemInviteCode Cloud Function Tests', () => {
     });
     
     it('throws an error for invalid invite code format', async () => {
-      const inviteCodeService = await import('../../src/services/inviteCodeService');
+      const inviteCodeService = await import('../../services/inviteCodeService');
       await expect(inviteCodeService.redeemInviteCode('')).rejects.toThrow('Invalid invite code format');
       await expect(inviteCodeService.redeemInviteCode(null as any)).rejects.toThrow('Invalid invite code format');
     });
@@ -104,7 +104,7 @@ describe('redeemInviteCode Cloud Function Tests', () => {
         message: 'This invite code has already been used.'
       });
       
-      const inviteCodeService = await import('../../src/services/inviteCodeService');
+      const inviteCodeService = await import('../../services/inviteCodeService');
       await expect(inviteCodeService.redeemInviteCode(mockUsedInviteCode.code))
         .rejects.toThrow('This invite code has already been used.');
       expect(mockHttpsCallable).toHaveBeenCalledWith({ code: mockUsedInviteCode.code });
@@ -115,14 +115,14 @@ describe('redeemInviteCode Cloud Function Tests', () => {
         message: 'Invalid invite code. Please check the code and try again.'
       });
       
-      const inviteCodeService = await import('../../src/services/inviteCodeService');
+      const inviteCodeService = await import('../../services/inviteCodeService');
       await expect(inviteCodeService.redeemInviteCode('NON-EXISTENT'))
         .rejects.toThrow('Invalid invite code. Please check the code and try again.');
       expect(mockHttpsCallable).toHaveBeenCalledWith({ code: 'NON-EXISTENT' });
     });
     
     it('validates an invite code without redeeming it', async () => {
-      const inviteCodeService = await import('../../src/services/inviteCodeService');
+      const inviteCodeService = await import('../../services/inviteCodeService');
       
       mockGetDocs.mockResolvedValue({
         empty: false,

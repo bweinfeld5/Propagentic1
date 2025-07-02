@@ -2,7 +2,7 @@ import {
   mockInvite, mockProperty, mockLandlord, mockTenant,
   firestoreInvite, firestoreProperty
 } from '../fixtures';
-import * as inviteService from '../../src/services/firestore/inviteService';
+import * as inviteService from '../../services/firestore/inviteService';
 import { vi, describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 
 // Hoisted mocks for Firestore functions

@@ -2,7 +2,7 @@ import {
   mockProperty, mockTenant, mockLandlord,
   firestoreProperty, createTimestamp 
 } from '../fixtures';
-import dataService from '../../src/services/dataService';
+import dataService from '../../services/dataService';
 import { vi, describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 
 // Hoist mockDbInstance

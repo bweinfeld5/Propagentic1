@@ -1,5 +1,0 @@
-./functions/lib/invites.js:// const mailTransport = nodemailer.createTransport({
-./functions/lib/invites.js:    const mailTransport = nodemailer.createTransport({
-./functions/src/invites.ts:// const mailTransport = nodemailer.createTransport({
-./functions/test.js:const mailTransport = nodemailer.createTransport({
-./src/inviteEmail.ts:const transporter = nodemailer.createTransport({

@@ -28,6 +28,7 @@ import TestUIComponents from './pages/TestUIComponents';
 import SimpleUIShowcase from './pages/SimpleUIShowcase';
 import MaintenanceSurvey from './components/maintenance/MaintenanceSurvey';
 import EnhancedMaintenancePage from './pages/tenant/EnhancedMaintenancePage';
+import AIMaintenanceChat from './components/tenant/AIMaintenanceChat';
 import PublicPropertyDashboardDemo from './pages/PublicPropertyDashboardDemo';
 import DemoShowcase from './pages/DemoShowcase';
 import TestPage from './pages/TestPage';
@@ -36,18 +37,15 @@ import InviteCodeBrowserTest from './pages/InviteCodeBrowserTest';
 
 // Lazy load page components
 const LandingPage = lazy(() => import('./components/landing/LandingPage.jsx'));
-const ComingSoonPage = lazy(() => import('./pages/ComingSoonPage.jsx'));
 const CanvasLandingPage = lazy(() => import('./pages/CanvasLandingPage.tsx'));
 const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage.jsx'));
 const ForgotPassword = lazy(() => import('./components/auth/ForgotPassword.jsx'));
 const TenantDashboard = lazy(() => import('./pages/tenant/EnhancedTenantDashboard.tsx'));
-const EnhancedTenantDashboard = lazy(() => import('./pages/tenant/EnhancedTenantDashboard.tsx'));
 const LandlordDashboard = lazy(() => import('./pages/landlord/LandlordDashboard.tsx'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboardPage.tsx'));
 const LandlordDashboardDemo = lazy(() => import('./pages/LandlordDashboardDemoPage.jsx'));
-const ContractorDashboard = lazy(() => import('./components/contractor/CleanContractorDashboard.tsx'));
-const ContractorDashboardDemo = lazy(() => import('./components/landing/ContractorDashboardDemo.jsx'));
-const OriginalContractorDashboard = lazy(() => import('./components/contractor/CleanContractorDashboard.tsx'));
+const ContractorDashboard = lazy(() => import('./components/contractor/CleanContractorDashboard'));
 const ContractorMessagesPage = lazy(() => import('./pages/contractor/ContractorMessagesPage.tsx'));
 const ContractorProfilePage = lazy(() => import('./pages/ContractorProfilePage.jsx'));
 const JobHistoryPage = lazy(() => import('./pages/JobHistoryPage.jsx'));
@@ -55,6 +53,10 @@ const PricingPage = lazy(() => import('./pages/PricingPage.jsx'));
 const OnboardingSurvey = lazy(() => import('./components/onboarding/OnboardingSurvey.jsx'));
 const LandlordOnboarding = lazy(() => import('./components/onboarding/LandlordOnboarding.jsx'));
 const ContractorOnboardingPage = lazy(() => import('./pages/ContractorOnboardingPage.jsx'));
+// New onboarding components
+const TenantOnboarding = lazy(() => import('./components/onboarding/TenantOnboarding.jsx'));
+const LandlordOnboardingNew = lazy(() => import('./components/onboarding/LandlordOnboardingNew.jsx'));
+const ContractorOnboardingNew = lazy(() => import('./components/onboarding/ContractorOnboardingNew.jsx'));
 const SVGTest = lazy(() => import('./components/branding/SVGTest'));
 const BlueprintTest = lazy(() => import('./components/testing/BlueprintTest'));
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
@@ -65,23 +67,40 @@ const ContractorRegistrationPage = lazy(() => import('./pages/ContractorRegistra
 const EnhancedContractorRegistrationPage = lazy(() => import('./pages/EnhancedContractorRegistrationPage.tsx'));
 const LandlordWaitlistPage = lazy(() => import('./pages/LandlordWaitlistPage.tsx'));
 const StripeMcpDashboard = lazy(() => import('./components/admin/StripeMcpDashboard.tsx'));
-const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboardPage.tsx'));
 
 // Route Guards
 const PrivateRoute = ({ children }) => {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, loading, userProfile } = useAuth();
+  
+  // Debug logging
+  console.log('PrivateRoute Debug:', {
+    loading,
+    hasCurrentUser: !!currentUser,
+    currentUserUid: currentUser?.uid,
+    hasUserProfile: !!userProfile,
+    userProfileType: userProfile?.userType,
+    pathname: window.location.pathname,
+    timestamp: new Date().toISOString()
+  });
   
   if (loading) {
+     console.log('PrivateRoute: Still loading authentication...');
      return <div className="flex h-screen items-center justify-center">
        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
      </div>;
   }
   
-  return currentUser ? (
+  if (!currentUser) {
+    console.log('PrivateRoute: No currentUser, redirecting to login');
+    return <Navigate to="/propagentic/new" />;
+  }
+  
+  console.log('PrivateRoute: Authentication passed, rendering children');
+  return (
     <TenantInviteGuard>
       {children}
     </TenantInviteGuard>
-  ) : <Navigate to="/propagentic/new" />;
+  );
 };
 
 // Role-specific redirect component
@@ -104,12 +123,26 @@ const RoleBasedRedirect = () => {
     }
     setProfileLoading(false);
     
-    // Check if user needs to see the coming soon page
-    // Users see coming soon if they haven't joined waitlist or completed onboarding
-    const needsComingSoon = !userProfile.onWaitlist && !userProfile.onboardingComplete;
+    // ADD THIS LINE FOR DEBUGGING:
+    console.log('DEBUG: User profile for redirect decision:', JSON.stringify(userProfile, null, 2));
     
-    if (needsComingSoon) {
-      navigate('/coming-soon');
+    // Check for admin roles first (prioritize role field, then userType)
+    const isAdmin = userProfile.role === 'admin' || userProfile.role === 'super_admin' || 
+                   userProfile.userType === 'admin' || userProfile.userType === 'super_admin';
+    
+    // Debug logging for admin account (temporary)
+    console.log('RoleBasedRedirect Debug:', {
+      email: userProfile.email,
+      role: userProfile.role,
+      userType: userProfile.userType,
+      isAdmin,
+      currentPath: window.location.pathname
+    });
+    
+    // Handle admin users (they bypass onboarding and go straight to admin dashboard)
+    if (isAdmin) {
+      console.log('Redirecting admin user to /admin/dashboard');
+      navigate('/admin/dashboard');
       return;
     }
     
@@ -118,16 +151,17 @@ const RoleBasedRedirect = () => {
     
     if (!onboardingComplete) {
       switch (userRole) {
-        case 'landlord': navigate('/landlord-onboarding'); break;
-        case 'contractor': navigate('/contractor-onboarding'); break;
-        default: navigate('/onboarding'); break;
+        case 'landlord': navigate('/onboarding/landlord'); break;
+        case 'contractor': navigate('/onboarding/contractor'); break;
+        case 'tenant': navigate('/onboarding/tenant'); break;
+        default: navigate('/onboarding/tenant'); break;
       }
     } else {
        switch (userRole) {
         case 'tenant': navigate('/tenant/dashboard'); break;
         case 'landlord': navigate('/landlord/dashboard'); break;
         case 'contractor': navigate('/contractor/dashboard'); break;
-        default: navigate('/profile'); break;
+        default: navigate('/u/profile'); break;
       }
     }
   }, [currentUser, userProfile, authLoading, navigate]);
@@ -200,13 +234,14 @@ function App() {
       <div className={`transition-all duration-1000 ease-in-out ${
         showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
       }`}>
-        <ThemeProvider defaultTheme="system">
+        <ThemeProvider defaultTheme="light">
           <AuthProvider>
             <PreLaunchGuard>
               <ConnectionProvider>
                 <DemoModeProvider>
                   <DataServiceProvider>
-                    <NotificationProvider>
+                    <ModelContextProvider>
+                      <NotificationProvider>
                       <ErrorBoundary 
                         level="page"
                         userId={null}
@@ -245,7 +280,6 @@ function App() {
                                 <Route path="/onboarding/contractor" element={<PrivateRoute><ContractorOnboardingPage /></PrivateRoute>} />
                                 <Route path="/forgot-password" element={<ForgotPassword />} />
                                 <Route path="/auth" element={<AuthPage />} />
-                                <Route path="/coming-soon" element={<ComingSoonPage />} />
                                 <Route path="/invite" element={<InviteAcceptancePage />} />
                                 <Route path="/invite-test" element={<PrivateRoute><InviteCodeBrowserTest /></PrivateRoute>} />
                                 <Route path="/dashboard" element={<PrivateRoute><RoleBasedRedirect /></PrivateRoute>} />
@@ -256,15 +290,13 @@ function App() {
                                 <Route path="/admin/dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
                                 <Route path="/admin/stripe-mcp" element={<PrivateRoute><StripeMcpDashboard /></PrivateRoute>} />
                                 <Route path="/u/profile" element={<PrivateRoute><UserProfilePage /></PrivateRoute>} />
-                                <Route path="/waitlist" element={<Navigate to="/coming-soon" replace />} />
-                                <Route path="/tenant/dashboard/legacy" element={<PrivateRoute><ProfileCompletionGuard requiredCompletion={85}><TenantDashboard /></ProfileCompletionGuard></PrivateRoute>} />
                                 <Route path="/contractor/messages" element={<PrivateRoute><ContractorMessagesPage /></PrivateRoute>} />
                                 <Route path="/contractor/profile" element={<PrivateRoute><ContractorProfilePage /></PrivateRoute>} />
                                 <Route path="/contractor/history" element={<PrivateRoute><JobHistoryPage /></PrivateRoute>} />
-                                <Route path="/contractor/dashboard/enhanced" element={<ContractorDashboardDemo />} />
-                                <Route path="/contractor/dashboard/original" element={<PrivateRoute><OriginalContractorDashboard /></PrivateRoute>} />
+
                                 <Route path="/maintenance/new" element={<PrivateRoute><MaintenanceSurvey /></PrivateRoute>} />
                                 <Route path="/maintenance/enhanced" element={<PrivateRoute><EnhancedMaintenancePage /></PrivateRoute>} />
+                                <Route path="/maintenance/ai-chat" element={<PrivateRoute><AIMaintenanceChat /></PrivateRoute>} />
                                 <Route path="/onboarding" element={<PrivateRoute><OnboardingSurvey /></PrivateRoute>} />
                                 <Route path="/landlord-onboarding" element={<PrivateRoute><LandlordOnboarding /></PrivateRoute>} />
                                 <Route path="/contractor-onboarding" element={<PrivateRoute><ContractorOnboardingPage /></PrivateRoute>} />
@@ -276,6 +308,7 @@ function App() {
                                 <Route path="/landlord/dashboard/demo" element={<LandlordDashboardDemo />} />
                                 <Route path="/demo/pitchdeck" element={<PitchDeckDemo />} />
                                 <Route path="/demo/contractor-readiness" element={<ContractorEstimateReadinessDemo />} />
+                                <Route path="/email-verification-test" element={<PrivateRoute><EmailVerificationTest /></PrivateRoute>} />
                                 {/* Fallback/Not Found - Redirect to login or a dedicated 404 page */}
                                 <Route path="*" element={<Navigate to="/login" />} />
                               </Routes>
@@ -316,10 +349,11 @@ function App() {
                       <LocalStorageDebug />
                     </Router>
                       </ErrorBoundary>
-                  </NotificationProvider>
-                </DataServiceProvider>
-              </DemoModeProvider>
-            </ConnectionProvider>
+                      </NotificationProvider>
+                    </ModelContextProvider>
+                  </DataServiceProvider>
+                </DemoModeProvider>
+              </ConnectionProvider>
             </PreLaunchGuard>
           </AuthProvider>
         </ThemeProvider>

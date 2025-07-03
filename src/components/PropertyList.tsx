@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Building, Wrench, LogOut } from 'lucide-react';
 import Button from './ui/Button';
-// import LeavePropertyModal from './tenant/LeavePropertyModal.jsx'; // Temporarily commented out
+import LeavePropertyModal from './tenant/LeavePropertyModal';
 
 interface Property {
   id: string;
@@ -114,12 +114,12 @@ const PropertyList: React.FC<PropertyListProps> = ({
       </div>
 
       {/* Leave Property Modal */}
-      {/* <LeavePropertyModal
+      <LeavePropertyModal
         isOpen={leaveModalOpen}
         onClose={() => setLeaveModalOpen(false)}
         property={selectedProperty}
         onSuccess={handleLeaveSuccess}
-      /> */}
+      />
     </div>
   );
 };

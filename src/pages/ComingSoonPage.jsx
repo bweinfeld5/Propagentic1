@@ -56,7 +56,7 @@ const ComingSoonPage = () => {
       </div>
 
       {/* Top Section: Waitlist (Left) + Hero Content (Right) */}
-      <section className="relative py-12 md:py-16 lg:py-24 px-4 sm:px-6">
+      <section className="relative py-16 lg:py-24 px-6">
         {/* Subtle background pattern */}
         <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-transparent to-red-500/5"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(251,146,60,0.1),transparent_50%)] bg-[radial-gradient(circle_at_70%_80%,rgba(239,68,68,0.1),transparent_50%)]"></div>
@@ -133,7 +133,7 @@ const ComingSoonPage = () => {
                   </span>
                 </div>
                 
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-8">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-8">
                   The Future of{' '}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-red-600 to-orange-700">
                     Property Management
@@ -141,7 +141,7 @@ const ComingSoonPage = () => {
                   is Here
                 </h1>
                 
-                <p className="text-lg md:text-xl lg:text-2xl text-gray-600 mb-10 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                <p className="text-xl lg:text-2xl text-gray-600 mb-10 leading-relaxed max-w-2xl">
                   PropAgentic revolutionizes how landlords, tenants, and contractors interact. 
                   Streamline maintenance, automate communications, and grow your property business 
                   with AI-powered insights.
@@ -176,16 +176,16 @@ const ComingSoonPage = () => {
                 </div>
 
                 {/* Stats Preview */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 text-center max-w-2xl mx-auto lg:mx-0 lg:text-left">
-                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 sm:p-3 lg:p-6 shadow-lg border border-white/30 hover:shadow-xl transition-shadow duration-300">
+                <div className="grid grid-cols-3 gap-4 lg:gap-6 text-center lg:text-left">
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 lg:p-6 shadow-lg border border-white/30 hover:shadow-xl transition-shadow duration-300">
                     <div className="text-2xl lg:text-3xl font-bold text-orange-600 mb-2">500+</div>
                     <div className="text-xs lg:text-sm text-gray-600 font-medium">Properties Ready</div>
                   </div>
-                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 sm:p-3 lg:p-6 shadow-lg border border-white/30 hover:shadow-xl transition-shadow duration-300">
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 lg:p-6 shadow-lg border border-white/30 hover:shadow-xl transition-shadow duration-300">
                     <div className="text-2xl lg:text-3xl font-bold text-red-600 mb-2">1,200+</div>
                     <div className="text-xs lg:text-sm text-gray-600 font-medium">Early Requests</div>
                   </div>
-                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 sm:p-3 lg:p-6 shadow-lg border border-white/30 hover:shadow-xl transition-shadow duration-300">
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 lg:p-6 shadow-lg border border-white/30 hover:shadow-xl transition-shadow duration-300">
                     <div className="text-2xl lg:text-3xl font-bold text-yellow-600 mb-2">50+</div>
                     <div className="text-xs lg:text-sm text-gray-600 font-medium">Contractors</div>
                   </div>

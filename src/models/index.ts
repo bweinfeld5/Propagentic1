@@ -10,3 +10,5 @@ export * from './PropertyTenantRelationship';
 export * from './User';
 export * from './Shared';
 export * from './ContractorRegistration'; 
+export * from './Waitlist'; 
+

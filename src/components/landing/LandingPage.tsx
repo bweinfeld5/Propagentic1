@@ -81,7 +81,7 @@ const LandingPage: React.FC = () => {
       {/* Content container with proper z-index */}
       <div className="relative z-10">
         {/* Hero section - Loaded directly (not lazy loaded) for best initial experience */}
-        <HeroSection />
+        <HeroSection launchDate={new Date('2024-12-31')} />
         
         {/* Other sections with lazy loading */}
         

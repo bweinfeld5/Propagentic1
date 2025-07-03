@@ -11,7 +11,8 @@ import {
   MagnifyingGlassIcon,
   UserGroupIcon,
   BuildingOfficeIcon,
-  WrenchScrewdriverIcon
+  WrenchScrewdriverIcon,
+  QueueListIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext';
 import AdminLayout from '../../components/admin/AdminLayout';
@@ -22,6 +23,7 @@ import SystemConfigPanel from '../../components/admin/SystemConfigPanel';
 import AdminStatsCards from '../../components/admin/AdminStatsCards';
 import SecurityMonitor from '../../components/admin/SecurityMonitor';
 import GlobalSearch from '../../components/search/GlobalSearch';
+import WaitlistManagement from '../../components/admin/WaitlistManagement';
 import { 
   collection, 
   query, 
@@ -183,6 +185,13 @@ const AdminDashboardPage: React.FC = () => {
       label: 'Contractor Management',
       icon: WrenchScrewdriverIcon,
       view: 'contractors',
+      adminLevel: 'moderator'
+    },
+    {
+      id: 'waitlist',
+      label: 'Waitlist Management',
+      icon: QueueListIcon,
+      view: 'waitlist',
       adminLevel: 'moderator'
     },
     {
@@ -430,6 +439,9 @@ const AdminDashboardPage: React.FC = () => {
       
       case 'contractors':
         return <UserManagementPanel roleFilter="contractor" />;
+      
+      case 'waitlist':
+        return <WaitlistManagement />;
       
       case 'properties':
         return <PropertyManagementPanel />;
